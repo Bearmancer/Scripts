@@ -23,8 +23,7 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
         
         $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
 
-        Write-Host "Translated File Variable: $translatedFile"
-
+        if (Test-Path $translatedFile) {
             Remove-Item $subtitleFile
             Rename-Item $translatedFile $subtitleFile
         }
