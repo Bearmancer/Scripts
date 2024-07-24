@@ -62,7 +62,7 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
 }
 
 function whisperJapanese ([System.IO.FileInfo] $file) {
-    if ($fileExtensions -notcontains $file.Extension -or (Test-Path -LiteralPath $subtitleFile)) {
+    if ($fileExtensions -notcontains $file.Extension) {
         Write-Output "Skipping $($file.Name)"
         return
     }
