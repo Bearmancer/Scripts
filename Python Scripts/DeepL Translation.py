@@ -1,8 +1,7 @@
 import deepl, sys, os
 from docx import Document
-auth_key = open("DeepL API Key.txt", 'r').read()
+auth_key = open("C:/Users/Lance/Documents/Powershell/Python Scripts/DeepL API Key.txt", 'r').read()
 
-auth_key = "" 
 translator = deepl.Translator(auth_key)
 
 if len(sys.argv) != 2:

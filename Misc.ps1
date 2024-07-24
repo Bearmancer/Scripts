@@ -65,11 +65,11 @@ function MeasureScriptTime([scriptblock] $command) {
 }
 
 function TranslateFile($file) {
-    py ".\Python Scripts\DeepL Translation.py" $file
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\DeepL Translation.py" $file
 }
 
 function PrintVideoResolutions {
-    py ".\Python Scripts\Print Video Resolutions.py"
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Print Video Resolutions.py"
 }
 
 function OpenCommandHistory {
