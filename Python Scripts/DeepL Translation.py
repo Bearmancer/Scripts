@@ -1,5 +1,4 @@
 import deepl, sys, os
-from docx import Document
 auth_key = open("C:/Users/Lance/Documents/Powershell/Python Scripts/DeepL API Key.txt", 'r').read()
 
 translator = deepl.Translator(auth_key)
@@ -7,21 +6,14 @@ translator = deepl.Translator(auth_key)
 if len(sys.argv) != 2:
     sys.exit(1)
 
-doc = Document(sys.argv[1])
+doc = open(sys.argv[1], 'r').read()
 
-text = []
+result = translator.translate_text(doc, target_lang="EN-GB")
 
-for para in doc.paragraphs:
-    text.append(para.text)
-
-full_text = '\n'.join(text)
-
-result = translator.translate_text(full_text, target_lang="EN-GB")
-
-translated_doc = Document()
-translated_doc.add_paragraph(result.text)
+translated_doc = result
 
 base, ext = os.path.splitext(sys.argv[1])
 new_file_path = f"{base} - Translated{ext}"
 
-translated_doc.save(new_file_path)
+with open(new_file_path, 'w') as file:
+    file.write(translated_doc.text)

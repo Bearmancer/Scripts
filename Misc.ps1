@@ -1,3 +1,27 @@
+function TranslateFile($file) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\DeepL Translation.py" $file
+}
+
+function OpenCommandHistory {
+    Invoke-Item C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+}
+
+function PrintVideoResolutions {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Print Video Resolutions.py"
+}
+
+function RemuxDVD {
+    & "C:\Users\Lance\Documents\PowerShell\Custom\MakeMKV Batch Remux.ps1" .
+}
+
+function CompressVideoFiles {
+    & "C:\Users\Lance\Documents\PowerShell\Custom\Handbrake Batch Compress.ps1" .
+}
+
+function SplitVideosByChapter() {
+    & "C:\Users\Lance\Documents\PowerShell\Custom\Split Video By Chapters.ps1" .
+}
+
 function RunCommandAllSubFolders($command) {
     Get-ChildItem -Directory -Recurse | ForEach-Object { Push-Location $_.FullName; $command; Pop-Location }
 }
@@ -62,30 +86,6 @@ function MeasureScriptTime([scriptblock] $command) {
     $stopwatch.Stop()
 
     Write-Output "Elapsed time: $($stopwatch.Elapsed.TotalMinutes) minutes"
-}
-
-function TranslateFile($file) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\DeepL Translation.py" $file
-}
-
-function PrintVideoResolutions {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Print Video Resolutions.py"
-}
-
-function OpenCommandHistory {
-    Invoke-Item C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
-}
-
-function RemuxDVD {
-    & "C:\Users\Lance\Documents\PowerShell\Custom\MakeMKV Batch Remux.ps1" .
-}
-
-function CompressVideoFiles {
-    & "C:\Users\Lance\Documents\PowerShell\Custom\Handbrake Batch Compress.ps1" .
-}
-
-function SplitVideosByChapter() {
-    & "C:\Users\Lance\Documents\PowerShell\Custom\Split Video By Chapters.ps1" .
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders

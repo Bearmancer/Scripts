@@ -2,7 +2,6 @@ import subprocess
 import os
 import sys
 
-
 def get_video_resolution(filepath):
     command = [
         "ffprobe",
@@ -30,7 +29,6 @@ def get_video_resolution(filepath):
         print(f"Error processing file: {filepath}. Error: {e}")
         return None
 
-
 def get_video_files(path):
     extensions = [".mkv", ".mp4", ".ts", ".flv"]
     video_files = []
@@ -41,7 +39,6 @@ def get_video_files(path):
                 video_files.append(os.path.join(root, file))
                 
     return video_files
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
