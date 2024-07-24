@@ -65,17 +65,16 @@ function MeasureScriptTime([scriptblock] $command) {
 }
 
 function TranslateFile($file) {
-    py "C:\Users\Lance\AppData\Local\Personal\Python Scripts\DeepL Translation.py" $file
+    py ".\Python Scripts\DeepL Translation.py" $file
+}
+
+function PrintVideoResolutions {
+    py ".\Python Scripts\Print Video Resolutions.py"
 }
 
 function OpenCommandHistory {
     Invoke-Item C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 }
-
-function PrintVideoResolutions {
-    py "C:\Users\Lance\AppData\Local\Personal\Python Scripts\Print Video Resolutions.py"
-}
-
 
 function RemuxDVD {
     & "C:\Users\Lance\Documents\PowerShell\Custom\MakeMKV Batch Remux.ps1" .
