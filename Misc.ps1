@@ -22,14 +22,14 @@ function SplitVideosByChapter() {
     & "C:\Users\Lance\Documents\PowerShell\Custom\Split Video By Chapters.ps1" .
 }
 
-function RunCommandAllSubFolders($command) {
-    Get-ChildItem -Directory -Recurse | ForEach-Object { Push-Location $_.FullName; $command; Pop-Location }
-}
-
 function CallCmdletAllSubFolders($command) {
     foreach ($folder in Get-ChildItem -Directory -Recurse) {
         Start-Process -FilePath pwsh.exe -ArgumentList "-NoExit", "-Command", "$command" -WorkingDirectory $folder
     }
+}
+
+function RunCommandAllSubFolders($command) {
+    Get-ChildItem -Directory -Recurse | ForEach-Object { Push-Location $_.FullName; $command; Pop-Location }
 }
 
 function ExtractCommentaryAudio() {
@@ -89,5 +89,4 @@ function MeasureScriptTime([scriptblock] $command) {
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders
-Set-Alias -Name ccaf -Value CallCmdletAllFiles
 Set-Alias -Name rcas -Value RunCommandAllSubFolders

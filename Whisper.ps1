@@ -36,7 +36,7 @@ function whisp($file) {
 
 function whisperPath {
     Get-ChildItem -File | ForEach-Object {
-        & whisp($_); 
+        & whisp $_
     }
 }
 
@@ -62,25 +62,16 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
 }
 
 function whisperJapanese ([System.IO.FileInfo] $file) {
-    if ($fileExtensions -notcontains $file.Extension) {
-        Write-Output "Skipping $($file.Name)"
-        return
-    }
-    
     whisperLogic small Japanese $file
 }
 
-function whisperFile {
-    ccaf whisp
-}
-
-function whisperJapaneseFile {
-    ccaf wpj
+function whisperPathJapanese {
+    Get-ChildItem -File | ForEach-Object {
+        & whisperLogic small Japanese $_
+    }
 }
 
 Set-Alias -Name wp -Value whisperPath
-Set-Alias -Name wpf -Value whisperFile
-Set-Alias -Name wpj -Value whisperJapanese
-Set-Alias -Name wpjf -Value whisperJapaneseFile
+Set-Alias -Name wpj -Value whisperPathJapanese
 Set-Alias -Name wpr -Value whisperPathRecursive
 Set-Alias -Name rsd -Value RemoveSubtitleDuplication
