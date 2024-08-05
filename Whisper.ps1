@@ -65,7 +65,7 @@ function whisperJapanese ([System.IO.FileInfo] $file) {
     whisperLogic small Japanese $file
 }
 
-function whisperJapanesePath {
+function whisperPathJapanese {
     Get-ChildItem -File | ForEach-Object {
         & wj $_
     }
