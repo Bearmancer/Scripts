@@ -28,6 +28,14 @@ function CallCmdletAllSubFolders($command) {
     }
 }
 
+function CallCmdletAllFiles($command) {
+    $files = Get-ChildItem -Path $directoryPath -File
+
+    foreach ($file in $files) {
+        Start-Process -FilePath pwsh.exe -ArgumentList "-NoExit", "-Command &$command '$($file)'"
+    }
+}
+
 function RunCommandAllSubFolders($command) {
     Get-ChildItem -Directory -Recurse | ForEach-Object { Push-Location $_.FullName; $command; Pop-Location }
 }
@@ -89,4 +97,5 @@ function MeasureScriptTime([scriptblock] $command) {
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders
+Set-Alias -Name ccaf -Value CallCmdletAllFiles
 Set-Alias -Name rcas -Value RunCommandAllSubFolders

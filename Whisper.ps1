@@ -65,13 +65,18 @@ function whisperJapanese ([System.IO.FileInfo] $file) {
     whisperLogic small Japanese $file
 }
 
-function whisperPathJapanese {
+function whisperJapanesePath {
     Get-ChildItem -File | ForEach-Object {
-        & whisperLogic small Japanese $_
+        & wj $_
     }
 }
 
+function whispJapFile {
+    ccaf wj
+}
+
 Set-Alias -Name wp -Value whisperPath
+Set-Alias -Name wj -Value whisperJapanese
 Set-Alias -Name wpj -Value whisperPathJapanese
 Set-Alias -Name wpr -Value whisperPathRecursive
 Set-Alias -Name rsd -Value RemoveSubtitleDuplication
