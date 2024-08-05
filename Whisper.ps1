@@ -71,12 +71,13 @@ function whisperPathJapanese {
     }
 }
 
-function whispJapFile {
+function whisperJapaneseFile {
     ccaf wj
 }
 
 Set-Alias -Name wp -Value whisperPath
 Set-Alias -Name wj -Value whisperJapanese
 Set-Alias -Name wpj -Value whisperPathJapanese
+Set-Alias -Name wpf -Value whisperJapaneseFile
 Set-Alias -Name wpr -Value whisperPathRecursive
 Set-Alias -Name rsd -Value RemoveSubtitleDuplication

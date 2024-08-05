@@ -2,8 +2,8 @@ function TranslateFile($file) {
     py "C:\Users\Lance\Documents\Powershell\Python Scripts\DeepL Translation.py" $file
 }
 
-function OpenCommandHistory {
-    Invoke-Item C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+function CallCommandHistory {
+    code C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 }
 
 function PrintVideoResolutions {
