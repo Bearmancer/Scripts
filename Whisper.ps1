@@ -18,7 +18,7 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
     
     RemoveSubtitleDuplication $subtitleFile
 
-    if ($language -ne "English") {
+    if ($language -ne "English" -or $language -ne "Hindi") {
         TranslateFile $subtitleFile
         
         $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
