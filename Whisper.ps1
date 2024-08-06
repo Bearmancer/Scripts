@@ -18,7 +18,7 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
     
     RemoveSubtitleDuplication $subtitleFile
 
-    if ($language -ne "English") {
+    if ($language -ne "English" -or $language -ne "Hindi") {
         TranslateFile $subtitleFile
         
         $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
@@ -36,7 +36,7 @@ function whisp($file) {
 
 function whisperPath {
     Get-ChildItem -File | ForEach-Object {
-        & whisp($_); 
+        & whisp $_
     }
 }
 
@@ -62,25 +62,32 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
 }
 
 function whisperJapanese ([System.IO.FileInfo] $file) {
-    if ($fileExtensions -notcontains $file.Extension) {
-        Write-Output "Skipping $($file.Name)"
-        return
-    }
-    
     whisperLogic small Japanese $file
+
+    SRTtoWord($($file.BaseName + ".srt"))
 }
 
-function whisperFile {
-    ccaf whisp
+function whisperPathJapanese {
+    Get-ChildItem -File | ForEach-Object {
+        & wj $_
+    }
 }
 
 function whisperJapaneseFile {
-    ccaf wpj
+    ccaf wj
+}
+
+function SRTtoWord($file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file srt
+}
+
+function WordToSRT($file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file docx
 }
 
 Set-Alias -Name wp -Value whisperPath
-Set-Alias -Name wpf -Value whisperFile
-Set-Alias -Name wpj -Value whisperJapanese
-Set-Alias -Name wpjf -Value whisperJapaneseFile
+Set-Alias -Name wj -Value whisperJapanese
+Set-Alias -Name wpj -Value whisperPathJapanese
+Set-Alias -Name wpf -Value whisperJapaneseFile
 Set-Alias -Name wpr -Value whisperPathRecursive
 Set-Alias -Name rsd -Value RemoveSubtitleDuplication
