@@ -63,6 +63,8 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
 
 function whisperJapanese ([System.IO.FileInfo] $file) {
     whisperLogic small Japanese $file
+
+    SRTtoWord($($file.BaseName + ".srt"))
 }
 
 function whisperPathJapanese {
@@ -73,6 +75,14 @@ function whisperPathJapanese {
 
 function whisperJapaneseFile {
     ccaf wj
+}
+
+function SRTtoWord($file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file srt
+}
+
+function WordToSRT($file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file docx
 }
 
 Set-Alias -Name wp -Value whisperPath
