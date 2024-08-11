@@ -18,16 +18,16 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
     
     RemoveSubtitleDuplication $subtitleFile
 
-    if ($language -ne "English" -or $language -ne "Hindi") {
-        TranslateFile $subtitleFile
+    # if ($language -ne "English" -or $language -ne "Hindi") {
+    #     TranslateFile $subtitleFile
         
-        $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
+    #     $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
 
-        if (Test-Path $translatedFile) {
-            Remove-Item $subtitleFile
-            Rename-Item $translatedFile $subtitleFile
-        }
-    }
+    #     if (Test-Path $translatedFile) {
+    #         Remove-Item $subtitleFile
+    #         Rename-Item $translatedFile $subtitleFile
+    #     }
+    # }
 }
 
 function whisp($file) {
@@ -64,7 +64,11 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
 function whisperJapanese ([System.IO.FileInfo] $file) {
     whisperLogic small Japanese $file
 
-    SRTtoWord($($file.BaseName + ".srt"))
+    $subtitleFile = $($file.BaseName + ".srt")
+
+    if (Test-Path $subtitleFile) {
+        SRTtoWord($subtitleFile)
+    }
 }
 
 function whisperPathJapanese {
