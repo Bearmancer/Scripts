@@ -22,6 +22,14 @@ function SplitVideosByChapter() {
     & "C:\Users\Lance\Documents\PowerShell\Custom\Split Video By Chapters.ps1" .
 }
 
+function DiscordTime([string]$time24h, [string]$dateDM) {
+    $dateTime = [datetime]::ParseExact("$dateDM $time24h", "dd/MM HH:mm", $null)
+    $unixTime = [math]::Round(($dateTime.ToUniversalTime()).Subtract((Get-Date "1970-01-01")).TotalSeconds)
+    $discordTimeFormat = "<t:$unixTime>"
+
+    Set-Clipboard $discordTimeFormat
+}
+
 function CallCmdletAllSubFolders($command) {
     foreach ($folder in Get-ChildItem -Directory -Recurse) {
         Start-Process -FilePath pwsh.exe -ArgumentList "-NoExit", "-Command", "$command" -WorkingDirectory $folder
