@@ -11,15 +11,15 @@ def srt_to_docx(input_file):
         doc.add_paragraph(f.read())
         output_file = input_file.replace('.srt', '.docx')
         doc.save(output_file)
-        print(f"Output saved to '{output_file}'")
+        print(f"Output saved to '{os.path.abspath(output_file)}'")
 
 def docx_to_srt(input_file):
     doc = Document(input_file)
     text = '\n'.join([para.text for para in doc.paragraphs])
-    output_file = input_file.replace('.docx', '.srt')
+    output_file = f'{input_file[:-8]}.srt'
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
-    print(f"Output saved to '{output_file}'")
+    print(f"Output saved to '{os.path.abspath(output_file)}'")
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
