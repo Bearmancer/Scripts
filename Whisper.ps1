@@ -1,4 +1,4 @@
-$fileExtensions = '.mkv', '.mp4', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi'
+$fileExtensions = '.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi'
 
 function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$file) {
     if ($fileExtensions -notcontains $file.Extension) {
