@@ -8,11 +8,11 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
     $subtitleFile = Join-Path $file.Directory.FullName ($file.BaseName + ".srt")
 
     if (Test-Path -LiteralPath $subtitleFile) { 
-        Write-Output "Subtitle for $($file.BaseName) already exists. Skipping..."
+        Write-Host "Subtitle for $($file.BaseName) already exists. Skipping..."
         return 
     }
     
-    Write-Output "Now transcribing: $($file.Name)"
+    Write-Host "Now transcribing: $($file.Name)"
     
     whisper --fp16 False --output_format "srt" --model $model --language $language $file
     
@@ -57,7 +57,7 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
         [System.IO.File]::WriteAllText($file, $NewContent)
     }
     else {
-        Write-Output "$($file) not found."
+        Write-Host "$($file) not found."
     }
 }
 
