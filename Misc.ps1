@@ -70,7 +70,7 @@ function ListDirectories {
     $indentation = " " * $indent
 
     Get-ChildItem -Directory | ForEach-Object {
-        Write-Output ("{0} {1}" -f $indentation, $_.Name)
+        Write-Host ("{0} {1}" -f $indentation, $_.Name)
         Push-Location -LiteralPath $_.FullName
         ListDirectories -indent ($indent + 2)
         Pop-Location
@@ -85,14 +85,14 @@ function ListFilesAndDirectories {
     $indentation = " " * $indent
 
     Get-ChildItem -Directory | ForEach-Object {
-        Write-Output ("{0} {1}" -f $indentation, $_.Name)
+        Write-Host ("{0} {1}" -f $indentation, $_.Name)
         Push-Location -LiteralPath $_.FullName
         ListFilesAndDirectories -indent ($indent + 2)
         Pop-Location
     }
 
     Get-ChildItem -File | ForEach-Object {
-        Write-Output ("{0} {1}" -f $indentation, $_.Name)
+        Write-Host ("{0} {1}" -f $indentation, $_.Name)
     }
 }
   
@@ -101,7 +101,7 @@ function MeasureScriptTime([scriptblock] $command) {
     & $command
     $stopwatch.Stop()
 
-    Write-Output "Elapsed time: $($stopwatch.Elapsed.TotalMinutes) minutes"
+    Write-Host "Elapsed time: $($stopwatch.Elapsed.TotalMinutes) minutes"
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders

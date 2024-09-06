@@ -7,7 +7,7 @@ function ZipFoldersLogic($path) {
     $maxSize = 9500 * 1000 * 1000
     $zipFilePath = "C:\Users\Lance\Desktop\zippedFolders"
 
-    Write-Output "Now zipping up $($path.BaseName)"
+    Write-Host "Now zipping up $($path.BaseName)"
 
     New-Item -ItemType Directory -Path $zipFilePath -Force
 
@@ -32,7 +32,7 @@ function ZipFoldersLogic($path) {
         }
 
         if ($itemSize -gt $maxSize -and $selectedItem.PSIsContainer) {
-            Write-Output "$($selectedItem.BaseName) is too big to be zipped up. Now applying code recursively..."
+            Write-Host "$($selectedItem.BaseName) is too big to be zipped up. Now applying code recursively..."
 
             ZipFoldersLogic $selectedItem.FullName
 
@@ -44,7 +44,7 @@ function ZipFoldersLogic($path) {
         
         if ($currentSize + $itemSize -gt $maxSize -or $currentIndex -eq $lastIndex) {
             if ($selectedItem -eq $sortedItems[$lastIndex]) {
-                Write-Output "Reached last item of directory"
+                Write-Host "Reached last item of directory"
                 $zipFolder += $sortedItems[$lastIndex]
             }
 
@@ -81,9 +81,9 @@ function ZipFoldersLogic($path) {
     }
 
     if ($allItems) {
-        Write-Output "The following items did not get zipped up:"
+        Write-Host "The following items did not get zipped up:"
         $allItems | ForEach-Object {
-            Write-Output $_.BaseName
+            Write-Host $_.BaseName
         }
     }
 

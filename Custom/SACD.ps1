@@ -54,7 +54,7 @@ function ExtractSACDs {
             
         }
         else {
-            Write-Output "Audio is neither 5ch nor stereo."
+            Write-Host "Audio is neither 5ch nor stereo."
             Continue
         }
     }
@@ -63,11 +63,11 @@ function ExtractSACDs {
     if ($multiChannelParentFolder) {
         Get-ChildItem -LiteralPath $multiChannelParentFolder -Recurse -Directory | DFFtoFLAC
     } else {
-        Write-Output "Multichannel audio does not exist for this folder"
+        Write-Host "Multichannel audio does not exist for this folder"
     }
             
     # Delete empty folders
-    Get-ChildItem -Directory -Recurse | % { Write-Output "Now processing: `n $($_.FullName)" } 
+    Get-ChildItem -Directory -Recurse | % { Write-Host "Now processing: `n $($_.FullName)" } 
     Get-ChildItem -Directory -Recurse | Where-Object { $_.GetFileSystemInfos().Count -eq 0 } | % { Remove-Item -LiteralPath $_.FullName -Force }
 }
 
@@ -123,7 +123,7 @@ function DFFtoFLAC {
                 Remove-Item -LiteralPath $flacFile
                 Rename-Item -LiteralPath $trimmedFlacFile -NewName $flacFile
             } else {
-                Write-Output "$($trimmedFlacFile) not found"
+                Write-Host "$($trimmedFlacFile) not found"
             }
         }
 

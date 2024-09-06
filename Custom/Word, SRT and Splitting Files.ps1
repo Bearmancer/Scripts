@@ -1,6 +1,6 @@
 function SRTtoWord([System.IO.FileInfo] $file) {
     if (!(Test-Path -LiteralPath $file) -or $file.Extension -ne ".srt") {
-        Write-Output "Skipping $($file)"
+        Write-Host "Skipping $($file)"
         return 
     }
 
@@ -20,7 +20,7 @@ function WordToSRT([String] $filePath) {
     $file = Get-Item $filePath
   
     if (!(Test-Path -LiteralPath $file) -or $file.Extension -ne ".docx") {
-        Write-Output "Skipping $($file)"
+        Write-Host "Skipping $($file)"
         return 
     }
 
@@ -81,7 +81,7 @@ function SplitWhisperLines {
 
     $result = $chunks -join "`n`n_______________________________________________________`n`n"
 
-    Write-Output $result
+    Write-Host $result
 }
 
 function MergeWhisperLines([System.IO.FileInfo]$Path) {
@@ -101,7 +101,7 @@ function MergeWhisperLines([System.IO.FileInfo]$Path) {
 
 # function WordToSRT([System.IO.FileInfo] $file) {
 #     if (!(Test-Path -LiteralPath $file) -or ($file.Extension -ne ".docx")) {
-#         Write-Output "Skipping $($file.Name)"
+#         Write-Host "Skipping $($file.Name)"
 #         return 
 #     }
 
