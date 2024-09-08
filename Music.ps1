@@ -104,10 +104,10 @@ function ConvertToMP3 {
                 New-Item -ItemType Directory -Force $destinationFolder
             }
 
-            if ($_.Extension -eq ".flac") {
+            if ($file.Extension -eq ".flac") {
                 $flacInfo = sox --i $file.FullName 2>&1
 
-                if ($flacInfo -match "Precision\s*:\s*16-bit") {
+                if ($flacInfo -match "Precision\s:\s16-bit") {
                     $mp3Path = Join-Path $destinationFolder "$($file.BaseName).mp3"
                     ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
                 }
@@ -115,14 +115,12 @@ function ConvertToMP3 {
                     Write-Host "Not a 16-bit FLAC file."
                 }
             }
-            
-            elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
+            elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
                 Copy-Item $file.FullName $destinationPath
             }
         }
     }
 }
-
 
 # function convertToMP3 {
 #     $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
