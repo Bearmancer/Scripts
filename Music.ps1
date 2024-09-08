@@ -82,57 +82,95 @@ function renameFileRed {
     }
 }
 
-function convertToMP3 {
-    $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
+function ConvertToMP3 {
+    $folders = Get-ChildItem -Directory -Recurse
 
     foreach ($folder in $folders) {
-        Push-Location $folder
-    
         $currentPath = (Resolve-Path -LiteralPath .).Path
-        $original = "$currentPath\original"
-        $converted = "$currentPath\converted"
-        $problemFiles = @()
-    
-        New-Item -ItemType Directory -Force -Path $original
-        New-Item -ItemType Directory -Force -Path $converted
-    
-        $files = Get-ChildItem *.flac
-    
+        $parentPath = (Split-Path -Path $currentPath -Parent)
+        $folderName = (Split-Path -Path $currentPath -Leaf)
+        $newFolder = "$parentPath\$($folderName) (MP3)"
+
+        New-Item -ItemType Directory -Force -Path $newFolder
+
+        $files = Get-ChildItem -File -Recurse
+
         foreach ($file in $files) {
-            $flacInfo = $(sox --i $file.FullName 2>&1)
-    
-            if ($flacInfo -match "Precision\s*:\s*16-bit") {
-                ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k "converted\$($file.BaseName).mp3"
-    
-                Move-Item -LiteralPath $file.FullName -Destination "$original"
+            $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart("\")
+            $destinationPath = Join-Path -Path $newFolder -ChildPath $relativePath
+            $destinationFolder = Split-Path -Path $destinationPath -Parent
+
+            if (-not (Test-Path -Path $destinationFolder)) {
+                New-Item -ItemType Directory -Force -Path $destinationFolder
             }
-                
-            else {
-                $problemFiles += $file.BaseName
-            }
-        }
-    
-        if ($problemFiles.Count -gt 0) {
-            Write-Host "The following file's bit-depth and sample rate could not be determined:"
-            foreach ($problemFile in $problemFiles) {
-                Write-Host "`n$($problemFile)"
-            }
-        }
-        
-        if ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-            while (Get-ChildItem -LiteralPath $converted) {
-                Get-ChildItem -LiteralPath $converted | Move-Item -Destination $currentPath
-            }
-    
-            while ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-                Remove-Item -Recurse -LiteralPath $converted
-                Remove-Item -Recurse -LiteralPath $original 
+
+            if ($file.Extension -eq ".flac") {
+                $flacInfo = sox --i $file.FullName 2>&1
+
+                if ($flacInfo -match "Precision\s*:\s*16-bit") {
+                    $mp3Path = Join-Path -Path $destinationFolder -ChildPath "$($file.BaseName).mp3"
+                    ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k $mp3Path
+                } else {
+                    Write-Host "The bit-depth of $($file.FullName) could not be determined."
+                }
+            } elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip") {
+                Copy-Item -Path $file.FullName -Destination $destinationPath
             }
         }
-    
-        Pop-Location
     }
 }
+
+# function convertToMP3 {
+#     $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
+
+#     foreach ($folder in $folders) {
+#         Push-Location $folder
+    
+#         $currentPath = (Resolve-Path .).Path
+#         $original = "$currentPath\original"
+#         $converted = "$currentPath\converted"
+#         $problemFiles = @()
+    
+#         New-Item -ItemType Directory -Force -Path $original
+#         New-Item -ItemType Directory -Force -Path $converted
+    
+#         $files = Get-ChildItem *.flac
+    
+#         foreach ($file in $files) {
+#             $flacInfo = $(sox --i $file.FullName 2>&1)
+    
+#             if ($flacInfo -match "Precision\s*:\s*16-bit") {
+#                 ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k "converted\$($file.BaseName).mp3"
+    
+#                 Move-Item -LiteralPath $file.FullName -Destination "$original"
+#             }
+                
+#             else {
+#                 $problemFiles += $file.BaseName
+#             }
+#         }
+    
+#         if ($problemFiles.Count -gt 0) {
+#             Write-Host "The following file's bit-depth and sample rate could not be determined:"
+#             foreach ($problemFile in $problemFiles) {
+#                 Write-Host "`n$($problemFile)"
+#             }
+#         }
+        
+#         if ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
+#             while (Get-ChildItem -LiteralPath $converted) {
+#                 Get-ChildItem -LiteralPath $converted | Move-Item -Destination $currentPath
+#             }
+    
+#             while ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
+#                 Remove-Item -Recurse -LiteralPath $converted
+#                 Remove-Item -Recurse -LiteralPath $original 
+#             }
+#         }
+    
+#         Pop-Location
+#     }
+# }
 
 Set-Alias -Name rfr -Value renameFileRed
 Set-Alias -Name sd -Value soxDownsample
