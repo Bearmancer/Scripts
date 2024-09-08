@@ -22,14 +22,6 @@ function SplitVideosByChapter() {
     & "C:\Users\Lance\Documents\PowerShell\Custom\Split Video By Chapters.ps1" .
 }
 
-function DiscordTime([string]$time24h, [string]$dateDM) {
-    $dateTime = [datetime]::ParseExact("$dateDM $time24h", "dd/MM HH:mm", $null)
-    $unixTime = [math]::Round(($dateTime.ToUniversalTime()).Subtract((Get-Date "1970-01-01")).TotalSeconds)
-    $discordTimeFormat = "<t:$unixTime>"
-
-    Set-Clipboard $discordTimeFormat
-}
-
 function CallCmdletAllSubFolders($command) {
     foreach ($folder in Get-ChildItem -Directory -Recurse) {
         Start-Process -FilePath pwsh.exe -ArgumentList "-NoExit", "-Command", "$command" -WorkingDirectory $folder
@@ -61,47 +53,13 @@ function ExtractCommentaryAudio() {
 
     Get-ChildItem -Filter *.flac | ForEach-Object { Write-Host $_.Name }
 }
- 
+
 function ListDirectories {
-    param (
-        [int]$indent = 0
-    )
-
-    $indentation = " " * $indent
-
-    Get-ChildItem -Directory | ForEach-Object {
-        Write-Host ("{0} {1}" -f $indentation, $_.Name)
-        Push-Location -LiteralPath $_.FullName
-        ListDirectories -indent ($indent + 2)
-        Pop-Location
-    }
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\List Files and Directories.py" list_dir
 }
 
 function ListFilesAndDirectories {
-    param (
-        [int]$indent = 0
-    )
-
-    $indentation = " " * $indent
-
-    Get-ChildItem -Directory | ForEach-Object {
-        Write-Host ("{0} {1}" -f $indentation, $_.Name)
-        Push-Location -LiteralPath $_.FullName
-        ListFilesAndDirectories -indent ($indent + 2)
-        Pop-Location
-    }
-
-    Get-ChildItem -File | ForEach-Object {
-        Write-Host ("{0} {1}" -f $indentation, $_.Name)
-    }
-}
-  
-function MeasureScriptTime([scriptblock] $command) {
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    & $command
-    $stopwatch.Stop()
-
-    Write-Host "Elapsed time: $($stopwatch.Elapsed.TotalMinutes) minutes"
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\List Files and Directories.py" list_files_and_dirs
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders
