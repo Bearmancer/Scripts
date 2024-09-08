@@ -83,7 +83,7 @@ function renameFileRed {
 }
 
 function ConvertToMP3 {
-    $folders = Get-ChildItem -Directory -Recurse
+    $folders = @(Get-ChildItem -Directory -Recurse) + (Get-Location)
 
     foreach ($folder in $folders) {
         $currentPath = (Resolve-Path -LiteralPath .).Path
@@ -93,17 +93,15 @@ function ConvertToMP3 {
 
         New-Item -ItemType Directory -Force -Path $newFolder
 
-        $files = Get-ChildItem -File -Recurse
+        $files = Get-ChildItem -File
 
         foreach ($file in $files) {
             $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart("\")
             $destinationPath = Join-Path -Path $newFolder -ChildPath $relativePath
             $destinationFolder = Split-Path -Path $destinationPath -Parent
 
-            if (-not (Test-Path -Path $destinationFolder)) {
-                New-Item -ItemType Directory -Force -Path $destinationFolder
-            }
-
+            New-Item -ItemType Directory -Force -Path $destinationFolder
+                
             if ($file.Extension -eq ".flac") {
                 $flacInfo = sox --i $file.FullName 2>&1
 
@@ -111,9 +109,10 @@ function ConvertToMP3 {
                     $mp3Path = Join-Path -Path $destinationFolder -ChildPath "$($file.BaseName).mp3"
                     ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k $mp3Path
                 } else {
-                    Write-Host "The bit-depth of $($file.FullName) could not be determined."
+                    Write-Host "Not a 16-bit FLAC file."
                 }
-            } elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip") {
+            }
+            elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip") {
                 Copy-Item -Path $file.FullName -Destination $destinationPath
             }
         }
