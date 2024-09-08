@@ -19,27 +19,27 @@ function soxDownsample {
         $files = Get-ChildItem *.flac
 
         foreach ($file in $files) {
-            $flacInfo = $(sox --i $_.FullName 2>&1)
+            $flacInfo = $(sox --i $file.FullName 2>&1)
 
             if ($flacInfo -match "Precision\s*:\s*24-bit") {
                 if ($flacInfo -match "Sample Rate\s*:\s*96000" -or $flacInfo -match "Sample Rate\s*:\s*192000") {
-                    sox -S $_.FullName -R -G -b 16 "converted\$($_.Name)" rate -v -L 48000 dither
+                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" rate -v -L 48000 dither
                 }
                 elseif ($flacInfo -match "Sample Rate\s*:\s*88200" -or $flacInfo -match "Sample Rate\s*:\s*176400") {
-                    sox -S $_.FullName -R -G -b 16 "converted\$($_.Name)" rate -v -L 44100 dither
+                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" rate -v -L 44100 dither
                 }
 
                 elseif ($flacInfo -match "Sample Rate\s*:\s*44100" -or $flacInfo -match "Sample Rate\s*:\s*48000") {
-                    sox -S $_.FullName -R -G -b 16 "converted\$($_.Name)" dither
+                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" dither
                 }
 
-                Move-Item -LiteralPath $_.FullName -Destination "$original"
+                Move-Item -LiteralPath $file.FullName -Destination "$original"
             }
             elseif ($flacInfo -match "Precision\s*:\s*16-bit" -and (($flacInfo -match "Sample Rate\s*:\s*44100") -or ($flacInfo -match "Sample Rate\s*:\s*48000"))) {
                 Write-Host "File is already 16-bit."
             }
             else {
-                $problemFiles += $_.BaseName
+                $problemFiles += $file.BaseName
             }
         }
 
@@ -96,7 +96,7 @@ function ConvertToMP3 {
         $files = Get-ChildItem -File $folder
 
         foreach ($file in $files) {
-            $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart("\")
+            $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart("\")
             $destinationPath = Join-Path $newFolder $relativePath
             $destinationFolder = Split-Path $destinationPath -Parent
 
@@ -105,11 +105,11 @@ function ConvertToMP3 {
             }
 
             if ($_.Extension -eq ".flac") {
-                $flacInfo = sox --i $_.FullName 2>&1
+                $flacInfo = sox --i $file.FullName 2>&1
 
                 if ($flacInfo -match "Precision\s*:\s*16-bit") {
-                    $mp3Path = Join-Path $destinationFolder "$($_.BaseName).mp3"d
-                    ffmpeg -i $_.FullName -codec:a libmp3lame -b:a 320k $mp3Path
+                    $mp3Path = Join-Path $destinationFolder "$($file.BaseName).mp3"
+                    ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
                 }
                 else {
                     Write-Host "Not a 16-bit FLAC file."
@@ -117,7 +117,7 @@ function ConvertToMP3 {
             }
             
             elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
-                Copy-Item $_.FullName $destinationPath
+                Copy-Item $file.FullName $destinationPath
             }
         }
     }
@@ -141,16 +141,16 @@ function ConvertToMP3 {
 #         $files = Get-ChildItem *.flac
     
 #         foreach ($file in $files) {
-#             $flacInfo = $(sox --i $_.FullName 2>&1)
+#             $flacInfo = $(sox --i $file.FullName 2>&1)
     
 #             if ($flacInfo -match "Precision\s*:\s*16-bit") {
-#                 ffmpeg -i $_.FullName -codec:a libmp3lame -b:a 320k "converted\$($_.BaseName).mp3"
+#                 ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k "converted\$($file.BaseName).mp3"
     
-#                 Move-Item -LiteralPath $_.FullName -Destination "$original"
+#                 Move-Item -LiteralPath $file.FullName -Destination "$original"
 #             }
                 
 #             else {
-#                 $problemFiles += $_.BaseName
+#                 $problemFiles += $file.BaseName
 #             }
 #         }
     
