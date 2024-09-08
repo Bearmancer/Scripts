@@ -107,7 +107,7 @@ function ConvertToMP3 {
 
                 if ($flacInfo -match "Precision\s*:\s*16-bit") {
                     $mp3Path = Join-Path -Path $destinationFolder -ChildPath "$($file.BaseName).mp3"
-                    ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k $mp3Path
+                    ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
                 } else {
                     Write-Host "Not a 16-bit FLAC file."
                 }
