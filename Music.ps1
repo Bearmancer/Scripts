@@ -83,41 +83,46 @@ function renameFileRed {
 }
 
 function ConvertToMP3 {
-    $folders = @(Get-ChildItem -Directory -Recurse) + (Get-Location)
+    $currentPath = (Resolve-Path .).Path
+    $parentPath = (Split-Path $currentPath -Parent)
+    $folderName = (Split-Path $currentPath -Leaf)
+    $newFolder = "$parentPath\$($folderName) (MP3)"
+
+    New-Item -ItemType Directory -Force $newFolder
+
+    $folders = @(Get-ChildItem -Directory -Recurse) + (Get-Item .)
 
     foreach ($folder in $folders) {
-        $currentPath = (Resolve-Path -LiteralPath .).Path
-        $parentPath = (Split-Path -Path $currentPath -Parent)
-        $folderName = (Split-Path -Path $currentPath -Leaf)
-        $newFolder = "$parentPath\$($folderName) (MP3)"
-
-        New-Item -ItemType Directory -Force -Path $newFolder
-
-        $files = Get-ChildItem -File
+        $files = Get-ChildItem -File $folder
 
         foreach ($file in $files) {
             $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart("\")
-            $destinationPath = Join-Path -Path $newFolder -ChildPath $relativePath
-            $destinationFolder = Split-Path -Path $destinationPath -Parent
+            $destinationPath = Join-Path $newFolder $relativePath
+            $destinationFolder = Split-Path $destinationPath -Parent
 
-            New-Item -ItemType Directory -Force -Path $destinationFolder
-                
-            if ($file.Extension -eq ".flac") {
+            if (!(Test-Path $destinationFolder)) {
+                New-Item -ItemType Directory -Force $destinationFolder
+            }
+
+            if ($_.Extension -eq ".flac") {
                 $flacInfo = sox --i $file.FullName 2>&1
 
                 if ($flacInfo -match "Precision\s*:\s*16-bit") {
-                    $mp3Path = Join-Path -Path $destinationFolder -ChildPath "$($file.BaseName).mp3"
+                    $mp3Path = Join-Path $destinationFolder "$($file.BaseName).mp3"
                     ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
-                } else {
+                }
+                else {
                     Write-Host "Not a 16-bit FLAC file."
                 }
             }
-            elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip") {
-                Copy-Item -Path $file.FullName -Destination $destinationPath
+            
+            elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
+                Copy-Item $file.FullName $destinationPath
             }
         }
     }
 }
+
 
 # function convertToMP3 {
 #     $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
