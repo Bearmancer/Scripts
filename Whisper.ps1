@@ -1,6 +1,6 @@
 $fileExtensions = '.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi'
 
-function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$file) {
+function WhisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$file) {
     if ($fileExtensions -notcontains $file.Extension) {
         return
     }
@@ -30,17 +30,17 @@ function whisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$fi
     # }
 }
 
-function whisp($file) {
+function Whisp($file) {
     whisperLogic small.en English $file
 }
 
-function whisperPath {
+function WhisperPath {
     Get-ChildItem -File | ForEach-Object {
         & whisp $_
     }
 }
 
-function whisperPathRecursive {
+function WhisperPathRecursive {
     Get-ChildItem -Directory -Recurse | ForEach-Object { 
         Start-Process -FilePath "pwsh.exe" -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$($_.FullName)'; whisperPath" 
     }
@@ -61,17 +61,17 @@ function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
     }
 }
 
-function whisperJapanese ([System.IO.FileInfo] $file) {
+function WhisperJapanese ([System.IO.FileInfo] $file) {
     whisperLogic small Japanese $file
 }
 
-function whisperPathJapanese {
+function WhisperPathJapanese {
     Get-ChildItem -File | ForEach-Object {
         & wj $_
     }
 }
 
-function whisperJapaneseFile {
+function WhisperJapaneseFile {
     ccaf wj
 }
 

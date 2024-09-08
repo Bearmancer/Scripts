@@ -1,8 +1,8 @@
-function propolis {
+function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function soxDownsample {
+function SoxDownsample {
     $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
 
     foreach ($folder in $folders) {
@@ -65,7 +65,7 @@ function soxDownsample {
     }
 }
 
-function renameFileRed {
+function RenameFileRed {
     $rootDirectory = (Get-Item ..)
 
     Get-ChildItem -Recurse -File | ForEach-Object {
