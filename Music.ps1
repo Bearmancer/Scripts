@@ -115,57 +115,5 @@ function ConvertToMP3 {
     }
 }
 
-# function convertToMP3 {
-#     $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
-
-#     foreach ($folder in $folders) {
-#         Push-Location $folder
-    
-#         $currentPath = (Resolve-Path .).Path
-#         $original = "$currentPath\original"
-#         $converted = "$currentPath\converted"
-#         $problemFiles = @()
-    
-#         New-Item -ItemType Directory -Force -Path $original
-#         New-Item -ItemType Directory -Force -Path $converted
-    
-#         $files = Get-ChildItem *.flac
-    
-#         foreach ($file in $files) {
-#             $flacInfo = $(sox --i $file.FullName 2>&1)
-    
-#             if ($flacInfo -match "Precision\s*:\s*16-bit") {
-#                 ffmpeg -i $file.FullName -codec:a libmp3lame -b:a 320k "converted\$($file.BaseName).mp3"
-    
-#                 Move-Item -LiteralPath $file.FullName -Destination "$original"
-#             }
-                
-#             else {
-#                 $problemFiles += $file.BaseName
-#             }
-#         }
-    
-#         if ($problemFiles.Count -gt 0) {
-#             Write-Host "The following file's bit-depth and sample rate could not be determined:"
-#             foreach ($problemFile in $problemFiles) {
-#                 Write-Host "`n$($problemFile)"
-#             }
-#         }
-        
-#         if ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-#             while (Get-ChildItem -LiteralPath $converted) {
-#                 Get-ChildItem -LiteralPath $converted | Move-Item -Destination $currentPath
-#             }
-    
-#             while ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-#                 Remove-Item -Recurse -LiteralPath $converted
-#                 Remove-Item -Recurse -LiteralPath $original 
-#             }
-#         }
-    
-#         Pop-Location
-#     }
-# }
-
 Set-Alias -Name rfr -Value renameFileRed
 Set-Alias -Name sd -Value soxDownsample
