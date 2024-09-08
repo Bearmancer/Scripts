@@ -106,6 +106,7 @@ function ConvertToMP3 {
             }
             else {
                 Write-Host "$($_.FullName) is not a 16-bit FLAC file."
+                a
             }
         }
         elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
