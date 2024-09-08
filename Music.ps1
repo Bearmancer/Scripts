@@ -84,40 +84,32 @@ function renameFileRed {
 
 function ConvertToMP3 {
     $currentPath = (Resolve-Path .).Path
-    $parentPath = (Split-Path $currentPath -Parent)
-    $folderName = (Split-Path $currentPath -Leaf)
-    $newFolder = "$parentPath\$($folderName) (MP3)"
+    $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
 
-    New-Item -ItemType Directory -Force $newFolder
+    New-Item -ItemType Directory -Force -Path $newFolder
 
-    $folders = @(Get-ChildItem -Directory -Recurse) + (Get-Item .)
+    Get-ChildItem -File -Recurse | ForEach-Object {
+        $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart("\")
+        $destinationPath = Join-Path $newFolder $relativePath
+        $destinationFolder = Split-Path $destinationPath -Parent
 
-    foreach ($folder in $folders) {
-        $files = Get-ChildItem -File $folder
+        if (-not (Test-Path $destinationFolder)) {
+            New-Item -ItemType Directory -Force -Path $destinationFolder
+        }
 
-        foreach ($file in $files) {
-            $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart("\")
-            $destinationPath = Join-Path $newFolder $relativePath
-            $destinationFolder = Split-Path $destinationPath -Parent
+        if ($_.Extension -eq ".flac") {
+            $flacInfo = sox --i $_.FullName 2>&1
 
-            if (!(Test-Path $destinationFolder)) {
-                New-Item -ItemType Directory -Force $destinationFolder
+            if ($flacInfo -match "Precision\s*:\s*16-bit") {
+                $mp3Path = Join-Path $destinationFolder "$($_.BaseName).mp3"
+                ffmpeg -i $_.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
             }
-
-            if ($file.Extension -eq ".flac") {
-                $flacInfo = sox --i $file.FullName 2>&1
-
-                if ($flacInfo -match "Precision\s:\s16-bit") {
-                    $mp3Path = Join-Path $destinationFolder "$($file.BaseName).mp3"
-                    ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
-                }
-                else {
-                    Write-Host "Not a 16-bit FLAC file."
-                }
+            else {
+                Write-Host "$($_.FullName) is not a 16-bit FLAC file."
             }
-            elseif ($file.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
-                Copy-Item $file.FullName $destinationPath
-            }
+        }
+        elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
+            Copy-Item -Path $_.FullName -Destination $destinationPath
         }
     }
 }
