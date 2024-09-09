@@ -86,7 +86,7 @@ function MakeMP3Torrents {
     Get-ChildItem -Directory -Filter "*MP3*" -Recurse | ForEach-Object {
         Set-Location $_.FullName
         rfr
-        py -m py3createtorrent $_.Name
+        py -m py3createtorrent $_.FullName
     }
 
     Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
