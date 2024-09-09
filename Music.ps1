@@ -87,9 +87,8 @@ function MakeMP3Torrents {
         Set-Location $_.FullName
         rfr
         py -m py3createtorrent $_.FullName
+        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
     }
-
-    Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
 }
 
 function ConvertToMP3 {
