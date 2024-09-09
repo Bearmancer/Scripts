@@ -82,6 +82,16 @@ function RenameFileRed {
     }
 }
 
+function MakeMP3Torrents {
+    Get-ChildItem -Directory -Filter "*MP3*" -Recurse | ForEach-Object {
+        Set-Location $_.FullName
+        rfr
+        py -m py3createtorrent $_.Name
+    }
+
+    Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
+}
+
 function ConvertToMP3 {
     $currentPath = (Resolve-Path .).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
