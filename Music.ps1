@@ -124,4 +124,3 @@ function ConvertToMP3 {
 }
 
 Set-Alias -Name rfr -Value renameFileRed
-Set-Alias -Name sd -Value soxDownsample
