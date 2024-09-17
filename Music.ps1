@@ -95,31 +95,54 @@ function ConvertToMP3 {
     $currentPath = (Resolve-Path .).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
 
-    New-Item -ItemType Directory -Force -Path $newFolder
+    New-Item -ItemType Directory -Force -Path $newFolder | Out-Null
 
-    Get-ChildItem -File -Recurse | ForEach-Object {
-        $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart("\")
+    $flacFiles = Get-ChildItem -File -Recurse | Where-Object { $_.Extension -eq ".flac" }
+
+    foreach ($file in $flacFiles) {
+        $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart('\')
         $destinationPath = Join-Path $newFolder $relativePath
         $destinationFolder = Split-Path $destinationPath -Parent
+        $mp3Path = [System.IO.Path]::ChangeExtension($destinationPath, "mp3")
 
         if (-not (Test-Path $destinationFolder)) {
-            New-Item -ItemType Directory -Force -Path $destinationFolder
+            New-Item -ItemType Directory -Force -Path $destinationFolder | Out-Null
         }
 
-        if ($_.Extension -eq ".flac") {
-            $flacInfo = sox --i $_.FullName 2>&1
+        try {
+            & ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata 0 -id3v2_version 3 -b:a 320k $mp3Path -y
+        }
+        catch {
+            $errorMsg = "Exception while converting: $($file.FullName)"
+            Write-Host $errorMsg
+            $errorMsg | Out-File -FilePath "Error.log" -Encoding UTF8 -Append
+        }
+    }
 
-            if ($flacInfo -match "Precision\s*:\s*16-bit") {
-                $mp3Path = Join-Path $destinationFolder "$($_.BaseName).mp3"
-                ffmpeg -i $_.FullName -codec:a libmp3lame -map_metadata -1 -b:a 320k $mp3Path
-            }
-            else {
-                Write-Host "$($_.FullName) is not a 16-bit FLAC file."
-            }
+    $mp3Files = Get-ChildItem -Path $newFolder -Filter *.mp3 -Recurse | Select-Object -ExpandProperty FullName
+    $mp3Set = $mp3Files | ForEach-Object { 
+        $_.Substring($newFolder.Length).TrimStart('\') 
+    }
+
+    $missingMp3s = @($flacFiles | Where-Object {
+        $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart('\')
+        $mp3Path = [System.IO.Path]::ChangeExtension($relativePath, "mp3")
+        -not $mp3Set.Contains($mp3Path)
+    } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
+
+    if ($missingMp3s.Count -gt 0) {
+        $message = "-----------------`n`n`n`nThe following FLAC files were not converted to MP3:"
+        Write-Host $message
+        $message | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
+        
+        $missingMp3s | ForEach-Object { 
+            Write-Host $_ 
+            $_ | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
         }
-        elseif ($_.Extension -notin ".cue", ".m3u", ".md5", ".accurip", ".log") {
-            Copy-Item -Path $_.FullName -Destination $destinationPath
-        }
+    }
+    else {
+        Write-Host "-----------------`n`n`n`nAll FLAC Files Were Successfully Converted To MP3."
+        $successMessage | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
     }
 }
 
