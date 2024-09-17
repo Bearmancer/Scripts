@@ -142,7 +142,6 @@ function ConvertToMP3 {
     }
     else {
         Write-Host "-----------------`n`n`n`nAll FLAC Files Were Successfully Converted To MP3."
-        $successMessage | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
     }
 }
 
