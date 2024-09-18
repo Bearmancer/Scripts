@@ -156,7 +156,7 @@ function ConvertToMP3([String]$directory) {
 }
 
 function Remove-DuplicateEntries([string]$inputFile) {
-    $lines = Get-Content -Path $inputFile
+    $lines = $inputFile
     $uniqueLines = @()
     $lastFileNamePrefix = ""
     $i = 0
@@ -184,26 +184,32 @@ function Remove-DuplicateEntries([string]$inputFile) {
         }
     }
 
-    Set-Content -Path $inputFile -Value $uniqueLines -Encoding utf8
+    Set-Content -Path $inputFile -Value $uniqueLines
 }
 
 function Get-FlacMetadata([System.IO.DirectoryInfo]$directory) {
-    "" | Out-File -FilePath $outputFile -Encoding utf8
+    $outputFile = "$env:USERPROFILE\Desktop\$($directory.BaseName).txt"
 
     Get-ChildItem -Path $directory -Recurse -Filter *.flac | ForEach-Object {
         $ffprobeOutput = & ffprobe -v quiet -print_format json -show_format -show_streams $_
 
         $metadata = $ffprobeOutput | ConvertFrom-Json
-        $artist = $metadata.format.tags.artist
-        $composer = $metadata.format.tags.composer
+        $content = @(
+            "File name: $($_.BaseName)"
+        )
+
+        $composer = if ($metadata.format.tags.PSObject.Properties['composer']) { $metadata.format.tags.composer } else { "Unknown" }
+        $artist = if ($metadata.format.tags.PSObject.Properties['artist']) { $metadata.format.tags.artist } else { "Unknown" }
+        $disc = if ($metadata.format.tags.PSObject.Properties['disc']) { $metadata.format.tags.disc } else { "Unknown" }
 
         $content = @(
             "File name: $($_.BaseName)"
-            "Artist: $artist"
             "Composer: $composer"
+            "Artist: $artist"
+            "Disc Number: $disc"
         )
 
-        $content | Out-File -FilePath $outputFile -Append -Encoding utf8
+        $content | Out-File -FilePath $outputFile -Append
     }
 
     Remove-DuplicateEntries $outputFile
