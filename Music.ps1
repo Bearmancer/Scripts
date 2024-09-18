@@ -2,8 +2,8 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample {
-    $folders = @(Get-Location) + @(Get-ChildItem -Directory -Recurse)
+function SoxDownsample([String]$directory) {
+    $folders = @(Get-Location $directory) + @(Get-ChildItem -Directory -Recurse)
 
     foreach ($folder in $folders) {
         Push-Location $folder
@@ -65,42 +65,44 @@ function SoxDownsample {
     }
 }
 
-function RenameFileRed {
-    $rootDirectory = (Get-Item ..)
+function RenameFileRed([String]$directory) {
+    $rootDirectory = ((Get-Item $directory).Parent)
     $fileList = ""
+    $oldFileNames = "Old File Names:`n"
 
     Get-ChildItem -Recurse -File | ForEach-Object {
         $relativePath = $_.FullName.Substring($rootDirectory.FullName.Length)
+        Write-Host $relativePath
 
         if ($relativePath.Length -gt 180) {
+            $oldFileNames += $.FullName
+
             $newLength = 180 - ($relativePath.Length - $_.BaseName.Length)
             $newName = $_.BaseName.Substring(0, $newLength) + $_.Extension
             Rename-Item -LiteralPath $_.FullName -NewName $newName
 
             if ($fileList) {
-                $fileList += "|$($_.FullName)"
+                $fileList += "|$newName"
             }
             else {
-                $fileList = "filelist:`"$($_.FullName)"
+                $fileList = "filelist:`"$newName"
             }
         }
     }
 
-    $fileList += "`""
+    $output += $oldFileNames + "----------------------------------`n`nNew Files:---------------------------------" + $fileList + "`""
 
     $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($rootDirectory.BaseName).txt")
 
-    $fileList | Out-File $desktopPath
+    $output | Out-File $desktopPath
 }
 
-function ConvertToMP3 {
-    $currentPath = (Resolve-Path .).Path
+function ConvertToMP3([String]$directory) {
+    $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
-
-    New-Item -ItemType Directory -Force -Path $newFolder | Out-Null
-
-    $flacFiles = Get-ChildItem -File -Recurse | Where-Object { $_.Extension -eq ".flac" }
-
+    
+    $flacFiles = Get-ChildItem -LiteralPath $currentPath -Recurse 
+    
     foreach ($file in $flacFiles) {
         $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart('\')
         $destinationPath = Join-Path $newFolder $relativePath
@@ -145,19 +147,74 @@ function ConvertToMP3 {
     else {
         $successMessage = "-----------------`n`n`n`nAll FLAC Files for $currentPath were successfully converted to MP3."
         Write-Host ""
-        $successMessage | Out-File -FilePath "C:\Users\Lance\Desktop\$(Conversion - $($rootDirectory.BaseName)).log" -Encoding UTF8 -Append
-        Set-Location $destinationFolder; MakeMP3Torrents
+        $successMessage | Out-File -FilePath "C:\Users\Lance\Desktop\Conversion - $($currentPath.BaseName)).log" -Encoding UTF8 -Append
+        Set-Location $destinationFolder
+        MakeTorrents
     }
     
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function MakeMP3Torrents {
-    Get-ChildItem -Directory -Filter "*MP3*" -Recurse | ForEach-Object {
+function Remove-DuplicateEntries([string]$inputFile) {
+    $lines = Get-Content -Path $inputFile
+    $uniqueLines = @()
+    $lastFileNamePrefix = ""
+    $i = 0
+
+    while ($i -lt $lines.Length) {
+        if ($lines[$i] -match "^File name:") {
+            $fileName = $lines[$i] -replace "^File name: \d+\.\s*", ""
+
+            if ($fileName -match "^(\w+ \w+)") {
+                $fileNamePrefix = $matches[1]
+            }
+
+            if ($fileNamePrefix -ne $lastFileNamePrefix) {
+                $uniqueLines += $lines[$i]
+                if ($i + 1 -lt $lines.Length) { $uniqueLines += $lines[$i + 1] }
+                if ($i + 2 -lt $lines.Length) { $uniqueLines += $lines[$i + 2] }
+                $uniqueLines += ""
+
+                $lastFileNamePrefix = $fileNamePrefix
+                $i += 3
+            }
+            else {
+                $i += 3
+            }
+        }
+    }
+
+    Set-Content -Path $inputFile -Value $uniqueLines -Encoding utf8
+}
+
+function Get-FlacMetadata([System.IO.DirectoryInfo]$directory) {
+    "" | Out-File -FilePath $outputFile -Encoding utf8
+
+    Get-ChildItem -Path $directory -Recurse -Filter *.flac | ForEach-Object {
+        $ffprobeOutput = & ffprobe -v quiet -print_format json -show_format -show_streams $_
+
+        $metadata = $ffprobeOutput | ConvertFrom-Json
+        $artist = $metadata.format.tags.artist
+        $composer = $metadata.format.tags.composer
+
+        $content = @(
+            "File name: $($_.BaseName)"
+            "Artist: $artist"
+            "Composer: $composer"
+        )
+
+        $content | Out-File -FilePath $outputFile -Append -Encoding utf8
+    }
+
+    Remove-DuplicateEntries $outputFile
+}
+
+function MakeTorrents($directory) {
+    Get-ChildItem $directory -Directory | ForEach-Object {
         Set-Location $_.FullName
         rfr
         py -m py3createtorrent $_.FullName
-        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
+        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ $env:USERPROFILE\Desktop }
     }
 }
 
