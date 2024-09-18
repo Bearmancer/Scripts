@@ -101,7 +101,7 @@ function ConvertToMP3([String]$directory) {
     $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
     
-    $flacFiles = Get-ChildItem -LiteralPath $currentPath -Recurse 
+    $flacFiles = Get-ChildItem -Path $currentPath -Recurse | Where-Object Extension -eq ".flac"
     
     foreach ($file in $flacFiles) {
         $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart('\')
