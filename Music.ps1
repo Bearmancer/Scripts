@@ -67,6 +67,7 @@ function SoxDownsample {
 
 function RenameFileRed {
     $rootDirectory = (Get-Item ..)
+    $fileList = ""
 
     Get-ChildItem -Recurse -File | ForEach-Object {
         $relativePath = $_.FullName.Substring($rootDirectory.FullName.Length)
@@ -74,21 +75,22 @@ function RenameFileRed {
         if ($relativePath.Length -gt 180) {
             $newLength = 180 - ($relativePath.Length - $_.BaseName.Length)
             $newName = $_.BaseName.Substring(0, $newLength) + $_.Extension
-            $newFullName = Join-Path $_.Directory $newName
-
             Rename-Item -LiteralPath $_.FullName -NewName $newName
-            Write-Host "Old Name: $($_.FullName)`nNew Name: $newFullName`n-----------------------------"
+
+            if ($fileList) {
+                $fileList += "|$($_.FullName)"
+            }
+            else {
+                $fileList = "filelist:`"$($_.FullName)"
+            }
         }
     }
-}
 
-function MakeMP3Torrents {
-    Get-ChildItem -Directory -Filter "*MP3*" -Recurse | ForEach-Object {
-        Set-Location $_.FullName
-        rfr
-        py -m py3createtorrent $_.FullName
-        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
-    }
+    $fileList += "`""
+
+    $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($rootDirectory.BaseName).txt")
+
+    $fileList | Out-File $desktopPath
 }
 
 function ConvertToMP3 {
@@ -125,13 +127,13 @@ function ConvertToMP3 {
     }
 
     $missingMp3s = @($flacFiles | Where-Object {
-        $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart('\')
-        $mp3Path = [System.IO.Path]::ChangeExtension($relativePath, "mp3")
-        -not $mp3Set.Contains($mp3Path)
-    } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
+            $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart('\')
+            $mp3Path = [System.IO.Path]::ChangeExtension($relativePath, "mp3")
+            -not $mp3Set.Contains($mp3Path)
+        } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
 
     if ($missingMp3s.Count -gt 0) {
-        $message = "-----------------`n`n`n`nThe following FLAC files were not converted to MP3:"
+        $message = "-----------------`n`n`n`nThe following FLAC files for $currentPath were not converted to MP3:"
         Write-Host $message
         $message | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
         
@@ -141,7 +143,21 @@ function ConvertToMP3 {
         }
     }
     else {
-        Write-Host "-----------------`n`n`n`nAll FLAC Files Were Successfully Converted To MP3."
+        $successMessage = "-----------------`n`n`n`nAll FLAC Files for $currentPath were successfully converted to MP3."
+        Write-Host ""
+        $successMessage | Out-File -FilePath "C:\Users\Lance\Desktop\$(Conversion - $($rootDirectory.BaseName)).log" -Encoding UTF8 -Append
+        Set-Location $destinationFolder; MakeMP3Torrents
+    }
+    
+    & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
+}
+
+function MakeMP3Torrents {
+    Get-ChildItem -Directory -Filter "*MP3*" -Recurse | ForEach-Object {
+        Set-Location $_.FullName
+        rfr
+        py -m py3createtorrent $_.FullName
+        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ "D:\Dropbox\Lance" }
     }
 }
 
