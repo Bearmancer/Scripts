@@ -100,6 +100,7 @@ function RenameFileRed([String]$directory) {
 function ConvertToMP3([String]$directory) {
     $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
+    $logPath = "C:\Users\Lance\Desktop\Conversion Log.txt"
     
     $flacFiles = Get-ChildItem -Path $currentPath -Recurse | Where-Object Extension -eq ".flac"
     
@@ -119,7 +120,7 @@ function ConvertToMP3([String]$directory) {
         catch {
             $errorMsg = "Exception while converting: $($file.FullName)"
             Write-Host $errorMsg
-            $errorMsg | Out-File -FilePath "Error.log" -Encoding UTF8 -Append
+            $errorMsg | Out-File -FilePath $logPath -Append
         }
     }
 
@@ -135,19 +136,19 @@ function ConvertToMP3([String]$directory) {
         } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
 
     if ($missingMp3s.Count -gt 0) {
-        $message = "-----------------`n`n`n`nThe following FLAC files for $currentPath were not converted to MP3:"
+        $message = "The following FLAC files for $currentPath were not converted to MP3:"
         Write-Host $message
-        $message | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
+        $message | Out-File -FilePath $logPath -Append
         
         $missingMp3s | ForEach-Object { 
             Write-Host $_ 
-            $_ | Out-File -FilePath "Conversion.log" -Encoding UTF8 -Append
+            $_ | Out-File -FilePath $logPath -Append
         }
     }
     else {
-        $successMessage = "-----------------`n`n`n`nAll FLAC Files for $currentPath were successfully converted to MP3."
-        Write-Host ""
-        $successMessage | Out-File -FilePath "C:\Users\Lance\Desktop\Conversion - $($currentPath.BaseName)).log" -Encoding UTF8 -Append
+        $successMessage = "All FLAC Files for $currentPath were successfully converted to MP3.`n`n------------------"
+        $successMessage | Out-File -FilePath $logPath -Append
+
         Set-Location $destinationFolder
         MakeTorrents
     }
