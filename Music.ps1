@@ -158,10 +158,6 @@ function ConvertToMP3([System.IO.DirectoryInfo]$directory) {
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function GetMusicMetadata([System.IO.DirectoryInfo]$directory) {
-    & "C:\Users\Lance\Documents\Powershell\Custom\Metadata.ps1" $directory
-}
-
 function MakeTorrents($directory) {
     Get-ChildItem $directory -Directory | ForEach-Object {
         rfr $_.FullName
