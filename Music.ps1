@@ -165,24 +165,20 @@ function Remove-DuplicateEntries([String]$inputFile) {
     $i = 0
 
     for ($i = 0; $i -lt $lines.Length; $i += 4) {
-        if ($lines[$i] -match "^File name:") {
-            $fileName = $lines[$i]
+        $fileName = $lines[$i]
+        $fileNamePrefix = $fileName -replace '^File name\:\s*\d*\.*\[*\(*\s*', ''
+    
+        $parts = $fileNamePrefix.Split(' ')
 
-            $fileNamePrefix = $fileName -replace '^File name\:\s*\d*\.*\[*\(*\s*', ''
-            Write-Host "`$filenameprefix is $fileNamePrefix"
-
-            $parts = $fileNamePrefix.Split(' ')
-            elseif ($parts.Length -ge 3) { $fileNamePrefix = $parts[0..2] -join ' ' }
-            elseif ($parts.Length -ge 2) { $fileNamePrefix = $parts[0..1] -join ' ' }
-            else { $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]; continue }
-
-            if ($fileNamePrefix -ne $lastFileNamePrefix) {
-                $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]
-
-                $lastFileNamePrefix = $fileNamePrefix
-            }
-            else { Write-Host "Skipping duplicate entry" }
+        if ($parts.Length -ge 3) { $fileNamePrefix = $parts[0..2] -join ' ' }
+        elseif ($parts.Length -ge 2) { $fileNamePrefix = $parts[0..1] -join ' ' }
+        else { $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]; continue }
+    
+        if ($fileNamePrefix -ne $lastFileNamePrefix) {
+            $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]
+            $lastFileNamePrefix = $fileNamePrefix
         }
+        else { Write-Host "Skipping duplicate entry for $fileName" }
     }
 
     Set-Content -Path $inputFile -Value $uniqueLines
