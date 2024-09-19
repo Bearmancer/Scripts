@@ -68,7 +68,7 @@ function SoxDownsample([System.IO.DirectoryInfo]$directory) {
 function RenameFileRed([System.IO.DirectoryInfo]$directory) {
     $rootDirectory = ((Get-Item $directory).Parent)
     $fileList = @()
-    $oldFileNames = "Old File Names:`n"
+    $oldFileNames = "Old File Names:`n`n"
 
     Get-ChildItem -Path $directory.FullName -Recurse -File | ForEach-Object {
         $relativePath = $_.FullName.Substring($rootDirectory.FullName.Length)
@@ -81,19 +81,21 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory) {
 
             Rename-Item $_.FullName -NewName $newName
 
-            $fileList += $newName
+            $fileList += [System.IO.Path]::Combine($_.DirectoryName, $newName)
         }
     }
 
-    if ($fileList.Count -eq 0) {
+    if ($fileList.Count -gt 0) {
         $output += $oldFileNames
-        $output += "---------------------------------`nNew File Names:`n"
-        $output += "filelist: " + ($fileList -join "|") + "`n"
+        $output += "---------------------------------`nNew File Names:`n`n"
+        $output += "filelist:`"" + ($fileList -join "|") + "`""
         $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($directory.BaseName).txt")
         $output | Out-File $desktopPath
+
+        Write-Host "Files have been renamed for $directory."
     }
     else {
-        New-Item ([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "No Files Renamed in $($directory.BaseName).txt"))
+        Write-Host "No files renamed for $directory."
     }
 }
 
@@ -162,29 +164,25 @@ function Remove-DuplicateEntries([String]$inputFile) {
     $lastFileNamePrefix = ""
     $i = 0
 
-    while ($i -lt $lines.Length) {
+    for ($i = 0; $i -lt $lines.Length; $i += 4) {
         if ($lines[$i] -match "^File name:") {
             $fileName = $lines[$i]
 
-            $fileNamePrefix = $fileName -replace '^File name:\s*', ''
-            $fileNamePrefix = $fileNamePrefix.Split(' ')[0..3] -join ' '
+            $fileNamePrefix = $fileName -replace '^File name\:\s*\d*\.*\[*\(*\s*', ''
+            Write-Host "`$filenameprefix is $fileNamePrefix"
+
+            $parts = $fileNamePrefix.Split(' ')
+            elseif ($parts.Length -ge 3) { $fileNamePrefix = $parts[0..2] -join ' ' }
+            elseif ($parts.Length -ge 2) { $fileNamePrefix = $parts[0..1] -join ' ' }
+            else { $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]; continue }
 
             if ($fileNamePrefix -ne $lastFileNamePrefix) {
-                Write-Host "Inside not equal block"
-                $uniqueLines += $lines[$i]
-                Write-Host "Added: $($lines[$i])"
-                if ($i + 1 -lt $lines.Length) { $uniqueLines += $lines[$i + 1] }
-                if ($i + 2 -lt $lines.Length) { $uniqueLines += $lines[$i + 2] }
-                if ($i + 3 -lt $lines.Length) { $uniqueLines += $lines[$i + 3] }
-                
-                $uniqueLines += ""
+                $uniqueLines += $lines[$i..[math]::Min($i + 3, $lines.Length - 1)]
 
                 $lastFileNamePrefix = $fileNamePrefix
             }
             else { Write-Host "Skipping duplicate entry" }
         }
-        
-        $i += 4
     }
 
     Set-Content -Path $inputFile -Value $uniqueLines
