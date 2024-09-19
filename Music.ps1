@@ -2,7 +2,7 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([String]$directory) {
+function SoxDownsample([System.IO.DirectoryInfo]$directory) {
     $folders = @(Get-Location $directory) + @(Get-ChildItem -Directory -Recurse)
 
     foreach ($folder in $folders) {
@@ -65,39 +65,39 @@ function SoxDownsample([String]$directory) {
     }
 }
 
-function RenameFileRed([String]$directory) {
+function RenameFileRed([System.IO.DirectoryInfo]$directory) {
     $rootDirectory = ((Get-Item $directory).Parent)
-    $fileList = ""
+    $fileList = @()
     $oldFileNames = "Old File Names:`n"
 
-    Get-ChildItem -Recurse -File | ForEach-Object {
+    Get-ChildItem -Path $directory.FullName -Recurse -File | ForEach-Object {
         $relativePath = $_.FullName.Substring($rootDirectory.FullName.Length)
-        Write-Host $relativePath
 
         if ($relativePath.Length -gt 180) {
-            $oldFileNames += $.FullName
+            $oldFileNames += "$($_.FullName)`n"
 
             $newLength = 180 - ($relativePath.Length - $_.BaseName.Length)
             $newName = $_.BaseName.Substring(0, $newLength) + $_.Extension
-            Rename-Item -LiteralPath $_.FullName -NewName $newName
 
-            if ($fileList) {
-                $fileList += "|$newName"
-            }
-            else {
-                $fileList = "filelist:`"$newName"
-            }
+            Rename-Item $_.FullName -NewName $newName
+
+            $fileList += $newName
         }
     }
 
-    $output += $oldFileNames + "----------------------------------`n`nNew Files:---------------------------------" + $fileList + "`""
-
-    $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($rootDirectory.BaseName).txt")
-
-    $output | Out-File $desktopPath
+    if ($fileList.Count -eq 0) {
+        $output += $oldFileNames
+        $output += "---------------------------------`nNew File Names:`n"
+        $output += "filelist: " + ($fileList -join "|") + "`n"
+        $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($directory.BaseName).txt")
+        $output | Out-File $desktopPath
+    }
+    else {
+        New-Item ([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "No Files Renamed in $($directory.BaseName).txt"))
+    }
 }
 
-function ConvertToMP3([String]$directory) {
+function ConvertToMP3([System.IO.DirectoryInfo]$directory) {
     $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
     $logPath = "C:\Users\Lance\Desktop\Conversion Log.txt"
@@ -156,33 +156,35 @@ function ConvertToMP3([String]$directory) {
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function Remove-DuplicateEntries([string]$inputFile) {
-    $lines = $inputFile
+function Remove-DuplicateEntries([String]$inputFile) {
+    $lines = Get-Content $inputFile
     $uniqueLines = @()
     $lastFileNamePrefix = ""
     $i = 0
 
     while ($i -lt $lines.Length) {
         if ($lines[$i] -match "^File name:") {
-            $fileName = $lines[$i] -replace "^File name: \d+\.\s*", ""
+            $fileName = $lines[$i]
 
-            if ($fileName -match "^(\w+ \w+)") {
-                $fileNamePrefix = $matches[1]
-            }
+            $fileNamePrefix = $fileName -replace '^File name:\s*', ''
+            $fileNamePrefix = $fileNamePrefix.Split(' ')[0..3] -join ' '
 
             if ($fileNamePrefix -ne $lastFileNamePrefix) {
+                Write-Host "Inside not equal block"
                 $uniqueLines += $lines[$i]
+                Write-Host "Added: $($lines[$i])"
                 if ($i + 1 -lt $lines.Length) { $uniqueLines += $lines[$i + 1] }
                 if ($i + 2 -lt $lines.Length) { $uniqueLines += $lines[$i + 2] }
+                if ($i + 3 -lt $lines.Length) { $uniqueLines += $lines[$i + 3] }
+                
                 $uniqueLines += ""
 
                 $lastFileNamePrefix = $fileNamePrefix
-                $i += 3
             }
-            else {
-                $i += 3
-            }
+            else { Write-Host "Skipping duplicate entry" }
         }
+        
+        $i += 4
     }
 
     Set-Content -Path $inputFile -Value $uniqueLines
@@ -218,8 +220,7 @@ function Get-FlacMetadata([System.IO.DirectoryInfo]$directory) {
 
 function MakeTorrents($directory) {
     Get-ChildItem $directory -Directory | ForEach-Object {
-        Set-Location $_.FullName
-        rfr
+        rfr $_.FullName
         py -m py3createtorrent $_.FullName
         Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ $env:USERPROFILE\Desktop }
     }
