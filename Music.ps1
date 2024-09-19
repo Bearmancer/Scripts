@@ -158,7 +158,7 @@ function ConvertToMP3([System.IO.DirectoryInfo]$directory) {
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function Remove-DuplicateEntries([String]$inputFile) {
+function RemoveDuplicateEntries([String]$inputFile) {
     $lines = Get-Content $inputFile
     $uniqueLines = @()
     $lastFileNamePrefix = ""
@@ -184,10 +184,10 @@ function Remove-DuplicateEntries([String]$inputFile) {
     Set-Content -Path $inputFile -Value $uniqueLines
 }
 
-function Get-FlacMetadata([System.IO.DirectoryInfo]$directory) {
+function GetMusicMetadata([System.IO.DirectoryInfo]$directory) {
     $outputFile = "$env:USERPROFILE\Desktop\$($directory.BaseName).txt"
 
-    Get-ChildItem -Path $directory -Recurse -Filter *.flac | ForEach-Object {
+    Get-ChildItem -Path $directory -Recurse -Include *.flac, *.mp3 | ForEach-Object {
         $ffprobeOutput = & ffprobe -v quiet -print_format json -show_format -show_streams $_
 
         $metadata = $ffprobeOutput | ConvertFrom-Json
@@ -203,13 +203,13 @@ function Get-FlacMetadata([System.IO.DirectoryInfo]$directory) {
             "File name: $($_.BaseName)"
             "Composer: $composer"
             "Artist: $artist"
-            "Disc Number: $disc"
+            "Disc Number: $disc`n"
         )
 
         $content | Out-File -FilePath $outputFile -Append
     }
 
-    Remove-DuplicateEntries $outputFile
+    RemoveDuplicateEntries $outputFile
 }
 
 function MakeTorrents($directory) {
