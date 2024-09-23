@@ -2,7 +2,7 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([System.IO.DirectoryInfo]$directory) {
+function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     $folders = @(Get-Location $directory) + @(Get-ChildItem -Directory -Recurse)
 
     foreach ($folder in $folders) {
@@ -65,7 +65,7 @@ function SoxDownsample([System.IO.DirectoryInfo]$directory) {
     }
 }
 
-function RenameFileRed([System.IO.DirectoryInfo]$directory) {
+function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     $rootDirectory = ((Get-Item $directory).Parent)
     $fileList = @()
     $oldFileNames = "Old File Names:`n`n"
@@ -92,14 +92,14 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory) {
         $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($directory.BaseName).txt")
         $output | Out-File $desktopPath
 
-        Write-Host "Files have been renamed for $directory."
+        Write-Host "Files have been renamed for $directory.`n--------------------------------"
     }
     else {
-        Write-Host "No files renamed for $directory."
+        Write-Host "No files renamed for $directory.`n--------------------------------"
     }
 }
 
-function ConvertToMP3([System.IO.DirectoryInfo]$directory) {
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
     $logPath = "C:\Users\Lance\Desktop\Conversion Log.txt"
@@ -158,12 +158,10 @@ function ConvertToMP3([System.IO.DirectoryInfo]$directory) {
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function MakeTorrents($directory) {
-    Get-ChildItem $directory -Directory | ForEach-Object {
-        rfr $_.FullName
-        py -m py3createtorrent $_.FullName
-        Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ $env:USERPROFILE\Desktop }
-    }
+function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
+    rfr $directory
+    py -m py3createtorrent $directory
+    Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ $env:USERPROFILE\Desktop }
 }
 
 Set-Alias -Name rfr -Value renameFileRed
