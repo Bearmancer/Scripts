@@ -2,7 +2,7 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
+function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     $folders = @(Get-Location $directory) + @(Get-ChildItem -Directory -Recurse)
 
     foreach ($folder in $folders) {
@@ -65,8 +65,8 @@ function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     }
 }
 
-function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
-    $rootDirectory = ((Get-Item $directory).Parent)
+function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    $rootDirectory = $directory.Parent
     $fileList = @()
     $oldFileNames = "Old File Names:`n`n"
 
@@ -99,7 +99,7 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     }
 }
 
-function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     $currentPath = (Resolve-Path $directory).Path
     $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
     $logPath = "C:\Users\Lance\Desktop\Conversion Log.txt"
@@ -158,7 +158,7 @@ function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
     & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
 }
 
-function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Location)) {
+function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     rfr $directory
     py -m py3createtorrent $directory
     Get-ChildItem *.torrent | ForEach-Object { Move-Item $_ $env:USERPROFILE\Desktop }
