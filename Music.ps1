@@ -2,8 +2,8 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    $folders = @(Get-Location $directory) + @(Get-ChildItem -Directory -Recurse)
+function SoxDownsample([System.IO.DirectoryInfo[]]$folders = @($(Get-Item (Get-Location)))) {
+    $folders.Add(@(Get-ChildItem -Directory -Recurse))
 
     foreach ($folder in $folders) {
         Push-Location $folder
@@ -13,56 +13,59 @@ function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loc
         $converted = "$currentPath\converted"
         $problemFiles = @()
 
-        New-Item -ItemType Directory -Force -Path $original
-        New-Item -ItemType Directory -Force -Path $converted
+        New-Item -ItemType Directory $original -Force
+        New-Item -ItemType Directory $converted -Force 
 
         $files = Get-ChildItem *.flac
 
         foreach ($file in $files) {
-            $flacInfo = $(sox --i $file.FullName 2>&1)
+            $flacInfo = & sox --i $file.FullName 2>&1 | Out-String
 
-            if ($flacInfo -match "Precision\s*:\s*24-bit") {
-                if ($flacInfo -match "Sample Rate\s*:\s*96000" -or $flacInfo -match "Sample Rate\s*:\s*192000") {
-                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" rate -v -L 48000 dither
-                }
-                elseif ($flacInfo -match "Sample Rate\s*:\s*88200" -or $flacInfo -match "Sample Rate\s*:\s*176400") {
-                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" rate -v -L 44100 dither
-                }
+            $precision = if ($flacInfo -match "Precision\s*:\s*(\d+-bit)") { $matches[1] } 
+            else { Write-Host "Can't determine bit rate"; $problemFiles.Add($file.BaseName); Continue }
 
-                elseif ($flacInfo -match "Sample Rate\s*:\s*44100" -or $flacInfo -match "Sample Rate\s*:\s*48000") {
-                    sox -S $file.FullName -R -G -b 16 "converted\$($file.Name)" dither
-                }
+            $sampleRate = @("192000", "176400", "96000", "88200", "48000", "44100") | Where-Object { $flacInfo -match "Sample Rate\s*:\s*$_" } | Select-Object -First 1
 
-                Move-Item -LiteralPath $file.FullName -Destination "$original"
+            $actions = @{
+                "24-bit, 96000"  = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" rate -v -L 48000 dither }
+                "24-bit, 192000" = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" rate -v -L 48000 dither }
+                "24-bit, 88200"  = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" rate -v -L 44100 dither }
+                "24-bit, 176400" = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" rate -v -L 44100 dither }
+                "24-bit, 44100"  = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" dither }
+                "24-bit, 48000"  = { sox -S $file.FullName -R -G -b 16 "$converted\$($file.Name)" dither }
+                "16-bit, 44100"  = { Write-Host "File is already 16-bit."; Continue }
+                "16-bit, 48000"  = { Write-Host "File is already 16-bit."; Continue }
             }
-            elseif ($flacInfo -match "Precision\s*:\s*16-bit" -and (($flacInfo -match "Sample Rate\s*:\s*44100") -or ($flacInfo -match "Sample Rate\s*:\s*48000"))) {
-                Write-Host "File is already 16-bit."
+
+            if ($precision -and $sampleRate) {
+                $actionKey = "$precision, $sampleRate"
+                if ($actions.ContainsKey($actionKey)) {
+                    & $actions[$actionKey]
+                    Move-Item -LiteralPath $file.FullName -Destination "$original"
+                }
+                else { Write-Host "Precision and bit rate is incompatibile at $precision and $sampleRate." }
             }
             else {
-                $problemFiles += $file.BaseName
+                $problemFiles.Add($file.BaseName)
             }
         }
-
-        if ($problemFiles.Count -gt 0) {
-            Write-Host "The following file's bit-depth and sample rate could not be determined:"
-            foreach ($problemFile in $problemFiles) {
-                Write-Host "`n$($problemFile.BaseName)"
-            }
-        }
-    
-        if ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-            while (Get-ChildItem -LiteralPath $converted) {
-                Get-ChildItem -LiteralPath $converted | Move-Item -Destination $currentPath
-            }
-
-            while ((Test-Path -LiteralPath $converted) -or (Test-Path -LiteralPath $original)) {
-                Remove-Item -Recurse -LiteralPath $converted
-                Remove-Item -Recurse -LiteralPath $original 
-            }
-        }
-
-        Pop-Location
     }
+
+    if ($problemFiles.Count -gt 0) {
+        Write-Host "The following file's bit-depth and sample rate could not be determined:"
+        $problemFiles | ForEach-Object { Write-Host "`n$_" }
+    }
+    
+    while (Get-ChildItem -LiteralPath $converted) {
+        Get-ChildItem -LiteralPath $converted | Move-Item -Destination $currentPath
+    }
+
+    while ((Test-Path -LiteralPath $converted)) {
+        Remove-Item -Recurse -LiteralPath $converted
+        # Remove-Item -Recurse -LiteralPath $original 
+    }
+
+    Pop-Location
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
@@ -70,92 +73,115 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loc
     $fileList = @()
     $oldFileNames = "Old File Names:`n`n"
 
-    Get-ChildItem -Path $directory.FullName -Recurse -File | ForEach-Object {
+    Get-ChildItem $directory.FullName -Recurse -File | ForEach-Object {
         $relativePath = $_.FullName.Substring($rootDirectory.FullName.Length)
 
         if ($relativePath.Length -gt 180) {
-            $oldFileNames += "$($_.FullName)`n"
+            $oldFileNames.Add("$($_)`n")
 
             $newLength = 180 - ($relativePath.Length - $_.BaseName.Length)
             $newName = $_.BaseName.Substring(0, $newLength) + $_.Extension
 
             Rename-Item $_.FullName -NewName $newName
 
-            $fileList += [System.IO.Path]::Combine($_.DirectoryName, $newName)
+            $fileList.Add([System.IO.Path]::Combine($_.DirectoryName, $newName))
         }
     }
 
     if ($fileList.Count -gt 0) {
-        $output += $oldFileNames
-        $output += "---------------------------------`nNew File Names:`n`n"
-        $output += "filelist:`"" + ($fileList -join "|") + "`""
+        $output = "$oldFileNames`n-----------------------`nNew File Names:`nfilelist:`"$($fileList -join "|")`""
         $desktopPath = [System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "Files Renamed - $($directory.BaseName).txt")
-        $output | Out-File $desktopPath
+        Add-Content $desktopPath $output
 
-        Write-Host "Files have been renamed for $directory.`n--------------------------------"
+        Write-Host "Files have been renamed for $directory.`n-----------------------"
     }
     else {
-        Write-Host "No files renamed for $directory.`n--------------------------------"
+        Write-Host "No files renamed for $directory.`n-----------------------"
     }
 }
 
-function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+function MP3Conversion([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     $currentPath = (Resolve-Path $directory).Path
-    $newFolder = "$((Split-Path $currentPath -Parent))\$((Split-Path $currentPath -Leaf)) (MP3)"
     $logPath = "C:\Users\Lance\Desktop\Conversion Log.txt"
-    
-    $flacFiles = Get-ChildItem -Path $currentPath -Recurse | Where-Object Extension -eq ".flac"
-    
-    foreach ($file in $flacFiles) {
-        $relativePath = $file.FullName.Substring($currentPath.Length).TrimStart('\')
-        $destinationPath = Join-Path $newFolder $relativePath
-        $destinationFolder = Split-Path $destinationPath -Parent
-        $mp3Path = [System.IO.Path]::ChangeExtension($destinationPath, "mp3")
+    $outputPath = [System.IO.Path]::Combine("C:\Users\Lance\Desktop\Torrents\MP3", "$($directory.Name) (Converted)")
 
-        if (-not (Test-Path $destinationFolder)) {
-            New-Item -ItemType Directory -Force -Path $destinationFolder | Out-Null
-        }
+    New-Item -ItemType Directory $outputPath -Force
 
+    Get-ChildItem $directory *.flac -Recurse | ForEach-Object {
+        $relativePath = $_.FullName.Substring($directory.FullName.Length).TrimStart('\')
+        $newFLACPath = [System.IO.Path]::Combine($outputPath, $relativePath)
+        $newFLACDirectory = [System.IO.Path]::GetDirectoryName($newFLACPath)
+
+        if (-not (Test-Path $newFLACDirectory)) { New-Item -ItemType Directory $newFLACDirectory -Force }
+
+        Copy-Item $_ $newFLACDirectory
+
+        metaflac --dont-use-padding --remove --block-type=PICTURE,PADDING $newFLACPath
+        metaflac --add-padding=8192 $newFLACPath
+    
+        $mp3Path = [System.IO.Path]::ChangeExtension($newFLACPath, "mp3")
+        $mp3Dir = [System.IO.Path]::GetDirectoryName($mp3Path)
+    
+        if (-not (Test-Path $mp3Dir)) { New-Item -ItemType Directory $mp3Dir -Force }
+    
         try {
-            & ffmpeg -i $file.FullName -codec:a libmp3lame -map_metadata 0 -id3v2_version 3 -b:a 320k $mp3Path -y
+            & ffmpeg -i $newFLACPath -codec:a libmp3lame -map_metadata 0 -id3v2_version 3 -b:a 320k $mp3Path -y
         }
         catch {
-            $errorMsg = "Exception while converting: $($file.FullName)"
+            $errorMsg = "Exception while converting: $newFLACPath"
             Write-Host $errorMsg
-            $errorMsg | Out-File -FilePath $logPath -Append
+            Add-Content $logPath $errorMsg
         }
-    }
-
-    $mp3Files = Get-ChildItem -Path $newFolder -Filter *.mp3 -Recurse | Select-Object -ExpandProperty FullName
-    $mp3Set = $mp3Files | ForEach-Object { 
-        $_.Substring($newFolder.Length).TrimStart('\') 
-    }
-
-    $missingMp3s = @($flacFiles | Where-Object {
-            $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart('\')
-            $mp3Path = [System.IO.Path]::ChangeExtension($relativePath, "mp3")
-            -not $mp3Set.Contains($mp3Path)
-        } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
-
-    if ($missingMp3s.Count -gt 0) {
-        $message = "The following FLAC files for $currentPath were not converted to MP3:"
-        Write-Host $message
-        $message | Out-File -FilePath $logPath -Append
-        
-        $missingMp3s | ForEach-Object { 
-            Write-Host $_ 
-            $_ | Out-File -FilePath $logPath -Append
-        }
-    }
-    else {
-        $successMessage = "All FLAC Files for $currentPath were successfully converted to MP3.`n`n------------------"
-        $successMessage | Out-File -FilePath $logPath -Append
-
-        Set-Location $destinationFolder
-        MakeTorrents
-    }
     
-    & robocopy $currentPath $newFolder /E /XF *.log *.cue *.md5 *.flac
+        Remove-Item $newFLACPath
+    }
+
+    $flacFiles = Get-ChildItem $currentPath *.flac -Recurse 
+    $mp3Files = Get-ChildItem $outputPath *.mp3 -Recurse | Select-Object -ExpandProperty FullName
+    
+    {
+        $mp3Set = $mp3Files | ForEach-Object { 
+            $_.Substring($outputPath.Length).TrimStart('\') 
+        }
+
+        $missingMp3s = @($flacFiles | Where-Object {
+                $relativePath = $_.FullName.Substring($currentPath.Length).TrimStart('\')
+                $mp3Path = [System.IO.Path]::ChangeExtension($relativePath, "mp3")
+                -not $mp3Set.Contains($mp3Path)
+            } | ForEach-Object { $_.FullName.Substring($currentPath.Length).TrimStart('\') })
+
+        if ($missingMp3s.Count -gt 0) {
+            $message = "Problematic Files:`nfilelist:`"$($missingMp3s -join "|")`"" 
+            Write-Host $message
+            Add-Content $logPath $message 
+        }
+        else {
+            $message = "All FLAC Files for $currentPath were successfully converted to MP3.`n------------------`n"
+            Write-Host $message
+            Add-Content $logPath $message
+
+            RenameFileRed $outputPath
+        }
+    }
+}
+
+function CheckEmbeddedImage($flacFile) {
+    $exifTool = "C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
+    $output = & $exifTool -PictureWidth -PictureHeight -s -s -s $flacFile 2>&1
+
+    if (!(Test-Path $flacFile) -or ($output -match "Warning")) {
+        Write-Host "Could not process: $flacFile"
+        return 999
+    }
+
+    $dimensions = & $exifTool -PictureWidth -PictureHeight -s -s -s $flacFile
+    $imageSize = & $exifTool -PictureLength -s -s -s $flacFile | ForEach-Object { [math]::Round($_ / 1KB, 2) }
+
+    if ($dimensions -and $imageSize -gt 1024) {
+        Write-Host "$flacFile has an image greater than 1MB."
+    } 
+
+    return $imageSize
 }
 
 function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {

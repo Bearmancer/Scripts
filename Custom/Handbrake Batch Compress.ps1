@@ -3,7 +3,7 @@ param (
     [string]$FolderPath
 )
 
-$mkvFiles = Get-ChildItem $FolderPath -Recurse -Filter  *.mkv
+$mkvFiles = Get-ChildItem $FolderPath -Recurse *.mkv
 
 foreach ($file in $mkvFiles) {
     $inputFilePath = $file.FullName

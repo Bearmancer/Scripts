@@ -29,7 +29,7 @@ function CallCmdletAllSubFolders($command) {
 }
 
 function CallCmdletAllFiles($command) {
-    $files = Get-ChildItem -Path $directoryPath -File
+    $files = Get-ChildItem $directoryPath -File
 
     foreach ($file in $files) {
         Start-Process -FilePath pwsh.exe -ArgumentList "-NoExit", "-Command &$command '$($file)'"
@@ -51,7 +51,7 @@ function ExtractCommentaryAudio() {
         }
     }
 
-    Get-ChildItem -Filter *.flac | ForEach-Object { Write-Host $_.Name }
+    Get-ChildItem *.flac | ForEach-Object { Write-Host $_.Name }
 }
 
 function ListDirectories {

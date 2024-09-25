@@ -11,17 +11,17 @@ $nonRemuxable = @()
 function Convert-DVDToMKV([System.IO.FileSystemInfo]$file, [System.IO.FileSystemInfo]$dvdFolder) { 
     # $outputPath = Join-Path -Path $dvdPath.FullName -ChildPath "Converted"
 
-    # New-Item -ItemType Directory -Force -Path $outputPath
+    # New-Item -ItemType Directory $outputPath -Force
 
     & "C:\Program Files (x86)\MakeMKV\makemkvcon64.exe" mkv file:"$($file.FullName)" all $dvdPath --minlength=180
 }
 
-Get-ChildItem -Path $rootDir -Directory | ForEach-Object {
+Get-ChildItem $rootDir -Directory | ForEach-Object {
     $dvdPath = $_
 
     Write-Host "---------------------------------------------`nNow converting $($dvdPath)"
 
-    $remuxable = Get-ChildItem -Path $dvdPath -File -Recurse -Include VIDEO_TS.IFO, index.bdmv
+    $remuxable = Get-ChildItem $dvdPath -File -Recurse -Include VIDEO_TS.IFO, index.bdmv
 
     if ($_.FullName -match "BACKUP") { continue }
     

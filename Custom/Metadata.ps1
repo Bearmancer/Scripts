@@ -5,7 +5,7 @@ param (
 
 $outputFile = "$env:USERPROFILE\Desktop\$($directory.BaseName).txt"
 
-Get-ChildItem -Path $directory -Recurse -Include *.flac, *.mp3 | ForEach-Object {
+Get-ChildItem $directory -Recurse -Include *.flac, *.mp3 | ForEach-Object {
     $ffprobeOutput = & ffprobe -v quiet -print_format json -show_format -show_streams $_
 
     $metadata = $ffprobeOutput | ConvertFrom-Json
@@ -51,5 +51,5 @@ function RemoveDuplicateEntries([String]$inputFile) {
         }
     }
 
-    Set-Content -Path $inputFile -Value $uniqueLines
+    Set-Content $inputFile $uniqueLines
 }

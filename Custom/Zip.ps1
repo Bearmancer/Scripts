@@ -1,5 +1,5 @@
 function ZipFolders() {
-    ZipFoldersLogic -path (Get-Location)
+    ZipFoldersLogic (Get-Location)
 }
 
 function ZipFoldersLogic($path) {
@@ -9,7 +9,7 @@ function ZipFoldersLogic($path) {
 
     Write-Host "Now zipping up $($path.BaseName)"
 
-    New-Item -ItemType Directory -Path $zipFilePath -Force
+    New-Item -ItemType Directory $zipFilePath -Force
 
     $allItems = Get-ChildItem -LiteralPath $path.FullName -Recurse
 

@@ -23,7 +23,7 @@ function ExtractSACDs {
             $multiChannelParentFolder = "{0} [SACD - 5.1 - 24-88.1]" -f $parentFolder
 
             if (-not (Test-Path -LiteralPath $multiChannelParentFolder)) {
-                New-Item -ItemType Directory -Path $multiChannelParentFolder
+                New-Item -ItemType Directory $multiChannelParentFolder
             }
 
             #Convert ISO to DFF Files
@@ -40,7 +40,7 @@ function ExtractSACDs {
             $stereoParentFolder = "{0} [SACD - 2.0 - 24-88.1]" -f $parentFolder
 
             if (-not (Test-Path -LiteralPath $stereoParentFolder)) {
-                New-Item -ItemType Directory -Path $stereoParentFolder
+                New-Item -ItemType Directory $stereoParentFolder
             }
 
             #Convert ISO to DFF Files
@@ -76,7 +76,7 @@ function GetDiscLocation([System.IO.DirectoryInfo]$parentFolder, $discNumber) {
             
     if ($discNumber -gt 0) {
         $subDirectoryPath = "{0}/Disc {1}" -f $parentFolder.FullName, $discNumber
-        New-Item -ItemType Directory -Path $subDirectoryPath -Force | Out-Null
+        New-Item -ItemType Directory $subDirectoryPath -Force | Out-Null
         $discLocation = $subDirectoryPath
     }
 
@@ -150,19 +150,19 @@ function CheckDFFandFLAC([System.IO.FileSystemInfo] $directory) {
 }
 
 function Move-ISO {
-    $folders = Get-ChildItem -Recurse -Filter "*.iso" |
+    $folders = Get-ChildItem -Recurse *.iso |
     Group-Object Directory | 
     Where-Object { $_.Count -gt 1 } |
     Select-Object -ExpandProperty Name
 
     foreach ($folder in $folders) {
-        $isoFiles = Get-ChildItem -Path $folder -Filter "*.iso"
+        $isoFiles = Get-ChildItem $folder *.iso
 
         $index = 1
         foreach ($isoFile in $isoFiles) {
             $newFolder = Join-Path -Path $folder -ChildPath "Disc $index"
-            New-Item -ItemType Directory -Path $newFolder -Force
-            Move-Item -Path $isoFile.FullName -Destination $newFolder
+            New-Item -ItemType Directory $newFolder -Force
+            Move-Item $isoFile.FullName $newFolder
             $index++
         }
     }
