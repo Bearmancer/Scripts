@@ -1,27 +1,14 @@
-import subprocess
-import os
-import sys
+import subprocess, sys
+from pathlib import Path
 
 def get_video_resolution(filepath):
-    command = [
-        "ffprobe",
-        "-v",
-        "error",
-        "-select_streams",
-        "v:0",
-        "-show_entries",
-        "stream=width,height",
-        "-of",
-        "csv=s=x:p=0",
-        filepath,
-    ]
+    command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=s=x:p=0", str(filepath)]
     
     try:
         result = subprocess.run(command, capture_output=True, check=True)
         output = result.stdout.decode("utf-8").strip()
-        dimensions = output.strip().split("x")
-        if len(dimensions) != 2:    
-            return None
+        dimensions = output.split("x")
+        if len(dimensions) != 2: return None
         width, height = dimensions
         return {"Width": int(width), "Height": int(height)}
     
@@ -33,10 +20,9 @@ def get_video_files(path):
     extensions = [".mkv", ".mp4", ".ts", ".flv"]
     video_files = []
     
-    for root, _, files in os.walk(path):
-        for file in files:
-            if file.lower().endswith(tuple(extensions)):
-                video_files.append(os.path.join(root, file))
+    for file in Path(path).rglob('*'):
+        if file.suffix.lower() in extensions:
+            video_files.append(file)
                 
     return video_files
 
@@ -45,8 +31,8 @@ if __name__ == "__main__":
         print("Usage: python script.py <path_to_directory>")
         sys.exit(1)
 
-    video_path = sys.argv[1]
-    if not os.path.isdir(video_path):
+    video_path = Path(sys.argv[1])
+    if not video_path.is_dir():
         print("Invalid directory path.")
         sys.exit(1)
 
@@ -68,12 +54,12 @@ if __name__ == "__main__":
 
     print("Files with a resolution of 1920x1080:")
     for file, resolution in files_1920_1080:
-        print(f"{os.path.basename(file)}")
+        print(file.name)
 
     print("\nFiles with resolution below 1920x1080:")
     for file, resolution in files_below_1920_1080:
-        print(f"{os.path.basename(file)}, Resolution: {resolution['Width']}x{resolution['Height']}")
+        print(f"{file.name}, Resolution: {resolution['Width']}x{resolution['Height']}")
 
     print("\nFiles with unresolved resolution:")
     for file in files_unresolved_resolution:
-        print(f"{os.path.basename(file)}")
+        print(file.name)

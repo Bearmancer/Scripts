@@ -1,26 +1,33 @@
-import os
 import sys
+from pathlib import Path
 
-def list_directories(path='.', indent=0):
+def list_directories(path=Path('.'), indent=0):
     """Recursively list directories with indentation starting from the current directory."""
     indentation = " " * indent
-    with os.scandir(path) as entries:
-        for entry in entries:
-            if entry.is_dir():
-                print(f"{indentation} {entry.name}")
-                list_directories(entry.path, indent + 2)
+    for entry in path.iterdir():
+        if entry.is_dir():
+            print(f"{indentation}{entry.name}")
+            list_directories(entry, indent + 2)
 
-def list_files_and_directories(path='.', indent=0):
-    """Recursively list directories and files with indentation starting from the current directory."""
+def get_folder_size(path):
+    total_size = 0
+    for entry in path.rglob('*'):
+        if entry.is_file():
+            total_size += entry.stat().st_size
+    return total_size
+
+def list_files_and_directories(path=Path('.'), indent=0):
+    """Recursively list directories and files with indentation, showing file sizes and folder sizes."""
     indentation = " " * indent
-    with os.scandir(path) as entries:
-        for entry in entries:
-            if entry.is_dir():
-                print(f"{indentation} {entry.name}")
-                list_files_and_directories(entry.path, indent + 2)
-        for entry in entries:
-            if entry.is_file():
-                print(f"{indentation} {entry.name}")
+    folder_size = get_folder_size(path)
+
+    print(f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)")
+
+    for entry in path.iterdir():
+        if entry.is_dir():
+            list_files_and_directories(entry, indent + 2)
+        elif entry.is_file():
+            print(f"{indentation}  {entry.name} (Size: {entry.stat().st_size / (1024 ** 2):.2f} MB)")
 
 def main():
     if len(sys.argv) != 2:

@@ -1,4 +1,4 @@
-import shutil, subprocess
+import shutil, subprocess, sys
 from pathlib import Path
 
 def mp3_conversion(directory=Path.cwd()):
@@ -50,7 +50,6 @@ def mp3_conversion(directory=Path.cwd()):
             log_file.write(message + '\n')
 
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 1:
         mp3_conversion(Path(sys.argv[1]))
     else:
