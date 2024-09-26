@@ -10,8 +10,8 @@ function PrintVideoResolutions {
     py "C:\Users\Lance\Documents\Powershell\Python Scripts\Print Video Resolutions.py"
 }
 
-function RemuxDVD {
-    & "C:\Users\Lance\Documents\PowerShell\Custom\MakeMKV Batch Remux.ps1" .
+function RemuxDVD([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Remux DVDs.py" $directory.FullName
 }
 
 function CompressVideoFiles {

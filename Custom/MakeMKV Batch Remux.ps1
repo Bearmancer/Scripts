@@ -9,9 +9,9 @@ $dvdPath = $rootDir
 $nonRemuxable = @()
 
 function Convert-DVDToMKV([System.IO.FileSystemInfo]$file, [System.IO.FileSystemInfo]$dvdFolder) { 
-    # $outputPath = Join-Path -Path $dvdPath.FullName -ChildPath "Converted"
+    $outputPath = Join-Path -Path $dvdPath.FullName -ChildPath "Converted"
 
-    # New-Item -ItemType Directory $outputPath -Force
+    New-Item -ItemType Directory $outputPath -Force
 
     & "C:\Program Files (x86)\MakeMKV\makemkvcon64.exe" mkv file:"$($file.FullName)" all $dvdPath --minlength=180
 }
