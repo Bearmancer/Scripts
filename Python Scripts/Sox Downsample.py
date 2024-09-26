@@ -1,4 +1,4 @@
-import subprocess, sys
+import shutil, subprocess, sys
 from pathlib import Path
 
 def main(folder: Path):
@@ -15,7 +15,7 @@ def main(folder: Path):
 
         precision_match = [line for line in flac_info_output.splitlines() if "Precision" in line]
         precision = precision_match[0].split(":")[-1].strip() if precision_match else None
-        
+
         sample_rate_match = [line for line in flac_info_output.splitlines() if "Sample Rate" in line]
         sample_rate = sample_rate_match[0].split(":")[-1].strip() if precision_match else None
 
@@ -29,12 +29,14 @@ def main(folder: Path):
             "24-bit, 176400": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
             "24-bit, 88200": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
             "24-bit, 44100": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'dither']),
-            "16-bit, 44100": lambda: (file.rename(converted / file.name)),
-            "16-bit, 48000": lambda: (file.rename(converted / file.name)),
+            "16-bit, 48000": lambda: subprocess.run(shutil.copy(file, converted / file.name)),
+            "16-bit, 44100": lambda: subprocess.run(shutil.copy(file, converted / file.name)),
         }
 
         action = actions.get(f"{precision}, {sample_rate}")
-        if (action): action()
+        if action:
+            action()
+            file.rename(original / file.name)
         else:
             print(f"No action found for {file} - Bit Depth: {precision}, Sample Rate: {sample_rate}")
             problem_files.append(file)
@@ -47,9 +49,9 @@ def main(folder: Path):
     for converted_file in converted.iterdir():
         converted_file.rename(folder / converted_file.name)
 
-    if len(list(original.glob('*.flac'))) == len(list(folder.glob('*.flac'))):
+    if len(list(folder.glob('*.flac'))) == len(list(original.glob('*.flac'))):
         for dir_path in [converted, original]:
-            dir_path.rmdir()
+            shutil.rmtree(dir_path)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

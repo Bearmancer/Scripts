@@ -58,8 +58,8 @@ def remove_subtitle_duplication(file):
     if file.exists():
         with open(file, 'r', encoding='utf-8') as f:
             content = f.read()
-        
-        new_content = re.sub(old_text, new_text, content)
+
+        new_content = re.sub(old_text, new_text.strip(), content)
         
         with open(file, 'w', encoding='utf-8') as f:
             f.write(new_content)
