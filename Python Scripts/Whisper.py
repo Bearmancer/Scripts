@@ -8,6 +8,7 @@ def whisper_logic(file: Path, model, language):
     file = Path(file)
 
     if file.suffix not in file_extensions:
+        print(f"{file}'s extension ({file.suffix}) is incompatibile. Terminating.")
         return
     
     subtitle_file = file.with_suffix('.srt')
@@ -40,7 +41,7 @@ def whisper_path_recursive(directory):
     whisper_path(directory)
 
 def whisper_japanese(file):
-    whisper_logic("small", "Japanese", file)
+    whisper_logic(file, "small", "Japanese")
 
 def whisper_path_japanese(directory):
     for file in directory.glob('*'):
@@ -76,22 +77,22 @@ if __name__ == "__main__":
         print("Invalid input entered.")
         exit
 
-command = sys.argv[1]
-path = Path(sys.argv[2])
+    command = sys.argv[1]
+    path = Path(sys.argv[2])
 
-commands = {
-    "WhisperLogic": lambda: whisper_logic(path, sys.argv[3], sys.argv[4]),
-    "Whisp": lambda: whisp(path),
-    "WhisperPath": lambda: whisper_path(path),
-    "WhisperPathRecursive": lambda: whisper_path_recursive(path),
-    "WhisperJapanese": lambda: whisper_japanese(path),
-    "WhisperPathJapanese": lambda: whisper_path_japanese(path),
-    "WhisperJapaneseFile": lambda: whisper_japanese_file(path)
-}
+    commands = {
+        "WhisperLogic": lambda: whisper_logic(path, sys.argv[3], sys.argv[4]),
+        "Whisp": lambda: whisp(path),
+        "WhisperPath": lambda: whisper_path(path),
+        "WhisperPathRecursive": lambda: whisper_path_recursive(path),
+        "WhisperJapanese": lambda: whisper_japanese(path),
+        "WhisperPathJapanese": lambda: whisper_path_japanese(path),
+        "WhisperJapaneseFile": lambda: whisper_japanese_file(path)
+    }
 
-execute_command = commands.get(command)
+    execute_command = commands.get(command)
 
-if execute_command:
-    execute_command()
-else:
-    print("Unknown command")
+    if execute_command:
+        execute_command()
+    else:
+        print("Unknown command")

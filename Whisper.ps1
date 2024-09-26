@@ -18,8 +18,8 @@ function WhisperJapanese ([System.IO.FileInfo] $file) {
         py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperJapanese" $file.FullName
 }
 
-function WhisperJapanese ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "whisperPathJapanese" $directory.FullName
+function WhisperPathJapanese ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPathJapanese" $directory.FullName
 }
 
 function WhisperJapaneseFile([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
@@ -34,9 +34,9 @@ function WordToSRT([System.IO.FileInfo] $file) {
     py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file.FullName docx
 }
 
-Set-Alias -Name wp -Value whisperPath
-Set-Alias -Name wj -Value whisperJapanese
-Set-Alias -Name wpj -Value whisperPathJapanese
-Set-Alias -Name wpf -Value whisperJapaneseFile
-Set-Alias -Name wpr -Value whisperPathRecursive
+Set-Alias -Name wp -Value WhisperPath
+Set-Alias -Name wj -Value WhisperJapanese
+Set-Alias -Name wpj -Value WhisperPathJapanese
+Set-Alias -Name wpf -Value WhisperJapaneseFile
+Set-Alias -Name wpr -Value WhisperPathRecursive
 Set-Alias -Name rsd -Value RemoveSubtitleDuplication
