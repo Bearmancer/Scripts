@@ -23,7 +23,7 @@ def main(folder: Path):
         file.write(output.strip())
 
 if __name__ == "__main__":
-    if sys.arg[len] > 1:
-        main(Path(sys.arg[1]))
+    if len(sys.argv) > 0:
+        main(Path(sys.argv[1]))
     else:
         print("Invalid number of arguments supplied.")

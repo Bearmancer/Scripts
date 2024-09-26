@@ -19,9 +19,9 @@ def call_cmdlet_all_files(command, directory: Path):
                 print(f"Error executing command for file {file}: {e}")
 
 if __name__ == "__main__":
-    if sys.args[1] == "ccas":
-        call_cmdlet_all_files(Path(sys.arg[2]))
-    elif sys.args[1] == "ccaf":
-        call_cmdlet_all_subfolders(Path(sys.arg[2]))
+    if sys.argv[1] == "ccas":
+        call_cmdlet_all_files(Path(sys.argv[2]))
+    elif sys.argv[1] == "ccaf":
+        call_cmdlet_all_subfolders(Path(sys.argv[2]))
     else:
         print("Invalid number of arguments supplied.")

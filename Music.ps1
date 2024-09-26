@@ -11,7 +11,7 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loc
 }
 
 function MP3Conversion([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\ConvertToMP3.py" $directory.FullName
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\ConvertToMP3.py" $directory
 }
 
 function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {

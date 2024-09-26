@@ -16,7 +16,7 @@ def main():
         print(flac_file.name)
 
 if __name__ == "__main__":
-    if sys.arg[len] > 0:
+    if len(sys.argv) > 0:
         main(Path(sys.argv[1]))
     else:
         print("Invalid number of arguments supplied.")
