@@ -4,7 +4,7 @@ from docx import Document
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
-def whisper_logic(file: Path, model, language):
+def whisper_logic(file, model, language):
     file = Path(file)
 
     if file.suffix not in file_extensions:
@@ -84,7 +84,7 @@ def word_to_srt(input_file):
     print(f"Output saved to '{output_file}'")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Invalid input entered.")
         exit()
 
