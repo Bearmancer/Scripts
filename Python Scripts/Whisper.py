@@ -4,7 +4,9 @@ from Misc import call_cmdlet_all_files
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
-def whisper_logic(file, model, language):
+def whisper_logic(file: Path, model, language):
+    file = Path(file)
+
     if file.suffix not in file_extensions:
         return
     
@@ -24,7 +26,7 @@ def whisper_logic(file, model, language):
         srt_to_word(subtitle_file)
 
 def whisp(file):
-    whisper_logic("small.en", "English", file)
+    whisper_logic(file, "small.en", "English")
 
 def whisper_path(directory):
     for file in directory.glob('*'):
@@ -70,15 +72,15 @@ def word_to_srt(file):
     subprocess.run(['python', 'C:/Users/Lance/Documents/Powershell/Python Scripts/Word and SRT Conversions.py', str(file), 'docx'])
 
 if __name__ == "__main__":
-    if sys.args[len] < 2:
+    if len(sys.argv) < 2:
         print("Invalid input entered.")
         exit
 
-command = sys.args[1]
-path = Path(sys.args[2])
+command = sys.argv[1]
+path = Path(sys.argv[2])
 
 commands = {
-    "WhisperLogic": lambda: whisper_logic(sys.args[2], sys.args[3], sys.args[4]),
+    "WhisperLogic": lambda: whisper_logic(path, sys.argv[3], sys.argv[4]),
     "Whisp": lambda: whisp(path),
     "WhisperPath": lambda: whisper_path(path),
     "WhisperPathRecursive": lambda: whisper_path_recursive(path),

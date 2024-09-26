@@ -29,12 +29,13 @@ def list_files_and_directories(path: Path, indent=0):
             print(f"{indentation}  {entry.name} (Size: {entry.stat().st_size / (1024 ** 2):.2f} MB)")
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 2:
         print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
         return
     
     command = sys.argv[1]
     path = Path(sys.argv[2])
+
     if command == 'list_dir':
         list_directories(path)
     elif command == 'list_files_and_dirs':

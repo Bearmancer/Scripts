@@ -37,7 +37,7 @@ function ListDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-L
 }
 
 function ListFilesAndDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\List Files and Directories.py" list_files_and_dirs 
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\List Files and Directories.py" list_files_and_dirs $directory.FullName
 }
 
 Set-Alias -Name ccas -Value CallCmdletAllSubFolders
