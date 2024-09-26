@@ -1,86 +1,37 @@
-$fileExtensions = '.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi'
-
-function WhisperLogic([string]$model, [string]$language, [System.IO.FileInfo]$file) {
-    if ($fileExtensions -notcontains $file.Extension) {
-        return
-    }
-    
-    $subtitleFile = Join-Path $file.Directory.FullName ($file.BaseName + ".srt")
-
-    if (Test-Path -LiteralPath $subtitleFile) { 
-        Write-Host "Subtitle for $($file.BaseName) already exists. Skipping..."
-        return 
-    }
-    
-    Write-Host "Now transcribing: $($file.Name)"
-    
-    whisper --fp16 False --output_format "srt" --model $model --language $language $file
-    
-    RemoveSubtitleDuplication (Get-Item $subtitleFile)
-
-    # if ($language -ne "English" -or $language -ne "Hindi") {
-    #     TranslateFile $subtitleFile
-        
-    #     $translatedFile = "$($(Get-Item $subtitleFile).BaseName) - Translated.srt"
-
-    #     if (Test-Path $translatedFile) {
-    #         Remove-Item $subtitleFile
-    #         Rename-Item $translatedFile $subtitleFile
-    #     }
-    # }
+function WhisperLogic([System.IO.FileInfo]$file, [string]$model, [string]$language) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperLogic" $file.FullName $model $language 
 }
 
-function Whisp($file) {
-    whisperLogic small.en English $file
+function Whisp([System.IO.FileInfo]$file) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "Whisp" $file.FullName
 }
 
-function WhisperPath {
-    Get-ChildItem -File | ForEach-Object {
-        & whisp $_
-    }
+function WhisperPath([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPath" $folder.FullName
 }
 
-function WhisperPathRecursive {
-    Get-ChildItem -Directory -Recurse | ForEach-Object { 
-        Start-Process -FilePath "pwsh.exe" -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$($_.FullName)'; whisperPath" 
-    }
-    
-    whisperPath
-}
-
-function RemoveSubtitleDuplication([System.IO.FileInfo]$file) {
-    $oldText = '(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'
-    $newText = "`$1`r`n`r`n"
-    
-    if (Test-Path -LiteralPath $file) {
-        $NewContent = [System.IO.File]::ReadAllText($file) -replace $oldText, $newText
-        [System.IO.File]::WriteAllText($file, $NewContent)
-    }
-    else {
-        Write-Host "$($file) not found."
-    }
+function WhisperPathRecursive([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPathRecursive" $folder.FullName
 }
 
 function WhisperJapanese ([System.IO.FileInfo] $file) {
-    whisperLogic small Japanese $file
+        py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperJapanese" $file.FullName
 }
 
-function WhisperPathJapanese {
-    Get-ChildItem -File | ForEach-Object {
-        & wj $_
-    }
+function WhisperJapanese ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "whisperPathJapanese" $folder.FullName
 }
 
-function WhisperJapaneseFile {
-    ccaf wj
+function WhisperJapaneseFile([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperJapaneseFile"
 }
 
-function SRTtoWord($file) {
-    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file srt
+function SRTtoWord([System.IO.FileInfo] $file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file.FullName srt
 }
 
-function WordToSRT($file) {
-    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file docx
+function WordToSRT([System.IO.FileInfo] $file) {
+    py 'C:\Users\Lance\Documents\Powershell\Python Scripts\Word and SRT Conversions.py' $file.FullName docx
 }
 
 Set-Alias -Name wp -Value whisperPath

@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-def list_directories(path=Path('.'), indent=0):
+def list_directories(path: Path, indent=0):
     """Recursively list directories with indentation starting from the current directory."""
     indentation = " " * indent
     for entry in path.iterdir():
@@ -9,15 +9,14 @@ def list_directories(path=Path('.'), indent=0):
             print(f"{indentation}{entry.name}")
             list_directories(entry, indent + 2)
 
-def get_folder_size(path):
+def get_folder_size(path: Path):
     total_size = 0
     for entry in path.rglob('*'):
         if entry.is_file():
             total_size += entry.stat().st_size
     return total_size
 
-def list_files_and_directories(path=Path('.'), indent=0):
-    """Recursively list directories and files with indentation, showing file sizes and folder sizes."""
+def list_files_and_directories(path: Path, indent=0):
     indentation = " " * indent
     folder_size = get_folder_size(path)
 
@@ -30,15 +29,16 @@ def list_files_and_directories(path=Path('.'), indent=0):
             print(f"{indentation}  {entry.name} (Size: {entry.stat().st_size / (1024 ** 2):.2f} MB)")
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
         return
     
     command = sys.argv[1]
+    path = Path(sys.argv[2])
     if command == 'list_dir':
-        list_directories()
+        list_directories(path)
     elif command == 'list_files_and_dirs':
-        list_files_and_directories()
+        list_files_and_directories(path)
     else:
         print("Unknown command. Use 'list_dir' or 'list_files_and_dirs'.")
 

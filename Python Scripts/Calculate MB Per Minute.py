@@ -12,7 +12,7 @@ def calculate_mb_per_minute(video_file):
     mb_per_minute = (size / 1024 / 1024) / (duration / 60)
     return mb_per_minute, size, duration
 
-def main(folder):
+def main(folder: Path):
     video_files = get_video_files(folder)
     if not video_files:
         print("No video files found in the specified folder.")
@@ -39,13 +39,9 @@ def main(folder):
     print(f"Output saved as '{output_file_path}'.")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) > 0:
+        main(Path(sys.argv[1]))
+        
+    else:
         print("Usage: python script.py <folder_path>")
         sys.exit(1)
-
-    folder_path = Path(sys.argv[1])
-    if not folder_path.is_dir():
-        print("Invalid folder path.")
-        sys.exit(1)
-
-    main(folder_path)

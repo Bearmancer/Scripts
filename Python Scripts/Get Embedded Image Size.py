@@ -1,7 +1,7 @@
-import subprocess
+import subprocess, sys
 from pathlib import Path
 
-def get_image_size(folder: Path):
+def main(folder: Path):
     exif_tool = Path(r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe")
     problematic_files = []
 
@@ -23,13 +23,7 @@ def get_image_size(folder: Path):
         file.write(output.strip())
 
 if __name__ == "__main__":
-    folder_path = Path(input("Please provide a directory path: "))
-    if folder_path.exists() and folder_path.is_dir():
-        sizes, problems = get_image_size(folder_path)
-        print(f"Image sizes greater than 1MB: {sizes}")
-        if problems:
-            print("Problematic files:")
-            for file in problems:
-                print(file)
+    if sys.arg[len] > 1:
+        main(Path(sys.arg[1]))
     else:
-        print("Invalid directory path.")
+        print("Invalid number of arguments supplied.")

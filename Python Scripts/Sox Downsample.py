@@ -1,7 +1,7 @@
 import subprocess, sys
 from pathlib import Path
 
-def sox_downsample(folder: Path):
+def main(folder: Path):
     original = folder / "original"
     converted = folder / "converted"
     problem_files = []
@@ -23,20 +23,18 @@ def sox_downsample(folder: Path):
             continue
 
         actions = {
-            "24-bit, 192000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'rate', '-v', '-L', '48000', 'dither']),
-            "24-bit, 96000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'rate', '-v', '-L', '48000', 'dither']),
-            "24-bit, 48000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'dither']),
-            "24-bit, 176400": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'rate', '-v', '-L', '44100', 'dither']),
-            "24-bit, 88200": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'rate', '-v', '-L', '44100', 'dither']),
-            "24-bit, 44100": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted/file.name), 'dither']),
-            "16-bit, 44100": lambda: (print(f"{file.name} is already 16-bit."), file.rename(original / file.name)),
-            "16-bit, 48000": lambda: (print(f"{file.name} is already 16-bit"), file.rename(original / file.name)),
+            "24-bit, 192000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '48000', 'dither']),
+            "24-bit, 96000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '48000', 'dither']),
+            "24-bit, 48000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'dither']),
+            "24-bit, 176400": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
+            "24-bit, 88200": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
+            "24-bit, 44100": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'dither']),
+            "16-bit, 44100": lambda: (file.rename(converted / file.name)),
+            "16-bit, 48000": lambda: (file.rename(converted / file.name)),
         }
 
         action = actions.get(f"{precision}, {sample_rate}")
-        if (action):
-            action()
-            file.rename(original / file.name)
+        if (action): action()
         else:
             print(f"No action found for {file} - Bit Depth: {precision}, Sample Rate: {sample_rate}")
             problem_files.append(file)
@@ -47,7 +45,7 @@ def sox_downsample(folder: Path):
             print(f"{problem_file}")
 
     for converted_file in converted.iterdir():
-        converted_file.rename(folder/converted_file.name)
+        converted_file.rename(folder / converted_file.name)
 
     if len(list(original.glob('*.flac'))) == len(list(folder.glob('*.flac'))):
         for dir_path in [converted, original]:
@@ -55,6 +53,6 @@ def sox_downsample(folder: Path):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        sox_downsample(Path(sys.argv[1]))
+        main(Path(sys.argv[1]))
     else:
         print("Please provide a directory path.")

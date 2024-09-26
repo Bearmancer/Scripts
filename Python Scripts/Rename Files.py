@@ -1,14 +1,14 @@
 import sys
 from pathlib import Path
 
-def rename_file_red(directory: Path):
+def main(directory: Path):
     if not directory.exists() or not directory.is_dir():
         print(f"Error: The specified directory '{directory}' does not exist.")
         sys.exit(1)
 
     root_directory = directory.parent
     file_list = []
-    old_file_names = "Old File Names:\n\n"
+    old_file_names = "Old File Names:\n"
 
     for file in directory.rglob('*'):
         relative_path = file.relative_to(root_directory)
@@ -41,6 +41,6 @@ def rename_file_red(directory: Path):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        rename_file_red(Path(sys.argv[1]))
+        main(Path(sys.argv[1]))
     else:
         print("Please provide a directory path.")
