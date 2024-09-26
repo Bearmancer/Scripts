@@ -2,7 +2,7 @@ import subprocess, re, sys
 from pathlib import Path
 
 def extract_sacds(path):
-    iso_files = list(path().rglob("*.iso"))
+    iso_files = list(Path(root_directory).rglob("*.iso"))
     total_discs = len(iso_files)
     sacd_extract = Path(r"C:\Users\Lance\AppData\Local\Personal\sacd_extract\sacd_extract.exe")
 
@@ -20,6 +20,7 @@ def extract_sacds(path):
             parent_folder = parent_folder.parent
 
         result = subprocess.run([sacd_extract, '-P', '-i', str(iso_file)], capture_output=True, text=True)
+        print(result)
         output = result.stdout
 
         if "Multichannel" in output or "5 Channel" in output or "6 Channel" in output:
@@ -126,7 +127,7 @@ def move_iso():
             iso_file.rename(new_folder / iso_file.name)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 3:
         print("Usage: script.py <root_dir> <FolderPath>")
         sys.exit(1)
 

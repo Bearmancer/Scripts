@@ -113,7 +113,7 @@ def calculate_image_size():
         print("No files with embedded artwork less than 1MB")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 3:
         print("Invalid number of arguments supplied.")
         exit()
 
