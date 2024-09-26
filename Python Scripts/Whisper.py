@@ -1,6 +1,6 @@
-import subprocess, sys, re
+import subprocess, sys, re, chardet
 from pathlib import Path
-from Misc import call_cmdlet_all_files
+from docx import Document
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
@@ -10,17 +10,17 @@ def whisper_logic(file: Path, model, language):
     if file.suffix not in file_extensions:
         print(f"{file}'s extension ({file.suffix}) is incompatibile. Terminating.")
         return
-    
+
     subtitle_file = file.with_suffix('.srt')
 
     if subtitle_file.exists():
         print(f"Subtitle for {file.stem} already exists. Skipping...")
         return
-    
+
     print(f"Now transcribing: {file.name}")
-    
+
     subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--model', model, '--language', language, str(file)])
-    
+
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
@@ -48,51 +48,66 @@ def whisper_path_japanese(directory):
         if file.is_file():
             whisper_japanese(file)
 
-def whisper_japanese_file(file):
-    call_cmdlet_all_files (file)
-
 def remove_subtitle_duplication(file):
-    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)'
+    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'
     new_text = r'\1\n\n'
-    
+
     if file.exists():
-        with open(file, 'r', encoding='utf-8') as f:
+        with open(file, 'r', encoding='utf-16') as f:
             content = f.read()
 
         new_content = re.sub(old_text, new_text.strip(), content)
-        
-        with open(file, 'w', encoding='utf-8') as f:
+
+        with open(file, 'w', encoding='utf-16') as f:
             f.write(new_content)
     else:
         print(f"{file} not found.")
 
-def srt_to_word(file):
-    subprocess.run(['python', 'C:/Users/Lance/Documents/Powershell/Python Scripts/Word and SRT Conversions.py', str(file), 'srt'])
+def srt_to_word(input_file):
+    with open(input_file, 'rb') as f:
+        raw_data = f.read()
+        encoding = chardet.detect(raw_data)['encoding']
 
-def word_to_srt(file):
-    subprocess.run(['python', 'C:/Users/Lance/Documents/Powershell/Python Scripts/Word and SRT Conversions.py', str(file), 'docx'])
+    with open(input_file, 'r', encoding=encoding) as f:
+        doc = Document()
+        doc.add_paragraph(f.read())
+        output_file = input_file.replace('.srt', '.docx')
+        doc.save(output_file)
+        print(f"Output saved to '{output_file}")
+
+def word_to_srt(input_file):
+    doc = Document(input_file)
+    text = '\n'.join([para.text for para in doc.paragraphs])
+    output_file = f'{str(input_file)[:-8]}.srt'
+    with open(output_file, 'w', encoding='utf-16') as f:
+        f.write(text)
+    print(f"Output saved to '{output_file}'")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Invalid input entered.")
-        exit
+        exit()
 
     command = sys.argv[1]
     path = Path(sys.argv[2])
 
-    commands = {
-        "WhisperLogic": lambda: whisper_logic(path, sys.argv[3], sys.argv[4]),
-        "Whisp": lambda: whisp(path),
-        "WhisperPath": lambda: whisper_path(path),
-        "WhisperPathRecursive": lambda: whisper_path_recursive(path),
-        "WhisperJapanese": lambda: whisper_japanese(path),
-        "WhisperPathJapanese": lambda: whisper_path_japanese(path),
-        "WhisperJapaneseFile": lambda: whisper_japanese_file(path)
-    }
-
-    execute_command = commands.get(command)
-
-    if execute_command:
-        execute_command()
+    if command == "WhisperLogic":
+        whisper_logic(path, sys.argv[3], sys.argv[4])
+    elif command == "Whisp":
+        whisp(path)
+    elif command == "WhisperPath":
+        whisper_path(path)
+    elif command == "WhisperPathRecursive":
+        whisper_path_recursive(path)
+    elif command == "WhisperJapanese":
+        whisper_japanese(path)
+    elif command == "WhisperPathJapanese":
+        whisper_path_japanese(path)
+    elif command == "SRTtoWord":
+        srt_to_word(path)
+    elif command == "WordToSRT":
+        word_to_srt(path)
+    elif command == "rsd":
+        remove_subtitle_duplication(path)
     else:
-        print("Unknown command")
+        print("Invalid command entered.")

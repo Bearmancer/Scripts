@@ -1,27 +1,44 @@
-import subprocess, sys
+import sys
 from pathlib import Path
 
-def call_cmdlet_all_subfolders(command, directory: Path):
-    for folder in directory.rglob('*'):
-        if folder.is_dir():
-            try:
-                subprocess.run(command, cwd=folder, check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error executing command in {folder}: {e}")
+def list_directories(path: Path, indent=0):
+    """Recursively list directories with indentation starting from the current directory."""
+    indentation = " " * indent
+    for entry in path.iterdir():
+        if entry.is_dir():
+            print(f"{indentation}{entry.name}")
+            list_directories(entry, indent + 2)
 
-def call_cmdlet_all_files(command, directory: Path):
-    files = directory.glob('*')
-    for file in files:
-        if file.is_file():
-            try:
-                subprocess.run(command + [str(file)], check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error executing command for file {file}: {e}")
+def get_folder_size(path: Path):
+    total_size = 0
+    for entry in path.rglob('*'):
+        if entry.is_file():
+            total_size += entry.stat().st_size
+    return total_size
 
-if __name__ == "__main__":
-    if sys.argv[1] == "ccas":
-        call_cmdlet_all_files(Path(sys.argv[2]))
-    elif sys.argv[1] == "ccaf":
-        call_cmdlet_all_subfolders(Path(sys.argv[2]))
+def list_files_and_directories(path: Path, indent=0):
+    indentation = " " * indent
+    folder_size = get_folder_size(path)
+
+    print(f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)")
+
+    for entry in path.iterdir():
+        if entry.is_dir():
+            list_files_and_directories(entry, indent + 2)
+        elif entry.is_file():
+            print(f"{indentation}  {entry.name} (Size: {entry.stat().st_size / (1024 ** 2):.2f} MB)")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
+        return
+
+    path = Path(sys.argv[1])
+    command = sys.argv[2]
+
+    if command == 'list_dir':
+        list_directories(path)
+    elif command == 'list_files_and_dirs':
+        list_files_and_directories(path)
     else:
-        print("Invalid number of arguments supplied.")
+        print("Unknown command. Use 'list_dir' or 'list_files_and_dirs'.")

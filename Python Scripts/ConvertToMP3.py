@@ -1,7 +1,7 @@
 import shutil, subprocess, sys
 from pathlib import Path
 
-def main(directory=Path.cwd()):
+def main(directory: Path):
     log_path = Path("C:/Users/Lance/Desktop/Conversion Log.txt")
     output_path = Path("C:/Users/Lance/Desktop/Torrents/MP3") / directory.name
 
@@ -11,7 +11,7 @@ def main(directory=Path.cwd()):
 
     for flac_path in flac_files:
         new_flac_path = output_path / flac_path.relative_to(directory)
-        
+
         new_flac_path.parent.mkdir(parents=True, exist_ok=True)
 
         shutil.copy(flac_path, new_flac_path)

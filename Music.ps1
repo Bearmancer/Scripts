@@ -10,7 +10,7 @@ function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loc
     py "C:\Users\Lance\Documents\Powershell\Python Scripts\Rename Files.py" $directory.FullName
 }
 
-function MP3Conversion([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     py "C:\Users\Lance\Documents\Powershell\Python Scripts\ConvertToMP3.py" $directory
 }
 
