@@ -125,7 +125,7 @@ if __name__ == "__main__":
         calculate_image_size()
     elif method == "SoxConversion":
         sox_conversion()
-    elif method == "RenameFileRed":
+    elif method == "RenameFileRed" or method == "rfr":
         rename_file_red()
     else:
         print("Invalid argument entered.")
