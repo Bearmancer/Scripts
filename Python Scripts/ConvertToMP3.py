@@ -16,18 +16,18 @@ def main(directory: Path):
 
         shutil.copy(flac_path, new_flac_path)
 
-        subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(new_flac_path)])
-        subprocess.run(['metaflac', '--add-padding=8192', str(new_flac_path)])
+        subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(new_flac_path)], encoding='utf-8')
+        subprocess.run(['metaflac', '--add-padding=8192', str(new_flac_path)], encoding='utf-8')
 
         mp3_path = new_flac_path.with_suffix('.mp3')
         mp3_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            subprocess.run(['ffmpeg', '-i', str(new_flac_path), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a', '320k', str(mp3_path), '-y'])
+            subprocess.run(['ffmpeg', '-i', str(new_flac_path), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a', '320k', str(mp3_path), '-y'], encoding='utf-8')
         except Exception as e:
             error_msg = f"Exception while converting: {new_flac_path} - {e}"
             print(error_msg)
-            with log_path.open('a') as log_file:
+            with log_path.open('a', encoding='utf-8') as log_file:
                 log_file.write(error_msg + '\n')
 
         print(f"Now deleting: {new_flac_path}")
@@ -36,17 +36,17 @@ def main(directory: Path):
     mp3_files = list(output_path.rglob('*.mp3'))
     mp3_set = {mp3.relative_to(output_path) for mp3 in mp3_files}
 
-    missing_mp3s = [flac.relative_to(directory) for flac in flac_files if flac.with_suffix('.mp3') not in mp3_set]
+    missing_mp3s = [flac for flac in flac_files if flac.with_suffix('.mp3').relative_to(directory) not in mp3_set]
 
     if missing_mp3s:
         message = f"Problematic Files:\nfilelist: {'|'.join(map(str, missing_mp3s))}"
         print(message)
-        with log_path.open('a') as log_file:
+        with log_path.open('a', encoding='utf-8') as log_file:
             log_file.write(message + '\n')
     else:
         message = f"All FLAC Files for {directory} were successfully converted to MP3.\n------------------\n"
         print(message)
-        with log_path.open('a') as log_file:
+        with log_path.open('a', encoding='utf-8') as log_file:
             log_file.write(message + '\n')
 
 if __name__ == "__main__":
