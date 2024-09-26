@@ -18,6 +18,10 @@ function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (
     py "C:\Users\Lance\Documents\Powershell\Python Scripts\Get Embedded Image Size.py" $directory.FullName
 }
 
+function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py "C:\Users\Lance\Documents\Powershell\Python Scripts\SACD.py" $directory.FullName
+}
+
 function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     rfr $directory
     py -m py3createtorrent $directory

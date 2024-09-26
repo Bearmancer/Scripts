@@ -47,9 +47,6 @@ def extract_sacds(path):
         else:
             print(f"Audio for {iso_file} is neither 5ch nor stereo.")
 
-    if 'multi_channel_parent_folder' not in locals():
-        print("Multichannel audio does not exist for this folder.")
-
 def get_disc_location(parent_folder, disc_number):
     disc_location = parent_folder
 
