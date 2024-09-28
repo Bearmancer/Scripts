@@ -33,8 +33,8 @@ def main():
         print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
         return
 
-    path = Path(sys.argv[1])
-    command = sys.argv[2]
+    command = sys.argv[1]
+    path = Path(sys.argv[2])
 
     if command == 'list_dir':
         list_directories(path)

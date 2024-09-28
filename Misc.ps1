@@ -1,5 +1,5 @@
 function TranslateFile($file) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\DeepL Translation.py" $file
+    py C:\Users\Lance\Documents\Powershell\python_scripts\deepl_translation.py $file
 }
 
 function CallCommandHistory {
@@ -7,25 +7,25 @@ function CallCommandHistory {
 }
 
 function PrintVideoResolutions([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Video Editing.py" $directory.FullName PrintVideoResolution
+    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py PrintVideoResolution $directory.FullName
 }
 
 function RemuxDVD ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Video Editing.py" $directory.FullName RemuxDVD
+    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py RemuxDVD $directory.FullName
 }
 
 function BatchCompression ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Video Editing.py" $directory.FullName BatchCompression
+    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py BatchCompression $directory.FullName
 }
 
 function ExtractChapters ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Video Editing.py" $directory.FullName ExtractChapters
+    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py ExtractChapters $directory.FullName
 }
 
 function ListDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Misc.py" $directory.FullName list_dir
+    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_dir $directory.FullName
 }
 
 function ListFilesAndDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\List Files and Directories.py" $directory.FullName list_files_and_dirs
+    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_files_and_dirs $directory.FullName
 }

@@ -1,6 +1,6 @@
 import deepl, sys, os, chardet
 
-auth_key = open("C:/Users/Lance/Documents/Powershell/Python Scripts/DeepL API Key.txt", 'r').read()
+auth_key = open("/python_scripts/deepl_api_key.txt", 'r').read()
 
 translator = deepl.Translator(auth_key)
 
