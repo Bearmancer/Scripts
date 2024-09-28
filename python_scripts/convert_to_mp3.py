@@ -43,26 +43,26 @@ def main(directory):
 
             if missing_mp3s:
                 with log_path.open('a', encoding='utf-8') as log_file:
-                    log_file.write(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}")
+                    log_file.write(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}\n------------------\n")
             else:
                 with log_path.open('a', encoding='utf-8') as log_file:
-                    log_file.write(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------")
+                    log_file.write(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
 
 def robocopy(src, dst):
     dst.mkdir(parents=True, exist_ok=True)
-    
+
     excluded_extensions = {'.log', '.cue', '.md5', '.flac', '.m3u'}
-    
+
     for file in src.rglob('*'):
         if file.is_file() and file.suffix.lower() not in excluded_extensions:
             relative_path = file.relative_to(src)
             destination_file_path = dst / relative_path
-            
+
             destination_file_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             shutil.copy2(file, destination_file_path)
-            print(f"Copied: {file} to {destination_file_path}")    
-    
+            print(f"Copied: {file} to {destination_file_path}")
+
 if __name__ == "__main__":
     if len(sys.argv) == 3:
         robocopy(Path(sys.argv[1]), Path(sys.argv[2]))

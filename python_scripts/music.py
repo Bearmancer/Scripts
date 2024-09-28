@@ -117,14 +117,14 @@ if __name__ == "__main__":
         print("Invalid number of arguments supplied.")
         exit()
 
-    path = Path(sys.argv[1])
-    method = sys.argv[2]
+    method = sys.argv[1]
+    path = Path(sys.argv[2])
 
     if method == "CalculateImageSize":
         calculate_image_size()
     elif method == "SoxConversion":
         sox_conversion()
-    elif method == "RenameFileRed" or method == "rfr":
+    elif method == "rfr":
         rename_file_red()
     else:
         print("Invalid argument entered.")

@@ -176,8 +176,8 @@ if __name__ == "__main__":
         print("Usage: script.py <root_dir> <FolderPath>")
         sys.exit(1)
 
-    path = Path(sys.argv[1])
-    method = sys.argv[2]
+    method = sys.argv[1]
+    path = Path(sys.argv[2])
 
     video_files = [file for file in path.rglob("*") if file.suffix in video_extensions]
 

@@ -3,23 +3,23 @@ function Propolis {
 }
 
 function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Sox Downsample.py" $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName SoxDownsample
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Rename Files.py" $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName rfr
 }
 
 function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\ConvertToMP3.py" $directory
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName
 }
 
 function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Get Embedded Image Size.py" $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName CalculateImageSize
 }
 
 function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\SACD.py" $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\sacd.py $directory.FullName
 }
 
 function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
