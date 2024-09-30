@@ -9,21 +9,24 @@ def main(directory):
         if subfolder.is_dir():
             output_path = output_base_path / f"{subfolder.name} (MP3)"
             output_path.mkdir(parents=True, exist_ok=True)
+            print(f"output path is :{output_path}")
 
             robocopy(subfolder, output_path)
 
             flac_files = list(subfolder.rglob('*.flac'))
 
-            for flac_path in flac_files:
-                new_flac_path = strip_flac_metadata(flac_path, output_path)
-                convert_to_mp3(new_flac_path)
-
-                new_flac_path.unlink()
+            # for flac_path in flac_files:
+            #     # new_flac_path = strip_flac_metadata(flac_path, output_path)
+            #     # convert_to_mp3(new_flac_path)
+            #     #
+            #     # new_flac_path.unlink()
 
             check_mp3_count(flac_files, output_path)
 
 def strip_flac_metadata(flac_path, output_path):
-    new_flac_path = output_path / flac_path.relative_to(flac_path.parent)
+    flac_path = Path(flac_path)
+
+    new_flac_path = output_path / flac_path.relative_to(flac_path.parent.parent)
     new_flac_path.parent.mkdir(parents=True, exist_ok=True)
 
     shutil.copy(flac_path, new_flac_path)
@@ -48,14 +51,14 @@ def check_mp3_count(flac_files, output_path):
     mp3_files = list(output_path.rglob('*.mp3'))
     mp3_set = {mp3.relative_to(output_path) for mp3 in mp3_files}
 
-    subfolder = flac_files[0].parent
+    subfolder = Path(flac_files[0]).parent.parent
 
     missing_mp3s = [flac for flac in flac_files if flac.with_suffix('.mp3').relative_to(subfolder) not in mp3_set]
 
     if missing_mp3s:
         log_to_file(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}\n------------------\n")
     else:
-        log_to_file(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
+        print(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
 
 def robocopy(src, dst):
     dst.mkdir(parents=True, exist_ok=True)

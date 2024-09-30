@@ -3,7 +3,7 @@ from pathlib import Path
 from misc import log_to_file
 
 def rename_file_red(path: Path):
-    log_to_file(f"Now renaming: {path}\n")
+    print(f"Now renaming: {path}\n")
     if not path.exists() or not path.is_dir():
         print(f"Error: The specified path '{path}' does not exist.")
         sys.exit(1)
@@ -33,8 +33,8 @@ def rename_file_red(path: Path):
             f"filelist:\"{'|'.join(map(str, new_files_list))}\"\n"
         )
 
-        log_to_file(output)
-        print(f"Files have been renamed for {path}.\n-----------------------")
+        print("Files have been renamed.")
+        log_to_file(f"Files have been renamed for {path}.\n-----------------------")
     else:
         print(f"No files renamed for {path}.\n-----------------------")
 
