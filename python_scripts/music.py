@@ -1,39 +1,39 @@
 import subprocess, sys
 from pathlib import Path
+from misc import log_to_file
 
 def rename_file_red(path: Path):
+    log_to_file(f"Now renaming: {path}\n")
     if not path.exists() or not path.is_dir():
         print(f"Error: The specified path '{path}' does not exist.")
         sys.exit(1)
 
     root_path = path.parent
-    file_list = []
-    old_file_names = "Old File Names:\n"
+    old_files_list = []
+    new_files_list = []
 
     for file in path.rglob('*'):
         relative_path_length = len(str(file.relative_to(root_path)))
 
         if relative_path_length > 180:
-            old_file_names.join(f"{file}\n")
+            old_files_list.append(file)
 
-            new_length = 180 - (relative_path_length - len(file.name))
-            new_name = file.name[:new_length] + file.suffix
+            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_name = file.stem[:new_length] + file.suffix
 
-            file.rename(new_name)
-            file_list.append(new_name)
+            new_file_path = file.with_name(new_name)
+            file.rename(new_file_path)
+            new_files_list.append(new_file_path)
 
-    if file_list:
-        output = f"""
-    {old_file_names}
-    -----------------------
-    New File Names:
-    filelist: "{'|'.join(map(str, file_list))}"
-    """
-        desktop_path = Path.home() / "Desktop" / f"Files Renamed - {path.name}.txt"
+    if new_files_list:
+        output = (
+            f"Old file names of {path}\n:\n{chr(10).join(map(str, old_files_list))}"
+            f"\n\n-----------------------\n\n"
+            f"New File Names of {path}:\n"
+            f"filelist:\"{'|'.join(map(str, new_files_list))}\"\n"
+        )
 
-        with desktop_path.open('a') as log_file:
-            log_file.write(output)
-
+        log_to_file(output)
         print(f"Files have been renamed for {path}.\n-----------------------")
     else:
         print(f"No files renamed for {path}.\n-----------------------")
@@ -72,6 +72,4 @@ if __name__ == "__main__":
     elif method == "rfr":
         rename_file_red(directory)
     else:
-        print(f"Argument 1 entered:{sys.argv[1]}")
-        print(f"Argument 2 entered:{sys.argv[2]}")
         print("Invalid argument entered.")

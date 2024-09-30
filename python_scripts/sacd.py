@@ -15,9 +15,7 @@ def extract_sacds(path):
         sox_downsample(flac_folder)
 
 def iso_to_flac(iso_file, path):
-    sacd_extract = Path(r"C:\Users\Lance\AppData\Local\Personal\sacd_extract\sacd_extract.exe")
-
-    output = subprocess.run([str(sacd_extract), '-P', '-i', str(iso_file)],
+    output = subprocess.run(['sacd_extract', '-P', '-i', str(iso_file)],
                             capture_output=True, text=True, cwd=str(path)).stdout
 
     if "Stereo" in output or "2 Channel" in output:
@@ -26,7 +24,7 @@ def iso_to_flac(iso_file, path):
 
         initial_dirs = {d.name for d in stereo_path.iterdir() if d.is_dir()}
 
-        subprocess.run([str(sacd_extract), '-2', '-p', '-c', '-i', str(iso_file)], cwd=str(stereo_path))
+        subprocess.run(['sacd_extract', '-2', '-p', '-c', '-i', str(iso_file)], cwd=str(stereo_path))
 
         new_dirs = [d for d in stereo_path.iterdir() if d.is_dir() and d.name not in initial_dirs]
 
@@ -44,7 +42,7 @@ def iso_to_flac(iso_file, path):
 
         initial_dirs = {d.name for d in mch_path.iterdir() if d.is_dir()}
 
-        subprocess.run([str(sacd_extract), '-m', '-p', '-c', '-i', str(iso_file)], cwd=str(mch_path))
+        subprocess.run(['sacd_extract', '-m', '-p', '-c', '-i', str(iso_file)], cwd=str(mch_path))
 
         new_dirs = [d for d in mch_path.iterdir() if d.is_dir() and d.name not in initial_dirs]
 
