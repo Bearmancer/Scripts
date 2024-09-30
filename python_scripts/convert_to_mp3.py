@@ -5,12 +5,13 @@ def main(directory):
     log_path = Path("C:/Users/Lance/Desktop/Conversion Log.txt")
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
 
-    robocopy(directory, output_base_path)
 
     for subfolder in directory.iterdir():
         if subfolder.is_dir():
             output_path = output_base_path / f"{subfolder.name} (MP3)"
             output_path.mkdir(parents=True, exist_ok=True)
+
+            robocopy(directory, output_base_path)
 
             flac_files = list(subfolder.rglob('*.flac'))
 
