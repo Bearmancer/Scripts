@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 
 def log_to_file(message):
-    log_file = Path.home() / "Desktop" / "Conversion Log.txt"
+    log_file = Path.home() / "Desktop" / "Python Functions' Log.txt"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
