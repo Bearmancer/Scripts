@@ -1,8 +1,8 @@
 import shutil, subprocess, sys
 from pathlib import Path
+from misc import log_to_file
 
 def main(directory):
-    log_path = Path("C:/Users/Lance/Desktop/Conversion Log.txt")
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
 
     for subfolder in directory.iterdir():
@@ -15,38 +15,47 @@ def main(directory):
             flac_files = list(subfolder.rglob('*.flac'))
 
             for flac_path in flac_files:
-                new_flac_path = output_path / flac_path.relative_to(subfolder)
+                new_flac_path = strip_flac_metadata(flac_path, output_path)
+                convert_to_mp3(new_flac_path)
 
-                new_flac_path.parent.mkdir(parents=True, exist_ok=True)
-
-                shutil.copy(flac_path, new_flac_path)
-
-                subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(new_flac_path)], encoding='utf-8')
-                subprocess.run(['metaflac', '--add-padding=8192', str(new_flac_path)], encoding='utf-8')
-
-                mp3_path = new_flac_path.with_suffix('.mp3')
-                mp3_path.parent.mkdir(parents=True, exist_ok=True)
-
-                try:
-                    subprocess.run(['ffmpeg', '-i', str(new_flac_path), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a', '320k', str(mp3_path), '-y'], encoding='utf-8')
-                except Exception as e:
-                    with log_path.open('a', encoding='utf-8') as log_file:
-                        log_file.write(f"Exception while converting: {new_flac_path} - {e}")
-
-                print(f"Now deleting: {new_flac_path}")
                 new_flac_path.unlink()
 
-            mp3_files = list(output_path.rglob('*.mp3'))
-            mp3_set = {mp3.relative_to(output_path) for mp3 in mp3_files}
+            check_mp3_count(flac_files, output_path)
 
-            missing_mp3s = [flac for flac in flac_files if flac.with_suffix('.mp3').relative_to(subfolder) not in mp3_set]
+def strip_flac_metadata(flac_path, output_path):
+    new_flac_path = output_path / flac_path.relative_to(flac_path.parent)
+    new_flac_path.parent.mkdir(parents=True, exist_ok=True)
 
-            if missing_mp3s:
-                with log_path.open('a', encoding='utf-8') as log_file:
-                    log_file.write(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}\n------------------\n")
-            else:
-                with log_path.open('a', encoding='utf-8') as log_file:
-                    log_file.write(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
+    shutil.copy(flac_path, new_flac_path)
+
+    subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(new_flac_path)],
+                   encoding='utf-8')
+    subprocess.run(['metaflac', '--add-padding=8192', str(new_flac_path)], encoding='utf-8')
+
+    return new_flac_path
+
+def convert_to_mp3(new_flac_path):
+    mp3_path = new_flac_path.with_suffix('.mp3')
+    mp3_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        subprocess.run(['ffmpeg', '-i', str(new_flac_path), '-codec:a', 'libmp3lame', '-map_metadata', '0',
+                        '-id3v2_version', '3', '-b:a', '320k', str(mp3_path), '-y'], encoding='utf-8')
+    except Exception as e:
+        log_to_file(f"Exception while converting: {new_flac_path} - {e}")
+
+def check_mp3_count(flac_files, output_path):
+    mp3_files = list(output_path.rglob('*.mp3'))
+    mp3_set = {mp3.relative_to(output_path) for mp3 in mp3_files}
+
+    subfolder = flac_files[0].parent
+
+    missing_mp3s = [flac for flac in flac_files if flac.with_suffix('.mp3').relative_to(subfolder) not in mp3_set]
+
+    if missing_mp3s:
+        log_to_file(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}\n------------------\n")
+    else:
+        log_to_file(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
 
 def robocopy(src, dst):
     dst.mkdir(parents=True, exist_ok=True)
