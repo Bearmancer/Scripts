@@ -48,15 +48,14 @@ def batch_compression():
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 def remux_dvd():
+    directories = [path] + [d for d in path.rglob("*") if d.is_dir() and "BACKUP" not in d.name]
+
     non_remuxable = []
 
-    for dvd_path in path.iterdir():
+    for dvd_path in directories:
         if dvd_path.is_dir():
-            remuxable = list(dvd_path.glob("**/*"))
+            remuxable = list(dvd_path.rglob("*"))
             remuxable = [f for f in remuxable if f.name in ('VIDEO_TS.IFO', 'index.bdmv')]
-
-            if "BACKUP" in dvd_path.name:
-                continue
 
             for file in remuxable:
                 print(f"Converting file: {file} in {dvd_path}")
@@ -172,7 +171,7 @@ def calculate_mb_for_directory():
     print(f"Output saved as '{output_file_path}'.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 3:
         print("Usage: script.py <root_dir> <FolderPath>")
         sys.exit(1)
 

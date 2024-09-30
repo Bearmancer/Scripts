@@ -8,7 +8,7 @@ def whisper_logic(file, model, language):
     file = Path(file)
 
     if file.suffix not in file_extensions:
-        print(f"{file}'s extension ({file.suffix}) is incompatibile. Terminating.")
+        print(f"{file}'s extension ({file.suffix}) is incompatible. Terminating.")
         return
 
     subtitle_file = file.with_suffix('.srt')

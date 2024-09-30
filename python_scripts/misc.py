@@ -1,8 +1,14 @@
 import sys
 from pathlib import Path
+from datetime import datetime
+
+def log_to_file(message):
+    log_file = Path.home() / "Desktop" / "Conversion Log.txt"
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"{timestamp}: {message}\n")
 
 def list_directories(path, indent=0):
-    """Recursively list directories with indentation starting from the current directory."""
     indentation = " " * indent
     for entry in path.iterdir():
         if entry.is_dir():
@@ -20,7 +26,7 @@ def list_files_and_directories(path, indent=0):
     indentation = " " * indent
     folder_size = get_folder_size(path)
 
-    print(f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)")
+    log_to_file(f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)")
 
     for entry in path.iterdir():
         if entry.is_dir():

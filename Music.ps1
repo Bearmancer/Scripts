@@ -3,19 +3,19 @@ function Propolis {
 }
 
 function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName SoxDownsample
+    py C:\Users\Lance\Documents\Powershell\python_scripts\sox_downsample.py $directory.FullName
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName rfr
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py rfr $directory.FullName
+}
+
+function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py calculate_image_size $directory.FullName
 }
 
 function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName
-}
-
-function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py $directory.FullName CalculateImageSize
 }
 
 function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {

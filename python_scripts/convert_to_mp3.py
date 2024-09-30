@@ -66,6 +66,7 @@ def robocopy(src, dst):
 if __name__ == "__main__":
     if len(sys.argv) == 3:
         robocopy(Path(sys.argv[1]), Path(sys.argv[2]))
-
-    if len(sys.argv) == 2:
+    elif len(sys.argv) == 2:
         main(Path(sys.argv[1]))
+    else:
+        print("Invalid number of arguments entered.")
