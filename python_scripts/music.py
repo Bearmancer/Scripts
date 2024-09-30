@@ -1,97 +1,44 @@
+import subprocess, sys
 from pathlib import Path
-import shutil, subprocess, sys
-path: Path
+from misc import log_to_file
 
-def sox_conversion():
-    original = path / "original"
-    converted = path / "converted"
-    problem_files = []
-
-    original.mkdir(exist_ok=True)
-    converted.mkdir(exist_ok=True)
-
-    for file in path.glob('*.flac'):
-        flac_info = subprocess.run(['sox', '--i', str(file)], capture_output=True, text=True)
-        flac_info_output = flac_info.stdout.strip()
-
-        precision_match = [line for line in flac_info_output.splitlines() if "Precision" in line]
-        precision = precision_match[0].split(":")[-1].strip() if precision_match else None
-
-        sample_rate_match = [line for line in flac_info_output.splitlines() if "Sample Rate" in line]
-        sample_rate = sample_rate_match[0].split(":")[-1].strip() if precision_match else None
-
-        if precision is None or sample_rate is None:
-            continue
-
-        actions = {
-            "24-bit, 192000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '48000', 'dither']),
-            "24-bit, 96000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '48000', 'dither']),
-            "24-bit, 48000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'dither']),
-            "24-bit, 176400": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
-            "24-bit, 88200": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'rate', '-v', '-L', '44100', 'dither']),
-            "24-bit, 44100": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / file.name), 'dither']),
-            "16-bit, 48000": lambda: subprocess.run(shutil.copy(file, converted / file.name)),
-            "16-bit, 44100": lambda: subprocess.run(shutil.copy(file, converted / file.name)),
-        }
-
-        action = actions.get(f"{precision}, {sample_rate}")
-        if action:
-            action()
-            file.rename(original / file.name)
-        else:
-            print(f"No action found for {file} - Bit Depth: {precision}, Sample Rate: {sample_rate}")
-            problem_files.append(file)
-
-    if problem_files:
-        print("The following files' bit-depth and sample rate could not be converted:")
-        for problem_file in problem_files:
-            print(f"{problem_file}")
-
-    for converted_file in converted.iterdir():
-        converted_file.rename(path / converted_file.name)
-
-    if len(list(path.glob('*.flac'))) == len(list(original.glob('*.flac'))):
-        for dir_path in [converted, original]:
-            shutil.rmtree(dir_path)
-
-def rename_file_red():
+def rename_file_red(path: Path):
+    log_to_file(f"Now renaming: {path}\n")
     if not path.exists() or not path.is_dir():
         print(f"Error: The specified path '{path}' does not exist.")
         sys.exit(1)
 
     root_path = path.parent
-    file_list = []
-    old_file_names = "Old File Names:\n"
+    old_files_list = []
+    new_files_list = []
 
     for file in path.rglob('*'):
         relative_path_length = len(str(file.relative_to(root_path)))
 
         if relative_path_length > 180:
-            old_file_names.join(f"{file}\n")
+            old_files_list.append(file)
 
-            new_length = 180 - (relative_path_length - len(file.name))
-            new_name = file.name[:new_length] + file.suffix
+            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_name = file.stem[:new_length] + file.suffix
 
-            file.rename(new_name)
-            file_list.append(new_name)
+            new_file_path = file.with_name(new_name)
+            file.rename(new_file_path)
+            new_files_list.append(new_file_path)
 
-    if file_list:
-        output = f"""
-    {old_file_names}
-    -----------------------
-    New File Names:
-    filelist: "{'|'.join(map(str, file_list))}"
-    """
-        desktop_path = Path.home() / "Desktop" / f"Files Renamed - {path.name}.txt"
+    if new_files_list:
+        output = (
+            f"Old file names of {path}\n:\n{chr(10).join(map(str, old_files_list))}"
+            f"\n\n-----------------------\n\n"
+            f"New File Names of {path}:\n"
+            f"filelist:\"{'|'.join(map(str, new_files_list))}\"\n"
+        )
 
-        with desktop_path.open('a') as log_file:
-            log_file.write(output)
-
+        log_to_file(output)
         print(f"Files have been renamed for {path}.\n-----------------------")
     else:
         print(f"No files renamed for {path}.\n-----------------------")
 
-def calculate_image_size():
+def calculate_image_size(path: Path):
     exif_tool = Path(r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe")
     problematic_files = []
 
@@ -118,13 +65,11 @@ if __name__ == "__main__":
         exit()
 
     method = sys.argv[1]
-    path = Path(sys.argv[2])
+    directory = Path(sys.argv[2])
 
-    if method == "CalculateImageSize":
-        calculate_image_size()
-    elif method == "SoxConversion":
-        sox_conversion()
+    if method == "calculate_image_size":
+        calculate_image_size(directory)
     elif method == "rfr":
-        rename_file_red()
+        rename_file_red(directory)
     else:
         print("Invalid argument entered.")
