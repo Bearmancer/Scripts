@@ -1,4 +1,4 @@
-import subprocess, re, sys, unicodedata
+import subprocess, re, shutil, sys, unicodedata
 from pathlib import Path
 from misc import log_to_file
 from sox_downsample import sox_downsample
@@ -12,7 +12,8 @@ def extract_sacds(path):
 
     for iso_file in iso_files:
         flac_folder = iso_to_flac(iso_file, path)
-        sox_downsample(flac_folder)
+        copied_folder = copy_folder(flac_folder)
+        sox_downsample(copied_folder)
 
 def iso_to_flac(iso_file, path):
     output = subprocess.run(['sacd_extract', '-P', '-i', str(iso_file)],
@@ -57,6 +58,14 @@ def iso_to_flac(iso_file, path):
     if not any(keyword in output for keyword in ["Stereo", "2 Channel", "Multichannel", "5 Channel", "6 Channel"]):
         log_to_file(f"Audio for {iso_file} is neither multichannel nor stereo.")
         return None
+
+def copy_folder(path: Path):
+    parent_dir = path.parent
+    destination_folder = parent_dir / f"{path.name} (16-bit)"
+
+    shutil.copytree(path, destination_folder)
+
+    return Path (destination_folder)
 
 def check_dynamic_range(directory):
     dr_gains = []

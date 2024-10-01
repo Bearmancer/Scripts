@@ -3,17 +3,10 @@ from pathlib import Path
 from datetime import datetime
 
 def log_to_file(message):
-    log_file = Path.home() / "Desktop" / "Conversion Log.txt"
+    log_file = Path.home() / "Desktop" / "Python Functions' Log.txt"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
-
-def list_directories(path, indent=0):
-    indentation = " " * indent
-    for entry in path.iterdir():
-        if entry.is_dir():
-            print(f"{indentation}{entry.name}")
-            list_directories(entry, indent + 2)
 
 def get_folder_size(path):
     total_size = 0
@@ -22,29 +15,61 @@ def get_folder_size(path):
             total_size += entry.stat().st_size
     return total_size
 
-def list_files_and_directories(path, indent=0):
-    indentation = " " * indent
+def list_directories(path, indent=0, sort_order="1"):
+    indentation = "  " * indent
     folder_size = get_folder_size(path)
+    output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
+    print(output)
+    log_to_file(output)
 
-    log_to_file(f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)")
+    entries = [(entry, get_folder_size(entry)) for entry in path.iterdir() if entry.is_dir()]
 
-    for entry in path.iterdir():
-        if entry.is_dir():
-            list_files_and_directories(entry, indent + 2)
-        elif entry.is_file():
-            print(f"{indentation}  {entry.name} (Size: {entry.stat().st_size / (1024 ** 2):.2f} MB)")
+    if sort_order == "1":
+        entries.sort(key=lambda e: e[0].name)
+    else:
+        entries.sort(key=lambda e: e[1], reverse=True)
 
-def main():
+    for entry, _ in entries:
+        list_directories(entry[0], indent + 2, sort_order)
+
+def list_files_and_directories(path, indent=0, sort_order="1"):
+    indentation = "  " * indent
+    folder_size = get_folder_size(path)
+    output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
+    print(output)
+    log_to_file(output)
+
+    entries = list(path.iterdir())
+    directories = [entry for entry in entries if entry.is_dir()]
+    files = [entry for entry in entries if entry.is_file()]
+
+    if sort_order == "1":
+        directories.sort(key=lambda e: e.name)
+        files.sort(key=lambda e: e.name)
+    else:
+        directories.sort(key=lambda e: get_folder_size(e), reverse=True)
+        files.sort(key=lambda e: e.stat().st_size, reverse=True)
+
+    for entry in directories:
+        list_files_and_directories(entry, indent + 2, sort_order)
+
+    for entry in files:
+        file_size_mb = entry.stat().st_size / (1024 ** 2)
+        file_output = f"{indentation}  {entry.name} (Size: {file_size_mb:.2f} MB)"
+        print(file_output)
+        log_to_file(file_output)
+
+if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
-        return
+        exit()
 
     command = sys.argv[1]
-    path = Path(sys.argv[2])
+    directory = Path(sys.argv[2])
 
     if command == 'list_dir':
-        list_directories(path)
+        list_directories(directory)
     elif command == 'list_files_and_dirs':
-        list_files_and_directories(path)
+        list_files_and_directories(directory)
     else:
         print("Unknown command. Use 'list_dir' or 'list_files_and_dirs'.")
