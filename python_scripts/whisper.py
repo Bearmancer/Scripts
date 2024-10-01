@@ -4,9 +4,7 @@ from docx import Document
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
-def whisper_logic(file, model, language):
-    file = Path(file)
-
+def whisper_logic(file: Path, model, language):
     if file.suffix not in file_extensions:
         print(f"{file}'s extension ({file.suffix}) is incompatible. Terminating.")
         return
@@ -91,21 +89,21 @@ if __name__ == "__main__":
     command = sys.argv[1]
     path = Path(sys.argv[2])
 
-    if command == "WhisperLogic":
+    if command == "whisper_logic":
         whisper_logic(path, sys.argv[3], sys.argv[4])
-    elif command == "Whisp":
+    elif command == "whisp":
         whisp(path)
-    elif command == "WhisperPath":
+    elif command == "whisper_path":
         whisper_path(path)
-    elif command == "WhisperPathRecursive":
+    elif command == "whisper_path_recursive":
         whisper_path_recursive(path)
-    elif command == "WhisperJapanese":
+    elif command == "whisper_japanese":
         whisper_japanese(path)
-    elif command == "WhisperPathJapanese":
+    elif command == "whisper_path_japanese":
         whisper_path_japanese(path)
-    elif command == "SRTtoWord":
+    elif command == "srt_to_word":
         srt_to_word(path)
-    elif command == "WordToSRT":
+    elif command == "word_to_srt":
         word_to_srt(path)
     elif command == "rsd":
         remove_subtitle_duplication(path)

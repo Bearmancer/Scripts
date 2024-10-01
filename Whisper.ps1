@@ -1,33 +1,33 @@
 function WhisperLogic([System.IO.FileInfo]$file, [string]$model, [string]$language) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperLogic" $file.FullName $model $language
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisper_logic $file.FullName $model $language
 }
 
 function Whisp([System.IO.FileInfo]$file) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "Whisp" $file.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisp $file.FullName
 }
 
 function WhisperPath([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPath" $directory.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisper_path $directory.FullName
 }
 
 function WhisperPathRecursive([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPathRecursive" $directory.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisper_path_recursive $directory.FullName
 }
 
 function WhisperJapanese ([System.IO.FileInfo] $file) {
-        py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperJapanese" $file.FullName
+        py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisper_japanese $file.FullName
 }
 
 function WhisperPathJapanese ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" "WhisperPathJapanese" $directory.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" whisper_path_japanese $directory.FullName
 }
 
 function SRTtoWord([System.IO.FileInfo] $file) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" SRTtoWord $file.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" srt_to_word $file.FullName
 }
 
 function WordToSRT([System.IO.FileInfo] $file) {
-    py "C:\Users\Lance\Documents\Powershell\Python Scripts\Whisper.py" WordToSRT $file.FullName
+    py "C:\Users\Lance\Documents\Powershell\python_scripts\Whisper.py" word_to_srt $file.FullName
 }
 
 Set-Alias -Name wp -Value WhisperPath
