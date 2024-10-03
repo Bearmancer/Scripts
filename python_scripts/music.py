@@ -35,6 +35,7 @@ def rename_file_red(path: Path):
 
         print("Files have been renamed.")
         log_to_file(f"Files have been renamed for {path}.\n-----------------------")
+        log_to_file(output)
     else:
         print(f"No files renamed for {path}.\n-----------------------")
 

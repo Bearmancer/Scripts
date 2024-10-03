@@ -7,6 +7,7 @@ function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loc
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    Write-Host "Location is set to $directory."
     py C:\Users\Lance\Documents\Powershell\python_scripts\music.py rfr $directory.FullName
 }
 
