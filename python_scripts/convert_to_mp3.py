@@ -15,11 +15,11 @@ def main(directory):
 
             flac_files = list(subfolder.rglob('*.flac'))
 
-            # for flac_path in flac_files:
-            #     # new_flac_path = strip_flac_metadata(flac_path, output_path)
-            #     # convert_to_mp3(new_flac_path)
-            #     #
-            #     # new_flac_path.unlink()
+            for flac_path in flac_files:
+                new_flac_path = strip_flac_metadata(flac_path, output_path)
+                convert_to_mp3(new_flac_path)
+
+                new_flac_path.unlink()
 
             check_mp3_count(flac_files, output_path)
 
