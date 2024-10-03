@@ -1,4 +1,4 @@
-import subprocess, sys
+import pyperclip, subprocess, sys
 from pathlib import Path
 from misc import log_to_file
 
@@ -26,18 +26,19 @@ def rename_file_red(path: Path):
             new_files_list.append(new_file_path)
 
     if new_files_list:
+        new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
         output = (
             f"Old file names of {path}\n:\n{chr(10).join(map(str, old_files_list))}"
             f"\n\n-----------------------\n\n"
-            f"New File Names of {path}:\n"
-            f"filelist:\"{'|'.join(map(str, new_files_list))}\"\n"
+            f"New File Names of {path}:\n\n"
+            f"{new_file_names}\n"
         )
 
-        print("Files have been renamed.")
-        log_to_file(f"Files have been renamed for {path}.\n-----------------------")
+        print(f"Files have been renamed for {path}.\n-----------------------\n")
+        pyperclip.copy(f"{new_file_names}")
         log_to_file(output)
     else:
-        print(f"No files renamed for {path}.\n-----------------------")
+        print(f"No files renamed for {path}.\n-----------------------\n")
 
 def calculate_image_size(path: Path):
     exif_tool = Path(r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe")
