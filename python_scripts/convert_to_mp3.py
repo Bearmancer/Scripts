@@ -6,9 +6,7 @@ from misc import log_to_file
 
 def main(directory):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
-    subprocess.run(
-        ["robocopy", str(directory), str(output_base_path), "/E", "/xf", "*.log", "*.cue", "*.md5", "*.m3u"],
-        shell=True)
+    subprocess.run( ["robocopy", str(directory), str(output_base_path), "/E", "/xf", "*.log", "*.cue", "*.md5", "*.m3u"], shell=True)
     flac_files = list(output_base_path.rglob('*.flac'))
     failed_files = []
 
@@ -24,11 +22,15 @@ def main(directory):
 
 def convert_flac_to_mp3(flac):
     try:
+        retain_tags = "ARTIST=TITLE=ALBUM=DATE=GENRE=COMPOSER=PERFORMER=ALBUMARTIST=TRACKNUMBER=TOTALTRACKS=DISCNUMBER=TOTALDISCS=COMMENT=RATING"
+
+        subprocess.run(['metaflac', f'--remove-all-tags-except={retain_tags}', str(flac)], check=True, encoding='utf-8')
+
         subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(flac)], check=True, encoding='utf-8')
         subprocess.run(['metaflac', '--add-padding=8192', str(flac)], check=True, encoding='utf-8')
-        subprocess.run(
-            ['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a',
-             '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
+
+        subprocess.run(['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a',
+                        '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
         flac.unlink()
         return True
     except subprocess.CalledProcessError as e:
