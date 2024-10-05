@@ -1,4 +1,4 @@
-import shutil, subprocess, os, sys
+import shutil, subprocess, sys
 from pathlib import Path
 from misc import log_to_file
 
