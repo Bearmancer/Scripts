@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 from misc import log_to_file
-
+import pyperclip
 
 def main(directory):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
@@ -15,9 +15,14 @@ def main(directory):
             failed_files.append(str(flac))
 
     if failed_files:
-        log_to_file(f"Not all FLAC files were converted to MP3. filelist:\"{'|'.join(failed_files)}\"")
+        failed_files = "filelist:\"{'|'.join(failed_files)}\""
+        pyperclip.copy(failed_files)
+        output = f"Not all FLAC files were converted to MP3: {failed_files}"
+        print(output)
+        log_to_file(output)
     else:
-        log_to_file("All FLAC files successfully converted to MP3.")
+        output = "All FLAC files successfully converted to MP3."
+        print(output)
 
 
 def convert_flac_to_mp3(flac):
