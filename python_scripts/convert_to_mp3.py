@@ -1,84 +1,44 @@
-import shutil, subprocess, sys
+import subprocess
+import sys
 from pathlib import Path
 from misc import log_to_file
 
+
 def main(directory):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
+    subprocess.run(
+        ["robocopy", str(directory), str(output_base_path), "/E", "/xf", "*.log", "*.cue", "*.md5", "*.m3u"],
+        shell=True)
+    flac_files = list(output_base_path.rglob('*.flac'))
+    failed_files = []
 
-    for subfolder in directory.iterdir():
-        if subfolder.is_dir():
-            output_path = output_base_path / f"{subfolder.name} (MP3)"
-            output_path.mkdir(parents=True, exist_ok=True)
-            print(f"output path is :{output_path}")
+    for flac in flac_files:
+        if not convert_flac_to_mp3(flac):
+            failed_files.append(str(flac))
 
-            robocopy(subfolder, output_path)
-
-            flac_files = list(subfolder.rglob('*.flac'))
-
-            for flac_path in flac_files:
-                new_flac_path = strip_flac_metadata(flac_path, output_path)
-                convert_to_mp3(new_flac_path)
-
-                new_flac_path.unlink()
-
-            check_mp3_count(flac_files, output_path)
-
-def strip_flac_metadata(flac_path, output_path):
-    flac_path = Path(flac_path)
-
-    new_flac_path = output_path / flac_path.relative_to(flac_path.parent.parent)
-    new_flac_path.parent.mkdir(parents=True, exist_ok=True)
-
-    shutil.copy(flac_path, new_flac_path)
-
-    subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(new_flac_path)],
-                   encoding='utf-8')
-    subprocess.run(['metaflac', '--add-padding=8192', str(new_flac_path)], encoding='utf-8')
-
-    return new_flac_path
-
-def convert_to_mp3(new_flac_path):
-    mp3_path = new_flac_path.with_suffix('.mp3')
-    mp3_path.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        subprocess.run(['ffmpeg', '-i', str(new_flac_path), '-codec:a', 'libmp3lame', '-map_metadata', '0',
-                        '-id3v2_version', '3', '-b:a', '320k', str(mp3_path), '-y'], encoding='utf-8')
-    except Exception as e:
-        log_to_file(f"Exception while converting: {new_flac_path} - {e}")
-
-def check_mp3_count(flac_files, output_path):
-    mp3_files = list(output_path.rglob('*.mp3'))
-    mp3_set = {mp3.relative_to(output_path) for mp3 in mp3_files}
-
-    subfolder = Path(flac_files[0]).parent.parent
-
-    missing_mp3s = [flac for flac in flac_files if flac.with_suffix('.mp3').relative_to(subfolder) not in mp3_set]
-
-    if missing_mp3s:
-        log_to_file(f"Problematic Files in {subfolder}:\nfilelist: {'|'.join(map(str, missing_mp3s))}\n------------------\n")
+    if failed_files:
+        log_to_file(f"Not all FLAC files were converted to MP3. filelist:\"{'|'.join(failed_files)}\"")
     else:
-        print(f"All FLAC Files for {subfolder} were successfully converted to MP3.\n------------------\n")
+        log_to_file("All FLAC files successfully converted to MP3.")
 
-def robocopy(src, dst):
-    dst.mkdir(parents=True, exist_ok=True)
 
-    excluded_extensions = {'.log', '.cue', '.md5', '.flac', '.m3u'}
+def convert_flac_to_mp3(flac):
+    try:
+        subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(flac)], check=True, encoding='utf-8')
+        subprocess.run(['metaflac', '--add-padding=8192', str(flac)], check=True, encoding='utf-8')
+        subprocess.run(
+            ['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a',
+             '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
+        flac.unlink()
+        return True
+    except subprocess.CalledProcessError as e:
+        log_to_file(f"Error processing file: {flac} - {e}")
+        return False
 
-    for file in src.rglob('*'):
-        if file.is_file() and file.suffix.lower() not in excluded_extensions:
-            relative_path = file.relative_to(src)
-            destination_file_path = dst / relative_path
-
-            destination_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-            shutil.copy2(file, destination_file_path)
-            print(f"Copied: {file} to {destination_file_path}")
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        robocopy(Path(sys.argv[1]), Path(sys.argv[2]))
-    elif len(sys.argv) == 2:
+    if len(sys.argv) == 2:
         main(Path(sys.argv[1]))
     else:
         print("Invalid number of arguments entered.")
+        exit()
