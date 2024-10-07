@@ -1,6 +1,6 @@
 import pyperclip, subprocess, sys
 from pathlib import Path
-from misc import log_to_file
+
 
 def rename_file_red(path: Path):
     print(f"Now renaming: {path}\n")
@@ -36,9 +36,12 @@ def rename_file_red(path: Path):
 
         print(f"Files have been renamed for {path}.\n-----------------------\n")
         pyperclip.copy(f"{new_file_names}")
-        log_to_file(output)
+        with (Path.home() / "Desktop" / "Excessively Long Files.txt").open('w') as file:
+            file.write(output)
+
     else:
         print(f"No files renamed for {path}.\n-----------------------\n")
+
 
 def calculate_image_size(path: Path):
     exif_tool = Path(r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe")
@@ -55,11 +58,12 @@ def calculate_image_size(path: Path):
 
     if problematic_files:
         output = f"Files larger than 1MB:\nfilelist:\"{'|'.join(str(file) for file in problematic_files)}\""
-        with (Path.home() / "Desktop" / "problematic_files.txt").open('w') as file:
-            file.write(output.strip())
+        with (Path.home() / "Desktop" / "Files with Giant Embedded Images.txt").open('w') as file:
+            file.write(output)
         print(output)
     else:
         print("No files with embedded artwork less than 1MB")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
