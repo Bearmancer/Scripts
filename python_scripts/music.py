@@ -25,6 +25,9 @@ def rename_file_red(path: Path):
             file.rename(new_file_path)
             new_files_list.append(new_file_path)
 
+            print(f"Old name: '{file}'")
+            print(f"New name: '{new_file_path}'")
+
     if new_files_list:
         new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
         output = (
