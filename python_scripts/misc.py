@@ -1,6 +1,9 @@
 import sys
+from py3createtorrent import create_torrent
 from pathlib import Path
 from datetime import datetime
+from music import rename_file_red
+
 
 def log_to_file(message):
     log_file = Path.home() / "Desktop" / "Python Functions' Log.txt"
@@ -59,6 +62,16 @@ def list_files_and_directories(path, indent=0, sort_order="1"):
         print(file_output)
         log_to_file(file_output)
 
+def make_torrents(path: Path):
+    for folder in path.iterdir():
+        if folder.is_dir():
+            rename_file_red(folder)
+            create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS",
+                           output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - OPS.torrent")
+            create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",
+                           output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - RED.torrent")
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
@@ -71,5 +84,7 @@ if __name__ == "__main__":
         list_directories(directory)
     elif command == 'list_files_and_dirs':
         list_files_and_directories(directory)
+    elif command == "make_torrents":
+        make_torrents(directory)
     else:
-        print("Unknown command. Use 'list_dir' or 'list_files_and_dirs'.")
+        print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")

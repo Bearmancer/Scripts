@@ -23,10 +23,4 @@ function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Locat
     py C:\Users\Lance\Documents\Powershell\python_scripts\sacd.py $directory.FullName
 }
 
-function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    rfr $directory
-    py -m py3createtorrent -P -t "https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce" -s "OPS" $directory -o "$env:USERPROFILE\Desktop\$($directory.BaseName) - OPS.torrent"
-    py -m py3createtorrent -P -t "https://flacsfor.me/250f870ba861cefb73003d29826af739/announce" -s "RED" $directory -o "$env:USERPROFILE\Desktop\$($directory.BaseName) - RED.torrent"
-}
-
 Set-Alias -Name rfr -Value renameFileRed

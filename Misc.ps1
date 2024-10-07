@@ -29,3 +29,7 @@ function ListDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-L
 function ListFilesAndDirectories([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_files_and_dirs $directory.FullName
 }
+
+function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py make_torrents $directory.FullName
+}
