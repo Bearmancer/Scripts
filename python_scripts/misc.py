@@ -63,8 +63,10 @@ def list_files_and_directories(path, indent=0, sort_order="1"):
 def make_torrents(path: Path):
     for folder in path.iterdir():
         if folder.is_dir():
-            create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, comment="OPS", output=f"C:\\Users\\Lance\\Desktop\\{path.name} - OPS.torrent")
-            create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, comment="RED", output=f"C:\\Users\\Lance\\Desktop\\{path.name} - RED.torrent")
+            create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, comment="OPS",
+                           output=f"C:\\Users\\Lance\\Desktop\\{path.name} - OPS.torrent")
+            create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, comment="RED",
+                           output=f"C:\\Users\\Lance\\Desktop\\{path.name} - RED.torrent")
 
 
 if __name__ == "__main__":
