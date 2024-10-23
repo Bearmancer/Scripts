@@ -1,8 +1,8 @@
 import subprocess
 import sys
+import pyperclip
 from pathlib import Path
 from misc import log_to_file
-import pyperclip
 
 def main(directory):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
@@ -23,6 +23,11 @@ def main(directory):
     else:
         output = "All FLAC files successfully converted to MP3."
         print(output)
+    
+    for folder in output_base_path.glob('*'):
+        if folder.is_dir():
+            new_folder_path = folder.parent / folder.name + " (MP3)"
+            folder.rename(new_folder_path)
 
 
 def convert_flac_to_mp3(flac):
