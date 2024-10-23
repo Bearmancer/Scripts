@@ -1,8 +1,8 @@
 import subprocess
 import sys
+import pyperclip
 from pathlib import Path
 from misc import log_to_file
-import pyperclip
 
 def main(directory):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
