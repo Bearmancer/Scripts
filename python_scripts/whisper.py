@@ -6,7 +6,6 @@ file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.w
 
 def whisper_logic(file: Path, model, language):
     if file.suffix not in file_extensions:
-        print(f"{file}'s extension ({file.suffix}) is incompatible. Terminating.")
         return
 
     subtitle_file = file.with_suffix('.srt')
