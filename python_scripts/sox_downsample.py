@@ -63,4 +63,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     directory = Path(sys.argv[1])
-    sox_downsample(directory)
+
+    for directory in directory.iterdir():
+        if directory.is_dir():
+            sox_downsample(path)
