@@ -2,7 +2,9 @@ import subprocess, sys, re, chardet
 from pathlib import Path
 from docx import Document
 
+
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
+
 
 def whisper_logic(file: Path, model, language):
     if file.suffix not in file_extensions:
@@ -23,13 +25,16 @@ def whisper_logic(file: Path, model, language):
     if language == "Japanese":
         srt_to_word(subtitle_file)
 
+
 def whisp(file):
     whisper_logic(file, "small.en", "English")
+
 
 def whisper_path(directory):
     for file in directory.glob('*'):
         if file.is_file():
             whisp(file)
+
 
 def whisper_path_recursive(directory):
     for subdir in directory.rglob('*'):
@@ -37,13 +42,16 @@ def whisper_path_recursive(directory):
             whisper_path(subdir)
     whisper_path(directory)
 
+
 def whisper_japanese(file):
     whisper_logic(file, "small", "Japanese")
+
 
 def whisper_path_japanese(directory):
     for file in directory.glob('*'):
         if file.is_file():
             whisper_japanese(file)
+
 
 def remove_subtitle_duplication(file):
     old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'
@@ -60,6 +68,7 @@ def remove_subtitle_duplication(file):
     else:
         print(f"{file} not found.")
 
+
 def srt_to_word(input_file):
     with open(input_file, 'rb') as f:
         raw_data = f.read()
@@ -72,6 +81,7 @@ def srt_to_word(input_file):
         doc.save(output_file)
         print(f"Output saved to '{output_file}")
 
+
 def word_to_srt(input_file):
     doc = Document(input_file)
     text = '\n'.join([para.text for para in doc.paragraphs])
@@ -79,6 +89,7 @@ def word_to_srt(input_file):
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
     print(f"Output saved to '{output_file}'")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

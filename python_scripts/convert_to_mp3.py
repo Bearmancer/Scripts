@@ -1,8 +1,8 @@
 import subprocess
 import sys
 import pyperclip
-import pyperclip
 from pathlib import Path
+
 
 output = []
 
@@ -33,7 +33,8 @@ def main(directory, process_all=False):
         output.append(f"Not all FLAC files were converted to MP3: {failed_files_str}")
     else:
         output.append("All FLAC files successfully converted to MP3.")
-        print(output)
+        
+    print(output)
     
     for folder in output_base_path.glob('*'):
         if folder.is_dir():

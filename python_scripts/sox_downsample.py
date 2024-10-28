@@ -2,6 +2,7 @@ import shutil, subprocess, sys
 from pathlib import Path
 from misc import log_to_file
 
+
 def sox_downsample(path: Path):
     original = path / "original"
     converted = path / "converted"
@@ -54,6 +55,7 @@ def sox_downsample(path: Path):
     if len(list(path.glob('*.flac'))) == len(list(original.glob('*.flac'))):
         for dir_path in [converted, original]:
             shutil.rmtree(dir_path)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

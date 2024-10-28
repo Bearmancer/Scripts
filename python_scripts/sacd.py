@@ -3,6 +3,7 @@ from pathlib import Path
 from misc import log_to_file
 from sox_downsample import sox_downsample
 
+
 def extract_sacds(path):
     normalized_name = ''.join(c for c in unicodedata.normalize('NFD', path.name) if unicodedata.category(c) != 'Mn')
 
@@ -14,6 +15,7 @@ def extract_sacds(path):
         flac_folder = iso_to_flac(iso_file, path)
         copied_folder = copy_folder(flac_folder)
         sox_downsample(copied_folder)
+
 
 def iso_to_flac(iso_file, path):
     output = subprocess.run(['sacd_extract', '-P', '-i', str(iso_file)],
@@ -59,6 +61,7 @@ def iso_to_flac(iso_file, path):
         log_to_file(f"Audio for {iso_file} is neither multichannel nor stereo.")
         return None
 
+
 def copy_folder(path: Path):
     parent_dir = path.parent
     destination_folder = parent_dir / f"{path.name} (16-bit)"
@@ -66,6 +69,7 @@ def copy_folder(path: Path):
     shutil.copytree(path, destination_folder)
 
     return Path (destination_folder)
+
 
 def check_dynamic_range(directory):
     dr_gains = []
@@ -79,6 +83,7 @@ def check_dynamic_range(directory):
     max_dr_gain = max(dr_gains) if dr_gains else None
 
     return max_dr_gain
+
 
 def dff_to_flac(input_folder):
     files = list(input_folder.glob("*.dff"))
@@ -112,6 +117,7 @@ def dff_to_flac(input_folder):
 
     check_dff_and_flac(input_folder)
 
+
 def check_dff_and_flac(input_folder):
     print(f"DFF and FLAC conversion invoked on {input_folder}")
 
@@ -124,6 +130,7 @@ def check_dff_and_flac(input_folder):
             dff_file.unlink()
     else:
         log_to_file(f"Unequal number of FLAC and DFF files in {input_folder}.")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
