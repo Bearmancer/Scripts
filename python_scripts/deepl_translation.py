@@ -1,4 +1,7 @@
-import deepl, sys, os, chardet
+import deepl
+import sys
+import os
+import chardet
 
 auth_key = open("/python_scripts/deepl_api_key.txt", 'r').read()
 

@@ -2,6 +2,7 @@ import shutil, subprocess, sys
 from pathlib import Path
 from misc import log_to_file
 
+
 def sox_downsample(path: Path):
     original = path / "original"
     converted = path / "converted"
@@ -55,10 +56,14 @@ def sox_downsample(path: Path):
         for dir_path in [converted, original]:
             shutil.rmtree(dir_path)
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: script.py <root_dir>")
         sys.exit(1)
 
     directory = Path(sys.argv[1])
-    sox_downsample(directory)
+
+    for directory in directory.iterdir():
+        if directory.is_dir():
+            sox_downsample(path)

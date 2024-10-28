@@ -11,12 +11,14 @@ def log_to_file(message):
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
 
+
 def get_folder_size(path):
     total_size = 0
     for entry in path.rglob('*'):
         if entry.is_file():
             total_size += entry.stat().st_size
     return total_size
+
 
 def list_directories(path, indent=0, sort_order="1"):
     indentation = "  " * indent
@@ -34,6 +36,7 @@ def list_directories(path, indent=0, sort_order="1"):
 
     for entry, _ in entries:
         list_directories(entry[0], indent + 2, sort_order)
+
 
 def list_files_and_directories(path, indent=0, sort_order="1"):
     indentation = "  " * indent
@@ -61,6 +64,7 @@ def list_files_and_directories(path, indent=0, sort_order="1"):
         file_output = f"{indentation}  {entry.name} (Size: {file_size_mb:.2f} MB)"
         print(file_output)
         log_to_file(file_output)
+
 
 def make_torrents(path: Path):
     for folder in path.iterdir():

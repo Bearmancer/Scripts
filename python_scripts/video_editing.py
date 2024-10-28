@@ -2,9 +2,11 @@ import subprocess, sys, json
 from operator import itemgetter
 from pathlib import Path
 
+
 video_extensions = ["mp4", "mkv", "ts", "avi"]
 path: Path
 video_files = None
+
 
 def extract_chapters():
     print(video_files)
@@ -32,6 +34,7 @@ def extract_chapters():
             subprocess.run(["ffmpeg.exe", "-i", str(video_file), "-ss", str(chapter["start_time"]), "-to", str(chapter["end_time"]), "-c", "copy", "-avoid_negative_ts", "make_zero", "-y", str(output_file_name)])
             i += 1
 
+
 def batch_compression():
     mkv_files = path.rglob("*.mkv")
 
@@ -46,6 +49,7 @@ def batch_compression():
             print(f"Successfully converted {file}.")
         else:
             print(f"Failed to convert {file}: {result.stderr.strip()}")
+
 
 def remux_dvd():
     directories = [path] + [d for d in path.rglob("*") if d.is_dir() and "BACKUP" not in d.name]
@@ -70,6 +74,7 @@ def remux_dvd():
         for folder in non_remuxable:
             print(folder)
 
+
 def convert_dvd_to_mkv(file, dvd_folder):
     output_path = dvd_folder / "Converted"
     output_path.mkdir(exist_ok=True)
@@ -83,6 +88,7 @@ def convert_dvd_to_mkv(file, dvd_folder):
     else:
         print(f"Failed to convert {file}: {result.stderr}")
 
+
 def extract_audio_commentary():
     for file in video_files:
         result = subprocess.run(['ffmpeg', '-i', str(file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -95,6 +101,7 @@ def extract_audio_commentary():
 
     for flac_file in Path('.').glob('*.flac'):
         print(flac_file.name)
+
 
 def print_video_resolution():
     files_1920_1080 = []
@@ -123,6 +130,7 @@ def print_video_resolution():
     for file in files_unresolved_resolution:
         print(file.name)
 
+
 def get_video_resolution(filepath):
     command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of",
                "csv=s=x:p=0", str(filepath)]
@@ -139,6 +147,7 @@ def get_video_resolution(filepath):
         print(f"Error processing file: {filepath}. Error: {e}")
         return None
 
+
 def calculate_mb_per_minute(video_file):
     command = ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'format=duration,size', '-of',
            'default=noprint_wrappers=1:nokey=1', str(video_file)]
@@ -146,6 +155,7 @@ def calculate_mb_per_minute(video_file):
     duration, size = map(float, output.strip().split('\n'))
     mb_per_minute = (size / 1024 / 1024) / (duration / 60)
     return mb_per_minute, size, duration
+
 
 def calculate_mb_for_directory():
     data = []
@@ -169,6 +179,7 @@ def calculate_mb_for_directory():
             """)
 
     print(f"Output saved as '{output_file_path}'.")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
