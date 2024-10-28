@@ -6,7 +6,7 @@ from pathlib import Path
 output = []
 
 
-def main(directory, process_all=False):
+def main(directory, process_all=True):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
 
     if process_all:
@@ -63,7 +63,7 @@ def convert_flac_to_mp3(flac):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         path = Path(sys.argv[1]).resolve()
-        process_subfolders = str(sys.argv[2:3]).lower() == ['true']
+        process_subfolders = len(sys.argv) <= 2 or sys.argv[2].lower() == 'true'
         main(path, process_subfolders)
     else:
         print("Invalid number of arguments entered.")
