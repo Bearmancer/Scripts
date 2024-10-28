@@ -3,7 +3,6 @@ import sys
 import pyperclip
 from pathlib import Path
 
-
 output = []
 
 
@@ -33,9 +32,9 @@ def main(directory, process_all=False):
         output.append(f"Not all FLAC files were converted to MP3: {failed_files_str}")
     else:
         output.append("All FLAC files successfully converted to MP3.")
-        
+
     print(output)
-    
+
     for folder in output_base_path.glob('*'):
         if folder.is_dir():
             new_folder_path = folder.parent / folder.name + " (MP3)"
@@ -52,10 +51,10 @@ def convert_flac_to_mp3(flac):
         subprocess.run(['metaflac', '--add-padding=8192', str(flac)], check=True, encoding='utf-8')
 
         subprocess.run(['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0' '-id3v2_version', '3', '-b:a', '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
-        
+
         flac.unlink()
         return True
-    
+
     except subprocess.CalledProcessError as e:
         output.append(f"Error processing file: {flac} - {e}")
         return False
