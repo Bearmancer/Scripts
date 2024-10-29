@@ -37,7 +37,7 @@ def main(directory, process_all=True):
 
     for folder in output_base_path.glob('*'):
         if folder.is_dir():
-            new_folder_path = folder.parent / folder.name + " (MP3)"
+            new_folder_path = f"{folder.parent}/{folder.name} (MP3)"
             folder.rename(new_folder_path)
 
 
@@ -50,7 +50,7 @@ def convert_flac_to_mp3(flac):
         subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(flac)], check=True, encoding='utf-8')
         subprocess.run(['metaflac', '--add-padding=8192', str(flac)], check=True, encoding='utf-8')
 
-        subprocess.run(['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0' '-id3v2_version', '3', '-b:a', '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
+        subprocess.run(['ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0', '-id3v2_version', '3', '-b:a', '320k', str(flac.with_suffix('.mp3')), '-y'], check=True, encoding='utf-8')
 
         flac.unlink()
         return True
