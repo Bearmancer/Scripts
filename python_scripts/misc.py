@@ -75,19 +75,6 @@ def make_torrents(folder):
     create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - RED.torrent")
 
 
-def main():
-    command, directory, process_all_subfolders = parse_arguments()
-
-    if command == 'list_dir':
-        list_directories(directory)
-    elif command == 'list_files_and_dirs':
-        list_files_and_directories(directory)
-    elif command == "make_torrents":
-        process_make_torrents(directory, process_all_subfolders)
-    else:
-        print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")
-
-
 def parse_arguments():
     if len(sys.argv) < 3:
         print("Invalid number of arguments entered.")
@@ -106,6 +93,19 @@ def process_make_torrents(directory, process_all_subfolders):
     for subfolder in directories:
         if subfolder.is_dir():
             make_torrents(subfolder)
+
+
+def main():
+    command, directory, process_all_subfolders = parse_arguments()
+
+    if command == 'list_dir':
+        list_directories(directory)
+    elif command == 'list_files_and_dirs':
+        list_files_and_directories(directory)
+    elif command == "make_torrents":
+        process_make_torrents(directory, process_all_subfolders)
+    else:
+        print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")
 
 
 if __name__ == "__main__":

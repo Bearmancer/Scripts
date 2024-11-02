@@ -181,16 +181,14 @@ def calculate_mb_for_directory():
     print(f"Output saved as '{output_file_path}'.")
 
 
-if __name__ == "__main__":
+def main():
+    global path, video_files
     if len(sys.argv) != 3:
         print("Usage: script.py <root_dir> <FolderPath>")
         sys.exit(1)
-
     method = sys.argv[1]
     path = Path(sys.argv[2])
-
     video_files = [file for file in path.rglob("*") if file.suffix in video_extensions]
-
     if method == "RemuxDVD":
         remux_dvd()
     elif method == "ExtractChapters":
@@ -205,3 +203,7 @@ if __name__ == "__main__":
         calculate_mb_for_directory()
     else:
         print("Invalid arguments passed.")
+
+
+if __name__ == "__main__":
+    main()

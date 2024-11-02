@@ -67,7 +67,7 @@ def calculate_image_size(path: Path):
         print("No files with embedded artwork less than 1MB")
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 3:
         print("Invalid number of arguments supplied.")
         exit()
@@ -81,3 +81,7 @@ if __name__ == "__main__":
         rename_file_red(directory)
     else:
         print("Invalid argument entered.")
+
+
+if __name__ == "__main__":
+    main()
