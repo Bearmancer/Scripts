@@ -2,9 +2,9 @@ import shutil
 import subprocess
 import sys
 import unidecode
+import chardet
 from pathlib import Path
 from pathvalidate import sanitize_filename
-import chardet
 
 
 def sox_downsample(path: Path):
@@ -54,16 +54,24 @@ def sox_downsample(path: Path):
             print(f"No action found for {file} - Bit Depth: {precision}, Sample Rate: {sample_rate}")
             sys.exit(1)
 
+    for flac in converted.glob('*.flac'):
+        shutil.move(flac, path)
+
     if len(list(path.glob('*.flac'))) == len(list(original.glob('*.flac'))):
         for dir_path in [converted, original]:
             shutil.rmtree(dir_path)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         print("Usage: script.py <root_dir>")
         sys.exit(1)
+
     directory = Path(sys.argv[1])
-    for subdir in directory.iterdir():
+    process_all_subfolders = sys.argv[2].lower() == 'true' if len(sys.argv) > 2 else True
+
+    directories_to_process = directory.iterdir() if process_all_subfolders else [directory]
+
+    for subdir in directories_to_process:
         if subdir.is_dir():
             sox_downsample(subdir)

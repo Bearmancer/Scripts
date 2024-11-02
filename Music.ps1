@@ -2,8 +2,8 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\sox_downsample.py $directory.FullName
+function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\sox_downsample.py $directory.FullName $process_all
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
