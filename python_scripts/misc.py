@@ -1,4 +1,5 @@
 import sys
+import json
 from py3createtorrent import create_torrent
 from pathlib import Path
 from datetime import datetime
@@ -71,8 +72,10 @@ def make_torrents(folder):
 
     rename_file_red(folder)
 
-    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"C:\\Users\\Lance\\Dropbox\\Lance\\{folder.name} - OPS.torrent")
-    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"C:\\Users\\Lance\\Dropbox\\Lance\\{folder.name} - RED.torrent")
+    dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
+
+    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"{dropbox}\\{folder.name} - OPS.torrent")
+    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"{dropbox}\\{folder.name} - RED.torrent")
 
 
 def parse_arguments():
