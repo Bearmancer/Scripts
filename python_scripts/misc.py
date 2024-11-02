@@ -66,29 +66,34 @@ def list_files_and_directories(path, indent=0, sort_order="1"):
         log_to_file(file_output)
 
 
-def make_torrents(path: Path):
-    for folder in path.iterdir():
+def make_torrents(path: Path, process_all):
+    if process_all:
+        folders = [d for d in path.iterdir() if d.is_dir()]
+    else:
+        folders = [path]
+
+    for folder in folders:
         if folder.is_dir():
+            print(f'Now processing: {folder}')
             rename_file_red(folder)
-            create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS",
-                           output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - OPS.torrent")
-            create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",
-                           output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - RED.torrent")
+            create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - OPS.torrent")
+            create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - RED.torrent")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python script_name.py [list_dir|list_files_and_dirs]")
+    if len(sys.argv) < 3:
+        print("Invalid number of arguments entered.")
         exit()
 
     command = sys.argv[1]
     directory = Path(sys.argv[2])
+    process_all_subfolders = sys.argv[3].lower() == 'true' if len(sys.argv) > 3 else True
 
     if command == 'list_dir':
         list_directories(directory)
     elif command == 'list_files_and_dirs':
         list_files_and_directories(directory)
     elif command == "make_torrents":
-        make_torrents(directory)
+        make_torrents(directory, process_all_subfolders)
     else:
         print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")

@@ -2,43 +2,40 @@ import subprocess
 import sys
 import pyperclip
 from pathlib import Path
+from pathvalidate import sanitize_filepath
 
 output = []
 
 
-def main(directory, process_all=True):
+def main(path, process_all):
     output_base_path = Path("C:/Users/Lance/Desktop/Music/MP3")
 
     if process_all:
-        directories_to_process = [d for d in directory.iterdir() if d.is_dir()]
+        directories = [d for d in path.iterdir() if d.is_dir()]
     else:
-        directories_to_process = [directory]
+        directories = [path]
 
-    for dir_to_process in directories_to_process:
-        output_path = Path(f"C:/Users/Lance/Desktop/Music/MP3/{dir_to_process.name} (MP3)")
+    for directory in directories:
+        output_path = Path(f"C:/Users/Lance/Desktop/Music/MP3/{directory.name} (MP3)")
         output_path.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["robocopy", str(dir_to_process), str(output_path), "/E", "/xf", "*.log", "*.cue", "*.md5", "*.m3u"], shell=True)
+        subprocess.run(["robocopy", str(directory), str(output_path), "/E", "/xf", "*.log", "*.cue", "*.md5", "*.m3u"], shell=True)
 
     flac_files = list(output_base_path.rglob('*.flac'))
     failed_files = []
 
     for flac in flac_files:
         if not convert_flac_to_mp3(flac):
-            failed_files.append(str(flac))
+            if not convert_flac_to_mp3(sanitize_filepath(flac)):
+                failed_files.append(flac)
 
     if failed_files:
         failed_files_str = "filelist:\"{}\"".format('|'.join(failed_files))
         pyperclip.copy(failed_files_str)
-        output.append(f"Not all FLAC files were converted to MP3: {failed_files_str}")
+        output.append(f"Not all FLAC files were converted to MP3:\n{failed_files_str}")
     else:
         output.append("All FLAC files successfully converted to MP3.")
 
-    print(output)
-
-    for folder in output_base_path.glob('*'):
-        if folder.is_dir():
-            new_folder_path = f"{folder.parent}/{folder.name} (MP3)"
-            folder.rename(new_folder_path)
+    print(output.__str__())
 
 
 def convert_flac_to_mp3(flac):
@@ -62,9 +59,10 @@ def convert_flac_to_mp3(flac):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        path = Path(sys.argv[1]).resolve()
-        process_subfolders = len(sys.argv) <= 2 or sys.argv[2].lower() == 'true'
-        main(path, process_subfolders)
+        location = Path(sys.argv[1]).resolve()
+        process_subfolders = sys.argv[2].lower() == 'true' if len(sys.argv) > 2 else True
+        main(location, process_subfolders)
+
     else:
         print("Invalid number of arguments entered.")
         exit()
