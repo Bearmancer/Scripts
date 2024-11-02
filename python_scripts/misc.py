@@ -71,8 +71,8 @@ def make_torrents(folder):
 
     rename_file_red(folder)
 
-    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - OPS.torrent")
-    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"C:\\Users\\Lance\\Desktop\\{folder.name} - RED.torrent")
+    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"C:\\Users\\Lance\\Dropbox\\Lance\\{folder.name} - OPS.torrent")
+    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"C:\\Users\\Lance\\Dropbox\\Lance\\{folder.name} - RED.torrent")
 
 
 def parse_arguments():
