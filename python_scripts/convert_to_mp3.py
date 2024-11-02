@@ -35,7 +35,7 @@ def main(path, process_all):
     else:
         output.append("All FLAC files successfully converted to MP3.")
 
-    print(output.__str__())
+    print("\n".join(output))
 
 
 def convert_flac_to_mp3(flac):
