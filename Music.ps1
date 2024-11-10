@@ -18,6 +18,10 @@ function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loca
     py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName $process_all
 }
 
+function ZipFiles([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\zip_folders.py $directory.FullName
+}
+
 function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     py C:\Users\Lance\Documents\Powershell\python_scripts\sacd.py $directory.FullName
 }
