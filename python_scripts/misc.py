@@ -21,7 +21,7 @@ def get_folder_size(path):
     return total_size
 
 
-def list_directories(path, indent=0, sort_order="1"):
+def list_directories(path, sort_order, indent=0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -36,10 +36,10 @@ def list_directories(path, indent=0, sort_order="1"):
         entries.sort(key=lambda e: e[1], reverse=True)
 
     for entry, _ in entries:
-        list_directories(entry[0], indent + 2, sort_order)
+        list_directories(entry, indent + 2, sort_order)
 
 
-def list_files_and_directories(path, indent=0, sort_order="1"):
+def list_files_and_directories(path, sort_order, indent=0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -50,7 +50,7 @@ def list_files_and_directories(path, indent=0, sort_order="1"):
     directories = [entry for entry in entries if entry.is_dir()]
     files = [entry for entry in entries if entry.is_file()]
 
-    if sort_order == "1":
+    if sort_order:
         directories.sort(key=lambda e: e.name)
         files.sort(key=lambda e: e.name)
     else:
@@ -78,18 +78,6 @@ def make_torrents(folder):
     create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"{dropbox}\\Lance\\{folder.name} - RED.torrent")
 
 
-def parse_arguments():
-    if len(sys.argv) < 3:
-        print("Invalid number of arguments entered.")
-        exit()
-
-    command = sys.argv[1]
-    directory = Path(sys.argv[2])
-    process_all_subfolders = sys.argv[3].lower() == 'true' if len(sys.argv) > 3 else True
-
-    return command, directory, process_all_subfolders
-
-
 def process_make_torrents(directory, process_all_subfolders):
     directories = [d for d in directory.iterdir() if d.is_dir()] if process_all_subfolders else [directory]
 
@@ -99,14 +87,20 @@ def process_make_torrents(directory, process_all_subfolders):
 
 
 def main():
-    command, directory, process_all_subfolders = parse_arguments()
+    if len(sys.argv) < 3:
+        print("Invalid number of arguments entered.")
+        exit()
+
+    command = sys.argv[1]
+    directory = Path(sys.argv[2])
+    third_parameter = sys.argv[3].lower() == 'true' if len(sys.argv) > 3 else True
 
     if command == 'list_dir':
-        list_directories(directory)
+        list_directories(directory, sort_order=third_parameter)
     elif command == 'list_files_and_dirs':
-        list_files_and_directories(directory)
+        list_files_and_directories(directory, sort_order=third_parameter)
     elif command == "make_torrents":
-        process_make_torrents(directory, process_all_subfolders)
+        process_make_torrents(directory, process_all_subfolders=third_parameter)
     else:
         print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")
 
