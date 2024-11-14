@@ -2,7 +2,7 @@ function TranslateFile($file) {
     py C:\Users\Lance\Documents\Powershell\python_scripts\deepl_translation.py $file
 }
 
-function CallCommandHistory {
+function OpenCommandHistory {
     code C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 }
 
