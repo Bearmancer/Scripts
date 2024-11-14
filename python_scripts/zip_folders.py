@@ -21,7 +21,7 @@ def create_zip(folders, zip_name):
 def main(directory: Path):
     max_size = 2 * 1024**3 
     zip_total = 0
-    folders_zipped = []
+    items_zipped = []
     starting_folder = None
     last_folder = None
 
@@ -34,32 +34,38 @@ def main(directory: Path):
             starting_folder = item.name
         
         print(f'Adding "{item.name}" with a size of {item_size / (1024 * 1024):.2f} MiB.')
+
+        if item_size > max_size:
+            main(item)
         
         if zip_total + item_size >= max_size or idx == len(items) - 1:
             print(f"Current size of folders totalled: {zip_total / (1024 * 1024):.2f} MiB")
 
-            zip_name = path / f'{directory.name} - {starting_folder} to {last_folder}.zip'
-            create_zip(folders_zipped, zip_name)
+            zip_name = directory / f'{directory.name} - {starting_folder} to {last_folder}.zip'
+            create_zip(items_zipped, zip_name)
 
             print(f"\n{zip_name} successfully created.\n")
 
-            folders_zipped = [item]
+            items_zipped = [item]
             zip_total = item_size
             starting_folder = item.name
 
         else:
-            folders_zipped.append(item)
+            items_zipped.append(item)
             if "Disc" in item.name:
                 last_folder = item.name
             zip_total += item_size
 
 
 if __name__ == "__main__":
-    if(len(sys.argv) != 2):
+    if(len(sys.argv) < 2):
         print("Invalid number of arguments entered.")
 
-    path = Path(sys.argv[1])
+    directory = Path(sys.argv[1])
 
-    for folder in path.iterdir():
-        if folder.is_dir():
-            main(folder)
+    process_all_subfolders = sys.argv[2].lower() == 'true' if len(sys.argv) > 2 else True
+    directories_to_process = directory.iterdir() if process_all_subfolders else [directory]
+
+    for subdir in directories_to_process:
+        if subdir.is_dir():
+            main(subdir)
