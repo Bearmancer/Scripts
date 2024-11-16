@@ -32,11 +32,7 @@ def main(directory: Path):
 
         if starting_folder is None:
             starting_folder = item.name
-        
-        print(f'Adding "{item.name}" with a size of {item_size / (1024 * 1024):.2f} MiB.')
-
-        if item_size > max_size:
-            main(item)
+            last_folder = starting_folder
         
         if zip_total + item_size >= max_size or idx == len(items) - 1:
             print(f"Current size of folders totalled: {zip_total / (1024 * 1024):.2f} MiB")
@@ -52,8 +48,10 @@ def main(directory: Path):
 
         else:
             items_zipped.append(item)
+
             if "Disc" in item.name:
                 last_folder = item.name
+
             zip_total += item_size
 
 
