@@ -1,41 +1,46 @@
-import subprocess, sys, json
+import sys
+import subprocess
+import ffmpeg
+import io
+import pyperclip
 from operator import itemgetter
 from pathlib import Path
+from PIL import Image
+
+VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
 
-video_extensions = ["mp4", "mkv", "ts", "avi"]
-path: Path
-video_files = None
-
-
-def extract_chapters():
-    print(video_files)
-
-    i = 1
-
+def extract_chapters(video_files):
     for video_file in video_files:
-        parent_directory = video_file.parent
-        command = ["ffprobe.exe", "-v", "error", "-i", str(video_file), "-print_format", "json", "-show_chapters"]
-        result = subprocess.run(command, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            print(f"Failed to probe {video_file}: {result.stderr.strip()}")
+        try:
+            probe = ffmpeg.probe(str(video_file), show_chapters=None)
+            chapters = probe.get('chapters', [])
+        except ffmpeg.Error as e:
+            print(f"Failed to probe {video_file}: {e.stderr.decode()}")
             continue
 
-        json_chapters = json.loads(result.stdout)
-
-        if len(json_chapters.get("chapters", [])) <= 1:
+        if len(chapters) <= 1:
             print(f"No chapters found in {video_file.name}.")
             continue
 
-        for chapter in json_chapters["chapters"]:
-            formatted_index = f"{i:02}"
-            output_file_name = parent_directory / f"{parent_directory.name} - Chapter {formatted_index}{video_file.suffix}"
-            subprocess.run(["ffmpeg.exe", "-i", str(video_file), "-ss", str(chapter["start_time"]), "-to", str(chapter["end_time"]), "-c", "copy", "-avoid_negative_ts", "make_zero", "-y", str(output_file_name)])
-            i += 1
+        parent_directory = video_file.parent
+
+        for chapter_index, chapter in enumerate(chapters, 1):
+            formatted_index = f"{chapter_index:02}"
+            output_file_name = parent_directory / f"{parent_directory.name} - Chapter {formatted_index}.{video_file.suffix}"
+            try:
+                (
+                    ffmpeg
+                    .input(str(video_file), ss=chapter['start_time'], to=chapter['end_time'])
+                    .output(str(output_file_name), c='copy', avoid_negative_ts='make_zero')
+                    .run()
+                )
+                print(f"Extracted chapter {formatted_index} from {video_file.name}.")
+            except ffmpeg.Error as e:
+                print(f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
 
 
-def batch_compression():
+def batch_compression(path):
     mkv_files = path.rglob("*.mkv")
 
     for file in mkv_files:
@@ -51,59 +56,121 @@ def batch_compression():
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 
-def remux_dvd():
-    directories = [path] + [d for d in path.rglob("*") if d.is_dir() and "BACKUP" not in d.name]
+def remux_disc(path):
+    remuxable_files = [
+        f for f in path.rglob('*')
+        if f.name in ('VIDEO_TS.IFO', 'index.bdmv') and 'BACKUP' not in f.parts
+    ]
 
-    non_remuxable = []
+    if not remuxable_files:
+        return print(f"No remuxable files found in {path}.")
 
-    for dvd_path in directories:
-        if dvd_path.is_dir():
-            remuxable = list(dvd_path.rglob("*"))
-            remuxable = [f for f in remuxable if f.name in ('VIDEO_TS.IFO', 'index.bdmv')]
+    for file in remuxable_files:
+        print(f"Converting file: {file.name}")
+        result = convert_disc_to_mkv(file, path)
 
-            for file in remuxable:
-                print(f"Converting file: {file} in {dvd_path}")
-                convert_dvd_to_mkv(file, dvd_path)
+        if result.returncode == 0:
+            print(f"File successfully converted.")
+            mkv_file = next(path.glob("*.mkv"))
+            get_mediainfo(mkv_file)
+            create_thumbnail_grid(mkv_file)
 
-            if not remuxable:
-                print(f"No remuxable files found in {dvd_path}.")
-                non_remuxable.append(dvd_path)
-
-    if non_remuxable:
-        print("Folders that couldn't be remuxed:")
-        for folder in non_remuxable:
-            print(folder)
-
-
-def convert_dvd_to_mkv(file, dvd_folder):
-    output_path = dvd_folder / "Converted"
-    output_path.mkdir(exist_ok=True)
-
-    command = [r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe", "mkv", f'file:{file}', "all", str(dvd_folder), "--minlength=180"]
-
-    result = subprocess.run(command, capture_output=True, text=True)
-
-    if result.returncode == 0:
-        print(f"Successfully converted {file}.")
-    else:
-        print(f"Failed to convert {file}: {result.stderr}")
+        else:
+            return print(f"Could not convert the file. Error: {result.stderr.strip()}")
 
 
-def extract_audio_commentary():
+def convert_disc_to_mkv(file, dvd_folder):
+    makemkv_path = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
+
+    makemkv_command = [
+        makemkv_path, "mkv",
+        f"file:{file}", "all", str(dvd_folder), "--minlength=180"
+    ]
+
+    return subprocess.run(makemkv_command, capture_output=True, text=True)
+
+
+def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
+    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.jpg"
+
+    try:
+        video = ffmpeg.probe(str(video_path.absolute()))
+    except ffmpeg.Error as e:
+        print(f"Error probing video file: {e.stderr.decode()}")
+        return
+
+    duration = float(video['format']['duration'])
+    timestamps = [duration * i / (rows * columns) for i in range(rows * columns)]
+
+    def extract_thumbnail(timestamp):
+        out, _ = (
+            ffmpeg
+            .input(str(video_path), ss=timestamp)
+            .filter('scale', width, -1)
+            .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
+            .run(capture_stdout=True, capture_stderr=True)
+        )
+        return Image.open(io.BytesIO(out))
+
+    images = [extract_thumbnail(ts) for ts in timestamps]
+    max_height = max(img.height for img in images)
+    grid_img = Image.new('RGB', (width * columns + spacing * (columns - 1), max_height * rows + spacing * (rows - 1)),
+                         color='white')
+
+    for idx, img in enumerate(images):
+        x = (idx % columns) * (width + spacing)
+        y = (idx // columns) * (max_height + spacing)
+        grid_img.paste(img, (x, y))
+        img.close()
+
+    grid_img.save(output_file)
+    print(f"Thumbnail grid saved to {output_file}")
+
+
+def get_mediainfo(video_path):
+    print(f"Getting MediaInfo for {video_path.absolute()}")
+    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.txt"
+
+    mediainfo_command = ["mediainfo", "--Output=TXT", str(video_path)]
+
+    result = (subprocess.run(mediainfo_command, capture_output=True, text=True)).stdout
+
+    with open(output_file, 'w') as f:
+        f.write(result)
+
+    pyperclip.copy(result)
+
+    print("MediaInfo successfully created.")
+
+
+def extract_audio_commentary(video_files):
     for file in video_files:
-        result = subprocess.run(['ffmpeg', '-i', str(file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        audio_tracks = [line for line in result.stderr.splitlines() if "Stream #" in line and "Audio" in line]
+        try:
+            probe = ffmpeg.probe(str(file))
+            audio_streams = [stream for stream in probe['streams']
+                             if stream['codec_type'] == 'audio']
+        except ffmpeg.Error as e:
+            print(f"Failed to probe {file}: {e.stderr.decode()}")
+            continue
 
-        if len(audio_tracks) > 1:
+        if len(audio_streams) > 1:
             output_file = file.with_name(f"{file.stem} Audio Commentary.flac")
-            subprocess.run(
-                ['ffmpeg', '-i', str(file), '-map', '0:a:1', '-sample_fmt', 's16', '-acodec', 'flac', str(output_file)])
+            try:
+                (
+                    ffmpeg
+                    .input(str(file))
+                    .output(str(output_file), map='0:a:1', acodec='flac')
+                    .run()
+                )
+                print(f"Extracted audio commentary from {file.name}.")
+            except ffmpeg.Error as e:
+                print(f"Failed to extract audio commentary from {file}: {e.stderr.decode()}")
 
     for flac_file in Path('.').glob('*.flac'):
         print(flac_file.name)
 
 
-def print_video_resolution():
+def print_video_resolution(video_files):
     files_1920_1080 = []
     files_below_1920_1080 = []
     files_unresolved_resolution = []
@@ -112,97 +179,101 @@ def print_video_resolution():
         resolution = get_video_resolution(file)
         if resolution:
             if resolution["Width"] >= 1920 and resolution["Height"] >= 1080:
-                files_1920_1080.append((file, resolution))
+                files_1920_1080.append(file.name)
             else:
-                files_below_1920_1080.append((file, resolution))
+                files_below_1920_1080.append((file.name, resolution))
         else:
-            files_unresolved_resolution.append(file)
+            files_unresolved_resolution.append(file.name)
 
     print("Files with a resolution of 1920x1080:")
-    for file, resolution in files_1920_1080:
-        print(file.name)
+    for name in files_1920_1080:
+        print(name)
 
     print("\nFiles with resolution below 1920x1080:")
-    for file, resolution in files_below_1920_1080:
-        print(f"{file.name}, Resolution: {resolution['Width']}x{resolution['Height']}")
+    for name, res in files_below_1920_1080:
+        print(f"{name}, Resolution: {res['Width']}x{res['Height']}")
 
     print("\nFiles with unresolved resolution:")
-    for file in files_unresolved_resolution:
-        print(file.name)
+    for name in files_unresolved_resolution:
+        print(name)
 
 
 def get_video_resolution(filepath):
-    command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of",
-               "csv=s=x:p=0", str(filepath)]
-
     try:
-        result = subprocess.run(command, capture_output=True, check=True)
-        output = result.stdout.decode("utf-8").strip()
-        dimensions = output.split("x")
-        if len(dimensions) != 2: return None
-        width, height = dimensions
-        return {"Width": int(width), "Height": int(height)}
+        probe = ffmpeg.probe(str(filepath))
+        video_streams = [stream for stream in probe['streams']
+                         if stream['codec_type'] == 'video']
+        width = int(video_streams[0]['width'])
+        height = int(video_streams[0]['height'])
+        return {"Width": width, "Height": height}
 
-    except (subprocess.CalledProcessError, ValueError) as e:
+    except (ffmpeg.Error, IndexError, KeyError, ValueError) as e:
         print(f"Error processing file: {filepath}. Error: {e}")
-        return None
+
+    return None
 
 
-def calculate_mb_per_minute(video_file):
-    command = ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'format=duration,size', '-of',
-           'default=noprint_wrappers=1:nokey=1', str(video_file)]
-    output = subprocess.check_output(command, universal_newlines=True)
-    duration, size = map(float, output.strip().split('\n'))
-    mb_per_minute = (size / 1024 / 1024) / (duration / 60)
-    return mb_per_minute, size, duration
+def calculate_mb_per_minute(file):
+    try:
+        probe = ffmpeg.probe(str(file))
+        format_info = probe.get('format', {})
+        duration = float(format_info.get('duration', 0))
+        size = float(format_info.get('size', 0))
+        mb_per_minute = (size / (1024 * 1024)) / (duration / 60)
+        return mb_per_minute, size, duration
+
+    except ffmpeg.Error as e:
+        print(f"Error processing file: {file}. Error: {e.stderr.decode()}")
+        return 0, 0, 0
 
 
-def calculate_mb_for_directory():
+def calculate_mb_for_directory(video_files):
     data = []
-
-    for video_file in video_files:
-        mb_per_minute, size, duration = calculate_mb_per_minute(video_file)
-        data.append((video_file.name, mb_per_minute, size, duration))
+    for file in video_files:
+        mb_per_minute, size, duration = calculate_mb_per_minute(file)
+        data.append((file.name, mb_per_minute, size, duration))
 
     sorted_data = sorted(data, key=itemgetter(1), reverse=True)
-
     output_file_path = Path.home() / 'Desktop' / 'video_files_info.txt'
 
     with open(output_file_path, 'w') as f:
         for i, (filename, mb_per_minute, size, duration) in enumerate(sorted_data, 1):
             f.write(
-            f"""
-            {i}. Name: {filename}
-            MB/Minute: {mb_per_minute:.2f}
-            Size: {size / 1024 / 1024:.2f} MB
-            Duration: {duration / 60:.2f} minutes
-            """)
+                f"{i}. Name: {filename}\n"
+                f"MB/Minute: {mb_per_minute:.2f}\n"
+                f"Size: {size / (1024 * 1024):.2f} MB\n"
+                f"Duration: {duration / 60:.2f} minutes\n\n"
+            )
 
     print(f"Output saved as '{output_file_path}'.")
 
 
 def main():
-    global path, video_files
     if len(sys.argv) != 3:
-        print("Usage: script.py <root_dir> <FolderPath>")
+        print("Usage: script.py <Method> <FolderPath>")
         sys.exit(1)
-    method = sys.argv[1]
-    path = Path(sys.argv[2])
-    video_files = [file for file in path.rglob("*") if file.suffix in video_extensions]
-    if method == "RemuxDVD":
-        remux_dvd()
+
+    method, folder = sys.argv[1], Path(sys.argv[2])
+    video_files = [file for file in folder.rglob("*") if file.suffix in VIDEO_EXTENSIONS]
+
+    if method == "RemuxDisc":
+        remux_disc(folder)
     elif method == "ExtractChapters":
-        extract_chapters()
+        extract_chapters(video_files)
     elif method == "BatchCompression":
-        batch_compression()
+        batch_compression(folder)
     elif method == "ExtractAudioCommentary":
-        extract_audio_commentary()
+        extract_audio_commentary(video_files)
     elif method == "PrintVideoResolution":
-        print_video_resolution()
+        print_video_resolution(video_files)
     elif method == "CalculateMBPerMinute":
-        calculate_mb_for_directory()
+        calculate_mb_for_directory(video_files)
+    elif method == "CreateThumbnailGrid":
+        create_thumbnail_grid(folder)
+    elif method == "GetMediaInfo":
+        get_mediainfo(folder)
     else:
-        print("Invalid arguments passed.")
+        print("Invalid method specified.")
 
 
 if __name__ == "__main__":

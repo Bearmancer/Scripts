@@ -10,8 +10,8 @@ function PrintVideoResolutions([System.IO.DirectoryInfo]$directory = $(Get-Item 
     py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py PrintVideoResolution $directory.FullName
 }
 
-function RemuxDVD ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py RemuxDVD $directory.FullName
+function RemuxDisc ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py RemuxDisc $directory.FullName
 }
 
 function BatchCompression ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
