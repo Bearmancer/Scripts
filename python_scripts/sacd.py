@@ -1,4 +1,8 @@
-import subprocess, re, shutil, sys, unicodedata
+import subprocess
+import re
+import shutil
+import sys
+import unicodedata
 from pathlib import Path
 from misc import log_to_file
 from sox_downsample import sox_downsample
