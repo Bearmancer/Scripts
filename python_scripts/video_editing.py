@@ -6,7 +6,6 @@ import pyperclip
 from operator import itemgetter
 from pathlib import Path
 from PIL import Image
-from concurrent.futures import ThreadPoolExecutor 
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
@@ -28,8 +27,7 @@ def extract_chapters(video_files):
 
         for chapter_index, chapter in enumerate(chapters, 1):
             formatted_index = f"{chapter_index:02}"
-            output_file_name = parent_directory / \
-                f"{parent_directory.name} - Chapter {formatted_index}{video_file.suffix}"
+            output_file_name = parent_directory / f"{parent_directory.name} - Chapter {formatted_index}.{video_file.suffix}"
             try:
                 (
                     ffmpeg
@@ -37,11 +35,9 @@ def extract_chapters(video_files):
                     .output(str(output_file_name), c='copy', avoid_negative_ts='make_zero')
                     .run()
                 )
-                print(
-                    f"Extracted chapter {formatted_index} from {video_file.name}.")
+                print(f"Extracted chapter {formatted_index} from {video_file.name}.")
             except ffmpeg.Error as e:
-                print(
-                    f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
+                print(f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
 
 
 def batch_compression(path):
@@ -60,21 +56,30 @@ def batch_compression(path):
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 
-def remux_dvd(path):
+def remux_disc(path):
     remuxable_files = [
         f for f in path.rglob('*')
         if f.name in ('VIDEO_TS.IFO', 'index.bdmv') and 'BACKUP' not in f.parts
     ]
 
-    if remuxable_files:
-        for file in remuxable_files:
-            print(f"Converting file: {file.name}")
-            convert_dvd_to_mkv(file, path)
-    else:
-        print(f"No remuxable files found in {path}.")
+    if not remuxable_files:
+        return print(f"No remuxable files found in {path}.")
+
+    for file in remuxable_files:
+        print(f"Converting file: {file.name}")
+        result = convert_disc_to_mkv(file, path)
+
+        if result.returncode == 0:
+            print(f"File successfully converted.")
+            mkv_file = next(path.glob("*.mkv"))
+            get_mediainfo(mkv_file)
+            create_thumbnail_grid(mkv_file)
+
+        else:
+            return print(f"Could not convert the file. Error: {result.stderr.strip()}")
 
 
-def convert_dvd_to_mkv(file, dvd_folder):
+def convert_disc_to_mkv(file, dvd_folder):
     makemkv_path = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 
     makemkv_command = [
@@ -82,38 +87,18 @@ def convert_dvd_to_mkv(file, dvd_folder):
         f"file:{file}", "all", str(dvd_folder), "--minlength=180"
     ]
 
-    result = subprocess.run(makemkv_command, capture_output=True, text=True)
-
-    if result.returncode == 0:
-        print(f"Successfully converted {file}")
-        mkv_file = next(dvd_folder.glob("*.mkv"))
-        create_mediainfo(mkv_file)
-        create_thumbnail_grid(mkv_file)
-
-    else:
-        print(f"Failed to convert {file}: {result.stderr}")
-        return
-
-
-def create_mediainfo(video_path):
-    output_file = Path.home() / "Desktop" / f"{video_path.name}.txt"
-
-    mediainfo_command = ["mediainfo", "--Output=TXT", str(video_path)]
-    
-    result = (subprocess.run(mediainfo_command, capture_output=True, text=True)).stdout
-    
-    with open(output_file, 'w') as f:
-        f.write(result)
-
-    pyperclip.copy(result)
-
-    print("MediaInfo successfully created.")
+    return subprocess.run(makemkv_command, capture_output=True, text=True)
 
 
 def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
-    output_file = Path.home() / "Desktop" / f"{video_path.name}.jpg"
+    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.jpg"
 
-    video = ffmpeg.probe(str(video_path))
+    try:
+        video = ffmpeg.probe(str(video_path.absolute()))
+    except ffmpeg.Error as e:
+        print(f"Error probing video file: {e.stderr.decode()}")
+        return
+
     duration = float(video['format']['duration'])
     timestamps = [duration * i / (rows * columns) for i in range(rows * columns)]
 
@@ -129,7 +114,8 @@ def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
 
     images = [extract_thumbnail(ts) for ts in timestamps]
     max_height = max(img.height for img in images)
-    grid_img = Image.new('RGB', (width * columns + spacing * (columns - 1), max_height * rows + spacing * (rows - 1)), color='white')
+    grid_img = Image.new('RGB', (width * columns + spacing * (columns - 1), max_height * rows + spacing * (rows - 1)),
+                         color='white')
 
     for idx, img in enumerate(images):
         x = (idx % columns) * (width + spacing)
@@ -139,6 +125,22 @@ def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
 
     grid_img.save(output_file)
     print(f"Thumbnail grid saved to {output_file}")
+
+
+def get_mediainfo(video_path):
+    print(f"Getting MediaInfo for {video_path.absolute()}")
+    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.txt"
+
+    mediainfo_command = ["mediainfo", "--Output=TXT", str(video_path)]
+
+    result = (subprocess.run(mediainfo_command, capture_output=True, text=True)).stdout
+
+    with open(output_file, 'w') as f:
+        f.write(result)
+
+    pyperclip.copy(result)
+
+    print("MediaInfo successfully created.")
 
 
 def extract_audio_commentary(video_files):
@@ -219,7 +221,7 @@ def calculate_mb_per_minute(file):
         size = float(format_info.get('size', 0))
         mb_per_minute = (size / (1024 * 1024)) / (duration / 60)
         return mb_per_minute, size, duration
-    
+
     except ffmpeg.Error as e:
         print(f"Error processing file: {file}. Error: {e.stderr.decode()}")
         return 0, 0, 0
@@ -254,8 +256,8 @@ def main():
     method, folder = sys.argv[1], Path(sys.argv[2])
     video_files = [file for file in folder.rglob("*") if file.suffix in VIDEO_EXTENSIONS]
 
-    if method == "RemuxDVD":
-        remux_dvd(folder)
+    if method == "RemuxDisc":
+        remux_disc(folder)
     elif method == "ExtractChapters":
         extract_chapters(video_files)
     elif method == "BatchCompression":
@@ -268,6 +270,8 @@ def main():
         calculate_mb_for_directory(video_files)
     elif method == "CreateThumbnailGrid":
         create_thumbnail_grid(folder)
+    elif method == "GetMediaInfo":
+        get_mediainfo(folder)
     else:
         print("Invalid method specified.")
 
