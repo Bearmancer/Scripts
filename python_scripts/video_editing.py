@@ -1,73 +1,64 @@
-import subprocess, sys, json
+import sys
+import subprocess
+import ffmpeg
 from operator import itemgetter
 from pathlib import Path
 
-
-video_extensions = ["mp4", "mkv", "ts", "avi"]
-path: Path
-video_files = None
+video_extensions = [".mp4", ".mkv", ".ts", ".avi"]
 
 
-def extract_chapters():
-    print(video_files)
-
-    i = 1
-
-    for video_file in video_files:
-        parent_directory = video_file.parent
-        command = ["ffprobe.exe", "-v", "error", "-i", str(video_file), "-print_format", "json", "-show_chapters"]
-        result = subprocess.run(command, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            print(f"Failed to probe {video_file}: {result.stderr.strip()}")
+def extract_chapters(video_files):
+    for i, video_file in enumerate(video_files, 1):
+        try:
+            probe = ffmpeg.probe(str(video_file), show_chapters=None)
+            chapters = probe.get('chapters', [])
+        except ffmpeg.Error as e:
+            print(f"Failed to probe {video_file}: {e.stderr.decode()}")
             continue
 
-        json_chapters = json.loads(result.stdout)
-
-        if len(json_chapters.get("chapters", [])) <= 1:
+        if len(chapters) <= 1:
             print(f"No chapters found in {video_file.name}.")
             continue
 
-        for chapter in json_chapters["chapters"]:
+        parent_directory = video_file.parent
+        for chapter in chapters:
             formatted_index = f"{i:02}"
-            output_file_name = parent_directory / f"{parent_directory.name} - Chapter {formatted_index}{video_file.suffix}"
-            subprocess.run(["ffmpeg.exe", "-i", str(video_file), "-ss", str(chapter["start_time"]), "-to", str(chapter["end_time"]), "-c", "copy", "-avoid_negative_ts", "make_zero", "-y", str(output_file_name)])
-            i += 1
+            output_file_name = parent_directory / \
+                f"{parent_directory.name} - Chapter {formatted_index}{video_file.suffix}"
+            (
+                ffmpeg
+                .input(str(video_file), ss=chapter['start_time'], to=chapter['end_time'])
+                .output(str(output_file_name), c='copy', avoid_negative_ts='make_zero', y=None)
+                .run()
+            )
 
 
-def batch_compression():
-    mkv_files = path.rglob("*.mkv")
+def batch_compression(path):
+    for file in path.rglob("*.mkv"):
 
-    for file in mkv_files:
         output_file_path = file.with_suffix(".mp4")
-
-        command = ["HandBrakeCLI", "--preset-import-gui", "-i", str(file), "-o", str(output_file_path)]
-        result = subprocess.run(command, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            file.unlink()
-            print(f"Successfully converted {file}.")
-        else:
-            print(f"Failed to convert {file}: {result.stderr.strip()}")
+        (
+            ffmpeg.input(str(file))
+            .output(str(output_file_path), preset='medium')
+            .run()
+        )
+        file.unlink()
+        print(f"Successfully converted {file}.")
 
 
-def remux_dvd():
+def remux_dvd(path):
     directories = [path] + [d for d in path.rglob("*") if d.is_dir() and "BACKUP" not in d.name]
-
     non_remuxable = []
 
     for dvd_path in directories:
-        if dvd_path.is_dir():
-            remuxable = list(dvd_path.rglob("*"))
-            remuxable = [f for f in remuxable if f.name in ('VIDEO_TS.IFO', 'index.bdmv')]
-
+        remuxable = [f for f in dvd_path.rglob("*") if f.name in ('VIDEO_TS.IFO', 'index.bdmv')]
+        if remuxable:
             for file in remuxable:
                 print(f"Converting file: {file} in {dvd_path}")
                 convert_dvd_to_mkv(file, dvd_path)
-
-            if not remuxable:
-                print(f"No remuxable files found in {dvd_path}.")
-                non_remuxable.append(dvd_path)
+        else:
+            print(f"No remuxable files found in {dvd_path}.")
+            non_remuxable.append(dvd_path)
 
     if non_remuxable:
         print("Folders that couldn't be remuxed:")
@@ -76,10 +67,11 @@ def remux_dvd():
 
 
 def convert_dvd_to_mkv(file, dvd_folder):
-    output_path = dvd_folder / "Converted"
+    output_path = dvd_folder
     output_path.mkdir(exist_ok=True)
 
-    command = [r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe", "mkv", f'file:{file}', "all", str(dvd_folder), "--minlength=180"]
+    command = [r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe",
+               "mkv", f'file:{file}', "all", str(dvd_folder), "--minlength=180"]
 
     result = subprocess.run(command, capture_output=True, text=True)
 
@@ -89,21 +81,30 @@ def convert_dvd_to_mkv(file, dvd_folder):
         print(f"Failed to convert {file}: {result.stderr}")
 
 
-def extract_audio_commentary():
+def extract_audio_commentary(video_files):
     for file in video_files:
-        result = subprocess.run(['ffmpeg', '-i', str(file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        audio_tracks = [line for line in result.stderr.splitlines() if "Stream #" in line and "Audio" in line]
+        try:
+            probe = ffmpeg.probe(str(file))
+            audio_streams = [stream for stream in probe['streams']
+                             if stream['codec_type'] == 'audio']
+        except ffmpeg.Error as e:
+            print(f"Failed to probe {file}: {e.stderr.decode()}")
+            continue
 
-        if len(audio_tracks) > 1:
+        if len(audio_streams) > 1:
             output_file = file.with_name(f"{file.stem} Audio Commentary.flac")
-            subprocess.run(
-                ['ffmpeg', '-i', str(file), '-map', '0:a:1', '-sample_fmt', 's16', '-acodec', 'flac', str(output_file)])
+            (
+                ffmpeg
+                .input(str(file))
+                .output(str(output_file), map='0:a:1', acodec='flac')
+                .run()
+            )
 
     for flac_file in Path('.').glob('*.flac'):
         print(flac_file.name)
 
 
-def print_video_resolution():
+def print_video_resolution(video_files):
     files_1920_1080 = []
     files_below_1920_1080 = []
     files_unresolved_resolution = []
@@ -112,97 +113,91 @@ def print_video_resolution():
         resolution = get_video_resolution(file)
         if resolution:
             if resolution["Width"] >= 1920 and resolution["Height"] >= 1080:
-                files_1920_1080.append((file, resolution))
+                files_1920_1080.append(file.name)
             else:
-                files_below_1920_1080.append((file, resolution))
+                files_below_1920_1080.append((file.name, resolution))
         else:
-            files_unresolved_resolution.append(file)
+            files_unresolved_resolution.append(file.name)
 
     print("Files with a resolution of 1920x1080:")
-    for file, resolution in files_1920_1080:
-        print(file.name)
+    for name in files_1920_1080:
+        print(name)
 
     print("\nFiles with resolution below 1920x1080:")
-    for file, resolution in files_below_1920_1080:
-        print(f"{file.name}, Resolution: {resolution['Width']}x{resolution['Height']}")
+    for name, res in files_below_1920_1080:
+        print(f"{name}, Resolution: {res['Width']}x{res['Height']}")
 
     print("\nFiles with unresolved resolution:")
-    for file in files_unresolved_resolution:
-        print(file.name)
+    for name in files_unresolved_resolution:
+        print(name)
 
 
 def get_video_resolution(filepath):
-    command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of",
-               "csv=s=x:p=0", str(filepath)]
-
     try:
-        result = subprocess.run(command, capture_output=True, check=True)
-        output = result.stdout.decode("utf-8").strip()
-        dimensions = output.split("x")
-        if len(dimensions) != 2: return None
-        width, height = dimensions
-        return {"Width": int(width), "Height": int(height)}
-
-    except (subprocess.CalledProcessError, ValueError) as e:
-        print(f"Error processing file: {filepath}. Error: {e}")
-        return None
-
-
-def calculate_mb_per_minute(video_file):
-    command = ['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'format=duration,size', '-of',
-           'default=noprint_wrappers=1:nokey=1', str(video_file)]
-    output = subprocess.check_output(command, universal_newlines=True)
-    duration, size = map(float, output.strip().split('\n'))
-    mb_per_minute = (size / 1024 / 1024) / (duration / 60)
-    return mb_per_minute, size, duration
+        probe = ffmpeg.probe(str(filepath))
+        video_streams = [stream for stream in probe['streams']
+                         if stream['codec_type'] == 'video']
+        if video_streams:
+            width = int(video_streams[0]['width'])
+            height = int(video_streams[0]['height'])
+            return {"Width": width, "Height": height}
+    except ffmpeg.Error as e:
+        print(f"Error processing file: {filepath}. Error: {e.stderr.decode()}")
+    return None
 
 
-def calculate_mb_for_directory():
+def calculate_mb_per_minute(file):
+    try:
+        probe = ffmpeg.probe(str(file))
+        format_info = probe.get('format', {})
+        duration = float(format_info.get('duration', 0))
+        size = float(format_info.get('size', 0))
+        mb_per_minute = (size / (1024 * 1024)) / (duration / 60)
+        return mb_per_minute, size, duration
+    except Exception as e:
+        print(f"Error processing file: {file}. Error: {e}")
+        return 0, 0, 0
+
+
+def calculate_mb_for_directory(video_files):
     data = []
-
-    for video_file in video_files:
-        mb_per_minute, size, duration = calculate_mb_per_minute(video_file)
-        data.append((video_file.name, mb_per_minute, size, duration))
+    for file in video_files:
+        mb_per_minute, size, duration = calculate_mb_per_minute(file)
+        data.append((file.name, mb_per_minute, size, duration))
 
     sorted_data = sorted(data, key=itemgetter(1), reverse=True)
-
     output_file_path = Path.home() / 'Desktop' / 'video_files_info.txt'
 
     with open(output_file_path, 'w') as f:
         for i, (filename, mb_per_minute, size, duration) in enumerate(sorted_data, 1):
-            f.write(
-            f"""
-            {i}. Name: {filename}
-            MB/Minute: {mb_per_minute:.2f}
-            Size: {size / 1024 / 1024:.2f} MB
-            Duration: {duration / 60:.2f} minutes
-            """)
+            f.write(f"{i}. Name: {filename}\nMB/Minute: {mb_per_minute:.2f}\nSize: {size / (1024 * 1024):.2f} MB\nDuration: {duration / 60:.2f} minutes\n\n")
 
     print(f"Output saved as '{output_file_path}'.")
 
 
 def main():
-    global path, video_files
     if len(sys.argv) != 3:
-        print("Usage: script.py <root_dir> <FolderPath>")
+        print("Usage: script.py <Method> <FolderPath>")
         sys.exit(1)
-    method = sys.argv[1]
-    path = Path(sys.argv[2])
-    video_files = [file for file in path.rglob("*") if file.suffix in video_extensions]
+
+    method, folder = sys.argv[1], Path(sys.argv[2])
+    video_files = [file for file in folder.rglob(
+        "*") if file.suffix in video_extensions]
+
     if method == "RemuxDVD":
-        remux_dvd()
+        remux_dvd(folder)
     elif method == "ExtractChapters":
-        extract_chapters()
+        extract_chapters(video_files)
     elif method == "BatchCompression":
-        batch_compression()
+        batch_compression(folder)
     elif method == "ExtractAudioCommentary":
-        extract_audio_commentary()
+        extract_audio_commentary(video_files)
     elif method == "PrintVideoResolution":
-        print_video_resolution()
+        print_video_resolution(video_files)
     elif method == "CalculateMBPerMinute":
-        calculate_mb_for_directory()
+        calculate_mb_for_directory(video_files)
     else:
-        print("Invalid arguments passed.")
+        print("Invalid method specified.")
 
 
 if __name__ == "__main__":
