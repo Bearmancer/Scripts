@@ -71,9 +71,9 @@ def remux_disc(path):
 
         if result.returncode == 0:
             print(f"File successfully converted.")
-            mkv_file = next(path.glob("*.mkv"))
-            get_mediainfo(mkv_file)
-            create_thumbnail_grid(mkv_file)
+            for mkv_file in path.glob("*.mkv"):
+                get_mediainfo(mkv_file)
+                create_thumbnail_grid(mkv_file)
 
         else:
             return print(f"Could not convert the file. Error: {result.stderr.strip()}")
