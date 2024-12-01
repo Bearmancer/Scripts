@@ -1,69 +1,57 @@
-import sys
-import zipfile
+import argparse
 from pathlib import Path
+import zipfile
 
+def zip_up_to_size(file_iter, output_dir, base_name, base_dir):
+    max_size = 2048
+    part_num = 1
+    current_size = 0
+    zf = None
 
-def get_size(item: Path) -> int:
-    if item.is_dir():
-        return sum(f.stat().st_size for f in item.rglob('*') if f.is_file())
-    return item.stat().st_size 
+    for file in file_iter:
+        if zf is None:
+            zip_filename = output_dir / f"{base_name} - Part {str(part_num).zfill(2)}.zip"
+            zf = zipfile.ZipFile(zip_filename, 'w', compression=zipfile.ZIP_STORED, allowZip64=True)
+        file_size = file.stat().st_size / (1024 * 1024)
+        if current_size + file_size > max_size:
+            zf.close()
+            part_num += 1
+            zip_filename = output_dir / f"{base_name} - Part {str(part_num).zfill(2)}.zip"
+            zf = zipfile.ZipFile(zip_filename, 'w', compression=zipfile.ZIP_STORED, allowZip64=True)
+            current_size = 0
+        zf.write(str(file), str(file.relative_to(base_dir)))
+        current_size += file_size
 
+    if zf is not None:
+        zf.close()
 
-def create_zip(folders, zip_name):
-    with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for folder in folders:
-            for item in folder.rglob('*'):
-                if item.is_file():
-                    arcname = item.relative_to(folder.parent)
-                    zipf.write(item, arcname)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--directory', nargs='?', default='.')
+    parser.add_argument('--process_subdirectories', dest='process_subdirectories', action='store_true', default=True)
+    args = parser.parse_args()
 
+    input_dir = Path(args.directory).resolve()
+    output_dir = Path.home() / 'Desktop' / 'ZIP Files'
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-def main(directory: Path):
-    max_size = 2 * 1024**3 
-    zip_total = 0
-    items_zipped = []
-    starting_folder = None
-    last_folder = None
+    if args.process_subdirectories:
+        for item in input_dir.iterdir():
+            if item.is_dir():
+                all_files = (f for f in item.rglob('*') if f.is_file())
+                zip_up_to_size(all_files, output_dir, item.name, base_dir=item)
 
-    items = list(directory.iterdir()) 
+        files_in_root = (f for f in input_dir.iterdir() if f.is_file())
 
-    for idx, item in enumerate(items):
-        item_size = get_size(item) 
+        try:
+            first_file = next(files_in_root)
+            files_in_root = (f for f in [first_file] + list(files_in_root))
+            zip_up_to_size(files_in_root, output_dir, input_dir.name, base_dir=input_dir)
+        except StopIteration:
+            pass
+    else:
+        all_files = (f for f in input_dir.rglob('*') if f.is_file())
+        zip_up_to_size(all_files, output_dir, input_dir.name, base_dir=input_dir)
 
-        if starting_folder is None:
-            starting_folder = item.name
-            last_folder = starting_folder
-        
-        if zip_total + item_size >= max_size or idx == len(items) - 1:
-            print(f"Current size of folders totalled: {zip_total / (1024 * 1024):.2f} MiB")
-
-            zip_name = directory / f'{directory.name} - {starting_folder} to {last_folder}.zip'
-            create_zip(items_zipped, zip_name)
-
-            print(f"\n{zip_name} successfully created.\n")
-
-            items_zipped = [item]
-            zip_total = item_size
-            starting_folder = item.name
-
-        else:
-            items_zipped.append(item)
-
-            if "Disc" in item.name:
-                last_folder = item.name
-
-            zip_total += item_size
-
-
-if __name__ == "__main__":
-    if(len(sys.argv) < 2):
-        print("Invalid number of arguments entered.")
-
-    directory = Path(sys.argv[1])
-
-    process_all_subfolders = sys.argv[2].lower() == 'true' if len(sys.argv) > 2 else True
-    directories_to_process = directory.iterdir() if process_all_subfolders else [directory]
-
-    for subdir in directories_to_process:
-        if subdir.is_dir():
-            main(subdir)
+if __name__ == '__main__':
+    main()
