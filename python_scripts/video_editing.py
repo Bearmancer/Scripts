@@ -133,12 +133,14 @@ def get_mediainfo(video_path):
 
     mediainfo_command = ["mediainfo", "--Output=TXT", str(video_path)]
 
-    result = (subprocess.run(mediainfo_command, capture_output=True, text=True)).stdout
+    result = subprocess.run(mediainfo_command, capture_output=True, text=True).stdout
+
+    cleaned_result = result.replace("Lance\\", "")
 
     with open(output_file, 'w') as f:
-        f.write(result)
+        f.write(cleaned_result)
 
-    pyperclip.copy(result)
+    pyperclip.copy(cleaned_result)
 
     print("MediaInfo successfully created.")
 
