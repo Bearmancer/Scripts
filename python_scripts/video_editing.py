@@ -5,7 +5,7 @@ import io
 import pyperclip
 from operator import itemgetter
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
@@ -91,13 +91,24 @@ def convert_disc_to_mkv(file, dvd_folder):
 
 
 def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
-    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.jpg"
+    output_file = Path.home() / 'Desktop' / f"{video_path.stem}.jpg"
 
     try:
         video = ffmpeg.probe(str(video_path.absolute()))
     except ffmpeg.Error as e:
         print(f"Error probing video file: {e.stderr.decode()}")
         return
+
+    video_stream = next((stream for stream in video['streams'] if stream['codec_type'] == 'video'), None)
+    if not video_stream:
+        print("No video stream found in the file.")
+        return
+
+    video_width = int(video_stream['width'])
+    video_height = int(video_stream['height'])
+    aspect_ratio = video_height / video_width
+
+    height = int(width * aspect_ratio)
 
     duration = float(video['format']['duration'])
     timestamps = [duration * i / (rows * columns) for i in range(rows * columns)]
@@ -106,26 +117,40 @@ def create_thumbnail_grid(video_path, width=800, rows=8, columns=4, spacing=1):
         out, _ = (
             ffmpeg
             .input(str(video_path), ss=timestamp)
-            .filter('scale', width, -1)
+            .filter('scale', width, -1) 
             .output('pipe:', vframes=1, format='image2', vcodec='mjpeg')
             .run(capture_stdout=True, capture_stderr=True)
         )
         return Image.open(io.BytesIO(out))
 
     images = [extract_thumbnail(ts) for ts in timestamps]
-    max_height = max(img.height for img in images)
-    grid_img = Image.new('RGB', (width * columns + spacing * (columns - 1), max_height * rows + spacing * (rows - 1)),
-                         color='white')
+
+    grid_width = width * columns + spacing * (columns - 1)
+    grid_height = height * rows + spacing * (rows - 1)
+
+    filename_height = 100
+    total_height = grid_height + filename_height
+
+    grid_img = Image.new('RGB', (grid_width, total_height), color='white')
+
+    draw = ImageDraw.Draw(grid_img)
+    try:
+        font = ImageFont.truetype("calibri.ttf", 80)
+    except IOError:
+        font = ImageFont.load_default()
+
+    filename_text = f"{video_path.stem}"
+    text_width = draw.textlength(filename_text, font=font)
+    draw.text(((grid_width - text_width) / 2, 10), filename_text, fill='black', font=font)
 
     for idx, img in enumerate(images):
         x = (idx % columns) * (width + spacing)
-        y = (idx // columns) * (max_height + spacing)
+        y = filename_height + (idx // columns) * (height + spacing)
         grid_img.paste(img, (x, y))
         img.close()
 
     grid_img.save(output_file)
     print(f"Thumbnail grid saved to {output_file}")
-
 
 def get_mediainfo(video_path):
     print(f"Getting MediaInfo for {video_path.absolute()}")
