@@ -232,8 +232,8 @@ def main():
         print_video_resolution(video_files)
     elif method == "CalculateMBPerMinute":
         calculate_mb_for_directory(video_files)
-    elif method == "CreateThumbnailGrid":
-        create_thumbnail_grid(folder)
+    elif method == "CreateImages":
+        extract_images(video_files)
     elif method == "GetMediaInfo":
         get_mediainfo(folder)
     else:

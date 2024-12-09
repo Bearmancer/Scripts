@@ -15,23 +15,25 @@ func main() {
 	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
 	model := "gemini-1.5-pro-002"
 	prompt := `
-You have been tasked with handling with a large text file with file names on each line. You must rewrite each line based on the prompt given to you without removing a single line or emptying any. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
+You have been tasked with handling a large text file with file names on each line. You must rewrite each line based on the prompt given to you without removing a single line or emptying any. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
+VERY IMPORTANT - NEVER REMOVE YEARS EVER!
 Start file with composer's last name. Harding is not a composer.
 Keep all lines; don’t remove or empty any.
 Convert all-caps to title case (keep acronyms like BBC and prepositions like "for").
 Remove composers' first names (e.g., "Ludwig van Beethoven" becomes "Beethoven").
 VERY IMPORTANT THAT YOU Replace the following characters [∙, ", :, ;, /, ⁄, ¦, –, -] with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
 Translate all foreign languages to English. VERY IMPORTANT.
-Replace n° and Nº with No. 
+Replace n° and Nº with No.
 Use English translation of composer names always (e.g., "Tchaikovsky" not "Chiakowsky").
 Remove single quotes in titles.
 Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
 Expand abbreviations (e.g., "PC" to "Piano Concerto", "VC" to "Violin Concerto").
 Trim and standardize spacing.
 Don’t translate hyphenated names like "hr-sinfonieorchester".
-Reformat dates (e.g., "2020/11" becomes "2020-11").
-`
+Reformat dates (e.g., "2020/11" becomes "2020-11").`
+
 	apiKeyFile := `C:\Users\Lance\Documents\Powershell\go_scripts\Google AI Studio API Key.txt`
+
 	apiKey, err := readAPIKey(apiKeyFile)
 	if err != nil {
 		fmt.Println("Error reading API key:", err)
@@ -49,13 +51,18 @@ Reformat dates (e.g., "2020/11" becomes "2020-11").
 		return
 	}
 
-	for _, fileInfo := range files {
-		if !fileInfo.IsDir() && strings.HasSuffix(fileInfo.Name(), ".txt") {
-			inputFilePath := filepath.Join(inputDir, fileInfo.Name())
-			if err := processFile(inputFilePath, outputDir, prompt, model, apiKey); err != nil {
-				fmt.Println("Error processing file:", err)
-			}
+	for _, file := range files {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".txt") {
+			continue
 		}
+
+		inputFilePath := filepath.Join(inputDir, file.Name())
+		fmt.Println("Processing file:", file.Name())
+		if err := processFile(inputFilePath, outputDir, prompt, model, apiKey); err != nil {
+			fmt.Println("Error processing file:", err)
+		}
+	    fmt.Printf("%s successfully processed.\n", file.Name())
+
 	}
 
 	fmt.Println("Processing completed.")
@@ -68,154 +75,68 @@ func processFile(inputFilePath, outputDir, prompt, model, apiKey string) error {
 	}
 	defer file.Close()
 
-	baseName := strings.TrimSuffix(filepath.Base(inputFilePath), ".txt")
-	var combinedOutput bytes.Buffer
-	scanner := bufio.NewScanner(file)
 	lines := []string{}
-	chunkNumber, lineCount := 1, 0
-	var chunkFiles []string
-
-	// Print which file is being processed
-	fmt.Printf("Processing file: %s\n", inputFilePath)
-
+	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-		lineCount++
+		line := strings.TrimSpace(scanner.Text())
+		lines = append(lines, line)
 	}
 
-	// Print total line count of the file
-	fmt.Printf("File %s has %d lines.\n", inputFilePath, lineCount)
-
-	// Process the file in chunks of 100 lines
-	for chunkNumber*100 <= lineCount {
-		if err := processChunk(lines[(chunkNumber-1)*100:chunkNumber*100], chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
-			return err
-		}
-		chunkFiles = append(chunkFiles, fmt.Sprintf("%s_chunk_%02d.txt", baseName, chunkNumber))
-		combinedOutput.WriteString(strings.Join(lines[(chunkNumber-1)*100:chunkNumber*100], "\n") + "\n")
-		chunkNumber++
-	}
-
-	// Process any remaining lines
-	if len(lines[(chunkNumber-1)*100:]) > 0 {
-		if err := processChunk(lines[(chunkNumber-1)*100:], chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
-			return err
-		}
-		chunkFiles = append(chunkFiles, fmt.Sprintf("%s_chunk_%02d.txt", baseName, chunkNumber))
-		combinedOutput.WriteString(strings.Join(lines[(chunkNumber-1)*100:], "\n") + "\n")
-	}
-
-	originalLineCount, err := countLines(inputFilePath)
-	if err != nil {
+	if err := scanner.Err(); err != nil {
 		return err
 	}
 
-	if originalLineCount > 100 {
-		combinedFile := filepath.Join(outputDir, fmt.Sprintf("%s_Combined.txt", baseName))
-		if err := os.WriteFile(combinedFile, combinedOutput.Bytes(), 0644); err != nil {
-			return err
+	totalLines := len(lines)
+	fmt.Println("Total lines in the original file:", totalLines)
+
+	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-4])
+	chunkSize := 100
+	var combinedOutput bytes.Buffer
+
+	for i := 0; i < totalLines; i += chunkSize {
+		end := i + chunkSize
+		if end > totalLines {
+			end = totalLines
 		}
-		if err := trimFile(combinedFile); err != nil {
-			return err
-		}
-		trimmedLineCount, err := countLines(combinedFile)
+		chunk := lines[i:end]
+
+		chunkNumber := (i / chunkSize) + 1
+		fmt.Printf("Processing chunk %d of %d\n", chunkNumber, (totalLines/chunkSize)+1)
+
+		output, err := processChunk(chunk, prompt, model, apiKey)
 		if err != nil {
 			return err
 		}
 
-		// Print result of comparing line counts
-		fmt.Printf("Original file line count: %d, Combined file line count: %d\n", originalLineCount, trimmedLineCount)
-		if originalLineCount != trimmedLineCount {
-			fmt.Printf("Line count mismatch! Original: %d, Trimmed: %d\n", originalLineCount, trimmedLineCount)
-		}
-
-		// Remove chunk files with more detailed checks and debugging
-		for _, chunkFile := range chunkFiles {
-			fmt.Printf("Attempting to delete chunk file: %s\n", chunkFile)
-
-			if _, err := os.Stat(chunkFile); err != nil {
-				if os.IsNotExist(err) {
-					fmt.Printf("Chunk file %s does not exist, skipping deletion.\n", chunkFile)
-				} else {
-					fmt.Printf("Error checking file status for %s: %s\n", chunkFile, err)
-				}
-			} else {
-				// File exists, proceed with deletion
-				if err := os.Remove(chunkFile); err != nil {
-					fmt.Printf("Error deleting chunk file %s: %s\n", chunkFile, err)
-				} else {
-					fmt.Printf("Successfully deleted chunk file: %s\n", chunkFile)
-				}
-			}
-		}
-	} else {
-		if err := trimFile(inputFilePath); err != nil {
-			return err
-		}
-		trimmedLineCount, err := countLines(inputFilePath)
-		if err != nil {
-			return err
-		}
-
-		// Print result of comparing line counts
-		fmt.Printf("Original file line count: %d, Processed file line count: %d\n", originalLineCount, trimmedLineCount)
-		if originalLineCount != trimmedLineCount {
-			fmt.Printf("Line count mismatch! Original: %d, Processed: %d\n", originalLineCount, trimmedLineCount)
-		}
+		combinedOutput.WriteString(output)
 	}
 
-	return nil
+	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s.txt", baseName))
+	return os.WriteFile(outputFile, combinedOutput.Bytes(), 0644)
 }
 
-func processChunk(lines []string, chunkNumber int, baseName, outputDir, prompt, model, apiKey string) error {
-	cmd := exec.Command("gemini-cli", "prompt", "-s", prompt, "--model", model, "-")
+func processChunk(lines []string, prompt, model, apiKey string) (string, error) {
+	cmd := exec.Command("gemini-cli", "prompt", prompt, "--model", model, "-")
 	cmd.Env = append(os.Environ(), "GEMINI_API_KEY="+apiKey)
 	cmd.Stdin = strings.NewReader(strings.Join(lines, "\n"))
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
+
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("chunk %d: %s", chunkNumber, stderr.String())
+		return "", fmt.Errorf("error processing chunk: %s", stderr.String())
 	}
-	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s_chunk_%02d.txt", baseName, chunkNumber))
-	if err := os.WriteFile(outputFile, out.Bytes(), 0644); err != nil {
-		return err
-	}
-	return trimFile(outputFile)
-}
 
-func countLines(filePath string) (int, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return 0, err
-	}
-	defer file.Close()
-
-	lineCount := 0
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lineCount++
-	}
-	return lineCount, scanner.Err()
-}
-
-func trimFile(filePath string) error {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+	outputLines := strings.Split(out.String(), "\n")
+	trimmedOutput := []string{}
+	for _, line := range outputLines {
+		line = strings.TrimSpace(line)
 		if line != "" {
-			lines = append(lines, line)
+			trimmedOutput = append(trimmedOutput, line)
 		}
 	}
 
-	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")+"\n"), 0644)
+	return strings.Join(trimmedOutput, "\n") + "\n", nil
 }
 
 func readAPIKey(apiKeyFile string) (string, error) {
@@ -229,5 +150,5 @@ func readAPIKey(apiKeyFile string) (string, error) {
 	if scanner.Scan() {
 		return scanner.Text(), nil
 	}
-	return "", fmt.Errorf("API key not found")
+	return "", fmt.Errorf("API key not found in file")
 }
