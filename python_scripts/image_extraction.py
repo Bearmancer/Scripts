@@ -86,18 +86,22 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
 def save_full_size_images(video_path, video_info, thumbnail_timestamps):
     duration = video_info['duration']
     timestamps = []
-    while len(timestamps) < 6:
-        timestamp = random.uniform(30, duration - 30)
-        if all(abs(timestamp - thumb) > 30 for thumb in thumbnail_timestamps):
-            timestamps.append(timestamp)
-    
-    timestamps.sort() 
+    min_gap = 30 if duration > 300 else 1
 
-    for idx, timestamp in enumerate(timestamps):
-        img = extract_frame(video_path, timestamp, video_info)
-        if img:
-            output_path = Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg"
-            img.save(output_path)
+    if duration < 300:
+        while len(timestamps) < 6:
+            timestamp = random.uniform(30, duration - 30)
+
+            if all(abs(timestamp - thumb) >= min_gap for thumb in timestamps + thumbnail_timestamps):
+                timestamps.append(timestamp)
+
+        timestamps.sort()
+
+        for idx, timestamp in enumerate(timestamps):
+            img = extract_frame(video_path, timestamp, video_info)
+            if img:
+                output_path = Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg"
+                img.save(output_path)
 
 
 def extract_images(video_path):
@@ -108,12 +112,13 @@ def extract_images(video_path):
         raise ValueError("Invalid file path")
 
     video_info = get_video_info(video_path)
+
     if not video_info:
         raise ValueError("Could not retrieve video info")
 
     thumbnail_timestamps = create_thumbnail_grid(video_path, video_info)
     print("Thumbnails successfully generated.")
-    
+
     save_full_size_images(video_path, video_info, thumbnail_timestamps)
     print("Full size images successfully generated.")
         
@@ -122,5 +127,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Invalid number of arguments entered.")
     
-    video_file = sys.argv[2]
+    video_file = sys.argv[1]
     extract_images(video_file)
