@@ -122,5 +122,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Invalid number of arguments entered.")
     
-    video_file = sys.argv[1]
+    video_file = sys.argv[2]
     extract_images(video_file)

@@ -15,14 +15,14 @@ func main() {
 	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
 	model := "gemini-1.5-pro-002"
 	prompt := `
-	You have been tasked with handling with this large amount of string. You must rewrite each line based on the prompt given to you.
+You have been tasked with handling with a large text file with file names on each line. You must rewrite each line based on the prompt given to you without removing a single line or emptying any. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
 Start file with composer's last name. Harding is not a composer.
 Keep all lines; don’t remove or empty any.
 Convert all-caps to title case (keep acronyms like BBC and prepositions like "for").
 Remove composers' first names (e.g., "Ludwig van Beethoven" becomes "Beethoven").
-Replace invalid characters (e.g., ∙, ", :, ;, /, ⁄, ¦, –, -) with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
-Translate foreign titles to English.
-Replace n° with No. 
+VERY IMPORTANT THAT YOU Replace the following characters [∙, ", :, ;, /, ⁄, ¦, –, -] with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
+Translate all foreign languages to English. VERY IMPORTANT.
+Replace n° and Nº with No. 
 Use English translation of composer names always (e.g., "Tchaikovsky" not "Chiakowsky").
 Remove single quotes in titles.
 Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
@@ -73,26 +73,36 @@ func processFile(inputFilePath, outputDir, prompt, model, apiKey string) error {
 	scanner := bufio.NewScanner(file)
 	lines := []string{}
 	chunkNumber, lineCount := 1, 0
+	var chunkFiles []string
+
+	// Print which file is being processed
+	fmt.Printf("Processing file: %s\n", inputFilePath)
 
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 		lineCount++
-		if lineCount == 100 {
-			if err := processChunk(lines, chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
-				return err
-			}
-			combinedOutput.WriteString(strings.Join(lines, "\n") + "\n")
-			lines = nil
-			lineCount = 0
-			chunkNumber++
-		}
 	}
 
-	if len(lines) > 0 {
-		if err := processChunk(lines, chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
+	// Print total line count of the file
+	fmt.Printf("File %s has %d lines.\n", inputFilePath, lineCount)
+
+	// Process the file in chunks of 100 lines
+	for chunkNumber*100 <= lineCount {
+		if err := processChunk(lines[(chunkNumber-1)*100:chunkNumber*100], chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
 			return err
 		}
-		combinedOutput.WriteString(strings.Join(lines, "\n") + "\n")
+		chunkFiles = append(chunkFiles, fmt.Sprintf("%s_chunk_%02d.txt", baseName, chunkNumber))
+		combinedOutput.WriteString(strings.Join(lines[(chunkNumber-1)*100:chunkNumber*100], "\n") + "\n")
+		chunkNumber++
+	}
+
+	// Process any remaining lines
+	if len(lines[(chunkNumber-1)*100:]) > 0 {
+		if err := processChunk(lines[(chunkNumber-1)*100:], chunkNumber, baseName, outputDir, prompt, model, apiKey); err != nil {
+			return err
+		}
+		chunkFiles = append(chunkFiles, fmt.Sprintf("%s_chunk_%02d.txt", baseName, chunkNumber))
+		combinedOutput.WriteString(strings.Join(lines[(chunkNumber-1)*100:], "\n") + "\n")
 	}
 
 	originalLineCount, err := countLines(inputFilePath)
@@ -112,8 +122,31 @@ func processFile(inputFilePath, outputDir, prompt, model, apiKey string) error {
 		if err != nil {
 			return err
 		}
+
+		// Print result of comparing line counts
+		fmt.Printf("Original file line count: %d, Combined file line count: %d\n", originalLineCount, trimmedLineCount)
 		if originalLineCount != trimmedLineCount {
 			fmt.Printf("Line count mismatch! Original: %d, Trimmed: %d\n", originalLineCount, trimmedLineCount)
+		}
+
+		// Remove chunk files with more detailed checks and debugging
+		for _, chunkFile := range chunkFiles {
+			fmt.Printf("Attempting to delete chunk file: %s\n", chunkFile)
+
+			if _, err := os.Stat(chunkFile); err != nil {
+				if os.IsNotExist(err) {
+					fmt.Printf("Chunk file %s does not exist, skipping deletion.\n", chunkFile)
+				} else {
+					fmt.Printf("Error checking file status for %s: %s\n", chunkFile, err)
+				}
+			} else {
+				// File exists, proceed with deletion
+				if err := os.Remove(chunkFile); err != nil {
+					fmt.Printf("Error deleting chunk file %s: %s\n", chunkFile, err)
+				} else {
+					fmt.Printf("Successfully deleted chunk file: %s\n", chunkFile)
+				}
+			}
 		}
 	} else {
 		if err := trimFile(inputFilePath); err != nil {
@@ -123,6 +156,9 @@ func processFile(inputFilePath, outputDir, prompt, model, apiKey string) error {
 		if err != nil {
 			return err
 		}
+
+		// Print result of comparing line counts
+		fmt.Printf("Original file line count: %d, Processed file line count: %d\n", originalLineCount, trimmedLineCount)
 		if originalLineCount != trimmedLineCount {
 			fmt.Printf("Line count mismatch! Original: %d, Processed: %d\n", originalLineCount, trimmedLineCount)
 		}
