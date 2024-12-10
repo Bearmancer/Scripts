@@ -15,13 +15,14 @@ func main() {
 	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
 	model := "gemini-1.5-pro-002"
 	prompt := `
-You have been tasked with handling a large text file with file names on each line. You must rewrite each line based on the prompt given to you without removing a single line or emptying any. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
+You have been tasked with handling a large text file with file names on each line. You must rewrite each line based on the prompt given to you. VERY IMPORTANT: NEVER DELETE LINES. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
 VERY IMPORTANT - NEVER REMOVE YEARS EVER!
 Start file with composer's last name. Harding is not a composer.
 Keep all lines; don’t remove or empty any.
 Convert all-caps to title case (keep acronyms like BBC and prepositions like "for").
 Remove composers' first names (e.g., "Ludwig van Beethoven" becomes "Beethoven").
-VERY IMPORTANT THAT YOU Replace the following characters [∙, ", :, ;, /, ⁄, ¦, –, -] with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
+Very important: Replace " with '
+VERY IMPORTANT THAT YOU Replace the following characters [∙, :, ;, /, ⁄, ¦, –, -] with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
 Translate all foreign languages to English. VERY IMPORTANT.
 Replace n° and Nº with No.
 Use English translation of composer names always (e.g., "Tchaikovsky" not "Chiakowsky").
@@ -58,11 +59,34 @@ Reformat dates (e.g., "2020/11" becomes "2020-11").`
 
 		inputFilePath := filepath.Join(inputDir, file.Name())
 		fmt.Println("Processing file:", file.Name())
-		if err := processFile(inputFilePath, outputDir, prompt, model, apiKey); err != nil {
-			fmt.Println("Error processing file:", err)
-		}
-	    fmt.Printf("%s successfully processed.\n", file.Name())
 
+		for {
+			if err := processFile(inputFilePath, outputDir, prompt, model, apiKey); err != nil {
+				fmt.Println("Error processing file:", err)
+				return
+			}
+
+			inputFileLineCount, err := countLines(inputFilePath)
+			if err != nil {
+				fmt.Println("Error counting lines in input file:", err)
+				return
+			}
+
+			combinedOutputFilePath := filepath.Join(outputDir, fmt.Sprintf("%s.txt", filepath.Base(inputFilePath[:len(inputFilePath)-4])))
+			combinedOutputLineCount, err := countLines(combinedOutputFilePath)
+			if err != nil {
+				fmt.Println("Error counting lines in output file:", err)
+				return
+			}
+
+			if inputFileLineCount != combinedOutputLineCount {
+				fmt.Printf("Line counts do not match. Original file: %d lines, New file: %d lines. Reprocessing the file.\n", inputFileLineCount, combinedOutputLineCount)
+				continue
+			}
+
+			fmt.Printf("%s successfully processed.\n", file.Name())
+			break
+		}
 	}
 
 	fmt.Println("Processing completed.")
@@ -151,4 +175,24 @@ func readAPIKey(apiKeyFile string) (string, error) {
 		return scanner.Text(), nil
 	}
 	return "", fmt.Errorf("API key not found in file")
+}
+
+func countLines(filePath string) (int, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	lineCount := 0
+	for scanner.Scan() {
+		lineCount++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return lineCount, nil
 }
