@@ -44,6 +44,9 @@ def extract_frame(video_path, timestamp, video_info, target_width=None):
 def add_filename_to_header(draw, filename, header_size, image_width):
     font = ImageFont.truetype("calibri.ttf", 60)
     text_lines = textwrap.wrap(filename, width=40)
+
+    draw.rectangle([(0, 0), (image_width, header_size)], fill=(240, 240, 240))
+
     y_offset = (header_size - (len(text_lines) * (font.size + 5))) // 2
     for line in text_lines:
         text_width, text_height = font.getbbox(line)[2:]
@@ -86,22 +89,21 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
 def save_full_size_images(video_path, video_info, thumbnail_timestamps):
     duration = video_info['duration']
     timestamps = []
-    min_gap = 30 if duration > 300 else 1
+    min_gap = 15 if duration > 1200 else 1
 
-    if duration < 300:
-        while len(timestamps) < 6:
-            timestamp = random.uniform(30, duration - 30)
+    while len(timestamps) < 6:
+        timestamp = random.uniform(30, duration - 30)
 
-            if all(abs(timestamp - thumb) >= min_gap for thumb in timestamps + thumbnail_timestamps):
-                timestamps.append(timestamp)
+        if all(abs(timestamp - thumb) >= min_gap for thumb in timestamps + thumbnail_timestamps):
+            timestamps.append(timestamp)
 
-        timestamps.sort()
+    timestamps.sort()
 
-        for idx, timestamp in enumerate(timestamps):
-            img = extract_frame(video_path, timestamp, video_info)
-            if img:
-                output_path = Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg"
-                img.save(output_path)
+    for idx, timestamp in enumerate(timestamps):
+        img = extract_frame(video_path, timestamp, video_info)
+        if img:
+            output_path = Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg"
+            img.save(output_path)
 
 
 def extract_images(video_path):
@@ -119,8 +121,8 @@ def extract_images(video_path):
     thumbnail_timestamps = create_thumbnail_grid(video_path, video_info)
     print("Thumbnails successfully generated.")
 
-    save_full_size_images(video_path, video_info, thumbnail_timestamps)
-    print("Full size images successfully generated.")
+    # save_full_size_images(video_path, video_info, thumbnail_timestamps)
+    # print("Full size images successfully generated.")
         
 
 if __name__ == "__main__":
