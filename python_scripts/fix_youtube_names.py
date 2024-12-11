@@ -6,6 +6,7 @@ def log_error(log_message):
     with open(log_file_path, 'a', encoding='utf-8') as log_file:
         log_file.write(log_message)
 
+
 def rename_files(directory, txt_file):
     try:
         directory = Path(directory)
@@ -52,20 +53,24 @@ def rename_files(directory, txt_file):
         print(f"Exception: {e}")
         log_error(str(e))
 
+
 def process_subfolders(base_directory, txt_directory):
     for subfolder in Path(base_directory).iterdir():
         if subfolder.is_dir():
-            txt_file = Path(txt_directory) / f"{subfolder.name}.txt"
+            name = subfolder.name
+            txt_file = Path(txt_directory) / f"{name}.txt"
             if txt_file.exists():
-                print(f"Processing {subfolder.name}...")
+                print(f"Processing {name}...")
                 rename_files(subfolder, txt_file)
             else:
-                print(f"Warning: Text file for {subfolder.name} does not exist.")
+                print(f"Warning: Text file for {name} does not exist. Now creating list of files...")
+
 
 def main():
-    base_directory = r"C:\Users\Lance\Desktop\Done"
-    txt_directory = r"C:\Users\Lance\Desktop\Gemini-CLI"
+    base_directory = Path.home() / 'Desktop' / 'Done'
+    txt_directory = Path.home() / 'Desktop' / 'Gemini-CLI'
     process_subfolders(base_directory, txt_directory)
+
 
 if __name__ == "__main__":
     main()
