@@ -14,128 +14,140 @@ import (
 func main() {
 	inputPath := `C:\Users\Lance\Desktop\Macbeth 2015 Bluray 1080p DTS-HD x264-Grym.srt`
 	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
-	model := "gemini-1.5-pro-002"
-	prompt := `Whilst preserving SRT formatting and without removing any lines, rewrite each line of dialogue in simple modern English.`
-
-	apiKeyFile := `C:\Users\Lance\Documents\Powershell\go_scripts\Google AI Studio API Key.txt`
-
-	apiKey := readAPIKey(apiKeyFile)
+	model, prompt := "gemini-1.5-pro-002", `Whilst preserving SRT formatting and without removing any lines, rewrite each line of dialogue in simple modern English.`
+	apiKey := readAPIKey(`C:\Users\Lance\Documents\Powershell\go_scripts\Google AI Studio API Key.txt`)
 
 	os.MkdirAll(outputDir, os.ModePerm)
 
-	inputInfo, _ := os.Stat(inputPath)
-
-	if inputInfo.IsDir() {
+	info, _ := os.Stat(inputPath)
+	
+	if info.IsDir() {
 		files, _ := os.ReadDir(inputPath)
-
 		for _, file := range files {
-			inputFilePath := filepath.Join(inputPath, file.Name())
-			fmt.Println("Processing file:", file.Name())
-
-			processFile(inputFilePath, outputDir, prompt, model, apiKey)
-
-			fmt.Printf("%s successfully processed.\n", file.Name())
+			processFile(filepath.Join(inputPath, file.Name()), outputDir, prompt, model, apiKey)
 		}
 	} else {
-		fmt.Println("Processing file:", inputPath)
 		processFile(inputPath, outputDir, prompt, model, apiKey)
-
-		fmt.Printf("%s successfully processed.\n", inputPath)
 	}
-
-	fmt.Println("Processing completed.")
 }
 
 func processFile(inputFilePath, outputDir, prompt, model, apiKey string) {
-	file, _ := os.Open(inputFilePath)
-	defer file.Close()
+	lines, originalLines, originalEmptyLines := readLines(inputFilePath)
+	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-len(filepath.Ext(inputFilePath))]) 
 
-	lines := []string{}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-	}
+	fmt.Printf("Processing file: %s\nTotal lines: %d\n", baseName, len(lines))
 
-	totalLines := len(lines)
-	fmt.Println("Total lines in the original file:", totalLines)
-
-	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-4])
 	chunkSize := 100
-	var combinedOutput bytes.Buffer
+	totalChunks := (len(lines) + chunkSize - 1) / chunkSize 
 
-	for i := 0; i < totalLines; i += chunkSize {
-		end := i + chunkSize
-		if end > totalLines {
-			end = totalLines
-		}
+	var combinedOutput bytes.Buffer
+	var chunkFiles []string 
+
+	for i := 0; i < len(lines); i += chunkSize {
+		end := min(i+chunkSize, len(lines))		
 		chunk := lines[i:end]
 
-		chunkNumber := (i / chunkSize) + 1
-		fmt.Printf("Processing chunk %d of %d\n", chunkNumber, (totalLines/chunkSize)+1)
+		fmt.Printf("Processing chunk %d of %d\n", i/chunkSize+1, totalChunks)
 
 		output := processChunk(chunk, prompt, model, apiKey)
-
+		chunkFile := filepath.Join(outputDir, fmt.Sprintf("%s_chunk_%d%s", baseName, i/chunkSize+1, filepath.Ext(inputFilePath))) 
+		os.WriteFile(chunkFile, []byte(output), 0644)
 		combinedOutput.WriteString(output)
+
+		chunkFiles = append(chunkFiles, chunkFile)
 	}
 
-	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s.txt", baseName))
-	_ = os.WriteFile(outputFile, combinedOutput.Bytes(), 0644)
+	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s%s", baseName, filepath.Ext(inputFilePath)))
+	restoreOriginalFormat(&combinedOutput, outputFile, originalLines, originalEmptyLines)
 
-	inputLineCount := countLines(inputFilePath)
-	outputLineCount := countLines(outputFile)
+	verifyLineCount(inputFilePath, outputFile)
 
-	fmt.Printf("Input lines: %d, Output lines: %d\n", inputLineCount, outputLineCount)
-
-	if inputLineCount != outputLineCount {
-		fmt.Println("Line count mismatch detected, retrying...")
-		time.Sleep(3 * time.Second)
-		processFile(inputFilePath, outputDir, prompt, model, apiKey)
+	for _, chunkFile := range chunkFiles {
+		os.Remove(chunkFile)
 	}
+
+	fmt.Printf("%s successfully processed.\n", baseName)
 }
 
 func processChunk(lines []string, prompt, model, apiKey string) string {
 	cmd := exec.Command("gemini-cli", "prompt", prompt, "--model", model, "-")
 	cmd.Env = append(os.Environ(), "GEMINI_API_KEY="+apiKey)
 	cmd.Stdin = strings.NewReader(strings.Join(lines, "\n"))
-	var out, stderr bytes.Buffer
+	var out bytes.Buffer
 	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-
 	cmd.Run()
 
-	outputLines := strings.Split(out.String(), "\n")
-	trimmedOutput := []string{}
-	for _, line := range outputLines {
-		line = strings.TrimSpace(line)
-		if line != "" {
-			trimmedOutput = append(trimmedOutput, line)
+	var trimmedOutput []string
+	for _, line := range strings.Split(out.String(), "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			trimmedOutput = append(trimmedOutput, trimmed)
 		}
 	}
-
 	return strings.Join(trimmedOutput, "\n") + "\n"
 }
 
-func readAPIKey(apiKeyFile string) string {
-	file, _ := os.Open(apiKeyFile)
+func readLines(filePath string) ([]string, []string, []bool) {
+	file, _ := os.Open(filePath)
 	defer file.Close()
 
+	var lines, originalLines []string
+	var originalEmptyLines []bool
 	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-	return scanner.Text()
+	for scanner.Scan() {
+		line := scanner.Text()
+		originalLines = append(originalLines, line)
+		if strings.TrimSpace(line) == "" {
+			originalEmptyLines = append(originalEmptyLines, true)
+		} else {
+			originalEmptyLines = append(originalEmptyLines, false)
+			lines = append(lines, line)
+		}
+	}
+	return lines, originalLines, originalEmptyLines
+}
+
+func restoreOriginalFormat(combinedOutput *bytes.Buffer, outputFile string, originalLines []string, originalEmptyLines []bool) {
+	var restoredOutput bytes.Buffer
+	outputLines := strings.Split(combinedOutput.String(), "\n")
+	outputIndex := 0
+	for i := range originalLines {
+		if originalEmptyLines[i] {
+			restoredOutput.WriteString("\n")
+		} else if outputIndex < len(outputLines) {
+			restoredOutput.WriteString(outputLines[outputIndex] + "\n")
+			outputIndex++
+		}
+	}
+	os.WriteFile(outputFile, restoredOutput.Bytes(), 0644)
+}
+
+func verifyLineCount(inputFilePath, outputFile string) {
+	inputLineCount := countLines(inputFilePath)
+	outputLineCount := countLines(outputFile)
+	if inputLineCount != outputLineCount {
+		fmt.Printf("Line count mismatch. Retrying...\n")
+		time.Sleep(3 * time.Second)
+		processFile(inputFilePath, filepath.Dir(outputFile), "", "", "")
+	}
 }
 
 func countLines(filePath string) int {
 	file, _ := os.Open(filePath)
 	defer file.Close()
-
 	scanner := bufio.NewScanner(file)
 	lineCount := 0
 	for scanner.Scan() {
 		lineCount++
 	}
-
 	return lineCount
+}
+
+func readAPIKey(apiKeyFile string) string {
+	file, _ := os.Open(apiKeyFile)
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	return scanner.Text()
 }
 
 // `

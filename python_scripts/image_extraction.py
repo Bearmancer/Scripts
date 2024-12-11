@@ -121,8 +121,8 @@ def extract_images(video_path):
     thumbnail_timestamps = create_thumbnail_grid(video_path, video_info)
     print("Thumbnails successfully generated.")
 
-    # save_full_size_images(video_path, video_info, thumbnail_timestamps)
-    # print("Full size images successfully generated.")
+    save_full_size_images(video_path, video_info, thumbnail_timestamps)
+    print("Full size images successfully generated.")
         
 
 if __name__ == "__main__":
