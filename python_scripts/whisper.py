@@ -95,8 +95,10 @@ def main():
     if len(sys.argv) < 3:
         print("Invalid input entered.")
         exit()
+
     command = sys.argv[1]
     path = Path(sys.argv[2])
+
     if command == "whisper_logic":
         whisper_logic(path, sys.argv[3], sys.argv[4])
     elif command == "whisp":

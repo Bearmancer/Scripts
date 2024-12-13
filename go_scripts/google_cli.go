@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,10 +10,10 @@ import (
 )
 
 func main() {
-	inputPath := `C:\Users\Lance\Desktop\Input`
-	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
-	model := "gemini-2.0-flash-exp"
-	prompt := `You are tasked with rewriting each line in a text file containing file names. Follow these rules:
+	input := flag.String("input", `C:\Users\Lance\Desktop\Input`, "Path to the input file or directory")
+	output := flag.String("output", `C:\Users\Lance\Desktop\`, "Path to the output directory")
+	model := flag.String("model", "gemini-2.0-flash-exp", "Model to use")
+	prompt := flag.String("prompt", `You are tasked with rewriting each line in a text file containing file names. Follow these rules:
 Very Important: Do not delete any lines.
 Very Important: Translate all foreign languages to English.
 Very Important: Replace ∙, :, ;, /, ⁄, ¦, –, - with spaces (except in names like Rimsky-Korsakov or hr-sinfonieorchester).
@@ -25,25 +26,27 @@ Use composer names' English transliterations only (e.g., "Tchaikovsky" not "Chia
 Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
 Expand abbreviations (e.g., "PC" to "Piano Concerto").
 Trim extra spaces and standardize formatting.
-`
+`, "Prompt to guide the text transformation process")
+
+	flag.Parse()
 
 	apiKey := os.Getenv("GEMINI_API_KEY")
 
-	os.MkdirAll(outputDir, os.ModePerm)
+	os.MkdirAll(*output, os.ModePerm)
 
-	info, _ := os.Stat(inputPath)
+	info, _ := os.Stat(*input)
 
 	if info.IsDir() {
-		files, _ := os.ReadDir(inputPath)
+		files, _ := os.ReadDir(*input)
 		for _, file := range files {
-			processFile(filepath.Join(inputPath, file.Name()), outputDir, prompt, model, apiKey)
+			processFile(filepath.Join(*input, file.Name()), *output, *prompt, *model, apiKey)
 		}
 	} else {
-		processFile(inputPath, outputDir, prompt, model, apiKey)
+		processFile(*input, *output, *prompt, *model, apiKey)
 	}
 }
 
-func processFile(inputFilePath, outputDir, prompt, model, apiKey string) {
+func processFile(inputFilePath, output, prompt, model, apiKey string) {
 	content, _ := os.ReadFile(inputFilePath)
 	lines := strings.Split(string(content), "\n")
 	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-4])
@@ -60,15 +63,11 @@ func processFile(inputFilePath, outputDir, prompt, model, apiKey string) {
 		fmt.Printf("Processing chunk %d of %d\n", i/chunkSize+1, (len(lines)+chunkSize-1)/chunkSize)
 
 		output := processChunk(chunk, prompt, model, apiKey)
+
 		processedLines = append(processedLines, strings.Split(output, "\n")...)
-
-		chunkName := fmt.Sprintf("%s - Chunk %d%s", baseName, i/chunkSize+1, filepath.Ext(inputFilePath))
-		chunkFile := filepath.Join(outputDir, chunkName)
-
-		os.WriteFile(chunkFile, []byte(output), 0644)
 	}
 
-	outputPath := filepath.Join(outputDir, filepath.Base(inputFilePath))
+	outputPath := filepath.Join(output, filepath.Base(inputFilePath))
 	os.WriteFile(outputPath, []byte(strings.Join(processedLines, "\n")), 0644)
 
 	fmt.Printf("%s successfully processed.\n", baseName)
