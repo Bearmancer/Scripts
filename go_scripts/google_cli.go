@@ -10,23 +10,12 @@ import (
 )
 
 func main() {
-	input := flag.String("input", `C:\Users\Lance\Desktop\Input`, "Path to the input file or directory")
-	output := flag.String("output", `C:\Users\Lance\Desktop\`, "Path to the output directory")
-	model := flag.String("model", "gemini-2.0-flash-exp", "Model to use")
-	prompt := flag.String("prompt", `You are tasked with rewriting each line in a text file containing file names. Follow these rules:
-Very Important: Do not delete any lines.
-Very Important: Translate all foreign languages to English.
-Very Important: Replace ∙, :, ;, /, ⁄, ¦, –, - with spaces (except in names like Rimsky-Korsakov or hr-sinfonieorchester).
-Very Important: Always keep years and reformat dates (e.g., "2020/11" becomes "2020-11").
-Start with the composer's last name (and remove first name when applicable.)
-Convert all-caps to title case (keep acronyms like BBC and small words like "for").
-Replace double quotes with single quotes.
-Replace "n°" and "Nº" with "No."
-Use composer names' English transliterations only (e.g., "Tchaikovsky" not "Chiakowsky").
-Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
-Expand abbreviations (e.g., "PC" to "Piano Concerto").
-Trim extra spaces and standardize formatting.
-`, "Prompt to guide the text transformation process")
+	input := flag.String("i", `C:\Users\Lance\Desktop\Input`, "Path to the input file or directory")
+	output := flag.String("o", `C:\Users\Lance\Desktop\`, "Path to the output directory")
+	model := flag.String("m", "gemini-2.0-flash-exp", "Model to use")
+	prompt := flag.String("prompt", "", "Prompt to guide the text transformation process")
+	
+	flag.StringVar(prompt, "p", *prompt, "Alias for prompt")
 
 	flag.Parse()
 
@@ -49,7 +38,6 @@ Trim extra spaces and standardize formatting.
 func processFile(inputFilePath, output, prompt, model, apiKey string) {
 	content, _ := os.ReadFile(inputFilePath)
 	lines := strings.Split(string(content), "\n")
-	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-4])
 
 	fmt.Printf("Processing file: %s\nTotal lines: %d\n", inputFilePath, len(lines))
 
@@ -70,7 +58,7 @@ func processFile(inputFilePath, output, prompt, model, apiKey string) {
 	outputPath := filepath.Join(output, filepath.Base(inputFilePath))
 	os.WriteFile(outputPath, []byte(strings.Join(processedLines, "\n")), 0644)
 
-	fmt.Printf("%s successfully processed.\n", baseName)
+	fmt.Printf("%s successfully processed.\n", filepath.Base(inputFilePath))
 }
 
 func processChunk(lines []string, prompt, model, apiKey string) string {
@@ -86,3 +74,19 @@ func processChunk(lines []string, prompt, model, apiKey string) string {
 
 	return output
 }
+
+// `
+// You are tasked with rewriting each line in a text file containing file names. Follow these rules:
+// Very Important: Do not delete any lines.
+// Very Important: Translate all foreign languages to English.
+// Very Important: Replace ∙, :, ;, /, ⁄, ¦, –, - with spaces (except in names like Rimsky-Korsakov or hr-sinfonieorchester).
+// Very Important: Always keep years and reformat dates (e.g., "2020/11" becomes "2020-11").
+// Start with the composer's last name (and remove first name when applicable.)
+// Convert all-caps to title case (keep acronyms like BBC and small words like "for").
+// Replace double quotes with single quotes.
+// Replace "n°" and "Nº" with "No."
+// Use composer names' English transliterations only (e.g., "Tchaikovsky" not "Chiakowsky").
+// Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
+// Expand abbreviations (e.g., "PC" to "Piano Concerto").
+// Trim extra spaces and standardize formatting.
+// `
