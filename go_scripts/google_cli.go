@@ -1,26 +1,38 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 func main() {
-	inputPath := `C:\Users\Lance\Desktop\Macbeth 2015 Bluray 1080p DTS-HD x264-Grym.srt`
+	inputPath := `C:\Users\Lance\Desktop\Input`
 	outputDir := `C:\Users\Lance\Desktop\Gemini-CLI`
-	model, prompt := "gemini-1.5-pro-002", `Whilst preserving SRT formatting and without removing any lines, rewrite each line of dialogue in simple modern English.`
-	apiKey := readAPIKey(`C:\Users\Lance\Documents\Powershell\go_scripts\Google AI Studio API Key.txt`)
+	model := "gemini-2.0-flash-exp"
+	prompt := `You are tasked with rewriting each line in a text file containing file names. Follow these rules:
+Very Important: Do not delete any lines.
+Very Important: Translate all foreign languages to English.
+Very Important: Replace ∙, :, ;, /, ⁄, ¦, –, - with spaces (except in names like Rimsky-Korsakov or hr-sinfonieorchester).
+Very Important: Always keep years and reformat dates (e.g., "2020/11" becomes "2020-11").
+Start with the composer's last name (and remove first name when applicable.)
+Convert all-caps to title case (keep acronyms like BBC and small words like "for").
+Replace double quotes with single quotes.
+Replace "n°" and "Nº" with "No."
+Use composer names' English transliterations only (e.g., "Tchaikovsky" not "Chiakowsky").
+Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
+Expand abbreviations (e.g., "PC" to "Piano Concerto").
+Trim extra spaces and standardize formatting.
+`
+
+	apiKey := os.Getenv("GEMINI_API_KEY")
 
 	os.MkdirAll(outputDir, os.ModePerm)
 
 	info, _ := os.Stat(inputPath)
-	
+
 	if info.IsDir() {
 		files, _ := os.ReadDir(inputPath)
 		for _, file := range files {
@@ -32,139 +44,46 @@ func main() {
 }
 
 func processFile(inputFilePath, outputDir, prompt, model, apiKey string) {
-	lines, originalLines, originalEmptyLines := readLines(inputFilePath)
-	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-len(filepath.Ext(inputFilePath))]) 
+	content, _ := os.ReadFile(inputFilePath)
+	lines := strings.Split(string(content), "\n")
+	baseName := filepath.Base(inputFilePath[:len(inputFilePath)-4])
 
-	fmt.Printf("Processing file: %s\nTotal lines: %d\n", baseName, len(lines))
+	fmt.Printf("Processing file: %s\nTotal lines: %d\n", inputFilePath, len(lines))
 
-	chunkSize := 100
-	totalChunks := (len(lines) + chunkSize - 1) / chunkSize 
-
-	var combinedOutput bytes.Buffer
-	var chunkFiles []string 
+	const chunkSize = 200
+	var processedLines []string
 
 	for i := 0; i < len(lines); i += chunkSize {
-		end := min(i+chunkSize, len(lines))		
+		end := min(i+chunkSize, len(lines))
 		chunk := lines[i:end]
 
-		fmt.Printf("Processing chunk %d of %d\n", i/chunkSize+1, totalChunks)
+		fmt.Printf("Processing chunk %d of %d\n", i/chunkSize+1, (len(lines)+chunkSize-1)/chunkSize)
 
 		output := processChunk(chunk, prompt, model, apiKey)
-		chunkFile := filepath.Join(outputDir, fmt.Sprintf("%s_chunk_%d%s", baseName, i/chunkSize+1, filepath.Ext(inputFilePath))) 
+		processedLines = append(processedLines, strings.Split(output, "\n")...)
+
+		chunkName := fmt.Sprintf("%s - Chunk %d%s", baseName, i/chunkSize+1, filepath.Ext(inputFilePath))
+		chunkFile := filepath.Join(outputDir, chunkName)
+
 		os.WriteFile(chunkFile, []byte(output), 0644)
-		combinedOutput.WriteString(output)
-
-		chunkFiles = append(chunkFiles, chunkFile)
 	}
 
-	outputFile := filepath.Join(outputDir, fmt.Sprintf("%s%s", baseName, filepath.Ext(inputFilePath)))
-	restoreOriginalFormat(&combinedOutput, outputFile, originalLines, originalEmptyLines)
-
-	verifyLineCount(inputFilePath, outputFile)
-
-	for _, chunkFile := range chunkFiles {
-		os.Remove(chunkFile)
-	}
+	outputPath := filepath.Join(outputDir, filepath.Base(inputFilePath))
+	os.WriteFile(outputPath, []byte(strings.Join(processedLines, "\n")), 0644)
 
 	fmt.Printf("%s successfully processed.\n", baseName)
 }
 
 func processChunk(lines []string, prompt, model, apiKey string) string {
-	cmd := exec.Command("gemini-cli", "prompt", prompt, "--model", model, "-")
-	cmd.Env = append(os.Environ(), "GEMINI_API_KEY="+apiKey)
+	cmd := exec.Command("gemini-cli", "--key", apiKey, "prompt", prompt, "--model", model, "-")
+
 	cmd.Stdin = strings.NewReader(strings.Join(lines, "\n"))
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Run()
 
-	var trimmedOutput []string
-	for _, line := range strings.Split(out.String(), "\n") {
-		if trimmed := strings.TrimSpace(line); trimmed != "" {
-			trimmedOutput = append(trimmedOutput, trimmed)
-		}
-	}
-	return strings.Join(trimmedOutput, "\n") + "\n"
+	out, _ := cmd.Output()
+
+	output := string(out)
+	output = strings.Trim(output, "`")
+	output = strings.TrimSpace(output)
+
+	return output
 }
-
-func readLines(filePath string) ([]string, []string, []bool) {
-	file, _ := os.Open(filePath)
-	defer file.Close()
-
-	var lines, originalLines []string
-	var originalEmptyLines []bool
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		originalLines = append(originalLines, line)
-		if strings.TrimSpace(line) == "" {
-			originalEmptyLines = append(originalEmptyLines, true)
-		} else {
-			originalEmptyLines = append(originalEmptyLines, false)
-			lines = append(lines, line)
-		}
-	}
-	return lines, originalLines, originalEmptyLines
-}
-
-func restoreOriginalFormat(combinedOutput *bytes.Buffer, outputFile string, originalLines []string, originalEmptyLines []bool) {
-	var restoredOutput bytes.Buffer
-	outputLines := strings.Split(combinedOutput.String(), "\n")
-	outputIndex := 0
-	for i := range originalLines {
-		if originalEmptyLines[i] {
-			restoredOutput.WriteString("\n")
-		} else if outputIndex < len(outputLines) {
-			restoredOutput.WriteString(outputLines[outputIndex] + "\n")
-			outputIndex++
-		}
-	}
-	os.WriteFile(outputFile, restoredOutput.Bytes(), 0644)
-}
-
-func verifyLineCount(inputFilePath, outputFile string) {
-	inputLineCount := countLines(inputFilePath)
-	outputLineCount := countLines(outputFile)
-	if inputLineCount != outputLineCount {
-		fmt.Printf("Line count mismatch. Retrying...\n")
-		time.Sleep(3 * time.Second)
-		processFile(inputFilePath, filepath.Dir(outputFile), "", "", "")
-	}
-}
-
-func countLines(filePath string) int {
-	file, _ := os.Open(filePath)
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	lineCount := 0
-	for scanner.Scan() {
-		lineCount++
-	}
-	return lineCount
-}
-
-func readAPIKey(apiKeyFile string) string {
-	file, _ := os.Open(apiKeyFile)
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-	return scanner.Text()
-}
-
-// `
-// You have been tasked with handling a large text file with file names on each line. You must rewrite each line based on the prompt given to you. VERY IMPORTANT: NEVER DELETE LINES. ALWAYS TRANSLATE FOREIGN LANGUAGES TO ENGLISH.
-// VERY IMPORTANT - NEVER REMOVE YEARS EVER!
-// Start file with composer's last name. Harding is not a composer.
-// Keep all lines; don’t remove or empty any.
-// Convert all-caps to title case (keep acronyms like BBC and prepositions like "for").
-// Remove composers' first names (e.g., "Ludwig van Beethoven" becomes "Beethoven").
-// Very important: Replace " with '
-// VERY IMPORTANT THAT YOU Replace the following characters [∙, :, ;, /, ⁄, ¦, –, -] with spaces, except in names like Rimsky-Korsakov or hr-sinfonieorchester.
-// Translate all foreign languages to English. VERY IMPORTANT.
-// Replace n° and Nº with No.
-// Use English translation of composer names always (e.g., "Tchaikovsky" not "Chiakowsky").
-// Remove single quotes in titles.
-// Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
-// Expand abbreviations (e.g., "PC" to "Piano Concerto", "VC" to "Violin Concerto").
-// Trim and standardize spacing.
-// Don’t translate hyphenated names like "hr-sinfonieorchester".
-// Reformat dates (e.g., "2020/11" becomes "2020-11").`
