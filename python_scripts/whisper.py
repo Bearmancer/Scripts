@@ -2,7 +2,6 @@ import subprocess, sys, re, chardet
 from pathlib import Path
 from docx import Document
 
-
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
 
@@ -23,7 +22,16 @@ def whisper_logic(file: Path, model, language):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        srt_to_word(subtitle_file)
+        go_translate_cmd = [
+            'go', 'run', 
+            r"C:\Users\Lance\Documents\Powershell\go_scripts\google_cli.go", 
+            '--prompt', 'Translate to English whilst retaining SRT formatting', 
+            '-i', str(subtitle_file), 
+            '-o', str(subtitle_file).replace('.srt', '- English.srt')
+            ]
+        
+        subprocess.run(go_translate_cmd, check=True)
+        print(f"Translated {subtitle_file.name} to English")
 
 
 def whisp(file):
@@ -70,16 +78,20 @@ def remove_subtitle_duplication(file):
 
 
 def srt_to_word(input_file):
-    with open(input_file, 'rb') as f:
+    input_path = Path(input_file)
+    
+    with open(input_path, 'rb') as f:
         raw_data = f.read()
         encoding = chardet.detect(raw_data)['encoding']
 
-    with open(input_file, 'r', encoding=encoding) as f:
+    with open(input_path, 'r', encoding=encoding) as f:
         doc = Document()
         doc.add_paragraph(f.read())
-        output_file = input_file.replace('.srt', '.docx')
+        
+        output_file = input_path.with_suffix('.docx')
+        
         doc.save(output_file)
-        print(f"Output saved to '{output_file}")
+        print(f"Output saved to '{output_file}'")
 
 
 def word_to_srt(input_file):
