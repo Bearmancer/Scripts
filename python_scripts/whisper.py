@@ -1,6 +1,7 @@
 import subprocess, sys, re, chardet
 from pathlib import Path
 from docx import Document
+from google_cloud_ai import process_file
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
@@ -22,15 +23,7 @@ def whisper_logic(file: Path, model, language):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        go_translate_cmd = [
-            'go', 'run', 
-            r"C:\Users\Lance\Documents\Powershell\go_scripts\google_cli.go", 
-            '--prompt', 'Translate to English whilst retaining SRT formatting', 
-            '-i', str(subtitle_file), 
-            '-o', str(subtitle_file).replace('.srt', '- English.srt')
-            ]
-        
-        subprocess.run(go_translate_cmd, check=True)
+        process_file(input_path=Path(subtitle_file.absolute))
         print(f"Translated {subtitle_file.name} to English")
 
 
