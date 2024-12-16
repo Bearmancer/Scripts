@@ -14,8 +14,8 @@ function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (
     py C:\Users\Lance\Documents\Powershell\python_scripts\music.py calculate_image_size $directory.FullName
 }
 
-function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName $process_all
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName --process_all
 }
 
 function ZipFiles([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {

@@ -1,9 +1,12 @@
 import os
+import warnings
 import google.generativeai as genai
 from pathlib import Path
 from argparse import ArgumentParser
 
-def process_chunks(input_file: Path, output_dir: Path, model_name: str, chunk_size: int, instructions: str):
+warnings.filterwarnings("ignore")
+
+def process_chunks(input_file, output_dir, model_name, chunk_size, instructions):
     api_key = os.getenv("GEMINI_API_KEY")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name)
@@ -14,7 +17,7 @@ def process_chunks(input_file: Path, output_dir: Path, model_name: str, chunk_si
     processed_content = []
 
     for i in range(0, len(lines), chunk_size):
-        chunk = ''.join(lines[i:i + chunk_size])
+        chunk = lines[i:i + chunk_size]
         response = model.generate_content(f"{instructions}\n\n{chunk}")
         response_text = response.text.strip().splitlines()[1:-1]
         processed_content.append("\n".join(response_text))
@@ -25,11 +28,11 @@ def process_chunks(input_file: Path, output_dir: Path, model_name: str, chunk_si
     print(f"Processed {input_file.name} and saved to {output_file}")
 
 def process_file(
-        input_path: Path, 
-        output_dir: Path = Path(r'C:\Users\Lance\Desktop\Gemini-CLI Output'), 
-        model_name: str = "gemini-2.0-flash-exp", 
-        chunk_size: int = 500, 
-        instructions: str = "Translate subtitles to English whilst retaining the SRT formatting."
+        input_path, 
+        output_dir = Path(r'C:\Users\Lance\Desktop\Gemini-CLI Output'), 
+        model_name = "gemini-2.0-flash-exp", 
+        chunk_size = 500, 
+        instructions = "Translate subtitles to English whilst retaining the SRT formatting."
         ):
     
     if input_path.is_dir():
