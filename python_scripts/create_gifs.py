@@ -5,7 +5,6 @@ import argparse
 def get_video_info(input_path):
     """Retrieve the original FPS and resolution of the video using ffprobe."""
     try:
-        # Get FPS
         fps_cmd = [
             'ffprobe', '-v', '0', '-select_streams', 'v:0',
             '-of', 'csv=p=0', '-show_entries',
@@ -15,7 +14,6 @@ def get_video_info(input_path):
         fps_fraction = fps_output.split('/')
         fps = float(fps_fraction[0]) / float(fps_fraction[1]) if len(fps_fraction) == 2 else float(fps_fraction[0])
 
-        # Get Resolution
         res_cmd = [
             'ffprobe', '-v', 'error', '-select_streams', 'v:0',
             '-show_entries', 'stream=width,height',
@@ -27,7 +25,7 @@ def get_video_info(input_path):
         return fps, width
     except Exception as e:
         print(f'Error retrieving video info: {e}')
-        return 10, 320  # Fallback values
+        return 10, 320 
 
 def create_gif(input_path, start, duration, output_path, fps, scale):
     print('Creating GIF with parameters:')
@@ -72,7 +70,6 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
     base_name = input_path.stem
 
-    # Get original video info
     original_fps, original_width = get_video_info(input_path)
     print(f'Original FPS: {original_fps}')
     print(f'Original Resolution Width: {original_width}')

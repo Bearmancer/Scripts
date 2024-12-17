@@ -1,13 +1,18 @@
-import subprocess, sys, re, chardet
+import subprocess, re, chardet
+import warnings
 from pathlib import Path
 from docx import Document
 from google_cloud_ai import process_file
+from argparse import ArgumentParser
 
-file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.opus', '.wmv', '.ts', '.flv', '.avi']
+file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
+
+warnings.filterwarnings("ignore", category=FutureWarning, module="torch")
 
 
 def whisper_logic(file: Path, model, language):
     if file.suffix not in file_extensions:
+        print(f"{file.name} not supported.")
         return
 
     subtitle_file = file.with_suffix('.srt')
@@ -23,7 +28,7 @@ def whisper_logic(file: Path, model, language):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        process_file(input_path=Path(subtitle_file.absolute))
+        process_file(input_path=subtitle_file.resolve())
         print(f"Translated {subtitle_file.name} to English")
 
 
@@ -97,34 +102,32 @@ def word_to_srt(input_file):
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Invalid input entered.")
-        exit()
+    parser = ArgumentParser(description="Process various file types and perform transcription or conversion")
 
-    command = sys.argv[1]
-    path = Path(sys.argv[2])
+    parser.add_argument("command", choices=["whisper_logic", "whisp", "whisper_path", "whisper_path_recursive", 
+                                            "whisper_japanese", "whisper_path_japanese", "srt_to_word", 
+                                            "word_to_srt", "rsd"], 
+                        help="Command to execute")
 
-    if command == "whisper_logic":
-        whisper_logic(path, sys.argv[3], sys.argv[4])
-    elif command == "whisp":
-        whisp(path)
-    elif command == "whisper_path":
-        whisper_path(path)
-    elif command == "whisper_path_recursive":
-        whisper_path_recursive(path)
-    elif command == "whisper_japanese":
-        whisper_japanese(path)
-    elif command == "whisper_path_japanese":
-        whisper_path_japanese(path)
-    elif command == "srt_to_word":
-        srt_to_word(path)
-    elif command == "word_to_srt":
-        word_to_srt(path)
-    elif command == "rsd":
-        remove_subtitle_duplication(path)
-    else:
-        print("Invalid command entered.")
+    parser.add_argument("path", type=Path, help="Path to the file or directory")
+    parser.add_argument("--model", type=str, default="small.en", help="Model for transcription (default: small.en)")
+    parser.add_argument("--language", type=str, default="English", help="Language for transcription (default: English)")
 
+    args = parser.parse_args()
+
+    command_map = {
+        "whisper_logic": lambda: whisper_logic(args.path, args.model, args.language),
+        "whisp": lambda: whisp(args.path),
+        "whisper_path": lambda: whisper_path(args.path),
+        "whisper_path_recursive": lambda: whisper_path_recursive(args.path),
+        "whisper_japanese": lambda: whisper_japanese(args.path),
+        "whisper_path_japanese": lambda: whisper_path_japanese(args.path),
+        "srt_to_word": lambda: srt_to_word(args.path),
+        "word_to_srt": lambda: word_to_srt(args.path),
+        "rsd": lambda: remove_subtitle_duplication(args.path),
+    }
+
+    command_map.get(args.command, lambda: print("Invalid command entered."))()
 
 if __name__ == "__main__":
     main()

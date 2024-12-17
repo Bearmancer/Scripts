@@ -1,8 +1,8 @@
-import sys
 import json
-from py3createtorrent import create_torrent
+import argparse
 from pathlib import Path
 from datetime import datetime
+from py3createtorrent import create_torrent
 from music import rename_file_red
 
 
@@ -67,40 +67,42 @@ def list_files_and_directories(path, sort_order, indent=0):
         log_to_file(file_output)
 
 
-def make_torrents(folder):
+def make_torrents(folder, process_all_subfolders):
     print(f'Now processing: {folder}')
 
     rename_file_red(folder)
 
     dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
 
-    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"{dropbox}\\Lance\\{folder.name} - OPS.torrent")
-    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"{dropbox}\\Lance\\{folder.name} - RED.torrent")
-
-
-def process_make_torrents(directory, process_all_subfolders):
-    directories = [d for d in directory.iterdir() if d.is_dir()] if process_all_subfolders else [directory]
+    if process_all_subfolders:
+        directories = [d for d in folder.iterdir() if d.is_dir()]
+    else:
+        directories = [folder]
 
     for subfolder in directories:
-        if subfolder.is_dir():
-            make_torrents(subfolder)
+        print(f"Creating torrents for {subfolder.name}...")
+
+        create_torrent(path=str(subfolder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"{dropbox}\\Lance\\{subfolder.name} - OPS.torrent")
+
+        create_torrent(path=str(subfolder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED", output=f"{dropbox}\\Lance\\{subfolder.name} - RED.torrent")
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Invalid number of arguments entered.")
-        exit()
+    parser = argparse.ArgumentParser(description="Process directories and files.")
 
-    command = sys.argv[1]
-    directory = Path(sys.argv[2])
-    third_parameter = sys.argv[3].lower() == 'true' if len(sys.argv) > 3 else True
+    parser.add_argument("command", choices=["list_dir", "list_files_and_dirs", "make_torrents"], help="Command to execute")
+    parser.add_argument("directory", type=Path, help="Directory to process")
+    parser.add_argument("sort_order", choices=["0", "1"], help="Sorting order for directories/files (0 for size, 1 for name)")
+    parser.add_argument("--process_all_subfolders", action="store_true", help="Process all subfolders for make_torrents")
 
-    if command == 'list_dir':
-        list_directories(directory, sort_order=third_parameter)
-    elif command == 'list_files_and_dirs':
-        list_files_and_directories(directory, sort_order=third_parameter)
-    elif command == "make_torrents":
-        process_make_torrents(directory, process_all_subfolders=third_parameter)
+    args = parser.parse_args()
+
+    if args.command == 'list_dir':
+        list_directories(args.directory, sort_order=args.sort_order)
+    elif args.command == 'list_files_and_dirs':
+        list_files_and_directories(args.directory, sort_order=args.sort_order == "1")
+    elif args.command == "make_torrents":
+        make_torrents(args.directory, process_all_subfolders=args.process_all_subfolders)
     else:
         print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")
 
