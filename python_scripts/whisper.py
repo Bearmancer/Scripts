@@ -1,13 +1,10 @@
 import subprocess, re, chardet
-import warnings
 from pathlib import Path
 from docx import Document
 from google_cloud_ai import process_file
 from argparse import ArgumentParser
 
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
-
-warnings.filterwarnings("ignore", category=FutureWarning, module="torch")
 
 
 def whisper_logic(file: Path, model, language):
