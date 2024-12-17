@@ -1,4 +1,6 @@
-import subprocess, re, chardet
+import subprocess
+import re
+import chardet
 from pathlib import Path
 from docx import Document
 from google_cloud_ai import process_file
@@ -7,7 +9,7 @@ from argparse import ArgumentParser
 file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
 
-def whisper_logic(file: Path, model, language):
+def whisper_logic(file: Path, model: str, language: str):
     if file.suffix not in file_extensions:
         print(f"{file.name} not supported.")
         return
@@ -25,39 +27,41 @@ def whisper_logic(file: Path, model, language):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        process_file(input_path=subtitle_file.resolve())
+        new_file = process_file(input_path=subtitle_file)
+        subtitle_file.unlink()
+        new_file.rename(subtitle_file.name)
         print(f"Translated {subtitle_file.name} to English")
 
 
-def whisp(file):
+def whisp(file: Path):
     whisper_logic(file, "small.en", "English")
 
 
-def whisper_path(directory):
+def whisper_path(directory: Path):
     for file in directory.glob('*'):
         if file.is_file():
             whisp(file)
 
 
-def whisper_path_recursive(directory):
+def whisper_path_recursive(directory: Path):
     for subdir in directory.rglob('*'):
         if subdir.is_dir():
             whisper_path(subdir)
     whisper_path(directory)
 
 
-def whisper_japanese(file):
+def whisper_japanese(file: Path):
     whisper_logic(file, "small", "Japanese")
 
 
-def whisper_path_japanese(directory):
+def whisper_path_japanese(directory: Path):
     for file in directory.glob('*'):
         if file.is_file():
             whisper_japanese(file)
 
 
-def remove_subtitle_duplication(file):
-    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'
+def remove_subtitle_duplication(file: Path):
+    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'  
     new_text = r'\1\n\n'
 
     if file.exists():
@@ -72,24 +76,22 @@ def remove_subtitle_duplication(file):
         print(f"{file} not found.")
 
 
-def srt_to_word(input_file):
-    input_path = Path(input_file)
-    
-    with open(input_path, 'rb') as f:
+def srt_to_word(input_file: Path):
+    with open(input_file, 'rb') as f:
         raw_data = f.read()
         encoding = chardet.detect(raw_data)['encoding']
 
-    with open(input_path, 'r', encoding=encoding) as f:
+    with open(input_file, 'r', encoding=encoding) as f:
         doc = Document()
         doc.add_paragraph(f.read())
         
-        output_file = input_path.with_suffix('.docx')
+        output_file = input_file.with_suffix('.docx')
         
         doc.save(output_file)
         print(f"Output saved to '{output_file}'")
 
 
-def word_to_srt(input_file):
+def word_to_srt(input_file: Path):
     doc = Document(input_file)
     text = '\n'.join([para.text for para in doc.paragraphs])
     output_file = f'{str(input_file)[:-8]}.srt'

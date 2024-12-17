@@ -2,7 +2,8 @@ import subprocess
 from pathlib import Path
 import argparse
 
-def get_video_info(input_path):
+
+def get_video_info(input_path: Path):
     """Retrieve the original FPS and resolution of the video using ffprobe."""
     try:
         fps_cmd = [
@@ -25,9 +26,10 @@ def get_video_info(input_path):
         return fps, width
     except Exception as e:
         print(f'Error retrieving video info: {e}')
-        return 10, 320 
+        return 10, 320
 
-def create_gif(input_path, start, duration, output_path, fps, scale):
+
+def create_gif(input_path: Path, start: str, duration: int, output_path: Path, fps: float, scale: int):
     print('Creating GIF with parameters:')
     print(f'  FPS: {fps}')
     print(f'  Scale width: {scale}')
@@ -46,6 +48,7 @@ def create_gif(input_path, start, duration, output_path, fps, scale):
     size = output_path.stat().st_size / (1024 * 1024)
     print(f'GIF created at {output_path} with size {size:.2f} MiB')
     return size
+
 
 def main():
     parser = argparse.ArgumentParser(description='Create a GIF from a video file.')
@@ -103,5 +106,6 @@ def main():
 
     print('GIF creation process completed.')
 
+
 if __name__ == '__main__':
-        main()
+    main()

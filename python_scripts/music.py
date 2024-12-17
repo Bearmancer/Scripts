@@ -46,7 +46,7 @@ def rename_file_red(path: Path):
 
 
 def calculate_image_size(path: Path):
-    exif_tool = Path(r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe")
+    exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
     problematic_files = []
 
     for flac_file in path.glob('*.flac'):

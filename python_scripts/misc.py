@@ -6,14 +6,14 @@ from py3createtorrent import create_torrent
 from music import rename_file_red
 
 
-def log_to_file(message):
+def log_to_file(message: str):
     log_file = Path.home() / "Desktop" / "Python Functions' Log.txt"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
 
 
-def get_folder_size(path):
+def get_folder_size(path: Path):
     total_size = 0
     for entry in path.rglob('*'):
         if entry.is_file():
@@ -21,7 +21,7 @@ def get_folder_size(path):
     return total_size
 
 
-def list_directories(path, sort_order, indent=0):
+def list_directories(path: Path, sort_order: str, indent: int = 0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -39,7 +39,7 @@ def list_directories(path, sort_order, indent=0):
         list_directories(entry, indent + 2, sort_order)
 
 
-def list_files_and_directories(path, sort_order, indent=0):
+def list_files_and_directories(path: Path, sort_order: bool, indent: int = 0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -67,7 +67,7 @@ def list_files_and_directories(path, sort_order, indent=0):
         log_to_file(file_output)
 
 
-def make_torrents(folder, process_all_subfolders):
+def make_torrents(folder: Path, process_all_subfolders: bool):
     print(f'Now processing: {folder}')
 
     rename_file_red(folder)

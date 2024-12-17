@@ -5,11 +5,11 @@ import sys
 from image_extraction import extract_images
 from operator import itemgetter
 from pathlib import Path
+from typing import List
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
-
-def extract_chapters(video_files):
+def extract_chapters(video_files: List[Path]):
     for video_file in video_files:
         try:
             probe = ffmpeg.probe(str(video_file), show_chapters=None)
@@ -39,7 +39,7 @@ def extract_chapters(video_files):
                 print(f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
 
 
-def batch_compression(path):
+def batch_compression(path: Path):
     mkv_files = path.rglob("*.mkv")
 
     for file in mkv_files:
@@ -55,7 +55,7 @@ def batch_compression(path):
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 
-def remux_disc(path):
+def remux_disc(path: Path):
     remuxable_files = [
         f for f in path.rglob('*')
         if f.name in ('VIDEO_TS.IFO', 'index.bdmv') and 'BACKUP' not in f.parts
@@ -73,12 +73,11 @@ def remux_disc(path):
             for mkv_file in path.glob("*.mkv"):
                 get_mediainfo(mkv_file)
                 extract_images(mkv_file)
-
         else:
             return print(f"Could not convert the file. Error: {result.stderr.strip()}")
 
 
-def convert_disc_to_mkv(file, dvd_folder):
+def convert_disc_to_mkv(file: Path, dvd_folder: Path):
     makemkv_path = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 
     makemkv_command = [
@@ -89,7 +88,7 @@ def convert_disc_to_mkv(file, dvd_folder):
     return subprocess.run(makemkv_command, capture_output=True, text=True)
 
 
-def get_mediainfo(video_path):
+def get_mediainfo(video_path: Path):
     print(f"Getting MediaInfo for {video_path.absolute()}")
     output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.txt"
 
@@ -107,7 +106,7 @@ def get_mediainfo(video_path):
     print("MediaInfo successfully created.")
 
 
-def extract_audio_commentary(video_files):
+def extract_audio_commentary(video_files: List[Path]):
     for file in video_files:
         try:
             probe = ffmpeg.probe(str(file))
@@ -134,7 +133,7 @@ def extract_audio_commentary(video_files):
         print(flac_file.name)
 
 
-def print_video_resolution(video_files):
+def print_video_resolution(video_files: List[Path]):
     files_1920_1080 = []
     files_below_1920_1080 = []
     files_unresolved_resolution = []
@@ -162,7 +161,7 @@ def print_video_resolution(video_files):
         print(name)
 
 
-def get_video_resolution(filepath):
+def get_video_resolution(filepath: Path):
     try:
         probe = ffmpeg.probe(str(filepath))
         video_streams = [stream for stream in probe['streams']
@@ -174,10 +173,10 @@ def get_video_resolution(filepath):
     except (ffmpeg.Error, IndexError, KeyError, ValueError) as e:
         print(f"Error processing file: {filepath}. Error: {e}")
 
-    return None
+    return {}
 
 
-def calculate_mb_per_minute(file):
+def calculate_mb_per_minute(file: Path):
     try:
         probe = ffmpeg.probe(str(file))
         format_info = probe.get('format', {})
@@ -191,7 +190,7 @@ def calculate_mb_per_minute(file):
         return 0, 0, 0
 
 
-def calculate_mb_for_directory(video_files):
+def calculate_mb_for_directory(video_files: List[Path]):
     data = []
     for file in video_files:
         mb_per_minute, size, duration = calculate_mb_per_minute(file)

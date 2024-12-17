@@ -8,7 +8,7 @@ from misc import log_to_file
 from sox_downsample import sox_downsample
 
 
-def extract_sacds(path):
+def extract_sacds(path: Path):
     normalized_name = ''.join(c for c in unicodedata.normalize('NFD', path.name) if unicodedata.category(c) != 'Mn')
 
     path = path.rename(path.with_name(normalized_name)) if normalized_name != path.name else path
@@ -21,7 +21,7 @@ def extract_sacds(path):
         sox_downsample(copied_folder)
 
 
-def iso_to_flac(iso_file, path):
+def iso_to_flac(iso_file: Path, path: Path):
     output = subprocess.run(['sacd_extract', '-P', '-i', str(iso_file)],
                             capture_output=True, text=True, cwd=str(path)).stdout
 
@@ -72,13 +72,13 @@ def copy_folder(path: Path):
 
     shutil.copytree(path, destination_folder)
 
-    return Path (destination_folder)
+    return Path(destination_folder)
 
 
-def check_dynamic_range(directory):
+def check_dynamic_range(directory: Path):
     dr_gains = []
 
-    for file in Path(directory).rglob("*.dff"):
+    for file in directory.rglob("*.dff"):
         output = subprocess.run(['ffmpeg', '-i', str(file), '-af', 'volumedetect', '-f', 'null', '-'],
                                 capture_output=True, text=True)
         dr_gain = [float(match.group(1)) for match in re.finditer(r'max_volume: (-?\d+(\.\d+)?) dB', output.stderr)]
@@ -89,7 +89,7 @@ def check_dynamic_range(directory):
     return max_dr_gain
 
 
-def dff_to_flac(input_folder):
+def dff_to_flac(input_folder: Path):
     files = list(input_folder.glob("*.dff"))
     dynamic_range = check_dynamic_range(input_folder)
 
@@ -110,8 +110,7 @@ def dff_to_flac(input_folder):
 
         subprocess.run(
             ['sox', str(flac_file), str(trimmed_flac_file), 'trim', '0.0065', 'reverse', 'silence', '1',
-             '0',
-             '0%', 'trim', '0.0065', 'reverse', 'pad', '0.0065', '0.2'])
+             '0', '0%', 'trim', '0.0065', 'reverse', 'pad', '0.0065', '0.2'])
 
         if trimmed_flac_file.exists():
             flac_file.unlink()
@@ -122,7 +121,7 @@ def dff_to_flac(input_folder):
     check_dff_and_flac(input_folder)
 
 
-def check_dff_and_flac(input_folder):
+def check_dff_and_flac(input_folder: Path):
     print(f"DFF and FLAC conversion invoked on {input_folder}")
 
     flac_count = len(list(input_folder.glob("*.flac")))

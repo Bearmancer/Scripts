@@ -9,11 +9,8 @@ warnings.filterwarnings("ignore")
 absl.logging.set_verbosity(absl.logging.ERROR)
 os.environ["GRPC_SHUTDOWN_GRACE_MS"] = "500"
 
-def process_chunks(input_file, model_name, chunk_size, instructions):
-    api_key = os.getenv("GEMINI_API_KEY")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name)
 
+def process_chunks(input_file: Path, model: genai.GenerativeModel, chunk_size: int, instructions: str):
     print(f"Now processing: {input_file}")
 
     with input_file.open(encoding="utf-8") as file:
@@ -34,14 +31,20 @@ def process_chunks(input_file, model_name, chunk_size, instructions):
     output_file.write_text("\n".join(processed_content), encoding="utf-8")
 
     print(f"Processed {input_file.name} and saved as {output_file.name}")
+    
+    return output_file
 
-def process_file(input_path, model_name="gemini-2.0-flash-exp", chunk_size=500, instructions="Translate subtitles to English whilst retaining the SRT formatting."):
+
+def process_file(input_path: Path, model_name: str = "gemini-2.0-flash-exp", chunk_size: int = 500, instructions: str = "Translate subtitles to English whilst retaining the SRT formatting."):
+    api_key = os.getenv("GEMINI_API_KEY")
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name)
+    
     if input_path.is_dir():
-        for file in input_path.iterdir():
-            if file.is_file():
-                process_chunks(file, model_name, chunk_size, instructions)
+        return [process_chunks(file, model, chunk_size, instructions) for file in input_path.iterdir() if file.is_file()]
     else:
-        process_chunks(input_path, model_name, chunk_size, instructions)
+        return [process_chunks(input_path, model, chunk_size, instructions)]
+
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Process files with Google Generative AI Gemini")
