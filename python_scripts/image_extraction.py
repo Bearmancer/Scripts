@@ -107,7 +107,6 @@ def save_full_size_images(video_path, video_info, thumbnail_timestamps):
 
 
 def extract_images(video_path):
-    video_path = Path(video_path)
     print(f"Now processing: {video_path}")
 
     if not video_path.is_file():
@@ -129,5 +128,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Invalid number of arguments entered.")
     
-    video_file = sys.argv[1]
+    video_file = Path(sys.argv[1])
     extract_images(video_file)

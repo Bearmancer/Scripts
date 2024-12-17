@@ -1,27 +1,23 @@
-import sys
+import argparse
 import json
-from py3createtorrent import create_torrent
 from pathlib import Path
 from datetime import datetime
+from py3createtorrent import create_torrent
 from music import rename_file_red
 
 
-def log_to_file(message):
+def log_to_file(message: str):
     log_file = Path.home() / "Desktop" / "Python Functions' Log.txt"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
 
 
-def get_folder_size(path):
-    total_size = 0
-    for entry in path.rglob('*'):
-        if entry.is_file():
-            total_size += entry.stat().st_size
-    return total_size
+def get_folder_size(path: Path):
+    return sum(entry.stat().st_size for entry in path.rglob('*') if entry.is_file())
 
 
-def list_directories(path, sort_order, indent=0):
+def list_directories(path: Path, sort_order: str = "0", indent: int = 0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -30,16 +26,14 @@ def list_directories(path, sort_order, indent=0):
 
     entries = [(entry, get_folder_size(entry)) for entry in path.iterdir() if entry.is_dir()]
 
-    if sort_order == "1":
-        entries.sort(key=lambda e: e[0].name)
-    else:
-        entries.sort(key=lambda e: e[1], reverse=True)
+    entries.sort(key=lambda e: e[0].name if sort_order == "1" else e[1], 
+                 reverse=sort_order != "1")
 
     for entry, _ in entries:
-        list_directories(entry, indent + 2, sort_order)
+        list_directories(entry, sort_order, indent + 2)
 
 
-def list_files_and_directories(path, sort_order, indent=0):
+def list_files_and_directories(path: Path, sort_order: bool = False, indent: int = 0):
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} (Folder Size: {folder_size / (1024 ** 2):.2f} MB)"
@@ -58,7 +52,7 @@ def list_files_and_directories(path, sort_order, indent=0):
         files.sort(key=lambda e: e.stat().st_size, reverse=True)
 
     for entry in directories:
-        list_files_and_directories(entry, indent + 2, sort_order)
+        list_files_and_directories(entry, sort_order, indent + 2)
 
     for entry in files:
         file_size_mb = entry.stat().st_size / (1024 ** 2)
@@ -67,43 +61,50 @@ def list_files_and_directories(path, sort_order, indent=0):
         log_to_file(file_output)
 
 
-def make_torrents(folder):
+def make_torrents(folder: Path, process_all_subfolders: bool = True):
     print(f'Now processing: {folder}')
 
     rename_file_red(folder)
 
     dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
 
-    create_torrent(path=str(folder), trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], private=True, source="OPS", output=f"{dropbox}\\Lance\\{folder.name} - OPS.torrent")
-    create_torrent(path=str(folder), trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], private=True, source="RED",output=f"{dropbox}\\Lance\\{folder.name} - RED.torrent")
-
-
-def process_make_torrents(directory, process_all_subfolders):
-    directories = [d for d in directory.iterdir() if d.is_dir()] if process_all_subfolders else [directory]
+    directories = [d for d in folder.iterdir() if d.is_dir()] if process_all_subfolders else [folder]
 
     for subfolder in directories:
-        if subfolder.is_dir():
-            make_torrents(subfolder)
+        print(f"Creating torrents for {subfolder.name}...")
+
+        create_torrent(
+            path=str(subfolder), 
+            trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
+            private=True, 
+            source="OPS", 
+            output=f"{dropbox}\\Lance\\{subfolder.name} - OPS.torrent"
+        )
+
+        create_torrent(
+            path=str(subfolder), 
+            trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], 
+            private=True, 
+            source="RED", 
+            output=f"{dropbox}\\Lance\\{subfolder.name} - RED.torrent"
+        )
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Invalid number of arguments entered.")
-        exit()
+    parser = argparse.ArgumentParser(description="File and Torrent Management Tool")
+    parser.add_argument('command', choices=['list_dir', 'list_files_and_dirs', 'make_torrents'], help='Command to execute')
+    parser.add_argument('directory', type=Path, help='Directory to process')
+    parser.add_argument('--sort_order', default='0', help='Sorting options for list commands (0: by size, 1: by name)')
+    parser.add_argument('--process_all_subfolders', action='store_true', help='Process all subfolders for torrent creation')
 
-    command = sys.argv[1]
-    directory = Path(sys.argv[2])
-    third_parameter = sys.argv[3].lower() == 'true' if len(sys.argv) > 3 else True
+    args = parser.parse_args()
 
-    if command == 'list_dir':
-        list_directories(directory, sort_order=third_parameter)
-    elif command == 'list_files_and_dirs':
-        list_files_and_directories(directory, sort_order=third_parameter)
-    elif command == "make_torrents":
-        process_make_torrents(directory, process_all_subfolders=third_parameter)
-    else:
-        print("Unknown command. Use 'list_dir', 'list_files_and_dirs' or 'make_torrents'.")
-
+    if args.command == 'list_dir':
+        list_directories(args.directory, args.sort_order)
+    elif args.command == 'list_files_and_dirs':
+        list_files_and_directories(args.directory, args.sort_order == '1')
+    elif args.command == 'make_torrents':
+        make_torrents(args.directory, args.process_all_subfolders)
 
 if __name__ == "__main__":
     main()

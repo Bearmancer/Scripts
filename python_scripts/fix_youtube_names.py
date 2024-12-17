@@ -1,19 +1,18 @@
 from pathlib import Path
 import re
 
-def log_error(log_message):
+
+def log_error(log_message: str):
     log_file_path = Path.home() / 'Desktop' / 'Files That Could Not Be Renamed.txt'
     with open(log_file_path, 'a', encoding='utf-8') as log_file:
         log_file.write(log_message)
 
 
-def rename_files(directory, txt_file):
+def rename_files(directory: Path, txt_file: Path):
     try:
-        directory = Path(directory)
         if not directory.exists():
             raise FileNotFoundError(f"Directory {directory} not found.")
         
-        txt_file = Path(txt_file)
         with txt_file.open('r', encoding='utf-8') as file:
             lines = file.readlines()
         
@@ -54,11 +53,11 @@ def rename_files(directory, txt_file):
         log_error(str(e))
 
 
-def process_subfolders(base_directory, txt_directory):
-    for subfolder in Path(base_directory).iterdir():
+def process_subfolders(base_directory: Path, txt_directory: Path):
+    for subfolder in base_directory.iterdir():
         if subfolder.is_dir():
             name = subfolder.name
-            txt_file = Path(txt_directory) / f"{name}.txt"
+            txt_file = txt_directory / f"{name}.txt"
             if txt_file.exists():
                 print(f"Processing {name}...")
                 rename_files(subfolder, txt_file)
