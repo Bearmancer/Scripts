@@ -57,12 +57,13 @@ def convert_flac_to_mp3(flac: Path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert FLAC files to MP3 and manage directories.")
     parser.add_argument("path", default=".", help="Path to the directory containing FLAC files.")
-    parser.add_argument("--process_subdirectories", action="store_true", help="Process all subdirectories (default: does not process subdirectories.)")
+    parser.add_argument('--process_all_subfolders', action='store_true', 
+                        help='Process all subfolders for torrent creation')
 
     args = parser.parse_args()
     path = Path(args.path).resolve()
 
-    if args.process_subdirectories:
+    if args.process_all_subfolders:
         [main(directory) for directory in path.iterdir() if directory.is_dir()]
     else:
         main(path)

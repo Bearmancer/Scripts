@@ -9,6 +9,7 @@ from typing import List
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
+
 def extract_chapters(video_files: List[Path]):
     for video_file in video_files:
         try:

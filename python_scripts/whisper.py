@@ -6,11 +6,11 @@ from docx import Document
 from google_cloud_ai import process_file
 from argparse import ArgumentParser
 
-file_extensions = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
+FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
 
 def whisper_logic(file: Path, model: str, language: str):
-    if file.suffix not in file_extensions:
+    if file.suffix not in FILE_EXTENSIONS:
         print(f"{file.name} not supported.")
         return
 
@@ -30,7 +30,7 @@ def whisper_logic(file: Path, model: str, language: str):
         new_file = process_file(input_path=subtitle_file)
         subtitle_file.unlink()
         new_file.rename(subtitle_file.name)
-        print(f"Translated {subtitle_file.name} to English")
+        print(f"Translated {new_file.name} to English.")
 
 
 def whisp(file: Path):
@@ -127,6 +127,7 @@ def main():
     }
 
     command_map.get(args.command, lambda: print("Invalid command entered."))()
+
 
 if __name__ == "__main__":
     main()
