@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 warnings.filterwarnings("ignore")
 absl.logging.set_verbosity(absl.logging.ERROR)
 os.environ["GRPC_SHUTDOWN_GRACE_MS"] = "500"
-
+os.environ["GRPC_DEFAULT_CHANNEL_ARGS"] = "grpc.max_receive_message_length=104857600"
 
 def process_chunks(input_file: Path, model: genai.GenerativeModel, chunk_size: int, instructions: str):
     print(f"Now processing: {input_file}")
@@ -19,19 +19,22 @@ def process_chunks(input_file: Path, model: genai.GenerativeModel, chunk_size: i
     processed_content = []
 
     total_chunks = (len(lines) + chunk_size - 1) // chunk_size
-    
+
     for i in range(0, len(lines), chunk_size):
-        chunk = lines[i:i + chunk_size]
+        chunk = ''.join(lines[i:i + chunk_size])
         print(f"Processing chunk {i // chunk_size + 1} of {total_chunks}, starting from line {i+1}")
         response = model.generate_content(f"{instructions}\n\n{chunk}")
-        processed_content.append("\n".join(response.text.strip().splitlines()[1:-1]))
+        try:
+            processed_content.append("\n".join(response.text.strip().splitlines()[1:-1]))
+        except Exception as e:
+            print(f"Could not carry out task because: {e}")
 
     output_file_name = f"{input_file.stem} (Gemini CLI){input_file.suffix}"
     output_file = input_file.parent / output_file_name
     output_file.write_text("\n".join(processed_content), encoding="utf-8")
 
     print(f"Processed {input_file.name} and saved as {output_file.name}")
-    
+
     return output_file
 
 
@@ -39,11 +42,11 @@ def process_file(input_path: Path, model_name: str = "gemini-2.0-flash-exp", chu
     api_key = os.getenv("GEMINI_API_KEY")
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name)
-    
+
     if input_path.is_dir():
         return [process_chunks(file, model, chunk_size, instructions) for file in input_path.iterdir() if file.is_file()]
     else:
-        return [process_chunks(input_path, model, chunk_size, instructions)]
+        return [process_chunks(input_path, model, chunk_size, instructions)][0]
 
 
 if __name__ == "__main__":
@@ -56,6 +59,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    
-    process_file(input_path, args.model, args.chunk_size, args.instructions)
+    path = Path(args.input)
+
+    process_file(path, args.model, args.chunk_size, args.instructions)
