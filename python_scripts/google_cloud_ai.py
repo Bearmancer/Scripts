@@ -14,30 +14,29 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chu
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel(model_name)
     lines = read_file_content(input_file)
+
     output_file = input_file.with_name(f"{input_file.stem} (Gemini CLI){input_file.suffix}")
+
+    if input_file.stem.endswith("(Gemini CLI)") or output_file.exists():
+        print(f'Translated file already exists for {input_file.name}.\n--------------------')
+        return
 
     if langid.classify(''.join(lines))[0] == "en":
         output_file.write_text("\n".join(lines), encoding="utf-8")
-        print(f"File already in English: {input_file}\n--------------------")
+        print(f"File already in English: {input_file}.\n--------------------")
         return output_file
 
     output = process_chunks(lines, chunk_size, instructions, model)
 
     attempts = 0
-    if match_lines:
-        while len(lines) != len(output) and attempts < 5:
-            print(f"Line count mismatch. Lines inputted: {len(lines)} | Lines outputted: {len(output)}")
-            output = process_chunks(lines, chunk_size, instructions, model)
-            attempts+=1
 
-    if attempts == 5:
-        print("Translation could not match number of lines. Saving last attempt to file...")
-        output_file.write_text('\n'.join(output), encoding="utf-8")
-
-
+    while match_lines and len(lines) != len(output) and attempts < 5:
+        print(f"Line count mismatch. {len(lines)} in | {len(output)} out")
+        output = process_chunks(lines, chunk_size, instructions, model)
+        attempts += 1
 
     output_file.write_text('\n'.join(output), encoding="utf-8")
-    print(f"Successfully translated: {input_file}\n--------------------")
+    print(f"Successfully translated: {input_file.name}\n--------------------")
 
     time.sleep(10)
 
@@ -45,38 +44,33 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chu
 
 
 def process_chunks(lines, chunk_size, instructions, model):
-    chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]
-    output = []
-
-    for i, chunk_lines in enumerate(chunks, 1):
-        print(f"Now processing chunk {i} of {len(chunks)}")
-        chunk_text = '\n'.join(chunk_lines)
-        output = model.generate_content(f"{instructions}\n\n{chunk_text}").text.splitlines()
-
-    return output
-
-
-def read_file_content(input_file: Path):
     try:
-        content = [line for line in input_file.read_text(encoding="utf-8").splitlines()]
-        return content
+        chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]
+        output = []
+        for i, chunk_lines in enumerate(chunks, 1):
+            print(f"Now processing chunk {i} of {len(chunks)}")
+            chunk_text = '\n'.join(chunk_lines)
+            output = model.generate_content(f"{instructions}\n\n{chunk_text}").text.splitlines()
+        return output
+
+    except Exception as e:
+        print(f'Error occurred: {e}')
+        log_to_file(e)
+
+
+def read_file_content(input_file):
+    try:
+        return [line for line in input_file.read_text(encoding="utf-8").splitlines()]
     except UnicodeDecodeError:
         detected_encoding = chardet.detect(input_file.read_bytes())["encoding"]
         print(f"Detected encoding: {detected_encoding}")
-        content = [line for line in input_file.read_text(encoding=detected_encoding).splitlines()]
-        return content
+        return [line for line in input_file.read_text(encoding=detected_encoding).splitlines()]
 
 
-def log_failed_files(file: str, in_count: int, out_count: int):
+def log_to_file(message):
     log = Path.home() / 'Desktop' / 'failed_files_log.txt'
-    content = f"""File: {file}
-    Input Lines: {in_count}
-    Output Lines: {out_count} 
-    Line Count Difference: {in_count - out_count}
-    {'-' * 30}
-    """
     with log.open(mode='a', encoding='utf-8') as f:
-        f.write(content)
+        f.write(message)
 
 
 def main():
@@ -86,18 +80,17 @@ def main():
     parser.add_argument("-c", "--chunk-size", type=int, default=500, help="Lines per chunk")
     parser.add_argument("--match_lines", type=bool, default=True, help="Match the number of input and output lines.")
     parser.add_argument("-t", "--instructions", default="""
-        Translate to English and replace the foreign text. Do not lose any lines! Do not insert any comments. 
-        Just translate the text. Retain all info ESPECIALLY DATES THIS IS VERY IMPORTANT! 
-        If the translation exists along with original language in the original text then retain both.
-    """)
+       Translate to English and replace the foreign text. Do not lose any lines! Do not insert any comments. 
+       Just translate the text. Retain all info ESPECIALLY DATES THIS IS VERY IMPORTANT! 
+       If the translation exists along with original language in the original text then retain both.
+   """)
 
     args = parser.parse_args()
-
     input_path = Path(args.input)
     files = input_path.rglob("*.txt")
 
     for file in files:
-        print(f"Processing file: {file.name}")
+        print(f"Processing file: {file}")
         process_file(file, args.model, args.chunk_size, args.match_lines, args.instructions)
 
 
