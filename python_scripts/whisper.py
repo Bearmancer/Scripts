@@ -11,7 +11,6 @@ FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.op
 
 def whisper_logic(file: Path, model: str, language: str):
     if file.suffix not in FILE_EXTENSIONS:
-        print(f"{file.name} not supported.")
         return
 
     subtitle_file = file.with_suffix('.srt')
@@ -27,7 +26,7 @@ def whisper_logic(file: Path, model: str, language: str):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        new_file = process_file(input_path=subtitle_file)
+        new_file = process_file(input_file=subtitle_file, chunk_size=200, instructions="Translate to English whilst retaining SRT formatting.")
         subtitle_file.unlink()
         new_file.rename(subtitle_file.name)
         print(f"Translated {new_file.name} to English.")

@@ -1,33 +1,24 @@
-import subprocess
-from pathlib import Path
 import argparse
-
+import ffmpeg
+from pathlib import Path
 
 def get_video_info(input_path: Path):
-    """Retrieve the original FPS and resolution of the video using ffprobe."""
     try:
-        fps_cmd = [
-            'ffprobe', '-v', '0', '-select_streams', 'v:0',
-            '-of', 'csv=p=0', '-show_entries',
-            'stream=r_frame_rate', str(input_path)
-        ]
-        fps_output = subprocess.check_output(fps_cmd, universal_newlines=True).strip()
-        fps_fraction = fps_output.split('/')
-        fps = float(fps_fraction[0]) / float(fps_fraction[1]) if len(fps_fraction) == 2 else float(fps_fraction[0])
+        probe = ffmpeg.probe(str(input_path))
+        video_stream = next(
+            (stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None
+        )
 
-        res_cmd = [
-            'ffprobe', '-v', 'error', '-select_streams', 'v:0',
-            '-show_entries', 'stream=width,height',
-            '-of', 'csv=s=x:p=0', str(input_path)
-        ]
-        res_output = subprocess.check_output(res_cmd, universal_newlines=True).strip()
-        width, height = map(int, res_output.split('x'))
+        if not video_stream:
+            raise ValueError("No video stream found.")
+
+        fps = eval(video_stream['r_frame_rate'])
+        width = int(video_stream['width'])
 
         return fps, width
     except Exception as e:
-        print(f'Error retrieving video info: {e}')
+        print(f"Error retrieving video info: {e}")
         return 10, 320
-
 
 def create_gif(input_path: Path, start: str, duration: int, output_path: Path, fps: float, scale: int):
     print('Creating GIF with parameters:')
@@ -35,31 +26,33 @@ def create_gif(input_path: Path, start: str, duration: int, output_path: Path, f
     print(f'  Scale width: {scale}')
     print(f'  Output path: {output_path}')
 
-    subprocess.run([
-        'ffmpeg',
-        '-ss', start,
-        '-t', str(duration),
-        '-i', str(input_path),
-        '-vf', f'fps={fps},scale={scale}:-1:flags=lanczos',
-        '-gifflags', '+transdiff',
-        '-y', str(output_path)
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+    try:
+        (
+            ffmpeg
+            .input(str(input_path), ss=start, t=duration)
+            .filter('fps', fps=fps)
+            .filter('scale', scale, -1, flags='lanczos')
+            .output(str(output_path), format='gif', gifflags='+transdiff', y=True)
+            .run(quiet=True)
+        )
 
-    size = output_path.stat().st_size / (1024 * 1024)
-    print(f'GIF created at {output_path} with size {size:.2f} MiB')
-    return size
-
+        size = output_path.stat().st_size / (1024 * 1024)
+        print(f"GIF created at {output_path} with size {size:.2f} MiB")
+        return size
+    except ffmpeg.Error as e:
+        print(f"Error creating GIF: {e}")
+        return float('inf')
 
 def main():
     parser = argparse.ArgumentParser(description='Create a GIF from a video file.')
-    parser.add_argument('input_path', type=Path, help='Path to the input video file')
-    parser.add_argument('--start', default='00:00', help='Start time (mm:ss)')
-    parser.add_argument('--duration', type=int, default=30, help='Duration in seconds')
-    parser.add_argument('--max_size', type=float, default=5.0, help='Maximum GIF size in MiB')
-    parser.add_argument('--output_dir', type=Path, default=Path.home() / 'Desktop', help='Directory to save the GIF')
-    
+    parser.add_argument('-i', '--input_path', type=Path, required=True, help='Path to the input video file')
+    parser.add_argument('-s', '--start', default='00:00', help='Start time (mm:ss)')
+    parser.add_argument('-d', '--duration', type=int, default=30, help='Duration in seconds')
+    parser.add_argument('-m', '--max_size', type=float, default=300, help='Maximum GIF size in MiB')
+    parser.add_argument('-o', '--output_dir', type=Path, default=Path.home() / 'Desktop', help='Directory to save the GIF')
+
     args = parser.parse_args()
-    
+
     input_path = args.input_path
     start = args.start
     duration = args.duration
@@ -67,15 +60,15 @@ def main():
     output_dir = args.output_dir
 
     if not input_path.is_file():
-        print(f'Error: The input file {input_path} does not exist.')
+        print(f"Error: The input file {input_path} does not exist.")
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
     base_name = input_path.stem
 
     original_fps, original_width = get_video_info(input_path)
-    print(f'Original FPS: {original_fps}')
-    print(f'Original Resolution Width: {original_width}')
+    print(f"Original FPS: {original_fps}")
+    print(f"Original Resolution Width: {original_width}")
 
     fps = original_fps
     scale = original_width
@@ -105,7 +98,6 @@ def main():
                 break
 
     print('GIF creation process completed.')
-
 
 if __name__ == '__main__':
     main()
