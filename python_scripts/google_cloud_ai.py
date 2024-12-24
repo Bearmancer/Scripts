@@ -1,64 +1,105 @@
+import chardet
+import langid
 import os
-import warnings
-import google.generativeai as genai
-import absl.logging
+import time
 from pathlib import Path
 from argparse import ArgumentParser
+import google.generativeai as genai
 
-warnings.filterwarnings("ignore")
-absl.logging.set_verbosity(absl.logging.ERROR)
-os.environ["GRPC_SHUTDOWN_GRACE_MS"] = "500"
-os.environ["GRPC_DEFAULT_CHANNEL_ARGS"] = "grpc.max_receive_message_length=104857600"
+os.environ['GRPC_VERBOSITY'] = 'NONE'
 
-def process_chunks(input_file: Path, model: genai.GenerativeModel, chunk_size: int, instructions: str):
-    print(f"Now processing: {input_file}")
 
-    with input_file.open(encoding="utf-8") as file:
-        lines = file.readlines()
+def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chunk_size: int = 500,
+                 match_lines: bool = "False", instructions: str = "", ):
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel(model_name)
+    lines = read_file_content(input_file)
+    output_file = input_file.with_name(f"{input_file.stem} (Gemini CLI){input_file.suffix}")
 
-    processed_content = []
+    if langid.classify(''.join(lines))[0] == "en":
+        output_file.write_text("\n".join(lines), encoding="utf-8")
+        print(f"File already in English: {input_file}\n--------------------")
+        return output_file
 
-    total_chunks = (len(lines) + chunk_size - 1) // chunk_size
+    output = process_chunks(lines, chunk_size, instructions, model)
 
-    for i in range(0, len(lines), chunk_size):
-        chunk = ''.join(lines[i:i + chunk_size])
-        print(f"Processing chunk {i // chunk_size + 1} of {total_chunks}, starting from line {i+1}")
-        response = model.generate_content(f"{instructions}\n\n{chunk}")
-        try:
-            processed_content.append("\n".join(response.text.strip().splitlines()[1:-1]))
-        except Exception as e:
-            print(f"Could not carry out task because: {e}")
+    attempts = 0
+    if match_lines:
+        while len(lines) != len(output) and attempts < 5:
+            print(f"Line count mismatch. Lines inputted: {len(lines)} | Lines outputted: {len(output)}")
+            output = process_chunks(lines, chunk_size, instructions, model)
+            attempts+=1
 
-    output_file_name = f"{input_file.stem} (Gemini CLI){input_file.suffix}"
-    output_file = input_file.parent / output_file_name
-    output_file.write_text("\n".join(processed_content), encoding="utf-8")
+    if attempts == 5:
+        print("Translation could not match number of lines. Saving last attempt to file...")
+        output_file.write_text('\n'.join(output), encoding="utf-8")
 
-    print(f"Processed {input_file.name} and saved as {output_file.name}")
+
+
+    output_file.write_text('\n'.join(output), encoding="utf-8")
+    print(f"Successfully translated: {input_file}\n--------------------")
+
+    time.sleep(10)
 
     return output_file
 
 
-def process_file(input_path: Path, model_name: str = "gemini-2.0-flash-exp", chunk_size: int = 500, instructions: str = "Translate subtitles to English whilst retaining the SRT formatting."):
-    api_key = os.getenv("GEMINI_API_KEY")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name)
+def process_chunks(lines, chunk_size, instructions, model):
+    chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]
+    output = []
 
-    if input_path.is_dir():
-        return [process_chunks(file, model, chunk_size, instructions) for file in input_path.iterdir() if file.is_file()]
-    else:
-        return [process_chunks(input_path, model, chunk_size, instructions)][0]
+    for i, chunk_lines in enumerate(chunks, 1):
+        print(f"Now processing chunk {i} of {len(chunks)}")
+        chunk_text = '\n'.join(chunk_lines)
+        output = model.generate_content(f"{instructions}\n\n{chunk_text}").text.splitlines()
+
+    return output
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description="Process files with Google Generative AI Gemini")
+def read_file_content(input_file: Path):
+    try:
+        content = [line for line in input_file.read_text(encoding="utf-8").splitlines()]
+        return content
+    except UnicodeDecodeError:
+        detected_encoding = chardet.detect(input_file.read_bytes())["encoding"]
+        print(f"Detected encoding: {detected_encoding}")
+        content = [line for line in input_file.read_text(encoding=detected_encoding).splitlines()]
+        return content
 
-    parser.add_argument("-i", "--input", required=True, help="Path to the input file or directory. Output will be saved in the same directory.")
-    parser.add_argument("-m", "--model", default="gemini-2.0-flash-exp", help="Model to use")
-    parser.add_argument("-c", "--chunk-size", type=int, default=500, help="Size of chunks to split the input text (in lines)")
-    parser.add_argument("-t", "--instructions", default="Translate subtitles to English whilst retaining the SRT formatting.", help="Instructions for the AI model")
+
+def log_failed_files(file: str, in_count: int, out_count: int):
+    log = Path.home() / 'Desktop' / 'failed_files_log.txt'
+    content = f"""File: {file}
+    Input Lines: {in_count}
+    Output Lines: {out_count} 
+    Line Count Difference: {in_count - out_count}
+    {'-' * 30}
+    """
+    with log.open(mode='a', encoding='utf-8') as f:
+        f.write(content)
+
+
+def main():
+    parser = ArgumentParser(description="Translate text files using Google's Gemini AI")
+    parser.add_argument("-i", "--input", required=True, help="Input file or directory path")
+    parser.add_argument("-m", "--model", default="gemini-2.0-flash-exp", help="Gemini model name")
+    parser.add_argument("-c", "--chunk-size", type=int, default=500, help="Lines per chunk")
+    parser.add_argument("--match_lines", type=bool, default=True, help="Match the number of input and output lines.")
+    parser.add_argument("-t", "--instructions", default="""
+        Translate to English and replace the foreign text. Do not lose any lines! Do not insert any comments. 
+        Just translate the text. Retain all info ESPECIALLY DATES THIS IS VERY IMPORTANT! 
+        If the translation exists along with original language in the original text then retain both.
+    """)
 
     args = parser.parse_args()
 
-    path = Path(args.input)
+    input_path = Path(args.input)
+    files = input_path.rglob("*.txt")
 
-    process_file(path, args.model, args.chunk_size, args.instructions)
+    for file in files:
+        print(f"Processing file: {file.name}")
+        process_file(file, args.model, args.chunk_size, args.match_lines, args.instructions)
+
+
+if __name__ == "__main__":
+    main()
