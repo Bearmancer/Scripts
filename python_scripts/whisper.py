@@ -1,6 +1,8 @@
 import subprocess
 import re
 import chardet
+import os
+import deepl
 from pathlib import Path
 from docx import Document
 from google_cloud_ai import process_file
@@ -26,7 +28,13 @@ def whisper_logic(file: Path, model: str, language: str):
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        new_file = process_file(input_file=subtitle_file, chunk_size=200, instructions="Translate to English whilst retaining SRT formatting.")
+        new_file = process_file(input_file=subtitle_file, instructions="Translate to English whilst retaining SRT formatting without removing any lines.")
+
+        if new_file is None:
+            translated_text = deepl_translate(subtitle_file.read_text())
+            subtitle_file.write_text(translated_text)
+            new_file = subtitle_file
+
         subtitle_file.unlink()
         new_file.rename(subtitle_file.name)
         print(f"Translated {new_file.name} to English.")
@@ -75,6 +83,12 @@ def remove_subtitle_duplication(file: Path):
         print(f"{file} not found.")
 
 
+def deepl_translate(input_text):
+    translated_text = deepl.Translator(os.getenv("DEEPL_API_KEY")).translate_text(input_text, target_lang='EN-US').text
+
+    return translated_text
+
+
 def srt_to_word(input_file: Path):
     with open(input_file, 'rb') as f:
         raw_data = f.read()
@@ -86,12 +100,12 @@ def srt_to_word(input_file: Path):
         
         output_file = input_file.with_suffix('.docx')
         
-        doc.save(output_file)
+        doc.save(str(output_file))
         print(f"Output saved to '{output_file}'")
 
 
 def word_to_srt(input_file: Path):
-    doc = Document(input_file)
+    doc = Document(str(input_file))
     text = '\n'.join([para.text for para in doc.paragraphs])
     output_file = f'{str(input_file)[:-8]}.srt'
     with open(output_file, 'w', encoding='utf-16') as f:

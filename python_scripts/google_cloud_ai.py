@@ -10,7 +10,7 @@ os.environ['GRPC_VERBOSITY'] = 'NONE'
 
 
 def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chunk_size: int = 500,
-                 match_lines: bool = "False", instructions: str = "", ):
+                 match_lines: bool = "False", instructions: str = ""):
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel(model_name)
     lines = read_file_content(input_file)
@@ -26,14 +26,11 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chu
         print(f"File already in English: {input_file}.\n--------------------")
         return output_file
 
-    output = process_chunks(lines, chunk_size, instructions, model)
+    output = None
 
-    attempts = 0
-
-    while match_lines and len(lines) != len(output) and attempts < 5:
-        print(f"Line count mismatch. {len(lines)} in | {len(output)} out")
+    for _ in range(5):
         output = process_chunks(lines, chunk_size, instructions, model)
-        attempts += 1
+        if output: break
 
     output_file.write_text('\n'.join(output), encoding="utf-8")
     print(f"Successfully translated: {input_file.name}\n--------------------")
@@ -54,8 +51,15 @@ def process_chunks(lines, chunk_size, instructions, model):
         return output
 
     except Exception as e:
-        print(f'Error occurred: {e}')
-        log_to_file(e)
+        if 'finish_reason' in str(e) and '4' in str(e):
+            print("Error 4 occurred: Finish reason 4")
+            log_to_file("Error 4: " + str(e))
+        else:
+            print(f'Error occurred: {e}')
+            log_to_file(str(e))
+            time.sleep(1000)
+        
+        return None
 
 
 def read_file_content(input_file):
@@ -77,9 +81,9 @@ def main():
     parser = ArgumentParser(description="Translate text files using Google's Gemini AI")
     parser.add_argument("-i", "--input", required=True, help="Input file or directory path")
     parser.add_argument("-m", "--model", default="gemini-2.0-flash-exp", help="Gemini model name")
-    parser.add_argument("-c", "--chunk-size", type=int, default=500, help="Lines per chunk")
-    parser.add_argument("--match_lines", type=bool, default=True, help="Match the number of input and output lines.")
-    parser.add_argument("-t", "--instructions", default="""
+    parser.add_argument("-c", "--chunk-size", type=int, default=200, help="Lines per chunk")
+    parser.add_argument("--match_lines", type=bool, default=False, help="Match the number of input and output lines.")
+    parser.add_argument("-t", "--instructions", default=""" 
        Translate to English and replace the foreign text. Do not lose any lines! Do not insert any comments. 
        Just translate the text. Retain all info ESPECIALLY DATES THIS IS VERY IMPORTANT! 
        If the translation exists along with original language in the original text then retain both.
@@ -87,7 +91,11 @@ def main():
 
     args = parser.parse_args()
     input_path = Path(args.input)
-    files = input_path.rglob("*.txt")
+
+    if input_path.is_file():
+        files = [input_path]
+    else:
+        files = input_path.rglob('*.[txt][srt]')
 
     for file in files:
         print(f"Processing file: {file}")

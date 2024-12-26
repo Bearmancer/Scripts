@@ -5,7 +5,6 @@ from pathvalidate import sanitize_filepath
 
 output = []
 
-
 def main(directory: Path):
     output_base_directory = Path("C:/Users/Lance/Desktop/Music/MP3")
     output_directory = output_base_directory / f"{directory.name} (MP3)"
@@ -20,9 +19,14 @@ def main(directory: Path):
     failed_files = []
 
     for flac in flac_files:
-        if not convert_flac_to_mp3(flac):
-            if not convert_flac_to_mp3(sanitize_filepath(flac)):
+        if not strip_flac_tags(flac):
+            new_file_path = sanitize_filepath(str(flac))
+            if not strip_flac_tags(new_file_path):
                 failed_files.append(str(flac))
+                continue
+
+        if not convert_flac_to_mp3(flac):
+            failed_files.append(str(flac))
 
     if failed_files:
         failed_files_str = "filelist:\"{}\"".format('|'.join(failed_files))
@@ -32,15 +36,21 @@ def main(directory: Path):
 
     print("\n".join(output))
 
-
-def convert_flac_to_mp3(flac: Path):
+def strip_flac_tags(flac: Path):
     try:
         retain_tags = "ARTIST=TITLE=ALBUM=DATE=GENRE=COMPOSER=PERFORMER=ALBUMARTIST=TRACKNUMBER=TOTALTRACKS=DISCNUMBER=TOTALDISCS=COMMENT=RATING"
 
         subprocess.run(['metaflac', f'--remove-all-tags-except={retain_tags}', str(flac)], check=True, encoding='utf-8')
         subprocess.run(['metaflac', '--dont-use-padding', '--remove', '--block-type=PICTURE,PADDING', str(flac)], check=True, encoding='utf-8')
         subprocess.run(['metaflac', '--add-padding=8192', str(flac)], check=True, encoding='utf-8')
+        return True
 
+    except subprocess.CalledProcessError as e:
+        output.append(f"Error stripping tags from file: {flac} - {e}")
+        return False
+
+def convert_flac_to_mp3(flac: Path):
+    try:
         subprocess.run([
             'ffmpeg', '-i', str(flac), '-codec:a', 'libmp3lame', '-map_metadata', '0',
             '-id3v2_version', '3', '-b:a', '320k', str(flac.with_suffix('.mp3')), '-y'
@@ -50,9 +60,8 @@ def convert_flac_to_mp3(flac: Path):
         return True
 
     except subprocess.CalledProcessError as e:
-        output.append(f"Error processing file: {flac} - {e}")
+        output.append(f"Error converting file to MP3: {flac} - {e}")
         return False
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert FLAC files to MP3 and manage directories.")
