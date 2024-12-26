@@ -64,13 +64,13 @@ def list_files_and_directories(path: Path, sort_order: bool = False, indent: int
 def make_torrents(folder: Path, process_all_subfolders: bool = True):
     print(f'Now processing: {folder}')
 
-    rename_file_red(folder)
+    directories = [d for d in folder.iterdir() if d.is_dir()] if process_all_subfolders else [folder]
 
     dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
 
-    directories = [d for d in folder.iterdir() if d.is_dir()] if process_all_subfolders else [folder]
-
     for subfolder in directories:
+        rename_file_red(subfolder)
+
         print(f"Creating torrents for {subfolder.name}...")
 
         create_torrent(
