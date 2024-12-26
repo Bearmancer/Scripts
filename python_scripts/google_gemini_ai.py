@@ -44,16 +44,19 @@ def process_chunks(lines, chunk_size, instructions, model):
     try:
         chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]
         output = []
+        
         for i, chunk_lines in enumerate(chunks, 1):
             print(f"Now processing chunk {i} of {len(chunks)}")
             chunk_text = '\n'.join(chunk_lines)
             output = model.generate_content(f"{instructions}\n\n{chunk_text}").text.splitlines()
+        
         return output
 
     except Exception as e:
         if 'finish_reason' in str(e) and '4' in str(e):
             print("Error 4 occurred: Finish reason 4")
             log_to_file("Error 4: " + str(e))
+       
         else:
             print(f'Error occurred: {e}')
             log_to_file(str(e))
@@ -84,10 +87,20 @@ def main():
     parser.add_argument("-c", "--chunk-size", type=int, default=200, help="Lines per chunk")
     parser.add_argument("--match_lines", type=bool, default=False, help="Match the number of input and output lines.")
     parser.add_argument("-t", "--instructions", default=""" 
-       Translate to English and replace the foreign text. Do not lose any lines! Do not insert any comments. 
-       Just translate the text. Retain all info ESPECIALLY DATES THIS IS VERY IMPORTANT! 
-       If the translation exists along with original language in the original text then retain both.
-   """)
+    You are tasked with rewriting each line in a text file containing file names. Follow these rules:
+    VERY IMPORTANT: DO NOT GET RID OF ANY TEXT. DO NOT REMOVE INFORMATION.
+    Very Important: Translate all foreign languages to English.
+    Very Important: Replace ∙, :, ;, /, ⁄, ¦, –, -, _ with spaces (except in names like Rimsky-Korsakov or hr-sinfonieorchester). Don't remove ( or ).
+    Very Important: Always keep years and reformat dates (e.g., "2020/11" becomes "2020-11"). Put all dates after the name of the piece.
+    Start with the composer's last name (and remove first name when applicable.)
+    Convert all-caps to title case (keep acronyms like BBC and small words like "for").
+    Replace double quotes with single quotes.
+    Replace "n°", "N. " and "Nº" with "No."
+    Use composer names' English transliterations only (e.g., "Tchaikovsky" not "Chiakowsky").
+    Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
+    Expand abbreviations (e.g., "PC" to "Piano Concerto").
+    Trim extra spaces and standardize formatting.
+    """)
 
     args = parser.parse_args()
     input_path = Path(args.input)
