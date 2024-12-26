@@ -5,7 +5,7 @@ import os
 import deepl
 from pathlib import Path
 from docx import Document
-from google_cloud_ai import process_file
+from google_gemini_ai import process_file
 from argparse import ArgumentParser
 
 FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
