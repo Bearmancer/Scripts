@@ -63,7 +63,7 @@ def list_files_and_directories(path: Path, sort_order: bool = False, indent: int
 
 def make_torrents(folder: Path, process_all_subfolders: bool = True):
     print(f'Now processing: {folder}')
-
+    
     directories = [d for d in folder.iterdir() if d.is_dir()] if process_all_subfolders else [folder]
 
     dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
@@ -98,6 +98,8 @@ def main():
     parser.add_argument('--process_all_subfolders', action='store_true', help='Process all subfolders for torrent creation')
 
     args = parser.parse_args()
+
+    print(f"Arguments: {args}")
 
     if args.command == 'list_dir':
         list_directories(args.directory, args.sort_order)

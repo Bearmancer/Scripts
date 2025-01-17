@@ -214,31 +214,29 @@ def calculate_mb_for_directory(video_files: List[Path]):
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: script.py <Method> <FolderPath>")
+        print("Usage: script.py <Method> <FilePath or FolderPath>")
         sys.exit(1)
 
-    method, folder = sys.argv[1], Path(sys.argv[2])
-    video_files = [file for file in folder.rglob("*") if file.suffix in VIDEO_EXTENSIONS]
+    method, path = sys.argv[1], Path(sys.argv[2])
+    
+    if not path.exists():
+        print("Invalid path specified.")
+        sys.exit(1)
 
-    if method == "RemuxDisc":
-        remux_disc(folder)
-    elif method == "ExtractChapters":
-        extract_chapters(video_files)
-    elif method == "BatchCompression":
-        batch_compression(folder)
-    elif method == "ExtractAudioCommentary":
-        extract_audio_commentary(video_files)
-    elif method == "PrintVideoResolution":
-        print_video_resolution(video_files)
-    elif method == "CalculateMBPerMinute":
-        calculate_mb_for_directory(video_files)
-    elif method == "CreateImages":
-        extract_images(video_files)
-    elif method == "GetMediaInfo":
-        get_mediainfo(folder)
+    video_files = [path] if path.is_file() else [file for file in path.rglob("*") if file.suffix.lower() in VIDEO_EXTENSIONS]
+
+    methods = {
+        "RemuxDisc": remux_disc,
+        "ExtractChapters": extract_chapters,
+        "BatchCompression": batch_compression,
+        "ExtractAudioCommentary": extract_audio_commentary,
+        "PrintVideoResolution": print_video_resolution,
+        "CalculateMBPerMinute": calculate_mb_for_directory,
+        "CreateImages": extract_images,
+        "GetMediaInfo": get_mediainfo
+    }
+
+    if method in methods:
+        methods[method](video_files)
     else:
         print("Invalid method specified.")
-
-
-if __name__ == "__main__":
-    main()

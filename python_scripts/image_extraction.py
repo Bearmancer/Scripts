@@ -56,8 +56,13 @@ def add_filename_to_header(draw, filename, header_size, image_width):
 
 
 def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
+    output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
     duration = video_info['duration']
     timestamps = [duration * i / (rows * columns) for i in range(rows * columns)]
+    
+    if output_path.exists():
+        print(f"Thumbanils already exist: {output_path}")
+        return timestamps
     
     aspect_ratio = video_info['height'] / video_info['width']
     target_height = int(width * aspect_ratio)
@@ -79,8 +84,6 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
             y = 100 + row * target_height  
             grid_image.paste(img, (x, y))
     
-    output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
-
     grid_image.save(output_path)
 
     return timestamps
@@ -88,22 +91,16 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
 
 def save_full_size_images(video_path, video_info, thumbnail_timestamps):
     duration = video_info['duration']
-    timestamps = []
-    min_gap = 15 if duration > 1200 else 1
+    possible_timestamps = {hour * 3600 + minute * 60 + second for hour in range(int(duration // 3600) + 1) 
+                           for minute in range(60) for second in range(60) if hour * 3600 + minute * 60 + second < duration}
 
-    while len(timestamps) < 6:
-        timestamp = random.uniform(30, duration - 30)
-
-        if all(abs(timestamp - thumb) >= min_gap for thumb in timestamps + thumbnail_timestamps):
-            timestamps.append(timestamp)
-
-    timestamps.sort()
+    possible_timestamps -= set(thumbnail_timestamps)
+    timestamps = sorted(random.sample(possible_timestamps, 12))
 
     for idx, timestamp in enumerate(timestamps):
         img = extract_frame(video_path, timestamp, video_info)
         if img:
-            output_path = Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg"
-            img.save(output_path)
+            img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
 
 
 def extract_images(video_path):
