@@ -12,7 +12,7 @@ FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.op
 
 
 def whisper_logic(file: Path, model: str, language: str):
-    if file.suffix not in FILE_EXTENSIONS:
+    if file.suffix.lower() not in FILE_EXTENSIONS:
         return
 
     subtitle_file = file.with_suffix('.srt')
@@ -23,17 +23,16 @@ def whisper_logic(file: Path, model: str, language: str):
 
     print(f"Now transcribing: {file.name}")
 
-    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--model', model, '--language', language, str(file)])
+    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file)])
 
     remove_subtitle_duplication(subtitle_file)
 
     if language == "Japanese":
-        new_file = process_file(input_file=subtitle_file, instructions="Translate to English whilst retaining SRT formatting without removing any lines.")
+    #     # new_file = process_file(input_file=subtitle_file, instructions="Translate to English whilst retaining SRT formatting without removing any lines.")
 
-        if new_file is None:
-            translated_text = deepl_translate(subtitle_file.read_text())
-            subtitle_file.write_text(translated_text)
-            new_file = subtitle_file
+        translated_text = deepl_translate(subtitle_file.read_text())
+        subtitle_file.write_text(translated_text)
+        new_file = subtitle_file
 
         subtitle_file.unlink()
         new_file.rename(subtitle_file.name)
@@ -54,6 +53,7 @@ def whisper_path_recursive(directory: Path):
     for subdir in directory.rglob('*'):
         if subdir.is_dir():
             whisper_path(subdir)
+    
     whisper_path(directory)
 
 

@@ -9,7 +9,7 @@ import google.generativeai as genai
 os.environ['GRPC_VERBOSITY'] = 'NONE'
 
 
-def process_file(input_file: Path, model_name: str = "gemini-2.0-flash-exp", chunk_size: int = 500,
+def process_file(input_file: Path, model_name: str = "gemini-exp-1206", chunk_size: int = 500,
                  instructions: str = "", match_lines: bool = False):
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel(model_name)
@@ -93,9 +93,9 @@ def log_to_file(message):
 def main():
     parser = ArgumentParser(description="Translate text files using Google's Gemini AI")
     parser.add_argument("-i", "--input", required=True, help="Input file or directory path")
-    parser.add_argument("-m", "--model", default="gemini-2.0-flash-exp", help="Gemini model name")
+    parser.add_argument("-m", "--model", default="gemini-exp-1206", help="Gemini model name")
     parser.add_argument("-c", "--chunk-size", type=int, default=200, help="Lines per chunk")
-    parser.add_argument("--match_lines", type=bool, default=True, help="Match the number of input and output lines.")
+    parser.add_argument("--match_lines", type=bool, default=False, help="Match the number of input and output lines.")
     parser.add_argument("-t", "--instructions", default="""
     YOU ARE TASKED WITH REWRITING EACH LINE IN A TEXT FILE CONTAINING FILE NAMES. FOLLOW THESE RULES:
     VERY IMPORTANT: DO NOT GET RID OF ANY TEXT. DO NOT REMOVE INFORMATION.
