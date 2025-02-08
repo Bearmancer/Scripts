@@ -35,6 +35,8 @@ def process_file(input_file: Path, model_name: str = "gemini-exp-1206", chunk_si
         
         while not (response := process_chunk(chunk_lines, instructions, model, match_lines)):
             print(f"Response was None. Retrying chunk {i}...")
+
+        time.sleep(4)
         
         output.append('\n'.join(response))
 
