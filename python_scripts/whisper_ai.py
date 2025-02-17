@@ -1,15 +1,15 @@
-import subprocess
 import re
 import chardet
-import os
-import deepl
+import subprocess
+import warnings
+from google_gemini_ai import process_file
 from pathlib import Path
 from docx import Document
-from google_gemini_ai import process_file
 from argparse import ArgumentParser
 
 FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
+warnings.filterwarnings('ignore')
 
 def whisper_logic(file: Path, model: str, language: str):
     if file.suffix.lower() not in FILE_EXTENSIONS:
@@ -25,18 +25,18 @@ def whisper_logic(file: Path, model: str, language: str):
 
     subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file)])
 
-    remove_subtitle_duplication(subtitle_file)
+    with open(subtitle_file, 'rb') as f:
+        raw_text = f.read()
+        encoding = chardet.detect(raw_text)['encoding']
+        text = raw_text.decode(encoding)
+
+    new_text = remove_subtitle_duplication(text)
+
+    with open(subtitle_file, 'w', encoding=encoding) as f:
+        f.write(new_text)
 
     if language == "Japanese":
-    #     # new_file = process_file(input_file=subtitle_file, instructions="Translate to English whilst retaining SRT formatting without removing any lines.")
-
-        translated_text = deepl_translate(subtitle_file.read_text())
-        subtitle_file.write_text(translated_text)
-        new_file = subtitle_file
-
-        subtitle_file.unlink()
-        new_file.rename(subtitle_file.name)
-        print(f"Translated {new_file.name} to English.")
+        process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
 
 
 def whisp(file: Path):
@@ -67,26 +67,13 @@ def whisper_path_japanese(directory: Path):
             whisper_japanese(file)
 
 
-def remove_subtitle_duplication(file: Path):
-    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'  
+def remove_subtitle_duplication(input_text: str): 
+    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'   
     new_text = r'\1\n\n'
 
-    if file.exists():
-        with open(file, 'r', encoding='utf-8') as f:
-            content = f.read()
+    new_content = re.sub(old_text, new_text.strip(), input_text)
 
-        new_content = re.sub(old_text, new_text.strip(), content)
-
-        with open(file, 'w', encoding='utf-8') as f:
-            f.write(new_content)
-    else:
-        print(f"{file} not found.")
-
-
-def deepl_translate(input_text):
-    translated_text = deepl.Translator(os.getenv("DEEPL_API_KEY")).translate_text(input_text, target_lang='EN-US').text
-
-    return translated_text
+    return new_content
 
 
 def srt_to_word(input_file: Path):
@@ -107,7 +94,12 @@ def srt_to_word(input_file: Path):
 def word_to_srt(input_file: Path):
     doc = Document(str(input_file))
     text = '\n'.join([para.text for para in doc.paragraphs])
-    output_file = f'{str(input_file)[:-8]}.srt'
+
+    text = re.sub('(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub('(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+
+    output_file = f'{str(input_file)[:-9]} Translated.srt'
+    
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
     print(f"Output saved to '{output_file}'")
