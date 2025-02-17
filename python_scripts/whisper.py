@@ -107,7 +107,12 @@ def srt_to_word(input_file: Path):
 def word_to_srt(input_file: Path):
     doc = Document(str(input_file))
     text = '\n'.join([para.text for para in doc.paragraphs])
-    output_file = f'{str(input_file)[:-8]}.srt'
+
+    text = re.sub('(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub('(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+
+    output_file = f'{str(input_file)[:-9]} Translated.srt'
+    
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
     print(f"Output saved to '{output_file}'")
