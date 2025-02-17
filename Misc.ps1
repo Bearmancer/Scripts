@@ -7,7 +7,11 @@ function PrintVideoResolutions([System.IO.DirectoryInfo]$directory = $(Get-Item 
 }
 
 function RemuxDisc ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    Write-Host "Remuxing disc in $directory"
+
     py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py RemuxDisc $directory.FullName
+
+    Write-Host "Remuxing has finished"
 }
 
 function BatchCompression ([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
