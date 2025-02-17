@@ -138,6 +138,6 @@ def check_dff_and_flac(input_folder: Path):
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: script.py <root_dir> <FolderPath>")
-        sys.exit(1)
+        exit(1)
 
     extract_sacds(Path(sys.argv[1]))

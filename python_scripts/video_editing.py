@@ -70,7 +70,7 @@ def remux_disc(path: Path):
         result = convert_disc_to_mkv(file, path)
 
         if result.returncode == 0:
-            print(f"File successfully converted.")
+            print(f"File successfully converted.`n----------------")
             for mkv_file in path.glob("*.mkv"):
                 get_mediainfo(mkv_file)
                 extract_images(mkv_file)
@@ -215,18 +215,21 @@ def calculate_mb_for_directory(video_files: List[Path]):
 def main():
     if len(sys.argv) != 3:
         print("Usage: script.py <Method> <FilePath or FolderPath>")
-        sys.exit(1)
-
-    method, path = sys.argv[1], Path(sys.argv[2])
+        exit(1)
     
+    method, path = sys.argv[1], Path(sys.argv[2])
+
     if not path.exists():
         print("Invalid path specified.")
-        sys.exit(1)
+        exit(1)
 
     video_files = [path] if path.is_file() else [file for file in path.rglob("*") if file.suffix.lower() in VIDEO_EXTENSIONS]
 
+    if method == "RemuxDisc":
+        remux_disc(path)
+        exit(0)
+
     methods = {
-        "RemuxDisc": remux_disc,
         "ExtractChapters": extract_chapters,
         "BatchCompression": batch_compression,
         "ExtractAudioCommentary": extract_audio_commentary,
@@ -236,7 +239,12 @@ def main():
         "GetMediaInfo": get_mediainfo
     }
 
-    if method in methods:
-        methods[method](video_files)
-    else:
+    if method not in methods:
         print("Invalid method specified.")
+        exit(1)
+
+    for file in video_files:
+        methods[method](file)
+
+if __name__ == "__main__":
+    main()

@@ -5,7 +5,7 @@ from pathlib import Path
 def rename_file_red(path: Path):
     if not path.exists() or not path.is_dir():
         print(f"Error: The specified path '{path}' does not exist.")
-        sys.exit(1)
+        exit(1)
 
     root_path = path.parent
     old_files_list = []

@@ -32,7 +32,7 @@ def sox_downsample(path: Path):
 
         if precision is None or sample_rate is None:
             print(f"Missing precision or sample rate information for file: {file}")
-            sys.exit(1)
+            exit(1)
 
         actions = {
             "24-bit, 192000": lambda: subprocess.run(['sox', '-S', str(file), '-R', '-G', '-b', '16', str(converted / old_file_name), 'rate', '-v', '-L', '48000', 'dither']),
@@ -52,7 +52,7 @@ def sox_downsample(path: Path):
             file.rename(original / old_file_name)
         else:
             print(f"No action found for {file} - Bit Depth: {precision}, Sample Rate: {sample_rate}")
-            sys.exit(1)
+            exit(1)
 
     for flac in converted.glob('*.flac'):
         shutil.move(flac, path)
@@ -65,7 +65,7 @@ def sox_downsample(path: Path):
 def main():
     if len(sys.argv) < 2:
         print("Usage: script.py <root_dir>")
-        sys.exit(1)
+        exit(1)
 
     directory = Path(sys.argv[1])
 

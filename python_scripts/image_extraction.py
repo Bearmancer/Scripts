@@ -58,10 +58,10 @@ def add_filename_to_header(draw, filename, header_size, image_width):
 def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
     output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
     duration = video_info['duration']
-    timestamps = [duration * i / (rows * columns) for i in range(rows * columns)]
+    timestamps = [int(duration * i / (rows * columns)) for i in range(rows * columns)]
     
     if output_path.exists():
-        print(f"Thumbanils already exist: {output_path}")
+        print(f"Thumbnail already exists: {output_path}")
         return timestamps
     
     aspect_ratio = video_info['height'] / video_info['width']
@@ -69,7 +69,7 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
     
     grid_width = width * columns
     grid_height = target_height * rows + 100 
-    grid_image = Image.new('RGB', (grid_width, grid_height), (255, 255, 255, 255))
+    grid_image = Image.new('RGB', (grid_width, grid_height), (255, 255, 255))
     draw = ImageDraw.Draw(grid_image)
 
     draw.rectangle([0, 0, grid_width, 100], fill=(255, 255, 255, 255))
@@ -91,16 +91,13 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
 
 def save_full_size_images(video_path, video_info, thumbnail_timestamps):
     duration = video_info['duration']
-    possible_timestamps = {hour * 3600 + minute * 60 + second for hour in range(int(duration // 3600) + 1) 
-                           for minute in range(60) for second in range(60) if hour * 3600 + minute * 60 + second < duration}
+    thumbnail_timestamps_set = set(thumbnail_timestamps)
 
-    possible_timestamps -= set(thumbnail_timestamps)
-    timestamps = sorted(random.sample(possible_timestamps, 12))
+    possible_timestamps = sorted(random.sample([t for t in range(int(duration)) if t not in thumbnail_timestamps_set], 12))
 
-    for idx, timestamp in enumerate(timestamps):
+    for idx, timestamp in enumerate(possible_timestamps):
         img = extract_frame(video_path, timestamp, video_info)
-        if img:
-            img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
+        img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
 
 
 def extract_images(video_path):
