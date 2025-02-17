@@ -2,6 +2,7 @@ import chardet
 import langid
 import os
 import time
+import deepl
 from pathlib import Path
 from argparse import ArgumentParser
 import google.generativeai as genai
@@ -9,7 +10,7 @@ import google.generativeai as genai
 os.environ['GRPC_VERBOSITY'] = 'NONE'
 
 
-def process_file(input_file: Path, model_name: str = "gemini-exp-1206", chunk_size: int = 500,
+def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_size: int = 200,
                  instructions: str = "", match_lines: bool = False):
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel(model_name)
@@ -35,6 +36,7 @@ def process_file(input_file: Path, model_name: str = "gemini-exp-1206", chunk_si
         
         while not (response := process_chunk(chunk_lines, instructions, model, match_lines)):
             print(f"Response was None. Retrying chunk {i}...")
+            time.sleep(600)
 
         time.sleep(4)
         
@@ -52,7 +54,6 @@ def process_chunk(chunk_lines, instructions, model, match_lines: bool = False):
         response = model.generate_content(f"{instructions}\n\n{chunk_lines}").text.strip().splitlines()
         response = [line for line in response if "```" not in line and line and line != "[" and line != "]"]
 
-
         if match_lines:
             print(f"Input lines: {len(chunk_lines)}, Output lines: {len(response)}")
 
@@ -67,14 +68,13 @@ def process_chunk(chunk_lines, instructions, model, match_lines: bool = False):
     except Exception as e:
         if 'finish_reason' in str(e) and '4' in str(e):
             print("Error 4 occurred: Finish reason 4")
-            log_to_file("Error 4: " + str(e))
+            translated_text = deepl.Translator(os.getenv("DEEPL_API_KEY")).translate_text("\n".join(chunk_lines), target_lang='EN-US').text
+            return translated_text.splitlines()
        
         else:
             print(f'Error occurred: {e}')
             log_to_file(str(e))
-            time.sleep(1000)
-
-        return None
+            return None
 
 
 def read_file_content(input_file):
@@ -99,20 +99,20 @@ def main():
     parser.add_argument("-c", "--chunk-size", type=int, default=200, help="Lines per chunk")
     parser.add_argument("--match_lines", type=bool, default=False, help="Match the number of input and output lines.")
     parser.add_argument("-t", "--instructions", default="""
-    YOU ARE TASKED WITH REWRITING EACH LINE IN A TEXT FILE CONTAINING FILE NAMES. FOLLOW THESE RULES:
-    VERY IMPORTANT: DO NOT GET RID OF ANY TEXT. DO NOT REMOVE INFORMATION.
-    VERY IMPORTANT: TRANSLATE ALL FOREIGN LANGUAGES TO ENGLISH.
-    VERY IMPORTANT: REPLACE ∙, :, ;, /, ⁄, ¦, –, -, _ WITH SPACES (EXCEPT IN NAMES LIKE Rimsky-Korsakov OR hr-sinfonieorchester). DON'T REMOVE ( OR ).
-    VERY IMPORTANT: ALWAYS KEEP YEARS AND REFORMAT DATES (E.G., "2020/11" BECOMES "2020-11"). 
-    VERY IMPORTANT: PUT ALL DATES AFTER THE NAME OF THE PIECE. SO IF THEY ARE AT THE START MOVE IT AFTER THE NAME OF THE PIECE.
-    START FILE NAME WITH THE COMPOSER'S LAST NAME WHEREVER POSSIBLE.
-    CONVERT ALL-CAPS TO TITLE CASE (EXCEPT FOR ACRONYMS LIKE BBC AND SMALLER WORDS LIKE "for", "the").
-    REPLACE DOUBLE QUOTES WITH SINGLE QUOTES.
-    REPLACE "N°", "N. " AND "Nº" WITH "No."
-    USE COMPOSER NAMES' ENGLISH TRANSLITERATIONS ONLY (E.G., "Tchaikovsky" NOT "Chaikowsky").
-    ADD "NO." TO NUMBERED WORKS (E.G., "Symphony 6" BECOMES "Symphony No. 6").
-    EXPAND ABBREVIATIONS (E.G., "PC" TO "Piano Concerto").
-    TRIM EXTRA SPACES AND STANDARDIZE FORMATTING.
+    TASK: Rewrite each line in a text file that contains file names. DO NOT DELETE LINES AND DO NOT OUTPUT CODE. Follow these guidelines:
+
+    1. VERY IMPORTANT: PRESERVE ALL TEXT AND INFORMATION INCLUDING INFORMATION INSIDE PARENTHESIS LIKE BIT RATE AND INFORMATION. Do not delete any content. ONLY PRINT FILE NAMES IN OUTPUT. Don't add any commas.
+    2. ALWAYS TRANSLATE FOREIGN TITLES TO ENGLISH.
+    3. Replace the following symbols with spaces: ∙, :, ;, /, ⁄, ¦, –, -. However, retain these symbols in names like "Rimsky-Korsakov" or "hr-sinfonieorchester". Do not remove parentheses ().
+    4. Retain all years and reformat dates to "YYYY-MM" format. Ensure dates appear after the piece's name if they are initially at the start.
+    5. Start file names with the composer's last name when possible.
+    6. Convert all-uppercase text to title case, except for acronyms (e.g., BBC) and smaller words such as "for" and "the".
+    7. Replace double quotes with single quotes.
+    8. Convert "N°", "N. ", and "Nº" to "No.".
+    9. Use English transliterations of composer names (e.g., "Tchaikovsky" instead of "Chaikowsky").
+    10. Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
+    11. Expand abbreviations (e.g., "PC" to "Piano Concerto").
+    12. Remove extra spaces and standardize formatting.
     """)
 
     args = parser.parse_args()
@@ -121,7 +121,7 @@ def main():
     if input_path.is_file():
         files = [input_path]
     else:
-        files = input_path.rglob('*.[txt][srt]')
+        files = list(input_path.rglob('*.txt')) + list(input_path.rglob('*.srt'))
 
     for file in files:
         print(f"Processing file: {file}")

@@ -1,9 +1,8 @@
 import re
 import chardet
-import os
-import deepl
 import subprocess
 import warnings
+from google_gemini_ai import process_file
 from pathlib import Path
 from docx import Document
 from argparse import ArgumentParser
@@ -18,13 +17,13 @@ def whisper_logic(file: Path, model: str, language: str):
 
     subtitle_file = file.with_suffix('.srt')
 
-    # if subtitle_file.exists():
-    #     print(f"Subtitle for {file.stem} already exists. Skipping...")
-    #     return
+    if subtitle_file.exists():
+        print(f"Subtitle for {file.stem} already exists. Skipping...")
+        return
 
     print(f"Now transcribing: {file.name}")
 
-    # subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file)])
+    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file)])
 
     with open(subtitle_file, 'rb') as f:
         raw_text = f.read()
@@ -37,12 +36,7 @@ def whisper_logic(file: Path, model: str, language: str):
         f.write(new_text)
 
     if language == "Japanese":
-        translated_text = deepl_translate(new_text)
-
-        with open(subtitle_file, 'w', encoding=encoding) as f:
-            f.write(translated_text)
-
-        print(f"Translated {subtitle_file.name} to English.")
+        process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
 
 
 def whisp(file: Path):
@@ -80,10 +74,6 @@ def remove_subtitle_duplication(input_text: str):
     new_content = re.sub(old_text, new_text.strip(), input_text)
 
     return new_content
-
-
-def deepl_translate(input_text):
-    return deepl.Translator(os.getenv("DEEPL_API_KEY")).translate_text(input_text, target_lang='EN-US').text
 
 
 def srt_to_word(input_file: Path):
