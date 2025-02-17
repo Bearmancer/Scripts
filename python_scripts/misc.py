@@ -99,8 +99,6 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"Arguments: {args}")
-
     if args.command == 'list_dir':
         list_directories(args.directory, args.sort_order)
     elif args.command == 'list_files_and_dirs':
