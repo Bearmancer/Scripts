@@ -2,10 +2,11 @@ import re
 import chardet
 import subprocess
 import warnings
-from google_gemini_ai import process_file
+from argparse import ArgumentParser
 from pathlib import Path
 from docx import Document
-from argparse import ArgumentParser
+from datetime import datetime
+from google_gemini_ai import process_file
 
 FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
@@ -21,9 +22,10 @@ def whisper_logic(file: Path, model: str, language: str):
         print(f"Subtitle for {file.stem} already exists. Skipping...")
         return
 
-    print(f"Now transcribing: {file.name}")
+    start_time = datetime.now()
+    print(f"Start time: {start_time}")
 
-    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file)])
+    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file.absolute())])
 
     with open(subtitle_file, 'rb') as f:
         raw_text = f.read()
@@ -35,8 +37,15 @@ def whisper_logic(file: Path, model: str, language: str):
     with open(subtitle_file, 'w', encoding=encoding) as f:
         f.write(new_text)
 
+    end_time = datetime.now()
+    print(f"End time: {end_time}")
+    print(f"Time elapsed: {end_time - start_time}")
+
     if language == "Japanese":
-        process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
+        gemini_cli_file = process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
+
+        if gemini_cli_file.exists():
+            gemini_cli_file.replace(subtitle_file)
 
 
 def whisp(file: Path):

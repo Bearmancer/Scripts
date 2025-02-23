@@ -36,7 +36,7 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_s
         
         while not (response := process_chunk(chunk_lines, instructions, model, match_lines)):
             print(f"Response was None. Retrying chunk {i}...")
-            time.sleep(600)
+            time.sleep(60)
 
         time.sleep(4)
         
@@ -101,7 +101,7 @@ def main():
     parser.add_argument("-t", "--instructions", default="""
     TASK: Rewrite each line in a text file that contains file names. DO NOT DELETE LINES AND DO NOT OUTPUT CODE. Follow these guidelines:
 
-    1. VERY IMPORTANT: PRESERVE ALL TEXT AND INFORMATION INCLUDING INFORMATION INSIDE PARENTHESIS LIKE BIT RATE AND INFORMATION. Do not delete any content. ONLY PRINT FILE NAMES IN OUTPUT. Don't add any commas.
+    1. VERY IMPORTANT: PRESERVE ALL TEXT AND INFORMATION INCLUDING INFORMATION INSIDE PARENTHESIS LIKE BIT RATE AND INFORMATION. DO NOT DELETE ANY INFORMATION. ONLY PRINT FILE NAMES IN OUTPUT. Don't add any commas.
     2. ALWAYS TRANSLATE FOREIGN TITLES TO ENGLISH.
     3. Replace the following symbols with spaces: ∙, :, ;, /, ⁄, ¦, –, -. However, retain these symbols in names like "Rimsky-Korsakov" or "hr-sinfonieorchester". Do not remove parentheses ().
     4. Retain all years and reformat dates to "YYYY-MM" format. Ensure dates appear after the piece's name if they are initially at the start.

@@ -8,13 +8,15 @@ from pathvalidate import sanitize_filename
 
 
 def sox_downsample(path: Path):
+    print(f"Processing {path}...")
+
     original = path / "original"
     converted = path / "converted"
 
     original.mkdir(exist_ok=True)
     converted.mkdir(exist_ok=True)
 
-    for file in path.glob('*.flac'):
+    for file in path.rglob('*.flac'):
         old_file_name = file.name
 
         file = file.rename(file.parent / sanitize_filename(unidecode.unidecode(file.name)))
@@ -63,16 +65,23 @@ def sox_downsample(path: Path):
 
 
 def main():
+    print(f"Sys.argv: {sys.argv}")
     if len(sys.argv) < 2:
         print("Usage: script.py <root_dir>")
         exit(1)
 
     directory = Path(sys.argv[1])
 
+    print(f"Processing {directory}...")
+
     process_all_subfolders = sys.argv[2].lower() == 'true' if len(sys.argv) > 2 else True
     directories_to_process = directory.iterdir() if process_all_subfolders else [directory]
 
+    print(f"Processing all subfolders: {process_all_subfolders}")
+    print(f"Directories to process: {directories_to_process}")
+
     for subdir in directories_to_process:
+        print(f"sdir: {subdir}")
         if subdir.is_dir():
             sox_downsample(subdir)
 
