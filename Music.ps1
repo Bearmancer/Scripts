@@ -3,15 +3,15 @@ function Propolis {
 }
 
 function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_utility.py $directory
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py $directory
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py rfr $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c rfr -d $directory.FullName
 }
 
 function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py calculate_image_size $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c calculate_image_size -d $directory.FullName
 }
 
 function ZipFiles([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {

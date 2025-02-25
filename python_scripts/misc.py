@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from py3createtorrent import create_torrent
-from music import rename_file_red
+from music_tools import rename_file_red
 
 
 def log_to_file(message: str):
