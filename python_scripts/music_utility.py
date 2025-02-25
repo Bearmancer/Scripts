@@ -6,7 +6,7 @@ import logging
 import chardet
 from pathlib import Path
 from pathvalidate import sanitize_filename
-from typing import Dict, Tuple
+from typing import Dict
 
 logging.basicConfig(
     level=logging.INFO,
@@ -165,9 +165,10 @@ def convert_to_mp3(flac_file: Path):
 
 def convert_files(directory: Path, tier: Dict):
     flac_files = list(directory.rglob('*.flac'))
+    total_files = len(flac_files)
 
-    logging.info(f"Converting {len(flac_files)} files to {tier['format'].upper()}")
-    print("=========================================")
+    logging.info(f"Converting {total_files} files to {tier['format'].upper()}")
+    converted_count = 0
 
     for flac in flac_files:
         try:
@@ -175,6 +176,9 @@ def convert_files(directory: Path, tier: Dict):
                 convert_flac(flac, tier)
             elif tier['format'] == 'mp3':
                 convert_to_mp3(flac)
+            converted_count += 1
+            print(f"\rConverted {converted_count}/{total_files} files", end='')
+            sys.stdout.flush()
         except Exception as e:
             logging.error(f"Conversion failed for {flac.name}: {e}")
 

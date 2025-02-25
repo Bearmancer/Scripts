@@ -61,33 +61,30 @@ def list_files_and_directories(path: Path, sort_order: bool = False, indent: int
         log_to_file(file_output)
 
 
-def make_torrents(folder: Path, process_all_subfolders: bool = True):
+def make_torrents(folder: Path):
     print(f'Now processing: {folder}')
-    
-    directories = [d for d in folder.iterdir() if d.is_dir()] if process_all_subfolders else [folder]
 
     dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
 
-    for subfolder in directories:
-        rename_file_red(subfolder)
+    rename_file_red(folder)
 
-        print(f"Creating torrents for {subfolder.name}...")
+    print(f"Creating torrents for {folder.name}...")
 
-        create_torrent(
-            path=str(subfolder), 
-            trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
-            private=True, 
-            source="OPS", 
-            output=f"{dropbox}\\Lance\\{subfolder.name} - OPS.torrent"
-        )
+    create_torrent(
+        path=str(folder), 
+        trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
+        private=True, 
+        source="OPS", 
+        output=f"{dropbox}\\Lance\\{folder.name} - OPS.torrent"
+    )
 
-        create_torrent(
-            path=str(subfolder), 
-            trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], 
-            private=True, 
-            source="RED", 
-            output=f"{dropbox}\\Lance\\{subfolder.name} - RED.torrent"
-        )
+    create_torrent(
+        path=str(folder), 
+        trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], 
+        private=True, 
+        source="RED", 
+        output=f"{dropbox}\\Lance\\{folder.name} - RED.torrent"
+    )
 
 
 def main():
@@ -95,7 +92,8 @@ def main():
     parser.add_argument('command', choices=['list_dir', 'list_files_and_dirs', 'make_torrents'], help='Command to execute')
     parser.add_argument('directory', type=Path, help='Directory to process')
     parser.add_argument('--sort_order', default='0', help='Sorting options for list commands (0: by size, 1: by name)')
-    parser.add_argument('--process_all_subfolders', action='store_true', help='Process all subfolders for torrent creation')
+    parser.add_argument('--subdirs', action='store_true',
+                        help='Create torrents for each subdirectory inside the directory passed, rather than for the directory itself')
 
     args = parser.parse_args()
 
@@ -104,7 +102,12 @@ def main():
     elif args.command == 'list_files_and_dirs':
         list_files_and_directories(args.directory, args.sort_order == '1')
     elif args.command == 'make_torrents':
-        make_torrents(args.directory, args.process_all_subfolders)
+        if args.subdirs:
+            for entry in args.directory.iterdir():
+                if entry.is_dir():
+                    make_torrents(entry)
+        else:
+            make_torrents(args.directory)
 
 if __name__ == "__main__":
     main()
