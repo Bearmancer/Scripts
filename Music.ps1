@@ -6,6 +6,14 @@ function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Loca
     py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py $directory
 }
 
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py -c mp3 $directory.FullName
+}
+
+function ConvertToFLAC([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py -c flac $directory.FullName
+}
+
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
     py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c rfr -d $directory.FullName
 }

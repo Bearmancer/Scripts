@@ -39,10 +39,12 @@ TIER_CONFIG = {
 
 def robocopy_directory(src: Path, dest: Path):
     logging.info(f"Copying structure to {dest.name}")
+
     result = subprocess.run(
         ['robocopy', str(src), str(dest), '/S', '/XF', '*.log', '*.m3u', '*.cue', '*.md5'],
         stdout=subprocess.DEVNULL
     )
+
     if result.returncode not in [0, 1]:
         raise RuntimeError(f"Robocopy failed: {result.returncode}")
 
@@ -58,11 +60,9 @@ def sanitize_directory(directory: Path) -> Dict[Path, str]:
 
         try:
             sanitized = sanitize_filename(unidecode.unidecode(original_name))
-        
         except Exception:
             raw_bytes = original_name.encode('utf-8')
             detected = chardet.detect(raw_bytes)
-            
             decoded = raw_bytes.decode(detected['encoding'], errors='replace')
             sanitized = sanitize_filename(decoded)
 
@@ -70,15 +70,13 @@ def sanitize_directory(directory: Path) -> Dict[Path, str]:
             continue
 
         new_path = path.with_name(sanitized)
-
+        
         if new_path.exists():
             logging.warning(f"Skipping existing sanitized name: {new_path}")
             continue
 
         path.rename(new_path)
-
         name_map[new_path] = original_name
-
         logging.debug(f"Sanitized: {original_name} → {sanitized}")
 
     return name_map
@@ -86,13 +84,13 @@ def sanitize_directory(directory: Path) -> Dict[Path, str]:
 
 def restore_directory(name_map: Dict[Path, str]):
     for new_path, original_name in name_map.items():
+        
         target_path = new_path.with_name(original_name)
         
         try:
             if new_path.exists() and not target_path.exists():
                 new_path.rename(target_path)
                 logging.debug(f"Restored: {new_path.name} → {original_name}")
-            
             elif target_path.exists():
                 logging.warning(f"Can't restore - target exists: {target_path}")
         
@@ -129,8 +127,10 @@ def get_conversion_tiers(sample_rate: int):
                 'target_sr': sr,
                 'suffix': suffix,
                 'format': 'flac'
-            } for desc, bd, sr, suffix in TIER_CONFIG[sample_rate]
+            }
+            for desc, bd, sr, suffix in TIER_CONFIG[sample_rate]
         ]
+        
         return flac_tiers + [MP3_TIER]
     
     except KeyError:
@@ -139,6 +139,7 @@ def get_conversion_tiers(sample_rate: int):
 
 def convert_flac(flac_file: Path, tier: Dict):
     temp_file = flac_file.with_name(f'temp_{flac_file.name}')
+    
     cmd = [
         'sox', '-S', str(flac_file), '-R', '-G',
         '-b', str(tier['bit_depth']), str(temp_file),
@@ -155,10 +156,8 @@ def convert_flac(flac_file: Path, tier: Dict):
 
 def convert_to_mp3(flac_file: Path):
     mp3_file = flac_file.with_suffix('.mp3')
-    
-    subprocess.run([
-        'ffmpeg', '-i', str(flac_file), '-codec:a', 'libmp3lame', '-b:a', MP3_TIER['bitrate'], str(mp3_file)
-    ], check=True)
+
+    subprocess.run(['ffmpeg', '-i', str(flac_file), '-codec:a', 'libmp3lame', '-b:a', MP3_TIER['bitrate'], str(mp3_file)], check=True)
 
     flac_file.unlink()
 
@@ -166,45 +165,50 @@ def convert_to_mp3(flac_file: Path):
 def convert_files(directory: Path, tier: Dict):
     flac_files = list(directory.rglob('*.flac'))
     total_files = len(flac_files)
-
+    
     logging.info(f"Converting {total_files} files to {tier['format'].upper()}")
+   
     converted_count = 0
 
     for flac in flac_files:
         try:
             if tier['format'] == 'flac':
                 convert_flac(flac, tier)
+
             elif tier['format'] == 'mp3':
                 convert_to_mp3(flac)
+
             converted_count += 1
             print(f"\rConverted {converted_count}/{total_files} files", end='')
             sys.stdout.flush()
+        
         except Exception as e:
             logging.error(f"Conversion failed for {flac.name}: {e}")
 
 
 def process_tier(src_dir: Path, tier: Dict):
     dest_dir = src_dir.parent / f"{src_dir.name}{tier['suffix']}"
+    
     logging.info(f"Converting to: {tier['description']}")
-
+    
     robocopy_directory(src_dir, dest_dir)
-
+    
     name_map = sanitize_directory(dest_dir)
     
     try:
         convert_files(dest_dir, tier)
+    
     finally:
         restore_directory(name_map)
 
 
-def process_directory(src_dir: Path):
+def process_directory(src_dir: Path, format_choice: str = "all"):
     logging.info(f"Processing: {src_dir.name}")
-
+    
     name_map = sanitize_directory(src_dir)
-
+    
     try:
         flac_files = list(src_dir.rglob('*.flac'))
-        
         if not flac_files:
             logging.warning("No FLAC files found")
             return
@@ -218,7 +222,7 @@ def process_directory(src_dir: Path):
             logging.warning("Unsupported bit depth - skipping")
             return
 
-        if common_bd == 16 and common_sr in (44100, 48000):
+        if format_choice == 'mp3':
             process_tier(src_dir, MP3_TIER)
             return
 
@@ -228,9 +232,12 @@ def process_directory(src_dir: Path):
 
         tiers = get_conversion_tiers(common_sr)
 
+        if format_choice == 'flac':
+            tiers = [tier for tier in tiers if tier['format'] == 'flac']
+
         for tier in tiers:
             process_tier(src_dir, tier)
-
+    
     finally:
         restore_directory(name_map)
 
@@ -238,13 +245,15 @@ def process_directory(src_dir: Path):
 def main():
     parser = argparse.ArgumentParser(description='Audio conversion pipeline')
     parser.add_argument('root_dir', type=Path, help='Source directory with FLAC files')
+    parser.add_argument('-f', '--format', choices=['flac', 'mp3', 'all'], default='all', help='Desired conversion format: "flac" for FLAC only, "mp3" for MP3 only, "all" for both (default)')
+    
     args = parser.parse_args()
 
     if not args.root_dir.exists():
         logging.error(f"Directory not found: {args.root_dir}")
         sys.exit(1)
 
-    process_directory(args.root_dir.resolve())
+    process_directory(args.root_dir, args.format)
     logging.info("\nProcessing completed successfully")
 
 
