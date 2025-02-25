@@ -5,7 +5,6 @@ import sys
 import unicodedata
 from pathlib import Path
 from misc import log_to_file
-from sox_downsample import sox_downsample
 
 
 def extract_sacds(path: Path):
