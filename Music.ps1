@@ -2,24 +2,24 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function SoxDownsample([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\sox_downsample.py $directory.FullName $process_all
+function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py $directory
+}
+
+function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py -c mp3 $directory.FullName
+}
+
+function ConvertToFLAC([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\convert_music.py -c flac $directory.FullName
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py rfr $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c rfr -d $directory.FullName
 }
 
 function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music.py calculate_image_size $directory.FullName
-}
-
-function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all_subfolders = "False") {
-    if ($process_all_subfolders -eq "False") {
-        py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName
-    } else {
-        py C:\Users\Lance\Documents\Powershell\python_scripts\convert_to_mp3.py $directory.FullName --process_all_subfolders
-    }
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c calculate_image_size -d $directory.FullName
 }
 
 function ZipFiles([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all = "True") {

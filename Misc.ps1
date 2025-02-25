@@ -30,10 +30,17 @@ function ListFilesAndDirectories([System.IO.DirectoryInfo]$directory = $(Get-Ite
     py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_files_and_dirs $directory.FullName $sort_order
 }
 
-function MakeTorrents([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), $process_all_subfolders = "False") {
-    if ($process_all_subfolders -eq "False") {
-        py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py make_torrents $directory.FullName
+function MakeTorrents {[CmdletBinding()] param(
+        [Parameter(Position = 0)]
+        [System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)),
+
+        [Parameter(Position = 1)]
+        [bool]$recursive = $false
+    )
+
+    if ($recursive) {
+        py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py make_torrents $directory.FullName --recursive
     } else {
-        py "C:\Users\Lance\Documents\Powershell\python_scripts\misc.py" make_torrents $directory.FullName --process_all_subfolders
+        py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py make_torrents $directory.FullName
     }
 }
