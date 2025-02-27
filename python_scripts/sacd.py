@@ -1,142 +1,132 @@
 import subprocess
 import re
-import shutil
 import sys
-import unicodedata
+import unicodedata, logging, time
 from pathlib import Path
-from misc import log_to_file
+from convert_music import process_directory
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("sacd_processing.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 
-def extract_sacds(path: Path):
-    normalized_name = ''.join(c for c in unicodedata.normalize('NFD', path.name) if unicodedata.category(c) != 'Mn')
-
-    path = path.rename(path.with_name(normalized_name)) if normalized_name != path.name else path
-
-    iso_files = path.rglob("*.iso")
-
-    for iso_file in iso_files:
-        flac_folder = iso_to_flac(iso_file, path)
-        copied_folder = copy_folder(flac_folder)
-        sox_downsample(copied_folder)
+def run_cmd(cmd, **kwargs):
+    return subprocess.run(cmd, capture_output=True, text=True, **kwargs)
 
 
-def iso_to_flac(iso_file: Path, path: Path):
-    output = subprocess.run(['sacd_extract', '-P', '-i', str(iso_file)],
-                            capture_output=True, text=True, cwd=str(path)).stdout
+def extract_sacds(p: Path):
+    try:
+        normalized = ''.join(c for c in unicodedata.normalize('NFD', p.name)
+                             if unicodedata.category(c) != 'Mn')
+        if normalized != p.name:
+            p = p.rename(p.with_name(normalized))
 
-    if "Stereo" in output or "2 Channel" in output:
-        stereo_path = path.parent / f"{path.name} (Stereo)"
-        stereo_path.mkdir(parents=True, exist_ok=True)
+        isos = list(p.rglob("*.iso"))
+        logging.info(f"Found {len(isos)} SACD images in {p.name}")
 
-        initial_dirs = {d.name for d in stereo_path.iterdir() if d.is_dir()}
-
-        subprocess.run(['sacd_extract', '-2', '-p', '-c', '-i', str(iso_file)], cwd=str(stereo_path))
-
-        new_dirs = [d for d in stereo_path.iterdir() if d.is_dir() and d.name not in initial_dirs]
-
-        if len(new_dirs) != 1:
-            log_to_file(f"Expected one new directory in stereo, but found: {len(new_dirs)}. Found multiple directories: {[d.name for d in new_dirs]}")
-            return None
-
-        new_dir = new_dirs[0]
-        dff_to_flac(new_dir)
-        return new_dir
-
-    if "Multichannel" in output or "5 Channel" in output or "6 Channel" in output:
-        mch_path = path.parent / f"{path.name} (Multichannel)"
-        mch_path.mkdir(parents=True, exist_ok=True)
-
-        initial_dirs = {d.name for d in mch_path.iterdir() if d.is_dir()}
-
-        subprocess.run(['sacd_extract', '-m', '-p', '-c', '-i', str(iso_file)], cwd=str(mch_path))
-
-        new_dirs = [d for d in mch_path.iterdir() if d.is_dir() and d.name not in initial_dirs]
-
-        if len(new_dirs) != 1:
-            log_to_file(f"Expected one new directory in multichannel, but found: {len(new_dirs)}. Found multiple directories: {[d.name for d in new_dirs]}")
-            return None
-
-        new_dir = new_dirs[0]
-        dff_to_flac(new_dir)
-        return new_dir
-
-    if not any(keyword in output for keyword in ["Stereo", "2 Channel", "Multichannel", "5 Channel", "6 Channel"]):
-        log_to_file(f"Audio for {iso_file} is neither multichannel nor stereo.")
-        return None
+        for i, iso in enumerate(isos, 1):
+            logging.info(f"Processing SACD {i}/{len(isos)}: {iso.name}")
+            for flac_dir in iso_to_flac(iso, p):
+                process_directory(flac_dir)
+    except Exception:
+        logging.error("Extraction failed", exc_info=True)
+        raise
 
 
-def copy_folder(path: Path):
-    parent_dir = path.parent
-    destination_folder = parent_dir / f"{path.name} (16-bit)"
+def iso_to_flac(iso: Path, base: Path):
+    result = run_cmd(['sacd_extract', '-P', '-i', str(iso)], cwd=base)
+    logging.info(f"Probe result: output={result.stdout[:100]}")
+    if result.returncode != 0:
+        logging.error(f"SACD extraction probe failed for {iso.name}")
+        return []
 
-    shutil.copytree(path, destination_folder)
+    extracted_dirs = []
 
-    return Path(destination_folder)
+    formats = [
+        ('Multichannel|5|6', ' (Multichannel)', ['-m', '-p', '-c']),
+        ('Stereo|2', ' (Stereo)', ['-2', '-p', '-c'])
+    ]
 
+    for pattern, suffix, cmd in formats:
+        if re.search(pattern, result.stdout):
+            logging.info(f"Found {suffix.strip()} version")
+            out_dir = base.parent / f"{base.name}{suffix}"
+            out_dir.mkdir(exist_ok=True)
 
-def check_dynamic_range(directory: Path):
-    dr_gains = []
+            logging.info(f"Extracting to {out_dir}")
+            extract_result = run_cmd(
+                ['sacd_extract', *cmd, '-i', str(iso)],
+                cwd=out_dir
+            )
+            logging.info(f"Extraction result: code={extract_result.returncode}")
 
-    for file in directory.rglob("*.dff"):
-        output = subprocess.run(['ffmpeg', '-i', str(file), '-af', 'volumedetect', '-f', 'null', '-'],
-                                capture_output=True, text=True)
-        dr_gain = [float(match.group(1)) for match in re.finditer(r'max_volume: (-?\d+(\.\d+)?) dB', output.stderr)]
-        dr_gains.extend(dr_gain)
+            if flac_dir := next((d for d in out_dir.iterdir() if d.is_dir()), None):
+                logging.info(f"Found directory {flac_dir.name}")
+                dff_count = len(list(flac_dir.rglob('*.dff')))
+                if dff_count > 0:
+                    extracted_dirs.append(dff_to_flac(flac_dir))
+            else:
+                logging.warning(f"No subdirectories found in {out_dir}")
 
-    max_dr_gain = max(dr_gains) if dr_gains else None
-
-    return max_dr_gain
-
-
-def dff_to_flac(input_folder: Path):
-    files = list(input_folder.glob("*.dff"))
-    dynamic_range = check_dynamic_range(input_folder)
-
-    if dynamic_range is None:
-        log_to_file("No dynamic range found.")
-        exit()
-
-    dynamic_range -= 0.5
-
-    for file in files:
-        flac_file = file.with_suffix('.flac')
-
-        subprocess.run(
-            ['ffmpeg', '-i', str(file), '-vn', '-c:a', 'flac', '-sample_fmt', 's32', '-ar', '88200',
-             '-af', f"volume={dynamic_range}", '-dither_method', 'triangular', str(flac_file)])
-
-        trimmed_flac_file = flac_file.with_name(flac_file.stem + ' - Trimmed.flac')
-
-        subprocess.run(
-            ['sox', str(flac_file), str(trimmed_flac_file), 'trim', '0.0065', 'reverse', 'silence', '1',
-             '0', '0%', 'trim', '0.0065', 'reverse', 'pad', '0.0065', '0.2'])
-
-        if trimmed_flac_file.exists():
-            flac_file.unlink()
-            trimmed_flac_file.rename(flac_file)
-        else:
-            log_to_file(f"{trimmed_flac_file} not found.")
-
-    check_dff_and_flac(input_folder)
+    logging.info(f"Processed {len(extracted_dirs)} directories")
+    return extracted_dirs
 
 
-def check_dff_and_flac(input_folder: Path):
-    print(f"DFF and FLAC conversion invoked on {input_folder}")
+def dff_to_flac(f: Path):
+    dffs = list(f.rglob("*.dff"))
 
-    flac_count = len(list(input_folder.glob("*.flac")))
-    dff_files = list(input_folder.glob("*.dff"))
-    dff_count = len(dff_files)
+    if not dffs:
+        logging.warning(f"No DFF files found in {f}")
+        return f
 
-    if flac_count == dff_count:
-        for dff_file in dff_files:
-            dff_file.unlink()
-    else:
-        log_to_file(f"Unequal number of FLAC and DFF files in {input_folder}.")
+    logging.info(f"Processing {len(dffs)} DFF files in {f.name}")
+
+    dr = max([float(m.group(1)) for d in dffs
+              if (m := re.search(r'max_volume: (-\d+\.?\d*) dB',
+                                 run_cmd(['ffmpeg', '-i', str(d), '-af', 'volumedetect',
+                                          '-f', 'null', '-']).stderr))] + [0.0]) - 0.5
+    logging.info(f"Calculated dynamic range adjustment: {dr}dB")
+
+    for i, d in enumerate(dffs, 1):
+        flac_path = d.with_suffix('.flac')
+        logging.info(f"Converting DFF {i}/{len(dffs)}: {d.name}")
+
+        while True:
+            try:
+                run_cmd(['ffmpeg', '-i', str(d), '-c:a', 'flac', '-sample_fmt', 's32',
+                         '-ar', '88200', '-af', f'volume={dr}', str(flac_path)], check=True)
+                break
+            except Exception:
+                logging.warning(f"Conversion failed for {d.name}, retrying in 10 seconds")
+                time.sleep(10)
+
+        trim = flac_path.with_stem(f'temp_{flac_path.stem}')
+
+        while True:
+            try:
+                run_cmd(['sox', str(flac_path), str(trim), 'trim', '0.0065', 'reverse',
+                         'silence', '1', '0', '0%', 'trim', '0.0065', 'reverse',
+                         'pad', '0.0065', '0.2'], check=True)
+                flac_path.unlink()
+                trim.rename(flac_path)
+                logging.info(f"Successfully processed: {flac_path.stem}")
+                break
+            except Exception:
+                logging.warning(f"Trim failed for {flac_path.name}, retrying in 10 seconds")
+                trim.unlink(missing_ok=True)
+                time.sleep(10)
+
+    return f
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: script.py <root_dir> <FolderPath>")
-        exit(1)
+        logging.error("Invalid arguments. Usage: python script.py <folder>")
+        sys.exit(1)
 
     extract_sacds(Path(sys.argv[1]))
