@@ -23,17 +23,25 @@ MP3_TIER = {
 }
 
 TIER_CONFIG = {
-    44100: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)", "format": "flac"}],
-    48000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)", "format": "flac"}],
-    88200: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)", "format": "flac"}],
-    96000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)", "format": "flac"}],
+    44100: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)",
+             "format": "flac"}],
+    48000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)",
+             "format": "flac"}],
+    88200: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)",
+             "format": "flac"}],
+    96000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)",
+             "format": "flac"}],
     176400: [
-        {"desc": "24-bit/88.2kHz FLAC", "bit_depth": 24, "quality_setting": 88200, "suffix": " (24-88.2)", "format": "flac"},
-        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)", "format": "flac"},
+        {"desc": "24-bit/88.2kHz FLAC", "bit_depth": 24, "quality_setting": 88200, "suffix": " (24-88.2)",
+         "format": "flac"},
+        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " (16-44.1)",
+         "format": "flac"},
     ],
     192000: [
-        {"desc": "24-bit/96kHz FLAC", "bit_depth": 24, "quality_setting": 96000, "suffix": " (24-96)", "format": "flac"},
-        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)", "format": "flac"},
+        {"desc": "24-bit/96kHz FLAC", "bit_depth": 24, "quality_setting": 96000, "suffix": " (24-96)",
+         "format": "flac"},
+        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " (16-48)",
+         "format": "flac"},
     ],
 }
 
@@ -58,13 +66,30 @@ def directory_context(directory):
                 new.rename(orig)
 
 
-def run_command(cmd):
-    result = subprocess.run(cmd,text=True)
+def run_command(cmd, cwd=None):
+    result = subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+        universal_newlines=True
+    )
+
+    if result.stdout:
+        print(result.stdout, end='')
+
+    if result.stderr:
+        print(result.stderr, end='', file=sys.stderr)
 
     if result.returncode != 0:
         print(f"\nError: Command {' '.join(cmd)} failed with return code {result.returncode}")
+        print("Standard Output:")
+        print(result.stdout)
+        print("Standard Error:")
+        print(result.stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd)
-
     return result
 
 
@@ -205,10 +230,9 @@ def dff_directory_conversion(dff_dir):
         flac_path = dff_to_flac(dff, dr)
         trim_flac(flac_path, dff.name)
 
-    delete_dff_dir(dff_dir)
-    flac_dir = dff_dir
+    delete_dff_dirs(dff_dir)
 
-    return flac_dir
+    return dff_dir
 
 
 def calculate_dynamic_range(dff_files):
@@ -258,45 +282,38 @@ def trim_flac(flac_path, dff_name):
     temp_path.rename(flac_path)
 
 
-def delete_dff_dir(dff_dir):
+def delete_dff_dirs(dff_dir):
     dff_files = list(dff_dir.rglob("*.dff"))
     flac_files = list(dff_dir.rglob("*.flac"))
 
     if len(dff_files) == len(flac_files):
+        logging.info(f"All {len(dff_files)} DFF files successfully converted to FLAC. Deleting DFF files.")
         for dff in dff_files:
             dff.unlink()
-        logging.info(f"All {len(dff_files)} DFF files successfully converted to FLAC. All DFF files deleted.")
+            logging.info(f"Deleted: {dff}")
     else:
         logging.warning(
             f"DFF count ({len(dff_files)}) does not match FLAC count ({len(flac_files)}). Keeping DFF files.")
 
-    flac_dir = dff_dir
-
-    return flac_dir
+    return dff_dir
 
 
 def main():
     parser = argparse.ArgumentParser(description="Audio processing tool")
     subparsers = parser.add_subparsers(dest="cmd", required=True)
-
     extract_parser = subparsers.add_parser("extract", help="Extract SACD ISO images")
     extract_parser.add_argument("directory", type=Path, help="Directory path (SACD ISOs)")
-
     convert_parser = subparsers.add_parser("convert", help="Convert FLAC files")
     convert_parser.add_argument("directory", type=Path, help="Directory path (FLAC files)")
     convert_parser.add_argument("-f", "--format", choices=["flac", "mp3", "all"], default="all")
-
     args = parser.parse_args()
-
     if not args.directory.exists():
         logging.error(f"Directory not found: {args.directory}")
         sys.exit(1)
-
     if args.cmd == "extract":
         process_sacd_directory(args.directory)
     elif args.cmd == "convert":
         process_flac_directory(args.directory.resolve(), args.format)
-
     logging.info("Processing completed")
 
 
