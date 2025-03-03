@@ -48,7 +48,7 @@ TIER_CONFIG = {
 
 @contextlib.contextmanager
 def directory_context(directory):
-    dir_path = Path(directory).resolve()
+    dir_path = Path(directory)
     rename_map = {
         p: p.with_name(sanitize_filename(p.name))
         for p in dir_path.rglob("*")
@@ -76,12 +76,10 @@ def run_command(cmd, cwd=None):
     )
 
     if result.returncode != 0:
-        logging.info(f"\nError: Command {' '.join(cmd)} failed with return code {result.returncode}")
-        logging.info("Standard Output:")
-        logging.info(result.stdout)
-        logging.info("Standard Error:")
-        logging.info(result.stderr)
-        raise subprocess.CalledProcessError(result.returncode, cmd)
+        logging.error(f"\nError: Command {' '.join(cmd)} failed with return code {result.returncode}")
+        logging.error("Standard Error:")
+        logging.error(result.stderr)
+        raise subprocess.CalledProcessError(result.returncode, cmd, output=result.stdout, stderr=result.stderr)
 
     return result
 
@@ -118,7 +116,7 @@ def convert_to_mp3(file, tier):
 
 def process_tier(src, tier):
     dest = src.parent / f"{src.name}{tier['suffix']}"
-    logging.info(f"Converting {dest} to {tier['desc']}")
+    logging.info(f"Converting \"{dest}\" to {tier['desc']}")
     rc = subprocess.run(["robocopy", str(src), str(dest), "/S", "/XF", "*.log", "*.m3u", "*.cue", "*.md5"],
                         stdout=subprocess.DEVNULL).returncode
     if rc >= 8:
@@ -137,6 +135,7 @@ def process_tier(src, tier):
 
 def process_flac_directory(src, fmt="all"):
     logging.info(f"Processing FLAC directory: {src}")
+
     with directory_context(src):
         flac_files = list(src.rglob("*.flac"))
 
@@ -151,6 +150,7 @@ def process_flac_directory(src, fmt="all"):
             prec, rate = get_metadata(f)
             bit_depths.append(prec)
             sample_rates.append(rate)
+
         bd, sr = min(bit_depths), min(sample_rates)
 
         logging.info(f"Detected: {bd}-bit/{sr}Hz")
@@ -180,8 +180,8 @@ def normalize_directory_name(path):
     return path
 
 
-def process_sacd_directory(src):
-    base_dir = normalize_directory_name(Path(src).resolve())
+def process_sacd_directory(src, fmt="all"):
+    base_dir = normalize_directory_name(Path(src))
 
     iso_files = list(base_dir.rglob("*.iso"))
 
@@ -191,49 +191,33 @@ def process_sacd_directory(src):
             dff_dirs = convert_iso_to_dff(iso, base_dir)
             for dff_dir in dff_dirs:
                 flac_dir = dff_directory_conversion(dff_dir)
-                process_flac_directory(flac_dir, "all")
+                process_flac_directory(flac_dir, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
     with directory_context(base_dir):
-        rel_path = Path(iso_path).relative_to(base_dir)
-        iso_parent_dir = rel_path.parent
-
-        probe_result = run_command(["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir))
-
+        probe_result = run_command(
+            ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
+        )
         dirs = []
         audio_channels = [
             ("Speaker config: (Multichannel|5|6)", " (Multichannel)", ["-m", "-p", "-c"]),
             ("Stereo|2", " (Stereo)", ["-2", "-p", "-c"])
         ]
-
         for pattern, suffix, cmd in audio_channels:
             if re.search(pattern, probe_result.stdout):
-                out_base_dir = base_dir.parent / f"{base_dir.name}{suffix}"
-                out_base_dir.mkdir(exist_ok=True)
-
-                out_dir = out_base_dir / iso_parent_dir
+                out_dir = base_dir.parent / f"{base_dir.name}{suffix}"
                 out_dir.mkdir(exist_ok=True, parents=True)
-
-                if any(out_dir.rglob("*.dff")):
-                    logging.info(f"DFF files found for {suffix.strip()} in {out_dir}. Skipping extraction...")
-                    dirs.append(out_dir)
-                    continue
 
                 run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
                 logging.info(f"Extracted {suffix.strip()} audio to {out_dir}")
 
                 if any(out_dir.rglob("*.dff")):
                     dirs.append(out_dir)
-
         return dirs
 
 
 def dff_directory_conversion(dff_dir):
-    if any(list(dff_dir.rglob("*.flac"))):
-        logging.info("FLAC files detected; assuming conversion is complete.")
-        return dff_dir
-
     dff_files = list(dff_dir.rglob("*.dff"))
 
     dr = calculate_dynamic_range(dff_files)
@@ -268,17 +252,15 @@ def calculate_dynamic_range(dff_files):
 
 def dff_to_flac(dff, dr):
     flac_path = dff.with_suffix(".flac")
-    while True:
-        try:
-            run_command([
-                "ffmpeg", "-nostats", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
-                "-ar", "88200", "-af", f"volume={dr}", str(flac_path)
-            ])
-            break
 
-        except Exception as e:
-            logging.warning(f"Conversion of {dff.stem} failed.\nError: {e}.\nTrying again...")
-            time.sleep(10)
+    try:
+        run_command([
+            "ffmpeg", "-nostats", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
+            "-ar", "88200", "-af", f"volume={dr}", str(flac_path)
+        ])
+
+    except Exception as e:
+        logging.warning(f"Conversion of {dff.stem} failed.\nError: {e}.\n")
 
     return flac_path
 
@@ -286,17 +268,15 @@ def dff_to_flac(dff, dr):
 def trim_flac(flac_path):
     temp_path = flac_path.with_name(f"temp_{flac_path.name}")
 
-    while True:
-        try:
-            run_command([
-                "sox", str(flac_path), str(temp_path), "trim", "0.0065", "reverse",
-                "silence", "1", "0", "0%", "trim", "0.0065", "reverse", "pad", "0.0065", "0.2"
-            ])
-            break
-
-        except Exception as e:
-            logging.warning(f"Trimming {flac_path.stem} failed.\nError: {e}.\nTrying again...")
-            time.sleep(10)
+    try:
+        run_command([
+            "sox", str(flac_path), str(temp_path),
+            "trim", "0.0065", "reverse",
+            "silence", "1", "0", "0%",
+            "trim", "0.0065", "reverse", "pad", "0.0065", "0.2"
+        ])
+    except Exception as e:
+        logging.warning(f"Trimming {flac_path.stem} failed.\nError: {e}.\nTrying again...")
 
     flac_path.unlink()
     temp_path.rename(flac_path)
@@ -319,14 +299,11 @@ def delete_dff_dirs(dff_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Audio processing tool")
-    subparsers = parser.add_subparsers(dest="cmd", required=True)
 
-    extract_parser = subparsers.add_parser("extract_sacd", help="Extract SACD ISO images")
-    extract_parser.add_argument("directory", type=Path, help="Directory path (SACD ISOs)")
+    parser.add_argument("cmd", choices=["extract_sacd", "convert"], help="Command to execute (extract_sacd or convert)")
 
-    convert_parser = subparsers.add_parser("convert", help="Convert FLAC files")
-    convert_parser.add_argument("directory", type=Path, help="Directory path (FLAC files)")
-    convert_parser.add_argument("-f", "--format", choices=["flac", "mp3", "all"], default="all")
+    parser.add_argument("-f", "--format", choices=["flac", "mp3", "all"], default="all", help="Output format (default: all)")
+    parser.add_argument("directory", type=Path, help="Directory to process")
 
     args = parser.parse_args()
 
@@ -334,11 +311,12 @@ def main():
         logging.error(f"Directory not found: {args.directory}")
         sys.exit(1)
 
-    if args.cmd == "extract_sacd":
-        process_sacd_directory(args.directory)
+    directory = Path(args.directory.resolve())
 
+    if args.cmd == "extract_sacd":
+        process_sacd_directory(directory, args.format)
     elif args.cmd == "convert":
-        process_flac_directory(args.directory.resolve(), args.format)
+        process_flac_directory(directory, args.format)
 
     logging.info("Processing completed")
 
