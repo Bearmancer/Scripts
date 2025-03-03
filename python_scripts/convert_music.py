@@ -4,8 +4,6 @@ import logging
 import re
 import subprocess
 import sys
-import unicodedata
-import time
 from pathlib import Path
 from pathvalidate import sanitize_filename
 
@@ -48,17 +46,16 @@ TIER_CONFIG = {
 
 @contextlib.contextmanager
 def directory_context(directory):
-    dir_path = Path(directory)
     rename_map = {
         p: p.with_name(sanitize_filename(p.name))
-        for p in dir_path.rglob("*")
+        for p in directory.rglob("*")
         if p.is_file() and ((s := sanitize_filename(p.name)) != p.name) and not p.with_name(s).exists()
     }
     for orig, new in rename_map.items():
         logging.info(f"Renaming: {orig} -> {new}")
         orig.rename(new)
     try:
-        yield dir_path
+        yield directory
     finally:
         for orig, new in rename_map.items():
             if new.exists() and not orig.exists():
@@ -167,27 +164,13 @@ def process_flac_directory(src, fmt="all"):
             process_tier(src, tier)
 
 
-def normalize_directory_name(path):
-    normalized = unicodedata.normalize("NFD", path.name)
-    cleaned = "".join(c for c in normalized if unicodedata.category(c) != "Mn")
-
-    if cleaned != path.name:
-        new_path = path.with_name(cleaned)
-        path.rename(new_path)
-        return new_path
-
-    return path
-
-
 def process_sacd_directory(src, fmt="all"):
-    base_dir = normalize_directory_name(src)
+    with directory_context(src):
+        iso_files = list(src.rglob("*.iso"))
 
-    iso_files = list(base_dir.rglob("*.iso"))
-
-    with directory_context(base_dir):
         for iso in iso_files:
             logging.info(f"Processing: {iso.name}")
-            dff_dirs = convert_iso_to_dff(iso, base_dir)
+            dff_dirs = convert_iso_to_dff(iso, src)
             for dff_dir in dff_dirs:
                 flac_dir = dff_directory_conversion(dff_dir)
                 process_flac_directory(flac_dir, fmt)
@@ -212,14 +195,13 @@ def convert_iso_to_dff(iso_path, base_dir):
 
                 existing_dirs = set(d for d in out_dir.iterdir() if d.is_dir())
 
-                logging.info(f"Extracting {suffix} channel from {iso_path.name}")
+                logging.info(f"Found {suffix} channels on {iso_path.name}")
                 run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
                 new_dirs_with_dffs = [d for d in out_dir.iterdir()
                                       if d.is_dir() and d not in existing_dirs]
 
                 for d in new_dirs_with_dffs:
-                    logging.info(f"Found new directory with {len(list(d.rglob('*.dff')))} DFF files: {d.name}")
                     output_dirs.append(d)
 
         if not output_dirs:
@@ -231,23 +213,17 @@ def convert_iso_to_dff(iso_path, base_dir):
 def dff_directory_conversion(dff_dir):
     dff_files = list(dff_dir.rglob("*.dff"))
     total_files = len(dff_files)
-    start_time = time.time()
     dr = calculate_dynamic_range(dff_files)
 
     for i, dff in enumerate(dff_files, 1):
         flac_path = dff_to_flac(dff, dr)
         trim_flac(flac_path)
 
-        elapsed = time.time() - start_time
-        avg_time = elapsed / i
-        remaining = avg_time * (total_files - i)
+        progress = f"\r{i}/{total_files} DFF files converted to FLAC"
+        print(progress, flush=True, end="\n")
 
-        progress = f"\r{i}/{total_files} DFF files converted to FLAC | Elapsed: {elapsed:.1f}s | Remaining: {remaining:.1f}s"
-        print(progress, flush=True, end="")
-
-    print(f"Completed {total_files} conversions in {time.time() - start_time:.1f} seconds")
-
-    for dff in dff_files: dff.unlink()
+    for dff in dff_files:
+        dff.unlink()
 
     return dff_dir
 
@@ -265,7 +241,7 @@ def calculate_dynamic_range(dff_files):
             dr_values.append(float(match.group(1)))
 
     db = max(dr_values, default=0.0) - 0.5 if dr_values else 0.0
-    logging.info(f"Dynamic range = {db:.2f} dB")
+    logging.info(f"Dynamic range: {db:.2f} dB")
 
     return db
 
