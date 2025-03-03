@@ -227,7 +227,8 @@ def dff_directory_conversion(dff_dir):
         flac_path = dff_to_flac(dff, dr)
         trim_flac(flac_path)
 
-    delete_dff_dirs(dff_dir)
+    for dff in dff_files:
+            dff.unlink()
 
     return dff_dir
 
@@ -287,8 +288,7 @@ def delete_dff_dirs(dff_dir):
     flac_files = list(dff_dir.rglob("*.flac"))
 
     if len(dff_files) == len(flac_files):
-        for dff in dff_files:
-            dff.unlink()
+        
 
         logging.info(f"All {len(dff_files)} DFF files successfully converted to FLAC. Deleted all DFF files.")
     else:
