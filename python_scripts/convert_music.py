@@ -66,7 +66,7 @@ def directory_context(directory):
                 new.rename(orig)
 
 
-def run_command(cmd, cwd=None, quiet=False):
+def run_command(cmd, cwd=None):
     result = subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -74,13 +74,6 @@ def run_command(cmd, cwd=None, quiet=False):
         stderr=subprocess.PIPE,
         text=True,
     )
-
-    if not quiet:
-        if result.stdout:
-            logging.info(result.stdout)
-
-        if result.stderr:
-            logging.error(result.stderr)
 
     if result.returncode != 0:
         logging.info(f"\nError: Command {' '.join(cmd)} failed with return code {result.returncode}")
@@ -119,13 +112,13 @@ def convert_to_mp3(file, tier):
     out_file = file.with_suffix(".mp3")
 
     run_command(["ffmpeg", "-nostats", "-i", str(file), "-codec:a", "libmp3lame",
-                 "-b:a", tier["quality_setting"], str(out_file)], quiet=True)
+                 "-b:a", tier["quality_setting"], str(out_file)])
     file.unlink()
 
 
 def process_tier(src, tier):
     dest = src.parent / f"{src.name}{tier['suffix']}"
-    logging.info(f"Converting to {tier['desc']} -> {dest}")
+    logging.info(f"Converting {dest} to {tier['desc']}")
     rc = subprocess.run(["robocopy", str(src), str(dest), "/S", "/XF", "*.log", "*.m3u", "*.cue", "*.md5"],
                         stdout=subprocess.DEVNULL).returncode
     if rc >= 8:
@@ -203,9 +196,12 @@ def process_sacd_directory(src):
 
 def convert_iso_to_dff(iso_path, base_dir):
     with directory_context(base_dir):
-        probe_result = run_command(["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir), quiet=True)
-        dirs = []
+        rel_path = Path(iso_path).relative_to(base_dir)
+        iso_parent_dir = rel_path.parent
 
+        probe_result = run_command(["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir))
+
+        dirs = []
         audio_channels = [
             ("Speaker config: (Multichannel|5|6)", " (Multichannel)", ["-m", "-p", "-c"]),
             ("Stereo|2", " (Stereo)", ["-2", "-p", "-c"])
@@ -213,21 +209,22 @@ def convert_iso_to_dff(iso_path, base_dir):
 
         for pattern, suffix, cmd in audio_channels:
             if re.search(pattern, probe_result.stdout):
-                out_dir = base_dir.parent / f"{base_dir.name}{suffix}"
-                out_dir.mkdir(exist_ok=True)
+                out_base_dir = base_dir.parent / f"{base_dir.name}{suffix}"
+                out_base_dir.mkdir(exist_ok=True)
 
-                subdir = next((d for d in out_dir.iterdir() if d.is_dir()), None)
+                out_dir = out_base_dir / iso_parent_dir
+                out_dir.mkdir(exist_ok=True, parents=True)
 
-                if subdir and any(subdir.rglob("*.dff")):
-                    logging.info(f"DFF files found for {suffix.strip()}. Skipping extraction...")
-                    dirs.append(subdir)
+                if any(out_dir.rglob("*.dff")):
+                    logging.info(f"DFF files found for {suffix.strip()} in {out_dir}. Skipping extraction...")
+                    dirs.append(out_dir)
                     continue
 
-                run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir), quiet=True)
+                run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
                 logging.info(f"Extracted {suffix.strip()} audio to {out_dir}")
-                subdir = next((d for d in out_dir.iterdir() if d.is_dir()), None)
-                if subdir and any(subdir.rglob("*.dff")):
-                    dirs.append(subdir)
+
+                if any(out_dir.rglob("*.dff")):
+                    dirs.append(out_dir)
 
         return dirs
 
@@ -244,7 +241,7 @@ def dff_directory_conversion(dff_dir):
     for dff in dff_files:
         logging.info(f"Converting {dff.name} to FLAC.")
         flac_path = dff_to_flac(dff, dr)
-        trim_flac(flac_path, dff.name)
+        trim_flac(flac_path)
 
     delete_dff_dirs(dff_dir)
 
@@ -255,7 +252,9 @@ def calculate_dynamic_range(dff_files):
     dr_values = []
 
     for dff in dff_files:
-        result = run_command(["ffmpeg", "-i", str(dff), "-af", "volumedetect", "-f", "null", "-"])
+        result = run_command(
+            ["ffmpeg", "-nostats", "-i", str(dff), "-af", "volumedetect", "-f",
+             "null", "-"])
         match = re.search(r"max_volume: (-\d+\.?\d*) dB", result.stderr)
 
         if match:
@@ -272,9 +271,9 @@ def dff_to_flac(dff, dr):
     while True:
         try:
             run_command([
-                "ffmpeg", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
+                "ffmpeg", "-nostats", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
                 "-ar", "88200", "-af", f"volume={dr}", str(flac_path)
-            ], quiet=True)
+            ])
             break
 
         except Exception as e:
