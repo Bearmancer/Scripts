@@ -4,6 +4,7 @@ import logging
 import re
 import subprocess
 import sys
+import chardet
 from pathlib import Path
 from pathvalidate import sanitize_filename
 
@@ -47,13 +48,16 @@ TIER_CONFIG = {
 @contextlib.contextmanager
 def directory_context(directory):
     rename_map = {
-        p: p.with_name(sanitize_filename(p.name))
-        for p in directory.rglob("*")
-        if p.is_file() and ((s := sanitize_filename(p.name)) != p.name) and not p.with_name(s).exists()
-    }
+            p: p.with_name(s)
+            for p in directory.rglob("*")
+            for s in [sanitize_filename(p.name)]
+            if p.is_file() and s != p.name and not p.with_name(s).exists()
+        }
+
     for orig, new in rename_map.items():
         logging.info(f"Renaming: {orig} -> {new}")
         orig.rename(new)
+
     try:
         yield directory
     finally:
@@ -67,21 +71,31 @@ def run_command(cmd, cwd=None):
     result = subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
-        capture_output=True,
-        text=True,
+        capture_output=True
     )
+
+    def decode_bytes(byte_data):
+        try:
+            return byte_data.decode("utf-8")
+        except UnicodeDecodeError:
+            detection = chardet.detect(byte_data)
+            encoding = detection.get("encoding", "utf-8")
+            return byte_data.decode(encoding, errors="replace")
+
+    stdout_decoded = decode_bytes(result.stdout)
+    stderr_decoded = decode_bytes(result.stderr)
 
     if result.returncode != 0:
         logging.error(f"\nError: Command {' '.join(cmd)} failed with return code {result.returncode}")
         logging.error("Standard Error:")
-        logging.error(result.stderr)
-        raise subprocess.CalledProcessError(result.returncode, cmd, output=result.stdout, stderr=result.stderr)
+        logging.error(stderr_decoded)
+        raise subprocess.CalledProcessError(result.returncode, cmd, output=stdout_decoded, stderr=stderr_decoded)
 
-    return result
+    return stdout_decoded, stderr_decoded
 
 
 def get_metadata(file):
-    out = run_command(["sox", "--i", str(file)]).stdout
+    out = run_command(["sox", "--i", str(file)])[0]
     extract = lambda key: int(next(
         line.split(":")[-1].strip().split()[0].split("-")[0]
         for line in out.splitlines() if key in line
@@ -112,101 +126,106 @@ def convert_to_mp3(file, tier):
 
 def process_tier(src, tier):
     dest = src.parent / f"{src.name}{tier['suffix']}"
-    logging.info(f"Converting {dest.name} to {tier['desc']}")
-    rc = subprocess.run(["robocopy", str(src), str(dest), "/S", "/XF", "*.log", "*.m3u", "*.cue", "*.md5"],
-                        stdout=subprocess.DEVNULL).returncode
+    logging.info(f"Converting {src.name} to {tier['desc']}")
+
+    rc = subprocess.run(
+        ["robocopy", str(src), str(dest), "/S", "/XF", "*.log", "*.m3u", "*.cue", "*.md5"],
+        stdout=subprocess.DEVNULL
+    ).returncode
     if rc >= 8:
         raise RuntimeError(f"Robocopy failed with code {rc}")
 
-    with directory_context(dest):
-        flac_files = list(dest.rglob("*.flac"))
-        for f in flac_files:
-            try:
-                converter = convert_flac if tier["format"] == "flac" else convert_to_mp3
-                converter(f, tier)
+    flac_files = list(dest.rglob("*.flac"))
+    total_files = len(flac_files)
 
-            except Exception as e:
-                logging.error(f"Failed {f.name}: {e}")
+    for idx, f in enumerate(flac_files, start=1):
+        try:
+            converter = convert_flac if tier["format"] == "flac" else convert_to_mp3
+            converter(f, tier)
+        except Exception as e:
+            logging.error(f"Failed {f.name}: {e}")
+        print(f"\rProcessed {idx}/{total_files} files", flush=True, end="")
+
+    print()
 
 
-def process_flac_directory(src, fmt= "all"):
+def process_flac_directory(src, format="all"):
     logging.info(f"Processing FLAC directory: {src.stem}")
 
-    with directory_context(src):
-        flac_files = list(src.rglob("*.flac"))
+    flac_files = list(src.rglob("*.flac"))
 
-        if not flac_files:
-            logging.warning("No FLAC files found")
-            return
+    if not flac_files:
+        logging.warning("No FLAC files found")
+        return
 
-        bit_depths = []
-        sample_rates = []
+    bit_depths = []
+    sample_rates = []
 
-        for f in flac_files:
-            prec, rate = get_metadata(f)
-            bit_depths.append(prec)
-            sample_rates.append(rate)
+    for f in flac_files:
+        prec, rate = get_metadata(f)
+        bit_depths.append(prec)
+        sample_rates.append(rate)
 
-        bd, sr = min(bit_depths), min(sample_rates)
+    bd, sr = min(bit_depths), min(sample_rates)
 
-        logging.info(f"Detected: {bd}-bit/{sr}Hz")
+    logging.info(f"Detected: {bd}-bit/{sr}Hz")
 
-        if bd not in {16, 24} or sr not in TIER_CONFIG:
-            logging.warning(f"Unsupported: {bd}-bit/{sr}Hz")
-            return
+    if bd not in {16, 24} or sr not in TIER_CONFIG:
+        logging.warning(f"Unsupported: {bd}-bit/{sr}Hz")
+        return
 
-        tiers = TIER_CONFIG[sr] + ([MP3_TIER] if fmt in ["mp3", "all"] else [])
+    tiers = TIER_CONFIG[sr] + ([MP3_TIER] if format in ["mp3", "all"] else [])
 
-        if fmt == "mp3":
-            tiers = [MP3_TIER]
+    if format == "mp3":
+        tiers = [MP3_TIER]
 
-        for tier in tiers:
-            process_tier(src, tier)
+    for tier in tiers:
+        process_tier(src, tier)
 
 
 def process_sacd_directory(src, fmt="all"):
-    with directory_context(src):
-        iso_files = list(src.rglob("*.iso"))
+    iso_files = list(src.rglob("*.iso"))
 
-        for iso in iso_files:
-            logging.info(f"Processing: {iso.name}")
-            output_dirs = convert_iso_to_dff(iso, src)
+    output_dirs = []
 
-        for folder in output_dirs:
-            dff_files = folder.rglob("*.dff")
-            dff_folders = sorted(set(d.parent for d in dff_files))
+    for iso in iso_files:
+        logging.info(f"Processing: {iso.name}")
+        output_dirs = convert_iso_to_dff(iso, src)
 
-            for dff_folder in dff_folders:
-                logging.info(f"Processing DFF directory: {dff_folder.stem}")
-                dff_directory_conversion(dff_folder)
+    for folder in output_dirs:
+        dff_files = folder.rglob("*.dff")
+        dff_folders = sorted(set(d.parent for d in dff_files))
 
-            process_flac_directory(folder, fmt)
+        for dff_folder in dff_folders:
+            logging.info(f"Processing DFF directory: {dff_folder.stem}")
+            dff_directory_conversion(dff_folder)
+
+        process_flac_directory(folder, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
-    with directory_context(base_dir):
-        probe_result = run_command(
-            ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
-        )
+    probe_result = run_command(
+        ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
+    )[0]
 
-        channel_configs = [
-            ("Speaker config: (Multichannel|5|6)", "Multichannel", ["-m", "-p", "-c"]),
-            ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-p", "-c"])
-        ]
+    channel_configs = [
+        ("Speaker config: (Multichannel|5|6)", "Multichannel", ["-m", "-p", "-c"]),
+        ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-p", "-c"])
+    ]
 
-        out_dirs = []
+    out_dirs = []
 
-        for pattern, suffix, cmd in channel_configs:
-            if re.search(pattern, probe_result.stdout):
-                out_dir = base_dir.parent / f"{base_dir.name} ({suffix})"
-                out_dir.mkdir(exist_ok=True, parents=True)
+    for pattern, suffix, cmd in channel_configs:
+        if re.search(pattern, probe_result):
+            out_dir = base_dir.parent / f"{base_dir.name} ({suffix})"
+            out_dir.mkdir(exist_ok=True, parents=True)
 
-                logging.info(f"{iso_path.name} contains {suffix} sound")
-                run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
+            logging.info(f"{iso_path.name} contains {suffix} sound")
+            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
-                out_dirs.append(out_dir)
+            out_dirs.append(out_dir)
 
-        return out_dirs
+    return out_dirs
 
 
 def dff_directory_conversion(dff_dir):
@@ -221,7 +240,7 @@ def dff_directory_conversion(dff_dir):
         trim_flac(flac_path)
 
         progress = f"\r{i}/{total_files} DFF files converted to FLAC"
-        print(progress, flush=True)
+        print(progress, flush=True, end="")
 
     for dff in dff_files:
         dff.unlink()
@@ -235,8 +254,8 @@ def calculate_dynamic_range(dff_files):
     for dff in dff_files:
         result = run_command(
             ["ffmpeg", "-nostats", "-i", str(dff), "-af", "volumedetect", "-f",
-             "null", "-"])
-        match = re.search(r"max_volume: (-\d+\.?\d*) dB", result.stderr)
+             "null", "-"])[1]
+        match = re.search(r"max_volume: (-\d+\.?\d*) dB", result)
 
         if match:
             dr_values.append(float(match.group(1)))
@@ -295,10 +314,15 @@ def main():
         logging.error(f"Directory not found: {args.directory}")
         sys.exit(1)
 
-    if args.cmd == "extract_sacd":
-        process_sacd_directory(directory, args.format)
-    elif args.cmd == "convert":
-        process_flac_directory(directory, args.format)
+    with directory_context(directory):
+        try:
+            if args.cmd == "extract_sacd":
+                process_sacd_directory(directory, args.format)
+            elif args.cmd == "convert":
+                process_flac_directory(directory, args.format)
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            sys.exit(1)
 
     logging.info("Processing completed")
 
