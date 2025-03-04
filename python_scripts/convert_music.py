@@ -112,7 +112,7 @@ def convert_to_mp3(file, tier):
 
 def process_tier(src, tier):
     dest = src.parent / f"{src.name}{tier['suffix']}"
-    logging.info(f"Converting {dest} to {tier['desc']}")
+    logging.info(f"Converting {dest.name} to {tier['desc']}")
     rc = subprocess.run(["robocopy", str(src), str(dest), "/S", "/XF", "*.log", "*.m3u", "*.cue", "*.md5"],
                         stdout=subprocess.DEVNULL).returncode
     if rc >= 8:
@@ -129,8 +129,8 @@ def process_tier(src, tier):
                 logging.error(f"Failed {f.name}: {e}")
 
 
-def process_flac_directory(src, fmt="all"):
-    logging.info(f"Processing FLAC directory: {src}")
+def process_flac_directory(src, fmt= "all"):
+    logging.info(f"Processing FLAC directory: {src.stem}")
 
     with directory_context(src):
         flac_files = list(src.rglob("*.flac"))
@@ -170,10 +170,17 @@ def process_sacd_directory(src, fmt="all"):
 
         for iso in iso_files:
             logging.info(f"Processing: {iso.name}")
-            dff_dirs = convert_iso_to_dff(iso, src)
-            for dff_dir in dff_dirs:
-                flac_dir = dff_directory_conversion(dff_dir)
-                process_flac_directory(flac_dir, fmt)
+            output_dirs = convert_iso_to_dff(iso, src)
+
+        for folder in output_dirs:
+            dff_files = folder.rglob("*.dff")
+            dff_folders = sorted(set(d.parent for d in dff_files))
+
+            for dff_folder in dff_folders:
+                logging.info(f"Processing DFF directory: {dff_folder.stem}")
+                dff_directory_conversion(dff_folder)
+
+            process_flac_directory(folder, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
@@ -182,35 +189,29 @@ def convert_iso_to_dff(iso_path, base_dir):
             ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
         )
 
-        output_dirs = []
         channel_configs = [
             ("Speaker config: (Multichannel|5|6)", "Multichannel", ["-m", "-p", "-c"]),
             ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-p", "-c"])
         ]
+
+        out_dirs = []
 
         for pattern, suffix, cmd in channel_configs:
             if re.search(pattern, probe_result.stdout):
                 out_dir = base_dir.parent / f"{base_dir.name} ({suffix})"
                 out_dir.mkdir(exist_ok=True, parents=True)
 
-                existing_dirs = set(d for d in out_dir.iterdir() if d.is_dir())
-
-                logging.info(f"Found {suffix} channels on {iso_path.name}")
+                logging.info(f"{iso_path.name} contains {suffix} sound")
                 run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
-                new_dirs_with_dffs = [d for d in out_dir.iterdir()
-                                      if d.is_dir() and d not in existing_dirs]
+                out_dirs.append(out_dir)
 
-                for d in new_dirs_with_dffs:
-                    output_dirs.append(d)
-
-        if not output_dirs:
-            logging.error(f"No new folder was created through {iso_path.name}")
-
-        return output_dirs
+        return out_dirs
 
 
 def dff_directory_conversion(dff_dir):
+    logging.info(f"Processing DFF directory: {dff_dir.stem}")
+
     dff_files = list(dff_dir.rglob("*.dff"))
     total_files = len(dff_files)
     dr = calculate_dynamic_range(dff_files)
@@ -220,7 +221,7 @@ def dff_directory_conversion(dff_dir):
         trim_flac(flac_path)
 
         progress = f"\r{i}/{total_files} DFF files converted to FLAC"
-        print(progress, flush=True, end="\n")
+        print(progress, flush=True)
 
     for dff in dff_files:
         dff.unlink()
