@@ -64,18 +64,18 @@ def list_files_and_directories(path: Path, sort_order: bool = False, indent: int
 def make_torrents(folder: Path):
     print(f'Now processing: {folder}')
 
-    dropbox = json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path')
-
+    dropbox = Path(json.load(open(Path.home() / 'AppData' / 'Local' / 'Dropbox' / 'info.json')).get('personal', {}).get('path'))
+    
     rename_file_red(folder)
 
     print(f"Creating torrents for {folder.name}...")
 
     create_torrent(
-        path=str(folder), 
-        trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
-        private=True, 
-        source="OPS", 
-        output=f"OPS - {dropbox}\\Lance\\{folder.name}.torrent"
+    path=str(folder), 
+    trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
+    private=True, 
+    source="OPS", 
+    output= dropbox / "Lance" / f"OPS - {folder.name}.torrent"
     )
 
     create_torrent(
@@ -83,7 +83,7 @@ def make_torrents(folder: Path):
         trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], 
         private=True, 
         source="RED", 
-        output=f"RED - {dropbox}\\Lance\\{folder.name}.torrent"
+        output= dropbox / "Lance" / f"RED - {folder.name}.torrent"
     )
 
 
