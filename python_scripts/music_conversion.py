@@ -17,7 +17,7 @@ logging.basicConfig(
 MP3_TIER = {
     "desc": "320kbps MP3",
     "quality_setting": "320k",
-    "suffix": " (MP3)",
+    "suffix": " [MP3]",
     "format": "mp3",
 }
 
@@ -76,7 +76,7 @@ def run_command(cmd, cwd=None):
 
     if result.returncode != 0:
         logging.error(f"Command:\n{' '.join(cmd)}")
-        logging.error({stderr})
+        logging.error(stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd, output=stdout, stderr=stderr)
 
     return stdout, stderr
@@ -111,7 +111,7 @@ def convert_to_mp3(file, tier):
 
 def process_tier(src, tier):
     dest = src.parent / f"{src.name}{tier['suffix']}"
-    logging.info(f"Converting {src.name} to {tier['desc']}")
+    logging.info(f"Converting {src.name} to {tier['desc']}.")
 
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
     rc = subprocess.run(
@@ -133,9 +133,10 @@ def process_tier(src, tier):
         end_char = "\n" if idx == len(flac_files) else ""
         print(f"\rProcessed {idx}/{len(flac_files)} files", flush=True, end=end_char)
 
+    logging.info("Conversion successful.")
 
 def process_flac_directory(src, fmt="all"):
-    logging.info(f"Processing FLAC directory: {src.stem}")
+    logging.info(f"Downsampling FLAC directory: {src.stem}")
 
     flac_files = list(src.rglob("*.flac"))
 
@@ -176,17 +177,17 @@ def process_sacd_directory(src, fmt="all"):
     output_dirs = []
 
     for iso in iso_files:
-        logging.info(f"Processing: {iso.name}")
+        logging.info(f"Converting to DFF: {iso.name}")
         output_dirs = convert_iso_to_dff(iso, src)
 
     for folder in output_dirs:
         dff_files = folder.rglob("*.dff")
         dff_folders = sorted(set(d.parent for d in dff_files))
 
-        for dff_folder in dff_folders:
-            dff_directory_conversion(dff_folder)
+    for idx, dff_folder in enumerate(dff_folders, start=1):
+        dff_directory_conversion(dff_folder, idx)
 
-        process_flac_directory(folder, fmt)
+    process_flac_directory(folder, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
@@ -203,19 +204,23 @@ def convert_iso_to_dff(iso_path, base_dir):
 
     for pattern, suffix, cmd in channel_configs:
         if re.search(pattern, probe_result):
-            out_dir = base_dir.parent / f"{base_dir.name} [{suffix}] [24-88.2]"
+            out_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
             out_dir.mkdir(exist_ok=True, parents=True)
 
-            logging.info(f"{iso_path.name} contains {suffix} sound")
+            logging.info(f"Found {suffix} sound")
             run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
             out_dirs.append(out_dir)
+            logging.info(f"{suffix} DFFs extracted for: {iso_path.name}")
 
     return out_dirs
 
 
-def dff_directory_conversion(dff_dir):
-    logging.info(f"Processing DFF directory: {dff_dir.stem}")
+def dff_directory_conversion(dff_dir, index):
+    dff_dir = dff_dir.rename(dff_dir.parent / f"Disc {index}")
+
+    logging.info(f"Converting DFF to FLAC - {dff_dir.name}")
+
     dff_files = list(dff_dir.rglob("*.dff"))
     dr = calculate_dynamic_range(dff_files)
 
@@ -246,23 +251,21 @@ def calculate_dynamic_range(dff_files):
 
 
 def process_dff(dff, dr):
-    orig = dff
-    dff = dff.rename(dff.with_name(dff.stem[:20] + dff.suffix))
     flac = dff.with_suffix(".flac")
 
     run_command(["ffmpeg", "-nostats", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
-                "-ar", "88200", "-af", f"volume={dr}", str(flac)])
-    temp = flac.with_name("temp_" + flac.name)
+                 "-ar", "88200", "-af", f"volume={dr}", str(flac)])
+
+    temp = dff.parent / f"temp_{flac.name}"
 
     run_command(["sox", str(flac), str(temp), "trim", "0.0065", "reverse", "silence",
-                "1", "0", "0%", "trim", "0.0065", "reverse", "pad", "0.0065", "0.2"])
+                 "1", "0", "0%", "trim", "0.0065", "reverse"])
 
     flac.unlink()
-
-    temp.rename(orig.with_suffix(".flac"))
     dff.unlink()
 
-    return temp
+    temp.rename(flac)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Audio processing tool")
