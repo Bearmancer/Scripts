@@ -3,15 +3,15 @@ function Propolis {
 }
 
 function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py convert $directory
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py $directory
 }
 
 function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py convert -f mp3 $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py -f mp3 $directory.FullName
 }
 
 function ConvertToFLAC([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py convert -f flac $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py -f flac $directory.FullName
 }
 
 function RenameFileRed([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
@@ -27,7 +27,7 @@ function ZipFiles([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location
 }
 
 function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py extract_sacd $directory.FullName
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py $directory.FullName
 }
 
 Set-Alias -Name rfr -Value renameFileRed
