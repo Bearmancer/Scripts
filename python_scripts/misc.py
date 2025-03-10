@@ -75,7 +75,7 @@ def make_torrents(folder: Path):
     trackers=['https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce'], 
     private=True, 
     source="OPS", 
-    output= dropbox / "Lance" / f"OPS - {folder.name}.torrent"
+    output= str(dropbox / "Lance" / f"OPS - {folder.name}.torrent")
     )
 
     create_torrent(
@@ -83,7 +83,7 @@ def make_torrents(folder: Path):
         trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"], 
         private=True, 
         source="RED", 
-        output= dropbox / "Lance" / f"RED - {folder.name}.torrent"
+        output= str(dropbox / "Lance" / f"RED - {folder.name}.torrent")
     )
 
 
