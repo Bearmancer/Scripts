@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import chardet
+from tqdm import tqdm
 from pathlib import Path
 from pathvalidate import sanitize_filename
 
@@ -17,36 +18,40 @@ logging.basicConfig(
 MP3_TIER = {
     "desc": "320kbps MP3",
     "quality_setting": "320k",
-    "suffix": " [MP3]",
+    "suffix": "[MP3]",
     "format": "mp3",
 }
 
 TIER_CONFIG = {
-    44100: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " [16-44.1]",
-             "format": "flac"}],
-    48000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " [16-48]",
-             "format": "flac"}],
-    88200: [{"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " [16-44.1]",
-             "format": "flac"}],
-    96000: [{"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " [16-48]",
-             "format": "flac"}],
+    44100: [
+        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": "[16-44.1]", "format": "flac"},
+    ],
+    48000: [
+        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": "[16-48]", "format": "flac"},
+    ],
+    88200: [
+        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": "[16-44.1]", "format": "flac"},
+    ],
+    96000: [
+        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": "[16-48]", "format": "flac"},
+    ],
     176400: [
-        {"desc": "24-bit/88.2kHz FLAC", "bit_depth": 24, "quality_setting": 88200, "suffix": " [24-88.2]",
-         "format": "flac"},
-        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": " [16-44.1]",
-         "format": "flac"},
+        {"desc": "24-bit/88.2kHz FLAC", "bit_depth": 24, "quality_setting": 88200, "suffix": "[24-88.2]", "format": "flac"},
+        {"desc": "16-bit/44.1kHz FLAC", "bit_depth": 16, "quality_setting": 44100, "suffix": "[16-44.1]", "format": "flac"},
     ],
     192000: [
-        {"desc": "24-bit/96kHz FLAC", "bit_depth": 24, "quality_setting": 96000, "suffix": " [24-96)",
-         "format": "flac"},
-        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": " [16-48]",
-         "format": "flac"},
+        {"desc": "24-bit/96kHz FLAC", "bit_depth": 24, "quality_setting": 96000, "suffix": "[24-96]", "format": "flac"},
+        {"desc": "16-bit/48kHz FLAC", "bit_depth": 16, "quality_setting": 48000, "suffix": "[16-48]", "format": "flac"},
     ],
 }
 
 
 @contextlib.contextmanager
 def directory_context(directory):
+    dir_name = sanitize_filename(directory.name)
+    if dir_name != directory.name:
+        directory = directory.rename(directory.parent / dir_name)
+
     rename_map = {
         p: p.with_name(s) for p in directory.rglob("*")
         if p.is_file() and (s := sanitize_filename(p.name)) != p.name
@@ -60,6 +65,9 @@ def directory_context(directory):
         for orig, new in rename_map.items():
             if new.exists() and not orig.exists():
                 new.rename(orig)
+
+        if dir_name != directory.parent / directory.name:
+            directory.rename(directory.parent / directory.name)
 
 
 def run_command(cmd, cwd=None):
@@ -83,37 +91,41 @@ def run_command(cmd, cwd=None):
 
 
 def get_metadata(file):
-    out = run_command(["sox", "--i", str(file)])[0]
-    extract = lambda key: int(re.search(f"{key}.*?(\d+)", out).group(1))
-    return extract("Precision"), extract("Sample Rate")
+    out = run_command([
+        "ffprobe", "-select_streams", "a:0",
+        "-show_entries", "stream=bits_per_raw_sample,sample_rate",
+        "-of", "default=nw=1", str(file)
+    ])[0]
+    extract = lambda key: int(re.search(f"{key}=(\\d+)", out).group(1))
+    return extract("bits_per_raw_sample"), extract("sample_rate")
 
 
-def convert_flac(file, tier):
-    tmp = file.with_name(f"temp_{file.name}")
-    cmd = ["sox", "-S", str(file), "-R", "-G", "-b", str(tier["bit_depth"]),
-           str(tmp), "rate", "-v", "-L", str(tier["quality_setting"])]
+def convert(file, tier):
+    if tier["format"] == "flac":
+        tmp = file.with_name(f"temp_{file.name}")
+        cmd = ["sox", "-S", str(file), "-R", "-G", "-b", str(tier["bit_depth"]),
+               str(tmp), "rate", "-v", "-L", str(tier["quality_setting"])]
 
-    if tier["bit_depth"] == 16:
-        cmd.append("dither")
+        if tier["bit_depth"] == 16:
+            cmd.append("dither")
 
-    run_command(cmd)
-    file.unlink()
-    tmp.rename(file)
+        run_command(cmd)
+        file.unlink()
+        tmp.rename(file)
 
-
-def convert_to_mp3(file, tier):
-    out_file = file.with_suffix(".mp3")
-
-    run_command(["ffmpeg", "-nostats", "-i", str(file), "-codec:a", "libmp3lame",
-                 "-b:a", tier["quality_setting"], str(out_file)])
-    file.unlink()
+    elif tier["format"] == "mp3":
+        out_file = file.with_suffix(".mp3")
+        run_command(["ffmpeg", "-nostats", "-i", str(file), "-codec:a", "libmp3lame",
+                     "-b:a", tier["quality_setting"], str(out_file)])
+        file.unlink()
 
 
 def process_tier(src, tier):
-    dest = src.parent / f"{src.name}{tier['suffix']}"
+    dest = src.parent / f"{src.name} {tier['suffix']}"
     logging.info(f"Converting {src.name} to {tier['desc']}.")
 
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
+
     rc = subprocess.run(
         ["robocopy", str(src), str(dest), "/S", "/XF", *exclusions],
         stdout=subprocess.DEVNULL
@@ -121,36 +133,24 @@ def process_tier(src, tier):
 
     if rc >= 8:
         raise RuntimeError(f"Robocopy failed with code {rc}")
-
     flac_files = list(dest.rglob("*.flac"))
 
-    for idx, f in enumerate(flac_files, start=1):
-        if tier["format"] == "flac":
-            convert_flac(f, tier)
-        else:
-            convert_to_mp3(f, tier)
-
-        end_char = "\n" if idx == len(flac_files) else ""
-        print(f"\rProcessed {idx}/{len(flac_files)} files", flush=True, end=end_char)
+    for f in tqdm(flac_files, desc=f"Converting {src.name} to {tier['desc']}"):
+        convert(f, tier)
 
     logging.info("Conversion successful.")
 
-def process_flac_directory(src, fmt="all"):
-    logging.info(f"Downsampling FLAC directory: {src.stem}")
 
+def process_flac_directory(src, fmt="all"):
+    logging.info(f"Processing FLAC directory: {src.stem}")
     flac_files = list(src.rglob("*.flac"))
 
     if not flac_files:
         logging.warning("No FLAC files found")
         return
 
-    bit_depths = []
-    sample_rates = []
-
-    for f in flac_files:
-        prec, rate = get_metadata(f)
-        bit_depths.append(prec)
-        sample_rates.append(rate)
+    bit_depths_and_rates = [get_metadata(f) for f in flac_files]
+    bit_depths, sample_rates = zip(*bit_depths_and_rates)
 
     bd, sr = min(bit_depths), min(sample_rates)
 
@@ -163,7 +163,7 @@ def process_flac_directory(src, fmt="all"):
     if fmt == "mp3":
         tiers = [MP3_TIER]
     elif fmt == "flac":
-        tiers = TIER_CONFIG[sr]
+        tiers = [t for t in TIER_CONFIG[sr]]
     else:
         tiers = TIER_CONFIG[sr] + [MP3_TIER]
 
@@ -173,21 +173,20 @@ def process_flac_directory(src, fmt="all"):
 
 def process_sacd_directory(src, fmt="all"):
     iso_files = list(src.rglob("*.iso"))
-
     output_dirs = []
 
     for iso in iso_files:
         logging.info(f"Converting to DFF: {iso.name}")
-        output_dirs = convert_iso_to_dff(iso, src)
+        output_dirs.extend(convert_iso_to_dff(iso, src))
 
     for folder in output_dirs:
         dff_files = folder.rglob("*.dff")
         dff_folders = sorted(set(d.parent for d in dff_files))
 
-    for idx, dff_folder in enumerate(dff_folders, start=1):
-        dff_directory_conversion(dff_folder, idx)
+        for idx, dff_folder in enumerate(dff_folders, 1):
+            dff_directory_conversion(dff_folder, idx)
 
-    process_flac_directory(folder, fmt)
+        process_flac_directory(folder, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
@@ -207,11 +206,10 @@ def convert_iso_to_dff(iso_path, base_dir):
             out_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
             out_dir.mkdir(exist_ok=True, parents=True)
 
-            logging.info(f"Found {suffix} sound")
             run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
             out_dirs.append(out_dir)
-            logging.info(f"{suffix} DFFs extracted for: {iso_path.name}")
+            logging.info(f"{suffix} DFFs successfully extracted.")
 
     return out_dirs
 
@@ -224,10 +222,8 @@ def dff_directory_conversion(dff_dir, index):
     dff_files = list(dff_dir.rglob("*.dff"))
     dr = calculate_dynamic_range(dff_files)
 
-    for i, dff in enumerate(dff_files, 1):
+    for dff in tqdm(dff_files, desc=f"Converting DFFs in {dff_dir.name}"):
         process_dff(dff, dr)
-        end_char = "\n" if i == len(dff_files) else ""
-        print(f"\r{i}/{len(dff_files)} DFF files converted to FLAC", flush=True, end=end_char)
 
     return dff_dir
 
@@ -240,7 +236,6 @@ def calculate_dynamic_range(dff_files):
             ["ffmpeg", "-nostats", "-i", str(dff), "-af", "volumedetect", "-f",
              "null", "-"])[1]
         match = re.search(r"max_volume: (-\d+\.?\d*) dB", result)
-
         if match:
             dr_values.append(float(match.group(1)))
 
@@ -251,46 +246,52 @@ def calculate_dynamic_range(dff_files):
 
 
 def process_dff(dff, dr):
-    flac = dff.with_suffix(".flac")
+    original = dff.stem
+    temp_dff = dff.rename(dff.parent / "a.dff")
+    flac = temp_dff.with_suffix(".flac")
 
-    run_command(["ffmpeg", "-nostats", "-i", str(dff), "-c:a", "flac", "-sample_fmt", "s32",
-                 "-ar", "88200", "-af", f"volume={dr}", str(flac)])
+    run_command([
+        "ffmpeg", "-nostats", "-i", str(temp_dff),
+        "-c:a", "flac", "-sample_fmt", "s32", "-ar", "88200",
+        "-af", f"volume={dr}", str(flac)
+    ])
 
     temp = dff.parent / f"temp_{flac.name}"
 
-    run_command(["sox", str(flac), str(temp), "trim", "0.0065", "reverse", "silence",
-                 "1", "0", "0%", "trim", "0.0065", "reverse"])
+    run_command([
+        "sox", str(flac), str(temp), "trim", "0.0065", "reverse",
+        "silence", "1", "0", "0%", "trim", "0.0065", "reverse"
+    ])
 
     flac.unlink()
-    dff.unlink()
-
-    temp.rename(flac)
+    temp_dff.unlink()
+    temp.rename(temp.parent / f"{original}.flac")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Audio processing tool")
 
-    parser.add_argument("cmd", choices=["extract_sacd", "convert"], help="Command to execute (extract_sacd or convert)")
-
-    parser.add_argument("-f", "--format", choices=["flac", "mp3", "all"], default="all", help="Output format (default: all)")
+    parser.add_argument("-f", "--format", choices=["flac", "mp3", "all"], default="all",
+                        help="Output format (default: all)")
     parser.add_argument("directory", type=Path, help="Directory to process")
 
     args = parser.parse_args()
     directory = Path(args.directory.resolve())
 
     if not directory.exists():
-        logging.error(f"Directory not found: {args.directory}")
+        logging.error(f"Directory not found: {directory}")
         sys.exit(1)
 
     with directory_context(directory):
-        try:
-            if args.cmd == "extract_sacd":
-                process_sacd_directory(directory, args.format)
-            elif args.cmd == "convert":
-                process_flac_directory(directory, args.format)
-        except Exception as e:
-            logging.error({e})
-            sys.exit(1)
+        flac_files = list(directory.rglob("*.flac"))
+        iso_files = list(directory.rglob("*.iso"))
+
+        if flac_files:
+            process_flac_directory(directory, args.format)
+        elif iso_files:
+            process_sacd_directory(directory, args.format)
+        else:
+            logging.warning("No FLAC or ISO files found in the directory")
 
     logging.info("Processing completed")
 
