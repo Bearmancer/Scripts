@@ -105,14 +105,29 @@ def convert(file, tier):
         tmp = file.with_name(f"temp_{file.name}")
         cmd = ["sox", "-S", str(file), "-R", "-G", "-b", str(tier["bit_depth"]),
                str(tmp), "rate", "-v", "-L", str(tier["quality_setting"])]
+def convert(file, tier):
+    if tier["format"] == "flac":
+        tmp = file.with_name(f"temp_{file.name}")
+        cmd = ["sox", "-S", str(file), "-R", "-G", "-b", str(tier["bit_depth"]),
+               str(tmp), "rate", "-v", "-L", str(tier["quality_setting"])]
 
+        if tier["bit_depth"] == 16:
+            cmd.append("dither")
         if tier["bit_depth"] == 16:
             cmd.append("dither")
 
         run_command(cmd)
         file.unlink()
         tmp.rename(file)
+        run_command(cmd)
+        file.unlink()
+        tmp.rename(file)
 
+    elif tier["format"] == "mp3":
+        out_file = file.with_suffix(".mp3")
+        run_command(["ffmpeg", "-nostats", "-i", str(file), "-codec:a", "libmp3lame",
+                     "-b:a", tier["quality_setting"], str(out_file)])
+        file.unlink()
     elif tier["format"] == "mp3":
         out_file = file.with_suffix(".mp3")
         run_command(["ffmpeg", "-nostats", "-i", str(file), "-codec:a", "libmp3lame",
@@ -125,6 +140,7 @@ def process_tier(src, tier):
     logging.info(f"Converting {src.name} to {tier['desc']}.")
 
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
+
 
     rc = subprocess.run(
         ["robocopy", str(src), str(dest), "/S", "/XF", *exclusions],
@@ -141,7 +157,9 @@ def process_tier(src, tier):
     logging.info("Conversion successful.")
 
 
+
 def process_flac_directory(src, fmt="all"):
+    logging.info(f"Processing FLAC directory: {src.stem}")
     logging.info(f"Processing FLAC directory: {src.stem}")
     flac_files = list(src.rglob("*.flac"))
 
@@ -164,6 +182,7 @@ def process_flac_directory(src, fmt="all"):
         tiers = [MP3_TIER]
     elif fmt == "flac":
         tiers = [t for t in TIER_CONFIG[sr]]
+        tiers = [t for t in TIER_CONFIG[sr]]
     else:
         tiers = TIER_CONFIG[sr] + [MP3_TIER]
 
@@ -178,6 +197,7 @@ def process_sacd_directory(src, fmt="all"):
     for iso in iso_files:
         logging.info(f"Converting to DFF: {iso.name}")
         output_dirs.extend(convert_iso_to_dff(iso, src))
+        output_dirs.extend(convert_iso_to_dff(iso, src))
 
     for folder in output_dirs:
         dff_files = folder.rglob("*.dff")
@@ -185,7 +205,10 @@ def process_sacd_directory(src, fmt="all"):
 
         for idx, dff_folder in enumerate(dff_folders, 1):
             dff_directory_conversion(dff_folder, idx)
+        for idx, dff_folder in enumerate(dff_folders, 1):
+            dff_directory_conversion(dff_folder, idx)
 
+        process_flac_directory(folder, fmt)
         process_flac_directory(folder, fmt)
 
 
@@ -280,6 +303,7 @@ def main():
 
     if not directory.exists():
         logging.error(f"Directory not found: {directory}")
+        logging.error(f"Directory not found: {directory}")
         sys.exit(1)
 
     with directory_context(directory):
@@ -298,3 +322,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
