@@ -25,7 +25,7 @@ def whisper_logic(file: Path, model: str, language: str):
 
     with open(subtitle_file, 'rb') as f:
         raw_text = f.read()
-        encoding = chardet.detect(raw_text)['encoding']
+        encoding = chardet.detect(raw_text)['encoding'] or 'utf-16'
         text = raw_text.decode(encoding)
 
     new_text = remove_subtitle_duplication(text)

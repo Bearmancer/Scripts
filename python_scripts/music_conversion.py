@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import chardet
+import time
 from tqdm import tqdm
 from pathlib import Path
 from pathvalidate import sanitize_filename
@@ -101,6 +102,20 @@ def run_command(cmd, cwd=None):
             return data.decode(enc, errors="replace")
 
     stdout, stderr = map(decode, (result.stdout, result.stderr))
+
+    if result.returncode == 3221225477:
+        input_file = next((arg for arg in cmd if arg.endswith('.flac')), None)
+        if input_file:
+            tasklist_cmd = ['tasklist', '/fi', f'status eq running', '/fo', 'csv', '/nh']
+            tasklist_output = subprocess.check_output(tasklist_cmd, text=True)
+
+            print(f"File access error on: {input_file}")
+            print("Running processes:")
+            for line in tasklist_output.splitlines():
+                if '.exe' in line.lower():
+                    print(f"- {line.split(',')[0].strip(chr(34))}")
+
+        raise subprocess.CalledProcessError(result.returncode, cmd, output=stdout, stderr=stderr)
 
     if result.returncode != 0:
         logging.error(f"Command:\n{' '.join(cmd)}")
@@ -231,7 +246,7 @@ def convert_iso_to_dff(iso_path, base_dir):
             out_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
             out_dir.mkdir(exist_ok=True, parents=True)
 
-            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
+            # run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
 
             out_dirs.append(out_dir)
             logging.info(f"{suffix} DFFs successfully extracted.")
@@ -271,26 +286,60 @@ def calculate_dynamic_range(dff_files):
 
 
 def process_dff(dff, dr):
-    original = dff.stem
-    temp_dff = dff.rename(dff.parent / "a.dff")
-    flac = temp_dff.with_suffix(".flac")
+    temp_dff = flac = temp = None
+    max_retries, retry_delay = 99, 15
+    success = False
 
-    run_command([
-        "ffmpeg", "-nostats", "-i", str(temp_dff),
-        "-c:a", "flac", "-sample_fmt", "s32", "-ar", "88200",
-        "-af", f"volume={dr}", str(flac)
-    ])
+    try:
+        original = dff.stem
+        temp_dff = dff.rename(dff.parent / "a.dff")
+        flac = temp_dff.with_suffix(".flac")
 
-    temp = dff.parent / f"temp_{flac.name}"
+        run_command([
+            "ffmpeg", "-y", "-nostats", "-i", str(temp_dff),
+            "-c:a", "flac", "-sample_fmt", "s32", "-ar", "88200",
+            "-af", f"volume={dr}", str(flac)
+        ])
 
-    run_command([
-        "sox", "-S", "-G", str(flac), str(temp), "trim", "0.0065", "reverse",
-        "silence", "1", "0", "0%", "trim", "0.0065", "reverse"
-    ])
+        temp = dff.parent / f"temp_{flac.name}"
 
-    flac.unlink()
-    temp_dff.unlink()
-    temp.rename(temp.parent / f"{original}.flac")
+        if temp.exists():
+            temp.unlink()
+
+        for attempt in range(max_retries):
+            try:
+                run_command([
+                    "sox", "--buffer", "131072", "-S", "-G",
+                    str(flac), str(temp),
+                    "trim", "0.0065", "reverse", "silence", "1", "0", "0%",
+                    "trim", "0.0065", "reverse"
+                ])
+                success = True
+                break
+            except subprocess.CalledProcessError:
+                if attempt < max_retries - 1:
+                    tqdm.write(f"Retrying... ({attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                else:
+                    raise
+
+    except Exception:
+        if temp_dff and temp_dff.exists():
+            temp_dff.rename(dff)
+        for f in [flac, temp]:
+            if f and f.exists():
+                f.unlink()
+        raise
+
+    finally:
+        if flac.exists():
+            flac.unlink()
+        if temp.exists():
+            temp.rename(temp.parent / f"{original}.flac")
+        if success and temp_dff.exists():
+            temp_dff.unlink()
+        elif temp_dff.exists():
+            temp_dff.rename(dff)
 
 
 def main():
