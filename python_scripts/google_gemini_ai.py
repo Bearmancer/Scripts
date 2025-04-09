@@ -3,8 +3,10 @@ import langid
 import os
 import time
 import deepl
+import time
 from pathlib import Path
 from argparse import ArgumentParser
+from tqdm import tqdm
 import google.generativeai as genai
 
 os.environ['GRPC_VERBOSITY'] = 'NONE'
@@ -31,11 +33,11 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_s
 
     chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]  
 
-    for i, chunk_lines in enumerate(chunks, 1):
-        print(f"Processing chunk {i} of {len(chunks)}...")
-        
+    for i, chunk_lines in enumerate(tqdm(chunks, desc="Processing chunks", unit="chunk"), 1):
+        response = None
+
         while not (response := process_chunk(chunk_lines, instructions, model, match_lines)):
-            print(f"Response was None. Retrying chunk {i}...")
+            tqdm.write(f"Response was None. Retrying chunk {i}...")
             time.sleep(60)
 
         time.sleep(4)

@@ -2,8 +2,8 @@ function Propolis {
     C:\Users\Lance\AppData\Local\Personal\Propolis\propolis_windows.exe --no-specs .
 }
 
-function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py $directory
+function ConvertMusic([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location)), [string]$format = "all") {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py $directory -f $format
 }
 
 function ConvertToMP3([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {

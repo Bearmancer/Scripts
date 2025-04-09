@@ -21,6 +21,8 @@ def whisper_logic(file: Path, model: str, language: str):
         print(f"Subtitle for {file.stem} already exists. Skipping...")
         return
 
+    print(f"Now transcribing: {file.name}")
+
     subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file.absolute())])
 
     with open(subtitle_file, 'rb') as f:
@@ -33,12 +35,13 @@ def whisper_logic(file: Path, model: str, language: str):
     with open(subtitle_file, 'w', encoding=encoding) as f:
         f.write(new_text)
 
-    if language == "Japanese":
+    if language != "English":
         gemini_cli_file = process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
 
         if gemini_cli_file.exists():
             gemini_cli_file.replace(subtitle_file)
 
+    print(f"Subtitles created for {file.name}.\n---------------------")
 
 def whisp(file: Path):
     whisper_logic(file, "small.en", "English")

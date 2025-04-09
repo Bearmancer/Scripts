@@ -193,6 +193,7 @@ def calculate_mb_per_minute(file: Path):
 
 def calculate_mb_for_directory(video_files: List[Path]):
     data = []
+    
     for file in video_files:
         mb_per_minute, size, duration = calculate_mb_per_minute(file)
         data.append((file.name, mb_per_minute, size, duration))

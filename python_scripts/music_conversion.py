@@ -19,7 +19,7 @@ logging.basicConfig(
 MP3_TIER = {
     "desc": "320kbps MP3",
     "quality_setting": "320k",
-    "suffix": "[MP3]",
+    "suffix": "MP3",
     "format": "mp3",
 }
 
@@ -103,20 +103,6 @@ def run_command(cmd, cwd=None):
 
     stdout, stderr = map(decode, (result.stdout, result.stderr))
 
-    if result.returncode == 3221225477:
-        input_file = next((arg for arg in cmd if arg.endswith('.flac')), None)
-        if input_file:
-            tasklist_cmd = ['tasklist', '/fi', f'status eq running', '/fo', 'csv', '/nh']
-            tasklist_output = subprocess.check_output(tasklist_cmd, text=True)
-
-            print(f"File access error on: {input_file}")
-            print("Running processes:")
-            for line in tasklist_output.splitlines():
-                if '.exe' in line.lower():
-                    print(f"- {line.split(',')[0].strip(chr(34))}")
-
-        raise subprocess.CalledProcessError(result.returncode, cmd, output=stdout, stderr=stderr)
-
     if result.returncode != 0:
         logging.error(f"Command:\n{' '.join(cmd)}")
         logging.error(stderr)
@@ -137,16 +123,26 @@ def get_metadata(file):
 
 def convert(file, tier):
     if tier["format"] == "flac":
-        tmp = file.with_name(f"temp_{file.name}")
-        cmd = ["sox", "-S", str(file), "-R", "-G", "-b", str(tier["bit_depth"]),
-               str(tmp), "rate", "-v", "-L", str(tier["quality_setting"])]
+        temp_a = file.with_name("a.flac")
+        temp_b = file.with_name("b.flac")
 
-        if tier["bit_depth"] == 16:
-            cmd.append("dither")
+        try:
+            file.rename(temp_a)
+            cmd = ["sox", "-S", str(temp_a), "-R", "-G", "-b", str(tier["bit_depth"]),
+                   str(temp_b), "rate", "-v", "-L", str(tier["quality_setting"])]
 
-        run_command(cmd)
-        file.unlink()
-        tmp.rename(file)
+            if tier["bit_depth"] == 16:
+                cmd.append("dither")
+
+            run_command(cmd)
+            temp_a.unlink()
+            temp_b.rename(file)
+
+        finally:
+            if temp_a.exists():
+                temp_a.rename(file)
+            if temp_b.exists():
+                temp_b.unlink()
 
     elif tier["format"] == "mp3":
         out_file = file.with_suffix(".mp3")
@@ -215,7 +211,7 @@ def process_sacd_directory(src, fmt="all"):
         logging.info(f"Converting to DFF: {iso.name}")
         output_dirs.extend(convert_iso_to_dff(iso, src))
 
-    print(f"All ISOs converted to DFF.\n-------------------\n")
+    print(f"All ISOs converted to DFF.\n__________________\n")
 
     for folder in output_dirs:
         dff_files = folder.rglob("*.dff")
@@ -224,9 +220,9 @@ def process_sacd_directory(src, fmt="all"):
         for idx, dff_folder in enumerate(dff_folders, 1):
             dff_directory_conversion(dff_folder, idx)
 
-        print(f"All DFFs converted to FLAC.\n-------------------\n")
+        print(f"All DFFs converted to FLAC.\n__________________\n")
 
-        process_flac_directory(folder, fmt)
+    process_flac_directory(folder, fmt)
 
 
 def convert_iso_to_dff(iso_path, base_dir):
@@ -240,20 +236,27 @@ def convert_iso_to_dff(iso_path, base_dir):
     ]
 
     out_dirs = []
+    iso_files = sorted(base_dir.rglob("*.iso"))
+    disc_number = iso_files.index(iso_path) + 1
 
     for pattern, suffix, cmd in channel_configs:
         if re.search(pattern, probe_result):
-            out_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
-            out_dir.mkdir(exist_ok=True, parents=True)
+            channel_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
+            channel_dir.mkdir(exist_ok=True, parents=True)
 
-            # run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(out_dir))
+            before_dirs = set(d for d in channel_dir.iterdir() if d.is_dir())
 
-            out_dirs.append(out_dir)
-            logging.info(f"{suffix} DFFs successfully extracted.")
+            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir))
+
+            after_dirs = set(d for d in channel_dir.iterdir() if d.is_dir())
+            new_dir = next(iter(after_dirs - before_dirs))
+
+            disc_dir = new_dir.rename(channel_dir / f"Disc {disc_number}")
+
+            out_dirs.append(disc_dir)
+            logging.info(f"{suffix} DFFs successfully extracted to {disc_dir.name}")
 
     return out_dirs
-
-
 def dff_directory_conversion(dff_dir, index):
     dff_dir = dff_dir.rename(dff_dir.parent / f"Disc {index}")
 
@@ -289,9 +292,9 @@ def process_dff(dff, dr):
     temp_dff = flac = temp = None
     max_retries, retry_delay = 99, 15
     success = False
+    original = dff.stem
 
     try:
-        original = dff.stem
         temp_dff = dff.rename(dff.parent / "a.dff")
         flac = temp_dff.with_suffix(".flac")
 
