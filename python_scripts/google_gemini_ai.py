@@ -3,7 +3,7 @@ import langid
 import os
 import time
 import deepl
-import time
+import re
 from pathlib import Path
 from argparse import ArgumentParser
 from tqdm import tqdm
@@ -44,8 +44,9 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_s
         
         output.append('\n'.join(response))
 
-    output_file.write_text('\n'.join(output), encoding="utf-8")
-    print(f"Successfully translated: {input_file.name}\n--------------------")
+    text = re.sub(r'^(\d+)\n(0\d.*)\n(.*)', r'\1\n\2\n\3\n', '\n'.join(output), flags=re.MULTILINE)
+    output_file.write_text(text, encoding="utf-8")
+    print(f"Successfully translated: {input_file.name}")
 
     time.sleep(10)
 

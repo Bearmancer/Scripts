@@ -1,7 +1,7 @@
 import ffmpeg
 import pyperclip
 import subprocess
-import sys
+import argparse
 from image_extraction import extract_images
 from operator import itemgetter
 from pathlib import Path
@@ -56,7 +56,7 @@ def batch_compression(path: Path):
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 
-def remux_disc(path: Path):
+def remux_disc(path: Path, get_mediainfo: bool = True):
     remuxable_files = [
         f for f in path.rglob('*')
         if f.name in ('VIDEO_TS.IFO', 'index.bdmv') and 'BACKUP' not in f.parts
@@ -67,13 +67,16 @@ def remux_disc(path: Path):
 
     for file in remuxable_files:
         print(f"Converting file: {file.name}")
-        result = convert_disc_to_mkv(file, path)
+        result = convert_disc_to_mkv(file, file.parent)
 
         if result.returncode == 0:
-            print(f"File successfully converted.`n----------------")
-            for mkv_file in path.glob("*.mkv"):
-                get_mediainfo(mkv_file)
-                extract_images(mkv_file)
+            print(f"Successfully converted: {file}.")
+            
+            if get_mediainfo:
+                for mkv_file in path.glob("*.mkv"):
+                    get_mediainfo(mkv_file)
+                    extract_images(mkv_file)
+        
         else:
             return print(f"Could not convert the file. Error: {result.stderr.strip()}")
 
@@ -214,38 +217,32 @@ def calculate_mb_for_directory(video_files: List[Path]):
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: script.py <Method> <FilePath or FolderPath>")
-        exit(1)
+    parser = argparse.ArgumentParser(description="Video processing tool.")
+    parser.add_argument("method", help=("Methods: RemuxDisc, ExtractChapters, BatchCompression, "
+                                        "ExtractAudioCommentary, PrintVideoResolution, "
+                                        "CalculateMBPerMinute, CreateImages, GetMediaInfo"))
+    parser.add_argument("path", type=Path, help="File or folder path to process.")
+    parser.add_argument("--get-mediainfo", action="store_true", help="Flag for MediaInfo in RemuxDisc")
     
-    method, path = sys.argv[1], Path(sys.argv[2])
+    args = parser.parse_args()
 
-    if not path.exists():
-        print("Invalid path specified.")
-        exit(1)
-
-    video_files = [path] if path.is_file() else [file for file in path.rglob("*") if file.suffix.lower() in VIDEO_EXTENSIONS]
-
-    if method == "RemuxDisc":
-        remux_disc(path)
-        exit(0)
+    video_files = lambda p: [p] if p.is_file() else [f for f in p.rglob("*") if f.suffix.lower() in VIDEO_EXTENSIONS]
 
     methods = {
-        "ExtractChapters": extract_chapters,
-        "BatchCompression": batch_compression,
-        "ExtractAudioCommentary": extract_audio_commentary,
-        "PrintVideoResolution": print_video_resolution,
-        "CalculateMBPerMinute": calculate_mb_for_directory,
-        "CreateImages": extract_images,
-        "GetMediaInfo": get_mediainfo
+        "RemuxDisc": lambda: remux_disc(args.path, args.get_mediainfo),
+        "BatchCompression": lambda: batch_compression(args.path),
+        "ExtractChapters": lambda: extract_chapters(video_files(args.path)),
+        "ExtractAudioCommentary": lambda: extract_audio_commentary(video_files(args.path)),
+        "PrintVideoResolution": lambda: print_video_resolution(video_files(args.path)),
+        "CalculateMBPerMinute": lambda: calculate_mb_for_directory(video_files(args.path)),
+        "CreateImages": lambda: [extract_images(f) for f in video_files(args.path)],
+        "GetMediaInfo": lambda: [get_mediainfo(f) for f in video_files(args.path)]
     }
 
-    if method not in methods:
-        print("Invalid method specified.")
-        exit(1)
+    func = methods.get(args.method)
 
-    for file in video_files:
-        methods[method](file)
+    func() if func else print(f"Method '{args.method}' not recognized.")
+
 
 if __name__ == "__main__":
     main()
