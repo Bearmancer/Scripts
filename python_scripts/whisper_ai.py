@@ -7,7 +7,7 @@ from pathlib import Path
 from docx import Document
 from google_gemini_ai import process_file
 
-FILE_EXTENSIONS = ['.mkv', '.mp4', '.mp3', '.flac', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
+FILE_EXTENSIONS = ['.mkv', '.mp4', '.flac', '.wav', '.mp3', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
 warnings.filterwarnings('ignore')
 
@@ -25,23 +25,23 @@ def whisper_logic(file: Path, model: str, language: str):
 
     subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file.absolute())])
 
-    with open(subtitle_file, 'rb') as f:
-        raw_text = f.read()
-        encoding = chardet.detect(raw_text)['encoding'] or 'utf-16'
-        text = raw_text.decode(encoding)
-
-    new_text = remove_subtitle_duplication(text)
-
-    with open(subtitle_file, 'w', encoding=encoding) as f:
-        f.write(new_text)
-
     if language != "English":
+        with open(subtitle_file, 'rb') as f:
+            raw_text = f.read()
+            encoding = chardet.detect(raw_text)['encoding'] or 'utf-16'
+            text = raw_text.decode(encoding)
+
+        new_text = remove_subtitle_duplication(text)
+
+        with open(subtitle_file, 'w', encoding=encoding) as f:
+            f.write(new_text)
+
         gemini_cli_file = process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
 
         if gemini_cli_file.exists():
             gemini_cli_file.replace(subtitle_file)
 
-    print(f"Subtitles created for {file.name}.\n---------------------")
+    print(f"Subtitles created: {file.name}.\n---------------------")
 
 def whisp(file: Path):
     whisper_logic(file, "small.en", "English")
@@ -106,6 +106,7 @@ def word_to_srt(input_file: Path):
     
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
+        
     print(f"Output saved to '{output_file}'")
 
 

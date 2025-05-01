@@ -6,11 +6,11 @@ function Whisp([System.IO.FileInfo]$file) {
     py "C:\Users\Lance\Documents\Powershell\python_scripts\whisper_ai.py" whisp $file.FullName
 }
 
-function WhisperPath([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+function WhisperPath([System.IO.DirectoryInfo]$directory = $(Get-Item .)) {
     py "C:\Users\Lance\Documents\Powershell\python_scripts\whisper_ai.py" whisper_path $directory.FullName
 }
 
-function WhisperPathRecursive([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+function WhisperPathRecursive([System.IO.DirectoryInfo]$directory = $(Get-Item .)) {
     py "C:\Users\Lance\Documents\Powershell\python_scripts\whisper_ai.py" whisper_path_recursive $directory.FullName
 }
 
@@ -18,7 +18,7 @@ function WhisperJapanese([System.IO.FileInfo]$file) {
     py "C:\Users\Lance\Documents\Powershell\python_scripts\whisper_ai.py" whisper_japanese $file.FullName
 }
 
-function WhisperPathJapanese([System.IO.DirectoryInfo]$directory = $(Get-Item (Get-Location))) {
+function WhisperPathJapanese([System.IO.DirectoryInfo]$directory = $(Get-Item .)) {
     py "C:\Users\Lance\Documents\Powershell\python_scripts\whisper_ai.py" whisper_path_japanese $directory.FullName
 }
 
