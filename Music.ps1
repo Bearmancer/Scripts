@@ -22,8 +22,8 @@ function GetEmbeddedImageSize([System.IO.DirectoryInfo]$directory = $(Get-Item .
     py C:\Users\Lance\Documents\Powershell\python_scripts\music_tools.py -c calculate_image_size -d $directory.FullName
 }
 
-function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item .)) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py $directory.FullName
+function SACDExtract([System.IO.DirectoryInfo]$directory = $(Get-Item .), [string]$format = "all") {
+    py C:\Users\Lance\Documents\Powershell\python_scripts\music_conversion.py -f $format $directory
 }
 
 Set-Alias -Name rfr -Value RenameFileRed
