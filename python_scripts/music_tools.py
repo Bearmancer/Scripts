@@ -23,11 +23,11 @@ def rename_file_red(path: Path):
             file.rename(new_file_path)
             new_files_list.append(new_file_path)
 
-            print(f"Old name: '{file}'\nNew name: '{new_file_path}'\n-----------------------\n")
+            print(f"Old name: '{file}'\nNew name: '{new_file_path}'\n-----------------------")
 
     if new_files_list:
         new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
-        output = f"Old file names of {path}:\n\n{chr(10).join(map(str, old_files_list))}\n\n-----------------------\n\nNew File Names of {path}:\n\n{new_file_names}\n"
+        output = f"Old file names of {path}:\n\n{chr(10).join(map(str, old_files_list))}\n\n-----------------------\n\nNew File Names of {path}:\n\n{new_file_names}"
 
         print(f"Files have been renamed for {path}.\n-----------------------\n")
         pyperclip.copy(new_file_names)
@@ -69,7 +69,13 @@ def main():
     parser.add_argument('-d', '--directory', type=Path, help='Directory to process.')
     args = parser.parse_args()
 
-    {'calculate_image_size': calculate_image_size, 'rfr': rename_file_red}[args.command](args.directory)
+    if args.command == 'calculate_image_size':
+        calculate_image_size(args.directory)
+    elif args.command == 'rfr':
+        rename_file_red(args.directory)
+    else:
+        print("Error: Invalid command provided.")
+        exit(1)
 
 
 if __name__ == "__main__":
