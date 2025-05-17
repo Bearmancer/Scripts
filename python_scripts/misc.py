@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from py3createtorrent import create_torrent
@@ -11,6 +12,24 @@ def log_to_file(message: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}: {message}\n")
+
+
+def run_command(cmd, cwd=None):
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        cwd=cwd,
+    )
+
+    result, error = process.communicate()
+
+    if process.returncode != 0:
+        raise Exception(f"Command: {cmd}.\nError: {e}")
+
+    return str(result), str(error)
 
 
 def get_folder_size(path: Path):
@@ -97,17 +116,18 @@ def main():
 
     args = parser.parse_args()
 
+    directory = args.directory
+
     if args.command == 'list_dir':
-        list_directories(args.directory, args.sort_order)
+        list_directories(directory, args.sort_order)
     elif args.command == 'list_files_and_dirs':
-        list_files_and_directories(args.directory, args.sort_order == '1')
+        list_files_and_directories(directory, args.sort_order == '1')
     elif args.command == 'make_torrents':
         if args.subdirs:
-            for entry in args.directory.iterdir():
-                if entry.is_dir():
-                    make_torrents(entry)
+            for entry in (e for e in directory.iterdir() if e.is_dir()):
+                make_torrents(entry)
         else:
-            make_torrents(args.directory)
+            make_torrents(directory)
 
 if __name__ == "__main__":
     main()
