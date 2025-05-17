@@ -4,8 +4,8 @@ import subprocess
 import warnings
 from argparse import ArgumentParser
 from pathlib import Path
-from docx import Document
 from google_gemini_ai import process_file
+from docx import Document
 
 FILE_EXTENSIONS = ['.mkv', '.mp4', '.flac', '.wav', '.mp3', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
@@ -48,15 +48,13 @@ def whisp(file: Path):
 
 
 def whisper_path(directory: Path):
-    for file in directory.glob('*'):
-        if file.is_file():
-            whisp(file)
+    for file in (f for f in directory.glob('*') if f.is_file()):
+        whisp(file)
 
 
 def whisper_path_recursive(directory: Path):
-    for subdir in directory.rglob('*'):
-        if subdir.is_dir():
-            whisper_path(subdir)
+    for subdir in (d for d in directory.rglob('*') if d.is_dir()):
+        whisper_path(subdir)
     
     whisper_path(directory)
 
@@ -66,9 +64,8 @@ def whisper_japanese(file: Path):
 
 
 def whisper_path_japanese(directory: Path):
-    for file in directory.glob('*'):
-        if file.is_file():
-            whisper_japanese(file)
+    for file in (f for f in directory.glob('*') if f.is_file()):
+        whisper_japanese(file)
 
 
 def remove_subtitle_duplication(input_text: str): 

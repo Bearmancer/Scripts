@@ -5,12 +5,12 @@ import argparse
 from image_extraction import extract_images
 from operator import itemgetter
 from pathlib import Path
-from typing import List
+from misc import run_command
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
 
 
-def extract_chapters(video_files: List[Path]):
+def extract_chapters(video_files):
     for video_file in video_files:
         try:
             probe = ffmpeg.probe(str(video_file), show_chapters=None)
@@ -56,29 +56,25 @@ def batch_compression(path: Path):
             print(f"Failed to convert {file}: {result.stderr.strip()}")
 
 
-def remux_disc(path: Path, get_mediainfo: bool = True):
+def remux_disc(path: Path, fetch_mediainfo: bool = True):
     remuxable_files = [
         f for f in path.rglob('*')
         if f.name in ('VIDEO_TS.IFO', 'index.bdmv') and 'BACKUP' not in f.parts
     ]
 
     if not remuxable_files:
-        return print(f"No remuxable files found in {path}.")
+        raise FileNotFoundError(f"No remuxable files found in {path}.")
 
     for file in remuxable_files:
         print(f"Converting file: {file.name}")
-        result = convert_disc_to_mkv(file, file.parent)
+        convert_disc_to_mkv(file, file.parent)
 
-        if result.returncode == 0:
-            print(f"Successfully converted: {file}.")
-            
-            if get_mediainfo:
-                for mkv_file in path.glob("*.mkv"):
-                    get_mediainfo(mkv_file)
-                    extract_images(mkv_file)
-        
-        else:
-            return print(f"Could not convert the file. Error: {result.stderr.strip()}")
+        print(f"Successfully converted: {file}.")
+
+        if fetch_mediainfo:
+            for mkv_file in path.glob("*.mkv"):
+                get_mediainfo(mkv_file)
+                extract_images(mkv_file)
 
 
 def convert_disc_to_mkv(file: Path, dvd_folder: Path):
@@ -89,7 +85,7 @@ def convert_disc_to_mkv(file: Path, dvd_folder: Path):
         f"file:{file}", "all", str(dvd_folder), "--minlength=180"
     ]
 
-    return subprocess.run(makemkv_command, capture_output=True, text=True)
+    run_command(makemkv_command, dvd_folder)
 
 
 def get_mediainfo(video_path: Path):
@@ -110,7 +106,7 @@ def get_mediainfo(video_path: Path):
     print("MediaInfo successfully created.")
 
 
-def extract_audio_commentary(video_files: List[Path]):
+def extract_audio_commentary(video_files):
     for file in video_files:
         try:
             probe = ffmpeg.probe(str(file))
@@ -137,7 +133,7 @@ def extract_audio_commentary(video_files: List[Path]):
         print(flac_file.name)
 
 
-def print_video_resolution(video_files: List[Path]):
+def print_video_resolution(video_files):
     files_1920_1080 = []
     files_below_1920_1080 = []
     files_unresolved_resolution = []
@@ -194,7 +190,7 @@ def calculate_mb_per_minute(file: Path):
         return 0, 0, 0
 
 
-def calculate_mb_for_directory(video_files: List[Path]):
+def calculate_mb_for_directory(video_files):
     data = []
     
     for file in video_files:
@@ -223,26 +219,32 @@ def main():
                                         "CalculateMBPerMinute, CreateImages, GetMediaInfo"))
     parser.add_argument("path", type=Path, help="File or folder path to process.")
     parser.add_argument("--get-mediainfo", action="store_true", help="Flag for MediaInfo in RemuxDisc")
-    
+
     args = parser.parse_args()
 
-    video_files = lambda p: [p] if p.is_file() else [f for f in p.rglob("*") if f.suffix.lower() in VIDEO_EXTENSIONS]
+    method = args.method
+    path = args.path
+    video_files = [path] if path.is_file() else [f for f in path.rglob("*") if f.suffix.lower() in VIDEO_EXTENSIONS]
 
-    methods = {
-        "RemuxDisc": lambda: remux_disc(args.path, args.get_mediainfo),
-        "BatchCompression": lambda: batch_compression(args.path),
-        "ExtractChapters": lambda: extract_chapters(video_files(args.path)),
-        "ExtractAudioCommentary": lambda: extract_audio_commentary(video_files(args.path)),
-        "PrintVideoResolution": lambda: print_video_resolution(video_files(args.path)),
-        "CalculateMBPerMinute": lambda: calculate_mb_for_directory(video_files(args.path)),
-        "CreateImages": lambda: [extract_images(f) for f in video_files(args.path)],
-        "GetMediaInfo": lambda: [get_mediainfo(f) for f in video_files(args.path)]
-    }
-
-    func = methods.get(args.method)
-
-    func() if func else print(f"Method '{args.method}' not recognized.")
-
+    match method:
+        case "RemuxDisc":
+            remux_disc(path, args.get_mediainfo)
+        case "BatchCompression":
+            batch_compression(path)
+        case "ExtractChapters":
+            extract_chapters(video_files)
+        case "ExtractAudioCommentary":
+            extract_audio_commentary(video_files)
+        case "PrintVideoResolution":
+            print_video_resolution(video_files)
+        case "CalculateMBPerMinute":
+            calculate_mb_for_directory(video_files)
+        case "CreateImages":
+            [extract_images(f) for f in video_files]
+        case "GetMediaInfo":
+            [get_mediainfo(f) for f in video_files]
+        case _:
+            print(f"Method '{method}' not recognized.")
 
 if __name__ == "__main__":
     main()
