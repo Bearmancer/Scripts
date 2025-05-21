@@ -49,7 +49,7 @@ def prepare_directory(directory: Path):
     return directory
 
 
-def progess_indicator(step: int, message: str):
+def progress_indicator(step: int, message: str):
     core = f"STEP {step}/3: {message}"
     terminal_width = os.get_terminal_size().columns
     border = '=' * terminal_width
@@ -62,11 +62,12 @@ def progess_indicator(step: int, message: str):
 
 ### -------------- SACD FUNCTIONS ------------- ###
 
+
 def process_sacd_directory(src: Path, fmt="all"):
     iso_files = list(src.rglob("*.iso"))
     output_dirs = []
 
-    progess_indicator(1, "Converting all ISOs → DFF + CUE sheets")
+    progress_indicator(1, "Converting all ISOs → DFF + CUE sheets")
 
     for disc_number, iso in enumerate(iso_files, 1):
         dirs = converto_iso_to_dff_and_cue(iso, src, disc_number)
@@ -76,7 +77,7 @@ def process_sacd_directory(src: Path, fmt="all"):
 
     parent_folders = set(folder.parent for folder, _ in output_dirs)
 
-    progess_indicator(2, "CONVERTING DFF + CUE sheet -> FLAC")
+    progress_indicator(2, "CONVERTING DFF + CUE sheet -> FLAC")
 
     for folder, _ in output_dirs:
         dff_directory_conversion(folder)
@@ -86,7 +87,7 @@ def process_sacd_directory(src: Path, fmt="all"):
     if fmt == "24-bit":
         return
 
-    progess_indicator(3, "Downsampling FLAC to 16-bit.")
+    progress_indicator(3, "Downsampling FLAC to 16-bit.")
 
     for parent_folder in parent_folders:
         process_flac_directory(parent_folder, fmt)
