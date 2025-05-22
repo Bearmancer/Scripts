@@ -96,8 +96,8 @@ def word_to_srt(input_file: Path):
     doc = Document(str(input_file))
     text = '\n'.join([para.text for para in doc.paragraphs])
 
-    text = re.sub('(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
-    text = re.sub('(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub(r'(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub(r'(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)', r'\1\n\2\3', text, flags=re.MULTILINE)
 
     output_file = f'{str(input_file)[:-9]} Translated.srt'
     

@@ -8,6 +8,8 @@ import os
 import argparse
 from pathvalidate import sanitize_filename
 from deflacue.deflacue import CueParser
+from tqdm import tqdm
+
 
 @dataclass
 class TrackInfo:
@@ -45,7 +47,7 @@ def extract_track_data(cue_data):
         track_info = TrackInfo(
             file=source_file,
             parent=str(Path(source_file).parent),
-            title=sanitize_filename(track.title),
+            title=track.title,
             track_num=track.num,
             start_sec=start_time_sec,
             metadata=metadata
@@ -73,16 +75,16 @@ def calculate_track_durations(tracks):
     return tracks
 
 
-def process_tracks(tracks, cue_directory, volume_adjustment=0.0):
-    print("\nExtracting audio tracks:")
+def process_tracks(tracks, cue_file, volume_adjustment=0.0):
+    print(f"\nConverting {cue_file.name} to FLAC:")
+
     track_count = len(tracks)
+    cue_directory = cue_file.parent
 
-    for index, track in enumerate(tracks, 1):
+    for index, track in tqdm(enumerate(tracks, 1), total=track_count, desc=f"Converting to FLAC"):
         track_number = str(track.track_num).rjust(2, '0')
-        output_filename = f"{track_number}. {track.title}.flac"
+        output_filename = f"{track_number}. {sanitize_filename(track.title)}.flac"
         output_path = cue_directory / output_filename
-
-        logging.info(f"Track {index}/{track_count} - {output_filename}")
 
         metadata_mappings = {
             'title': track.title,
@@ -112,23 +114,23 @@ def process_tracks(tracks, cue_directory, volume_adjustment=0.0):
             .run()
         )
 
-    logging.info("Extraction completed successfully.\n----------------------")
 
+def process_cue_file(cue_file, volume_adjustment=0.0):
+    if not cue_file.exists():
+        raise FileNotFoundError(f"CUE file not found: {cue_file}")
 
-def process_cue_file(cuefile_path, volume_adjustment=0.0):
-    cuefile_path = Path(cuefile_path).absolute()
-    cue_directory = cuefile_path.parent
-
-    logging.info(f"Processing: {cuefile_path.stem}")
+    cue_file = Path(cue_file).absolute()
+    cue_directory = cue_file.parent
 
     original_dir = Path.cwd()
     os.chdir(cue_directory)
 
-    cue_data = parse_cue_file(cuefile_path)
+    cue_data = parse_cue_file(cue_file)
+
     tracks = extract_track_data(cue_data)
     tracks = calculate_track_durations(tracks)
 
-    process_tracks(tracks, cue_directory, volume_adjustment)
+    process_tracks(tracks, cue_file, volume_adjustment)
 
     os.chdir(original_dir)
 
