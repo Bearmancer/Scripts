@@ -3,6 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from unidecode import unidecode
 from py3createtorrent import create_torrent
 from music_tools import rename_file_red
 
@@ -20,16 +21,19 @@ def run_command(cmd, cwd=None):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        encoding="utf-8",
+        encoding='utf-8',
+        errors='ignore',
         cwd=cwd,
     )
 
     result, error = process.communicate()
 
     if process.returncode != 0:
-        raise Exception(f"Command: {cmd}.\nError: {e}")
+        raise subprocess.CalledProcessError(
+            process.returncode, cmd, output=result, stderr=error
+        )
 
-    return str(result), str(error)
+    return unidecode(result), unidecode(error)
 
 
 def get_folder_size(path: Path):
