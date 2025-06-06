@@ -1,15 +1,18 @@
-import re
 import chardet
+import re
 import subprocess
 import warnings
 from argparse import ArgumentParser
-from pathlib import Path
-from google_gemini_ai import process_file
 from docx import Document
+from pathlib import Path
 
-FILE_EXTENSIONS = ['.mkv', '.mp4', '.flac', '.wav', '.mp3', '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
+from google_gemini_ai import process_file
+
+FILE_EXTENSIONS = ['.mkv', '.mp4', '.flac', '.wav', '.mp3',
+                   '.m4a', '.ogg', '.aac', '.opus', '.wmv', '.ts', '.flv', '.avi']
 
 warnings.filterwarnings('ignore')
+
 
 def whisper_logic(file: Path, model: str, language: str):
     if file.suffix.lower() not in FILE_EXTENSIONS:
@@ -23,7 +26,8 @@ def whisper_logic(file: Path, model: str, language: str):
 
     print(f"Now transcribing: {file.name}")
 
-    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir', str(file.parent), '--model', model, '--language', language, str(file.absolute())])
+    subprocess.run(['whisper', '--fp16', 'False', '--output_format', 'srt', '--output_dir',
+                    str(file.parent), '--model', model, '--language', language, str(file.absolute())])
 
     if language != "English":
         with open(subtitle_file, 'rb') as f:
@@ -36,12 +40,14 @@ def whisper_logic(file: Path, model: str, language: str):
         with open(subtitle_file, 'w', encoding=encoding) as f:
             f.write(new_text)
 
-        gemini_cli_file = process_file(input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
+        gemini_cli_file = process_file(
+            input_file=subtitle_file, instructions="Translate to English while retaining SRT formatting")
 
         if gemini_cli_file.exists():
             gemini_cli_file.replace(subtitle_file)
 
     print(f"Subtitles created: {file.name}.\n---------------------")
+
 
 def whisp(file: Path):
     whisper_logic(file, "small.en", "English")
@@ -55,7 +61,7 @@ def whisper_path(directory: Path):
 def whisper_path_recursive(directory: Path):
     for subdir in (d for d in directory.rglob('*') if d.is_dir()):
         whisper_path(subdir)
-    
+
     whisper_path(directory)
 
 
@@ -68,8 +74,8 @@ def whisper_path_japanese(directory: Path):
         whisper_japanese(file)
 
 
-def remove_subtitle_duplication(input_text: str): 
-    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'   
+def remove_subtitle_duplication(input_text: str):
+    old_text = r'(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+'
     new_text = r'\1\n\n'
 
     new_content = re.sub(old_text, new_text.strip(), input_text)
@@ -85,9 +91,9 @@ def srt_to_word(input_file: Path):
     with open(input_file, 'r', encoding=encoding) as f:
         doc = Document()
         doc.add_paragraph(f.read())
-        
+
         output_file = input_file.with_suffix('.docx')
-        
+
         doc.save(str(output_file))
         print(f"Output saved to '{output_file}'")
 
@@ -96,28 +102,34 @@ def word_to_srt(input_file: Path):
     doc = Document(str(input_file))
     text = '\n'.join([para.text for para in doc.paragraphs])
 
-    text = re.sub(r'(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
-    text = re.sub(r'(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub(
+        r'(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)', r'\1\n\2\3', text, flags=re.MULTILINE)
+    text = re.sub(r'(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)',
+                  r'\1\n\2\3', text, flags=re.MULTILINE)
 
     output_file = f'{str(input_file)[:-9]} Translated.srt'
-    
+
     with open(output_file, 'w', encoding='utf-16') as f:
         f.write(text)
-        
+
     print(f"Output saved to '{output_file}'")
 
 
 def main():
-    parser = ArgumentParser(description="Process various file types and perform transcription or conversion")
+    parser = ArgumentParser(
+        description="Process various file types and perform transcription or conversion")
 
-    parser.add_argument("command", choices=["whisper_logic", "whisp", "whisper_path", "whisper_path_recursive", 
-                                            "whisper_japanese", "whisper_path_japanese", "srt_to_word", 
-                                            "word_to_srt", "rsd"], 
+    parser.add_argument("command", choices=["whisper_logic", "whisp", "whisper_path", "whisper_path_recursive",
+                                            "whisper_japanese", "whisper_path_japanese", "srt_to_word",
+                                            "word_to_srt", "rsd"],
                         help="Command to execute")
 
-    parser.add_argument("path", type=Path, help="Path to the file or directory")
-    parser.add_argument("--model", type=str, default="small.en", help="Model for transcription (default: small.en)")
-    parser.add_argument("--language", type=str, default="English", help="Language for transcription (default: English)")
+    parser.add_argument("path", type=Path,
+                        help="Path to the file or directory")
+    parser.add_argument("--model", type=str, default="small.en",
+                        help="Model for transcription (default: small.en)")
+    parser.add_argument("--language", type=str, default="English",
+                        help="Language for transcription (default: English)")
 
     args = parser.parse_args()
 

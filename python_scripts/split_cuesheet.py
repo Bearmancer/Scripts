@@ -1,13 +1,13 @@
-import logging
+import argparse
 import chardet
 import ffmpeg
-from pathlib import Path
-from dataclasses import dataclass, field
-import sys
+import logging
 import os
-import argparse
-from pathvalidate import sanitize_filename
+import sys
+from dataclasses import dataclass, field
 from deflacue.deflacue import CueParser
+from pathlib import Path
+from pathvalidate import sanitize_filename
 from tqdm import tqdm
 
 
@@ -136,9 +136,11 @@ def process_cue_file(cue_file, volume_adjustment=0.0):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Split DFF audio files using CUE sheets')
+    parser = argparse.ArgumentParser(
+        description='Split DFF audio files using CUE sheets')
     parser.add_argument('cuefile', help='Path to the CUE file')
-    parser.add_argument('--volume', type=float, default=0.0, help='Volume adjustment in dB')
+    parser.add_argument('--volume', type=float, default=0.0,
+                        help='Volume adjustment in dB')
 
     args = parser.parse_args()
 

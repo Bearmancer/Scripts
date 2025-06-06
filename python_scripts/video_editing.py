@@ -1,10 +1,11 @@
+import argparse
 import ffmpeg
 import pyperclip
 import subprocess
-import argparse
-from image_extraction import extract_images
 from operator import itemgetter
 from pathlib import Path
+
+from image_extraction import extract_images
 from misc import run_command
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
@@ -27,7 +28,8 @@ def extract_chapters(video_files):
 
         for chapter_index, chapter in enumerate(chapters, 1):
             formatted_index = f"{chapter_index:02}"
-            output_file_name = parent_directory / f"{parent_directory.name} - Chapter {formatted_index}.{video_file.suffix}"
+            output_file_name = parent_directory / \
+                               f"{parent_directory.name} - Chapter {formatted_index}.{video_file.suffix}"
             try:
                 (
                     ffmpeg
@@ -35,9 +37,11 @@ def extract_chapters(video_files):
                     .output(str(output_file_name), c='copy', avoid_negative_ts='make_zero')
                     .run()
                 )
-                print(f"Extracted chapter {formatted_index} from {video_file.name}.")
+                print(
+                    f"Extracted chapter {formatted_index} from {video_file.name}.")
             except ffmpeg.Error as e:
-                print(f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
+                print(
+                    f"Failed to extract chapter {formatted_index} from {video_file}: {e.stderr.decode()}")
 
 
 def batch_compression(path: Path):
@@ -46,7 +50,8 @@ def batch_compression(path: Path):
     for file in mkv_files:
         output_file_path = file.with_suffix(".mp4")
 
-        command = ["HandBrakeCLI", "--preset-import-gui", "-i", str(file), "-o", str(output_file_path)]
+        command = ["HandBrakeCLI", "--preset-import-gui",
+                   "-i", str(file), "-o", str(output_file_path)]
         result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode == 0:
@@ -90,11 +95,13 @@ def convert_disc_to_mkv(file: Path, dvd_folder: Path):
 
 def get_mediainfo(video_path: Path):
     print(f"Getting MediaInfo for {video_path.absolute()}")
-    output_file = Path.home() / 'Desktop' / f"{video_path.parent.name} - {video_path.name}.txt"
+    output_file = Path.home() / 'Desktop' / \
+                  f"{video_path.parent.name} - {video_path.name}.txt"
 
     mediainfo_command = ["mediainfo", "--Output=TXT", str(video_path)]
 
-    result = subprocess.run(mediainfo_command, capture_output=True, text=True).stdout
+    result = subprocess.run(
+        mediainfo_command, capture_output=True, text=True).stdout
 
     cleaned_result = result.replace("Lance\\", "")
 
@@ -127,7 +134,8 @@ def extract_audio_commentary(video_files):
                 )
                 print(f"Extracted audio commentary from {file.name}.")
             except ffmpeg.Error as e:
-                print(f"Failed to extract audio commentary from {file}: {e.stderr.decode()}")
+                print(
+                    f"Failed to extract audio commentary from {file}: {e.stderr.decode()}")
 
     for flac_file in Path('.').glob('*.flac'):
         print(flac_file.name)
@@ -192,7 +200,7 @@ def calculate_mb_per_minute(file: Path):
 
 def calculate_mb_for_directory(video_files):
     data = []
-    
+
     for file in video_files:
         mb_per_minute, size, duration = calculate_mb_per_minute(file)
         data.append((file.name, mb_per_minute, size, duration))
@@ -217,14 +225,17 @@ def main():
     parser.add_argument("method", help=("Methods: RemuxDisc, ExtractChapters, BatchCompression, "
                                         "ExtractAudioCommentary, PrintVideoResolution, "
                                         "CalculateMBPerMinute, CreateImages, GetMediaInfo"))
-    parser.add_argument("path", type=Path, help="File or folder path to process.")
-    parser.add_argument("--get-mediainfo", action="store_true", help="Flag for MediaInfo in RemuxDisc")
+    parser.add_argument("path", type=Path,
+                        help="File or folder path to process.")
+    parser.add_argument("--get-mediainfo", action="store_true",
+                        help="Flag for MediaInfo in RemuxDisc")
 
     args = parser.parse_args()
 
     method = args.method
     path = args.path
-    video_files = [path] if path.is_file() else [f for f in path.rglob("*") if f.suffix.lower() in VIDEO_EXTENSIONS]
+    video_files = [path] if path.is_file() else [f for f in path.rglob(
+        "*") if f.suffix.lower() in VIDEO_EXTENSIONS]
 
     match method:
         case "RemuxDisc":
@@ -245,6 +256,7 @@ def main():
             [get_mediainfo(f) for f in video_files]
         case _:
             print(f"Method '{method}' not recognized.")
+
 
 if __name__ == "__main__":
     main()
