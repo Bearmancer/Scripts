@@ -6,12 +6,18 @@ import textwrap
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
+
 def get_video_info(video_path):
-    probe = ffmpeg.probe(str(video_path), v='error', select_streams='v:0', show_entries='format=duration,stream=width,height')
+    probe = ffmpeg.probe(
+        str(video_path),
+        v="error",
+        select_streams="v:0",
+        show_entries="format=duration,stream=width,height",
+    )
     video_info = {
-        'duration': float(probe['format']['duration']),
-        'width': int(probe['streams'][0]['width']),
-        'height': int(probe['streams'][0]['height'])
+        "duration": float(probe["format"]["duration"]),
+        "width": int(probe["streams"][0]["width"]),
+        "height": int(probe["streams"][0]["height"]),
     }
     return video_info
 
@@ -22,19 +28,24 @@ def add_timestamp(image, timestamp, font_path="calibri.ttf", font_size=20):
     timestamp_text = f"{int(timestamp // 3600):02}:{int((timestamp % 3600) // 60):02}:{int(timestamp % 60):02}"
 
     text_width, text_height = font.getbbox(timestamp_text)[2:]
-    text_position = (image.width - text_width - 20, image.height - text_height - 20)
-    draw.text(text_position, timestamp_text, font=font, fill=(255, 255, 255, 255))
+    text_position = (image.width - text_width - 20,
+                     image.height - text_height - 20)
+    draw.text(text_position, timestamp_text,
+              font=font, fill=(255, 255, 255, 255))
     return image
 
 
 def extract_frame(video_path, timestamp, video_info, target_width=None):
     input_stream = ffmpeg.input(str(video_path), ss=timestamp)
     if target_width:
-        aspect_ratio = video_info['height'] / video_info['width']
+        aspect_ratio = video_info["height"] / video_info["width"]
         target_height = int(target_width * aspect_ratio)
-        input_stream = input_stream.filter('scale', target_width, target_height)
+        input_stream = input_stream.filter(
+            "scale", target_width, target_height)
 
-    out, _ = input_stream.output('pipe:', vframes=1, format='image2', vcodec='mjpeg').run(capture_stdout=True, capture_stderr=True)
+    out, _ = input_stream.output(
+        "pipe:", vframes=1, format="image2", vcodec="mjpeg"
+    ).run(capture_stdout=True, capture_stderr=True)
     img = Image.open(io.BytesIO(out))
 
     img = add_timestamp(img, timestamp)
@@ -56,20 +67,22 @@ def add_filename_to_header(draw, filename, header_size, image_width):
 
 
 def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
-    output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
-    duration = video_info['duration']
-    timestamps = [int(duration * i / (rows * columns)) for i in range(rows * columns)]
-    
+    output_path = Path.home() / "Desktop" / \
+                  f"{video_path.stem} - Thumbnails.jpg"
+    duration = video_info["duration"]
+    timestamps = [int(duration * i / (rows * columns))
+                  for i in range(rows * columns)]
+
     if output_path.exists():
         print(f"Thumbnail already exists: {output_path}")
         return timestamps
-    
-    aspect_ratio = video_info['height'] / video_info['width']
+
+    aspect_ratio = video_info["height"] / video_info["width"]
     target_height = int(width * aspect_ratio)
-    
+
     grid_width = width * columns
-    grid_height = target_height * rows + 100 
-    grid_image = Image.new('RGB', (grid_width, grid_height), (255, 255, 255))
+    grid_height = target_height * rows + 100
+    grid_image = Image.new("RGB", (grid_width, grid_height), (255, 255, 255))
     draw = ImageDraw.Draw(grid_image)
 
     draw.rectangle([0, 0, grid_width, 100], fill=(255, 255, 255, 255))
@@ -81,23 +94,29 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
             col = idx % columns
             row = idx // columns
             x = col * width
-            y = 100 + row * target_height  
+            y = 100 + row * target_height
             grid_image.paste(img, (x, y))
-    
+
     grid_image.save(output_path)
 
     return timestamps
 
 
 def save_full_size_images(video_path, video_info, thumbnail_timestamps):
-    duration = video_info['duration']
+    duration = video_info["duration"]
     thumbnail_timestamps_set = set(thumbnail_timestamps)
 
-    possible_timestamps = sorted(random.sample([t for t in range(int(duration)) if t not in thumbnail_timestamps_set], 12))
+    possible_timestamps = sorted(
+        random.sample(
+            [t for t in range(int(duration))
+             if t not in thumbnail_timestamps_set], 12
+        )
+    )
 
     for idx, timestamp in enumerate(possible_timestamps):
         img = extract_frame(video_path, timestamp, video_info)
-        img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
+        img.save(Path.home() / "Desktop" /
+                 f"{video_path.stem} - Image {idx + 1}.jpg")
 
 
 def extract_images(video_path):
@@ -116,11 +135,11 @@ def extract_images(video_path):
 
     save_full_size_images(video_path, video_info, thumbnail_timestamps)
     print("Full size images successfully generated.")
-        
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Invalid number of arguments entered.")
-    
+
     video_file = Path(sys.argv[1])
     extract_images(video_file)

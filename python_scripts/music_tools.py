@@ -1,6 +1,6 @@
+import argparse
 import pyperclip
 import subprocess
-import argparse
 from pathlib import Path
 
 
@@ -17,19 +17,22 @@ def rename_file_red(path: Path):
 
         if relative_path_length > 180:
             old_files_list.append(file)
-            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_length = 180 - (relative_path_length -
+                                len(file.name)) - len(file.suffix)
             new_name = file.stem[:new_length] + file.suffix
             new_file_path = file.with_name(new_name)
             file.rename(new_file_path)
             new_files_list.append(new_file_path)
 
-            print(f"Old name: '{file}'\nNew name: '{new_file_path}'\n-----------------------")
+            print(
+                f"Old name: '{file}'\nNew name: '{new_file_path}'\n-----------------------")
 
     if new_files_list:
         new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
         output = f"Old file names of {path}:\n\n{chr(10).join(map(str, old_files_list))}\n\n-----------------------\n\nNew File Names of {path}:\n\n{new_file_names}"
 
-        print(f"Files have been renamed for {path}.\n-----------------------\n")
+        print(
+            f"Files have been renamed for {path}.\n-----------------------\n")
         pyperclip.copy(new_file_names)
         with (Path.home() / "Desktop" / "Excessively Long Files.txt").open('w') as file:
             file.write(output)
@@ -42,12 +45,14 @@ def calculate_image_size(path: Path):
     problematic_files = []
 
     for flac_file in path.glob('*.flac'):
-        result = subprocess.run([exif_tool, '-PictureLength', '-s', '-s', '-s', str(flac_file)], capture_output=True, text=True)
+        result = subprocess.run([exif_tool, '-PictureLength', '-s',
+                                 '-s', '-s', str(flac_file)], capture_output=True, text=True)
 
         try:
             image_size_kb = round(int(result.stdout.strip()) / 1024, 2)
         except ValueError:
-            print(f"Could not convert image size for {flac_file}: '{result.stdout.strip()}'")
+            print(
+                f"Could not convert image size for {flac_file}: '{result.stdout.strip()}'")
             continue
 
         if image_size_kb > 1024:
@@ -64,9 +69,12 @@ def calculate_image_size(path: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Utility for renaming files with long paths and calculating embedded image sizes.')
-    parser.add_argument('-c', '--command', choices=['calculate_image_size', 'rfr'], help='Command to execute.')
-    parser.add_argument('-d', '--directory', type=Path, help='Directory to process.')
+    parser = argparse.ArgumentParser(
+        description='Utility for renaming files with long paths and calculating embedded image sizes.')
+    parser.add_argument(
+        '-c', '--command', choices=['calculate_image_size', 'rfr'], help='Command to execute.')
+    parser.add_argument('-d', '--directory', type=Path,
+                        help='Directory to process.')
     args = parser.parse_args()
 
     if args.command == 'calculate_image_size':
