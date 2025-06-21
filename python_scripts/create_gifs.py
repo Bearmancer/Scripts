@@ -7,8 +7,7 @@ def get_video_info(input_path: Path):
     try:
         probe = ffmpeg.probe(str(input_path))
         video_stream = next(
-            (stream for stream in probe["streams"]
-             if stream["codec_type"] == "video"),
+            (stream for stream in probe["streams"] if stream["codec_type"] == "video"),
             None,
         )
 
@@ -26,12 +25,12 @@ def get_video_info(input_path: Path):
 
 
 def create_gif(
-        input_path: Path,
-        start: str,
-        duration: int,
-        output_path: Path,
-        fps: float,
-        scale: int,
+    input_path: Path,
+    start: str,
+    duration: int,
+    output_path: Path,
+    fps: float,
+    scale: int,
 ):
     print("Creating GIF with parameters:")
     print(f"  FPS: {fps}")
@@ -56,8 +55,7 @@ def create_gif(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Create a GIF from a video file.")
+    parser = argparse.ArgumentParser(description="Create a GIF from a video file.")
     parser.add_argument(
         "-i",
         "--input_path",
@@ -65,14 +63,9 @@ def main():
         required=True,
         help="Path to the input video file",
     )
-    parser.add_argument("-s", "--start", default="00:00",
-                        help="Start time (mm:ss)")
-    parser.add_argument(
-        "-d", "--duration", default=30, help="Duration in seconds"
-    )
-    parser.add_argument(
-        "-m", "--max_size", default=300, help="Maximum GIF size in MiB"
-    )
+    parser.add_argument("-s", "--start", default="00:00", help="Start time (mm:ss)")
+    parser.add_argument("-d", "--duration", default=30, help="Duration in seconds")
+    parser.add_argument("-m", "--max_size", default=300, help="Maximum GIF size in MiB")
     parser.add_argument(
         "-o",
         "--output_dir",

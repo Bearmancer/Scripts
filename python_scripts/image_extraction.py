@@ -28,10 +28,8 @@ def add_timestamp(image, timestamp, font_path="calibri.ttf", font_size=20):
     timestamp_text = f"{int(timestamp // 3600):02}:{int((timestamp % 3600) // 60):02}:{int(timestamp % 60):02}"
 
     text_width, text_height = font.getbbox(timestamp_text)[2:]
-    text_position = (image.width - text_width - 20,
-                     image.height - text_height - 20)
-    draw.text(text_position, timestamp_text,
-              font=font, fill=(255, 255, 255, 255))
+    text_position = (image.width - text_width - 20, image.height - text_height - 20)
+    draw.text(text_position, timestamp_text, font=font, fill=(255, 255, 255, 255))
     return image
 
 
@@ -40,8 +38,7 @@ def extract_frame(video_path, timestamp, video_info, target_width=None):
     if target_width:
         aspect_ratio = video_info["height"] / video_info["width"]
         target_height = int(target_width * aspect_ratio)
-        input_stream = input_stream.filter(
-            "scale", target_width, target_height)
+        input_stream = input_stream.filter("scale", target_width, target_height)
 
     out, _ = input_stream.output(
         "pipe:", vframes=1, format="image2", vcodec="mjpeg"
@@ -67,11 +64,9 @@ def add_filename_to_header(draw, filename, header_size, image_width):
 
 
 def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
-    output_path = Path.home() / "Desktop" / \
-                  f"{video_path.stem} - Thumbnails.jpg"
+    output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
     duration = video_info["duration"]
-    timestamps = [int(duration * i / (rows * columns))
-                  for i in range(rows * columns)]
+    timestamps = [int(duration * i / (rows * columns)) for i in range(rows * columns)]
 
     if output_path.exists():
         print(f"Thumbnail already exists: {output_path}")
@@ -108,15 +103,13 @@ def save_full_size_images(video_path, video_info, thumbnail_timestamps):
 
     possible_timestamps = sorted(
         random.sample(
-            [t for t in range(int(duration))
-             if t not in thumbnail_timestamps_set], 12
+            [t for t in range(int(duration)) if t not in thumbnail_timestamps_set], 12
         )
     )
 
     for idx, timestamp in enumerate(possible_timestamps):
         img = extract_frame(video_path, timestamp, video_info)
-        img.save(Path.home() / "Desktop" /
-                 f"{video_path.stem} - Image {idx + 1}.jpg")
+        img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
 
 
 def extract_images(video_path):
