@@ -1,50 +1,65 @@
 import chardet
+import deepl
+import google.generativeai as genai
 import langid
 import os
-import time
-import deepl
 import re
-from pathlib import Path
+import time
 from argparse import ArgumentParser
+from pathlib import Path
 from tqdm import tqdm
-import google.generativeai as genai
 
-os.environ['GRPC_VERBOSITY'] = 'NONE'
+os.environ["GRPC_VERBOSITY"] = "NONE"
 
 
-def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_size: int = 200,
-                 instructions: str = "", match_lines: bool = False):
+def process_file(
+    input_file: Path,
+    model_name: str = "gemini-2.0-flash",
+    chunk_size: int = 200,
+    instructions: str = "",
+    match_lines: bool = False,
+):
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel(model_name)
     lines = read_file_content(input_file)
 
-    output_file = input_file.with_name(f"{input_file.stem} (Gemini CLI){input_file.suffix}")
+    output_file = input_file.with_name(
+        f"{input_file.stem} (Gemini CLI){input_file.suffix}"
+    )
 
     if input_file.stem.endswith("(Gemini CLI)") or output_file.exists():
-        print(f'Translated file already exists for {input_file.name}.\n--------------------')
+        print(
+            f"Translated file already exists for {input_file.name}.\n--------------------"
+        )
         return
 
-    if langid.classify(''.join(lines))[0] == "en":
+    if langid.classify("".join(lines))[0] == "en":
         output_file.write_text("\n".join(lines), encoding="utf-8")
         print(f"File already in English: {input_file}.\n--------------------")
         return output_file
 
     output = []
 
-    chunks = [lines[i:i + chunk_size] for i in range(0, len(lines), chunk_size)]  
+    chunks = [lines[i : i + chunk_size] for i in range(0, len(lines), chunk_size)]
 
-    for i, chunk_lines in enumerate(tqdm(chunks, desc="Processing chunks", unit="chunk"), 1):
+    for i, chunk_lines in enumerate(
+        tqdm(chunks, desc="Processing chunks", unit="chunk"), 1
+    ):
         response = None
 
-        while not (response := process_chunk(chunk_lines, instructions, model, match_lines)):
+        while not (
+            response := process_chunk(chunk_lines, instructions, model, match_lines)
+        ):
             tqdm.write(f"Response was None. Retrying chunk {i}...")
             time.sleep(60)
 
         time.sleep(4)
-        
-        output.append('\n'.join(response))
 
-    text = re.sub(r'^(\d+)\n(0\d.*)\n(.*)', r'\1\n\2\n\3\n', '\n'.join(output), flags=re.MULTILINE)
+        output.append("\n".join(response))
+
+    text = re.sub(
+        r"^(\d+)\n(0\d.*)\n(.*)", r"\1\n\2\n\3\n", "\n".join(output), flags=re.MULTILINE
+    )
     output_file.write_text(text, encoding="utf-8")
     print(f"Successfully translated: {input_file.name}")
 
@@ -52,16 +67,27 @@ def process_file(input_file: Path, model_name: str = "gemini-2.0-flash", chunk_s
 
     return output_file
 
+
 def process_chunk(chunk_lines, instructions, model, match_lines: bool = False):
     try:
-        response = model.generate_content(f"{instructions}\n\n{chunk_lines}").text.strip().splitlines()
-        response = [line for line in response if "```" not in line and line and line != "[" and line != "]"]
+        response = (
+            model.generate_content(f"{instructions}\n\n{chunk_lines}")
+            .text.strip()
+            .splitlines()
+        )
+        response = [
+            line
+            for line in response
+            if "```" not in line and line and line != "[" and line != "]"
+        ]
 
         if match_lines:
             print(f"Input lines: {len(chunk_lines)}, Output lines: {len(response)}")
 
             while len(chunk_lines) != len(response):
-                print(f"Lines count does not match. Length of input: {len(chunk_lines)}, length of output: {len(response)}")
+                print(
+                    f"Lines count does not match. Length of input: {len(chunk_lines)}, length of output: {len(response)}"
+                )
                 for idx, line in enumerate(response, start=1):
                     print(f"{idx}. {line}")
                 response = process_chunk(chunk_lines, instructions, model, match_lines)
@@ -69,13 +95,17 @@ def process_chunk(chunk_lines, instructions, model, match_lines: bool = False):
         return response
 
     except Exception as e:
-        if 'finish_reason' in str(e) and '4' in str(e):
+        if "finish_reason" in str(e) and "4" in str(e):
             print("Error 4 occurred: Finish reason 4")
-            translated_text = deepl.Translator(os.getenv("DEEPL_API_KEY")).translate_text("\n".join(chunk_lines), target_lang='EN-US').text
+            translated_text = (
+                deepl.Translator(os.getenv("DEEPL_API_KEY"))
+                .translate_text("\n".join(chunk_lines), target_lang="EN-US")
+                .text
+            )
             return translated_text.splitlines()
-       
+
         else:
-            print(f'Error occurred: {e}')
+            print(f"Error occurred: {e}")
             log_to_file(str(e))
             return None
 
@@ -86,22 +116,39 @@ def read_file_content(input_file):
     except UnicodeDecodeError:
         detected_encoding = chardet.detect(input_file.read_bytes())["encoding"]
         print(f"Detected encoding: {detected_encoding}")
-        return [line for line in input_file.read_text(encoding=detected_encoding).splitlines()]
+        return [
+            line
+            for line in input_file.read_text(encoding=detected_encoding).splitlines()
+        ]
 
 
 def log_to_file(message):
-    log = Path.home() / 'Desktop' / 'failed_files_log.txt'
-    with log.open(mode='a', encoding='utf-8') as f:
+    log = Path.home() / "Desktop" / "failed_files_log.txt"
+    with log.open(mode="a", encoding="utf-8") as f:
         f.write(message)
 
 
 def main():
     parser = ArgumentParser(description="Translate text files using Google's Gemini AI")
-    parser.add_argument("-i", "--input", required=True, help="Input file or directory path")
-    parser.add_argument("-m", "--model", default="gemini-2.0-flash", help="Gemini model name")
-    parser.add_argument("-c", "--chunk-size", type=int, default=200, help="Lines per chunk")
-    parser.add_argument("--match_lines", type=bool, default=False, help="Match the number of input and output lines.")
-    parser.add_argument("-t", "--instructions", default="""
+    parser.add_argument(
+        "-i", "--input", required=True, help="Input file or directory path"
+    )
+    parser.add_argument(
+        "-m", "--model", default="gemini-2.0-flash", help="Gemini model name"
+    )
+    parser.add_argument(
+        "-c", "--chunk-size", type=int, default=200, help="Lines per chunk"
+    )
+    parser.add_argument(
+        "--match_lines",
+        type=bool,
+        default=False,
+        help="Match the number of input and output lines.",
+    )
+    parser.add_argument(
+        "-t",
+        "--instructions",
+        default="""
     TASK: Rewrite each line in a text file that contains file names. DO NOT DELETE LINES AND DO NOT OUTPUT CODE. Follow these guidelines:
 
     1. VERY IMPORTANT: PRESERVE ALL TEXT AND INFORMATION INCLUDING INFORMATION INSIDE PARENTHESIS LIKE BIT RATE AND INFORMATION. DO NOT DELETE ANY INFORMATION. ONLY PRINT FILE NAMES IN OUTPUT. Don't add any commas.
@@ -116,7 +163,8 @@ def main():
     10. Add "No." to numbered works (e.g., "Symphony 6" becomes "Symphony No. 6").
     11. Expand abbreviations (e.g., "PC" to "Piano Concerto").
     12. Remove extra spaces and standardize formatting.
-    """)
+    """,
+    )
 
     args = parser.parse_args()
     input_path = Path(args.input)
@@ -124,11 +172,14 @@ def main():
     if input_path.is_file():
         files = [input_path]
     else:
-        files = list(input_path.rglob('*.txt')) + list(input_path.rglob('*.srt'))
+        files = list(input_path.rglob("*.txt")) + list(input_path.rglob("*.srt"))
 
     for file in files:
         print(f"Processing file: {file}")
-        process_file(file, args.model, args.chunk_size, args.instructions, args.match_lines)
+        process_file(
+            file, args.model, args.chunk_size, args.instructions, args.match_lines
+        )
+
 
 if __name__ == "__main__":
     main()
