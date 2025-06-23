@@ -40,9 +40,7 @@ def extract_track_data(cue_data):
     for track in tracks:
         start_time_sec = track.start / 44100
 
-        metadata = {}
-        metadata.update(album_info)
-        metadata.update(track.data)
+        metadata = album_info | track.data
 
         track_info = TrackInfo(
             file=source_file,
@@ -76,12 +74,10 @@ def calculate_track_durations(tracks):
 
 
 def process_tracks(tracks, cue_file, volume_adjustment=0.0):
-    print(f"\nConverting {cue_file.name} to FLAC:")
-
     track_count = len(tracks)
     cue_directory = cue_file.parent
 
-    for index, track in tqdm(enumerate(tracks, 1), total=track_count, desc=f"Converting to FLAC"):
+    for index, track in tqdm(enumerate(tracks, 1), total=track_count, desc=f"Converting {cue_file.parent} to FLAC"):
         track_number = str(track.track_num).rjust(2, '0')
         output_filename = f"{track_number}. {sanitize_filename(track.title)}.flac"
         output_path = cue_directory / output_filename
