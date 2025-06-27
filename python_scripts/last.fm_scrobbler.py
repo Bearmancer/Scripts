@@ -8,10 +8,11 @@ from pathlib import Path
 from datetime import datetime
 
 USERNAME = "kanishknishar"
-CUTOFF_DATE_STRING = "2025-06-27 13:44:23"
+CUTOFF_DATE_STRING = "2025-06-26 5:16:39"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
+
 
 def lastfmconnect():
     api_key = os.environ.get("LASTFM_API_KEY")
@@ -30,16 +31,6 @@ def lastfmconnect():
         password_hash=password_hash,
     )
 
-def sanitize_dataframe(df):
-    for col in ['Title', 'Artist', 'Album']:
-        if col in df.columns:
-            df[col] = df[col].astype(str).apply(lambda x: (
-                x.strip()
-                .replace('"', '')
-                .replace(',', ' ')
-                .replace('\n', ' ')
-            ))
-    return df
 
 def fetch_new_tracks(user, hard_cutoff_timestamp):
     tracks, last_timestamp = [], None
@@ -57,6 +48,7 @@ def fetch_new_tracks(user, hard_cutoff_timestamp):
         time.sleep(0.2)
 
     return tracks
+
 
 def main():
     logger.info("Connecting to Last.fm API...")
@@ -81,16 +73,19 @@ def main():
 
     df = pd.DataFrame(timeline)
 
+    string_columns = df.select_dtypes(include="object").columns
+    df[string_columns] = df[string_columns].applymap(lambda value: value.strip() if isinstance(value, str) else value)
+
     max_date = df["Date"].max().replace(":", ".")
 
-    output_file = Path.home() / "Desktop" / f"Timeline - {USERNAME} - until {max_date}.csv"
+    output_file = Path.home() / "Desktop" / f"last.fm scrobbles - {USERNAME} - until {max_date}.csv"
 
     df.to_csv(
         output_file,
         sep=',',
         index=False,
         columns=["Date", "Title", "Album", "Artist"],
-        quoting=csv.QUOTE_MINIMAL,
+        quoting=csv.QUOTE_ALL,
         quotechar='"',
         escapechar='\\',
         encoding='utf-8',
@@ -99,6 +94,7 @@ def main():
     )
 
     logger.info(f"Done. Exported {len(df)} tracks to: {output_file}")
+
 
 if __name__ == "__main__":
     main()
