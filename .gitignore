@@ -4,3 +4,8 @@ Help
 Modules
 python_scripts/__pycache__
 go_scripts/Google AI Studio API Key.txt
+CSharpScripts/bin/
+CSharpScripts/obj/
+CSharpScripts/packages/
+CSharpScripts/riderModule.iml
+CSharpScripts/_ReSharper.Caches/
