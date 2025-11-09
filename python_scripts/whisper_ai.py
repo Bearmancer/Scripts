@@ -1,209 +1,84 @@
-import chardet
-import re
-import subprocess
-import warnings
-from argparse import ArgumentParser
-from docx import Document
 from pathlib import Path
-from google_gemini_ai import process_file
+from subprocess import run
+from threading import Lock
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
-FILE_EXTENSIONS = [
-    ".mkv",
-    ".mp4",
+THREADS = 6
+PARALLEL_LIMIT = 2
+EXTENSIONS = {
     ".flac",
-    ".wav",
-    ".mp3",
     ".m4a",
-    ".ogg",
     ".aac",
-    ".opus",
-    ".wmv",
-    ".ts",
-    ".flv",
+    ".mp3",
+    ".mp4",
+    ".mkv",
     ".avi",
-]
+    ".wav",
+    ".webm",
+    ".opus",
+    ".ogg",
+    ".wma",
+}
 
-warnings.filterwarnings("ignore")
+progress_counter = 0
+total_files = 0
+state_lock = Lock()
 
 
-def whisper_logic(file: Path, model: str, language: str):
-    if file.suffix.lower() not in FILE_EXTENSIONS:
-        return
+def whisper_logic(file, model, language):
+    global progress_counter
+    
+    srt_path = file.with_suffix(".srt")
 
-    subtitle_file = file.with_suffix(".srt")
+    if srt_path.exists():
+        with state_lock:
+            progress_counter += 1
+            print(
+                f"[{datetime.now():%H:%M:%S}] {progress_counter}/{total_files} - Skipped: {file.name}"
+            )
+        return file
 
-    if subtitle_file.exists():
-        print(f"Subtitle for {file.stem} already exists. Skipping...")
-        return
+    args = [
+        "faster-whisper-xxl",
+        "--device", "cpu",
+        "--compute_type", "int8",
+        "--threads", str(THREADS),
+        "--output_dir", str(file.parent),
+        "--model", model,
+        *(["--language", language] if language is not None else []),
+        str(file),
+    ]
 
-    print(f"Now transcribing: {file.name}")
+    run(args)
 
-    subprocess.run(
-        [
-            "whisper",
-            "--fp16",
-            "False",
-            "--output_format",
-            "srt",
-            "--output_dir",
-            str(file.parent),
-            "--model",
-            model,
-            "--language",
-            language,
-            str(file.absolute()),
-        ]
-    )
-
-    if language != "English":
-        with open(subtitle_file, "rb") as f:
-            raw_text = f.read()
-            encoding = chardet.detect(raw_text)["encoding"] or "utf-16"
-            text = raw_text.decode(encoding)
-
-        new_text = remove_subtitle_duplication(text)
-
-        with open(subtitle_file, "w", encoding=encoding) as f:
-            f.write(new_text)
-
-        gemini_cli_file = process_file(
-            input_file=subtitle_file,
-            instructions="Translate to English while retaining SRT formatting",
+    with state_lock:
+        progress_counter += 1
+        print(
+            f"[{datetime.now():%H:%M:%S}] {progress_counter}/{total_files} - Completed: {file.name}"
         )
 
-        if gemini_cli_file.exists():
-            gemini_cli_file.replace(subtitle_file)
-
-    print(f"Subtitles created: {file.name}.\n---------------------")
+    return file
 
 
-def whisp(file: Path):
-    whisper_logic(file, "small.en", "English")
+def whisper_path(directory, language="en", model="distil-large-v3.5"):
+    global total_files
+    directory = Path(directory)
+    audio_files = [
+        f
+        for f in directory.rglob("*")
+        if f.is_file() and f.suffix.casefold() in EXTENSIONS
+    ]
+    total_files = len(audio_files)
+
+    with ThreadPoolExecutor(max_workers=PARALLEL_LIMIT) as executor:
+        for file in audio_files:
+            executor.submit(whisper_logic, file, model, language)
 
 
-def whisper_path(directory: Path):
-    for file in (f for f in directory.glob("*") if f.is_file()):
-        whisp(file)
+def whisper_japanese(file_path):
+    whisper_logic(file_path, model="medium", language="ja")
 
 
-def whisper_path_recursive(directory: Path):
-    for subdir in (d for d in directory.rglob("*") if d.is_dir()):
-        whisper_path(subdir)
-
-    whisper_path(directory)
-
-
-def whisper_japanese(file: Path):
-    whisper_logic(file, "small", "Japanese")
-
-
-def whisper_path_japanese(directory: Path):
-    for file in (f for f in directory.glob("*") if f.is_file()):
-        whisper_japanese(file)
-
-
-def remove_subtitle_duplication(input_text: str):
-    old_text = (
-        r"(\d+\r?\n\d+.*?\r?\n(.*?))(?:\r?\n)+(?:\d+\r?\n\d+.*?\r?\n\2(?:\r?\n)+)+"
-    )
-    new_text = r"\1\n\n"
-
-    new_content = re.sub(old_text, new_text.strip(), input_text)
-
-    return new_content
-
-
-def srt_to_word(input_file: Path):
-    with open(input_file, "rb") as f:
-        raw_data = f.read()
-        encoding = chardet.detect(raw_data)["encoding"]
-
-    with open(input_file, "r", encoding=encoding) as f:
-        doc = Document()
-        doc.add_paragraph(f.read())
-
-        output_file = input_file.with_suffix(".docx")
-
-        doc.save(str(output_file))
-        print(f"Output saved to '{output_file}'")
-
-
-def word_to_srt(input_file: Path):
-    doc = Document(str(input_file))
-    text = "\n".join([para.text for para in doc.paragraphs])
-
-    text = re.sub(
-        r"(>.*?\d{2},\d{3})(\w+)\s*(?:\s*|$)\n(?:\s*|^)\s*([.,?\'\"].*)",
-        r"\1\n\2\3",
-        text,
-        flags=re.MULTILINE,
-    )
-    text = re.sub(
-        r"(>.*?\d{2},\d{3})(?!$)\s*(.*)(?:\s*|$)(?:\s*|^)\s*(.*)",
-        r"\1\n\2\3",
-        text,
-        flags=re.MULTILINE,
-    )
-
-    output_file = f"{str(input_file)[:-9]} Translated.srt"
-
-    with open(output_file, "w", encoding="utf-16") as f:
-        f.write(text)
-
-    print(f"Output saved to '{output_file}'")
-
-
-def main():
-    parser = ArgumentParser(
-        description="Process various file types and perform transcription or conversion"
-    )
-
-    parser.add_argument(
-        "command",
-        choices=[
-            "whisper_logic",
-            "whisp",
-            "whisper_path",
-            "whisper_path_recursive",
-            "whisper_japanese",
-            "whisper_path_japanese",
-            "srt_to_word",
-            "word_to_srt",
-            "rsd",
-        ],
-        help="Command to execute",
-    )
-
-    parser.add_argument("path", type=Path, help="Path to the file or directory")
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="small.en",
-        help="Model for transcription (default: small.en)",
-    )
-    parser.add_argument(
-        "--language",
-        type=str,
-        default="English",
-        help="Language for transcription (default: English)",
-    )
-
-    args = parser.parse_args()
-
-    command_map = {
-        "whisper_logic": lambda: whisper_logic(args.path, args.model, args.language),
-        "whisp": lambda: whisp(args.path),
-        "whisper_path": lambda: whisper_path(args.path),
-        "whisper_path_recursive": lambda: whisper_path_recursive(args.path),
-        "whisper_japanese": lambda: whisper_japanese(args.path),
-        "whisper_path_japanese": lambda: whisper_path_japanese(args.path),
-        "srt_to_word": lambda: srt_to_word(args.path),
-        "word_to_srt": lambda: word_to_srt(args.path),
-        "rsd": lambda: remove_subtitle_duplication(args.path),
-    }
-
-    command_map.get(args.command, lambda: print("Invalid command entered."))()
-
-
-if __name__ == "__main__":
-    main()
+def process_japanese_directory(directory):
+    whisper_path(directory, model="medium", language="ja")

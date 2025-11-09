@@ -45,8 +45,6 @@ def process_file(
     for i, chunk_lines in enumerate(
         tqdm(chunks, desc="Processing chunks", unit="chunk"), 1
     ):
-        response = None
-
         while not (
             response := process_chunk(chunk_lines, instructions, model, match_lines)
         ):
