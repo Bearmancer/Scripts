@@ -11,7 +11,6 @@ from unidecode import unidecode
 from misc import run_command
 from split_cuesheet import process_cue_file
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s - %(asctime)s - %(message)s",
@@ -130,7 +129,9 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
 
             old_dirs = set(Path(channel_dir).glob("*/"))
 
-            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir))
+            run_command(
+                ["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir)
+            )
 
             logging.info(f"{suffix} audio extracted from {iso_path.name}.")
 
@@ -224,7 +225,6 @@ def flac_directory_conversion(directory, tier):
 
     sample_rate, bit_depth = tier
 
-
     flac_files = list(destination.rglob("*.flac"))
 
     for f in tqdm(
@@ -313,14 +313,16 @@ def get_metadata(file):
 
 def get_flac_tiers(sample_rate, bit_depth, fmt="all"):
     tiers = FLAC_44 if sample_rate in {44100, 88200, 176400} else FLAC_48
-    
+
     for i, (tier_sr, tier_bd) in enumerate(tiers):
         if sample_rate > tier_sr and bit_depth >= tier_bd:
             result = [tier for tier in tiers[i:] if fmt != "24-bit" or tier[1] == 24]
-            
+
             return result or None
-    
-    raise ValueError(f"No suitable conversion tier found for {bit_depth}-bit/{sample_rate}Hz")
+
+    raise ValueError(
+        f"No suitable conversion tier found for {bit_depth}-bit/{sample_rate}Hz"
+    )
 
 
 ### -------------- MAIN FUNCTION ------------- ###
@@ -332,7 +334,8 @@ def main():
     )
 
     parser.add_argument(
-        "mode",
+        "-m",
+        "--mode",
         choices=["convert", "extract"],
         help="Select mode: 'convert' to process FLAC files or 'extract' to rip SACD ISOs to FLAC.",
     )
@@ -347,7 +350,8 @@ def main():
     )
 
     parser.add_argument(
-        "directory",
+        "-d",
+        "--directory",
         type=Path,
         help="Path to input directory containing audio files to process",
     )
@@ -360,7 +364,7 @@ def main():
     if not directory.exists():
         raise FileNotFoundError(f"Directory {directory} does not exist.")
 
-    os.system('cls')
+    os.system("cls")
 
     directory = prepare_directory(directory)
     fmt = args.format

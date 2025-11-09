@@ -39,7 +39,7 @@ def rename_files(directory: Path, txt_file: Path):
             try:
                 file.rename(new_path)
                 print(f"Renamed: {file.name} to {sanitized_new_name}")
-            except OSError as e:
+            except OSError:
                 try:
                     sanitized_file_name = re.sub(r'[<>:"/\\|?*]', " ", file.name)
                     sanitized_path = file.parent / sanitized_file_name

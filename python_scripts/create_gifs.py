@@ -25,12 +25,12 @@ def get_video_info(input_path: Path):
 
 
 def create_gif(
-    input_path: Path,
-    start: str,
-    duration: int,
-    output_path: Path,
-    fps: float,
-    scale: int,
+        input_path: Path,
+        start: str,
+        duration: int,
+        output_path: Path,
+        fps: float,
+        scale: int,
 ):
     print("Creating GIF with parameters:")
     print(f"  FPS: {fps}")

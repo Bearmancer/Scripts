@@ -86,7 +86,7 @@ def list_files_and_directories(path: Path, sort_order: bool = False, indent: int
         list_files_and_directories(entry, sort_order, indent + 2)
 
     for entry in files:
-        file_size_mb = entry.stat().st_size / (1024**2)
+        file_size_mb = entry.stat().st_size / (1024 ** 2)
         file_output = f"{indentation}  {entry.name} (Size: {file_size_mb:.2f} MB)"
         print(file_output)
         log_to_file(file_output)

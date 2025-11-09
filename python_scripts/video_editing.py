@@ -7,8 +7,10 @@ from pathlib import Path
 from image_extraction import extract_images
 from misc import run_command
 
-
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi"]
+HANDBRAKE_PATH = (
+    r"C:\Users\Lance\AppData\Local\Personal\HandBrakeCLI 1.8.0\HandBrakeCLI.exe"
+)
 
 
 def extract_chapters(video_files):
@@ -58,13 +60,14 @@ def batch_compression(path: Path):
         output_file_path = file.with_suffix(".mp4")
 
         command = [
-            "HandBrakeCLI",
+            HANDBRAKE_PATH,
             "--preset-import-gui",
             "-i",
             str(file),
             "-o",
             str(output_file_path),
         ]
+
         result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode == 0:
