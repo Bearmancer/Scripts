@@ -107,12 +107,12 @@ function Invoke-WhisperJapaneseFolder {
 function Save-YouTubeVideo {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory, Position 0= 0, ValueFromRemainingArguments)]
+        [Parameter(Mandatory, Position = 0, ValueFromRemainingArguments)]
         [string[]]$Urls,
+        [switch]$Transcribe,
         [string]$Language = 'en',
         [string]$Model,
         [switch]$Translate,
-        [switch]$NoTranscribe,
         [System.IO.DirectoryInfo]$OutputDir = (Get-Item .)
     )
 
@@ -132,11 +132,10 @@ function Save-YouTubeVideo {
 
         & yt-dlp $url --windows-filenames -o '%(title)s.%(ext)s'
 
-        if (-not $NoTranscribe -and (Test-Path $filePath)) {
+        if ($Transcribe -and (Test-Path $filePath)) {
             Invoke-Whisper -FilePath $filePath -Language $Language -Model $Model -Translate:$Translate
         }
     }
-
     Pop-Location
 }
 
