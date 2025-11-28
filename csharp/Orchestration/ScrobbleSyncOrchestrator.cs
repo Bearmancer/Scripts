@@ -62,7 +62,6 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
 
             state.FetchComplete = true;
             SaveState();
-            NewLine();
             Info(
                 "Fetch complete: {0} scrobbles from {1} pages",
                 state.TotalFetched,
@@ -106,8 +105,6 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
             },
             ct: ct
         );
-
-        NewLine();
 
         if (ct.IsCancellationRequested)
             Warning("Stopped at page {0} ({1} scrobbles)", state.LastPage, state.TotalFetched);
