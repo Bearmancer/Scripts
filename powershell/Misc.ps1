@@ -1,13 +1,13 @@
 function OpenCommandHistory {
-    code C:\Users\Lance\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+    code "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
 }
 
 function PrintVideoResolutions([System.IO.DirectoryInfo]$directory = $( Get-Item . )) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py PrintVideoResolution $directory.FullName
+    py "$ScriptRoot\python\video_editing.py" PrintVideoResolution $directory.FullName
 }
 
 function RemuxDisc([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [switch]$get_media_info) {
-    $arg = @("C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py", "RemuxDisc", $directory.FullName)
+    $arg = @("$ScriptRoot\python\video_editing.py", "RemuxDisc", $directory.FullName)
 
     if ($get_media_info) {
         $arg += "--get-mediainfo"
@@ -17,19 +17,19 @@ function RemuxDisc([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [switc
 }
 
 function BatchCompression([System.IO.DirectoryInfo]$directory = $( Get-Item . )) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py BatchCompression $directory.FullName
+    py "$ScriptRoot\python\video_editing.py" BatchCompression $directory.FullName
 }
 
 function ExtractChapters([System.IO.DirectoryInfo]$directory = $( Get-Item . )) {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\video_editing.py ExtractChapters $directory.FullName
+    py "$ScriptRoot\python\video_editing.py" ExtractChapters $directory.FullName
 }
 
 function ListDirectories([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [string]$sort_order = "0") {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_dir $directory.FullName $sort_order
+    py "$ScriptRoot\python\misc.py" list_dir $directory.FullName $sort_order
 }
 
 function ListFilesAndDirectories([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [string]$sort_order = "0") {
-    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py list_files_and_dirs $directory.FullName $sort_order
+    py "$ScriptRoot\python\misc.py" list_files_and_dirs $directory.FullName $sort_order
 }
 
 function MakeTorrents([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [switch]$recursive) {
@@ -39,5 +39,6 @@ function MakeTorrents([System.IO.DirectoryInfo]$directory = $( Get-Item . ), [sw
         $baseArgs += "--recursive"
     }
 
-    py C:\Users\Lance\Documents\Powershell\python_scripts\misc.py $baseArgs
+    py "$ScriptRoot\python\misc.py" $baseArgs
 }
+

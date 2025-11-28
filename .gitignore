@@ -1,10 +1,9 @@
 .idea
 Help
 Modules
-python_scripts/__pycache__
 Scripts
 obj
 bin
-.idea
 *.csv
 .fake
+__pycache__

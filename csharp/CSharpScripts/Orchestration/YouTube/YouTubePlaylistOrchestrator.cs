@@ -1,0 +1,740 @@
+namespace CSharpScripts.Orchestration.YouTube;
+
+internal class YouTubePlaylistOrchestrator(CancellationToken ct)
+{
+    const string DeletedPlaylistsDirectory = "deleted_playlists";
+
+    static readonly FrozenSet<object> VideoHeaders = FrozenSet.ToFrozenSet<object>([
+        "Title",
+        "Description",
+        "Duration",
+        "Channel",
+        "Video URL",
+    ]);
+
+    readonly YouTubeService youtubeService = new(
+        clientId: AuthenticationConfig.GoogleClientId,
+        clientSecret: AuthenticationConfig.GoogleClientSecret
+    );
+
+    readonly GoogleSheetsService sheetsService = new(
+        clientId: AuthenticationConfig.GoogleClientId,
+        clientSecret: AuthenticationConfig.GoogleClientSecret
+    );
+
+    readonly YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
+        StateManager.YouTubeStateFile
+    );
+
+    internal void Execute()
+    {
+        var spreadsheetId = GetOrCreateSpreadsheet();
+
+        if (state.FetchComplete && state.PlaylistSnapshots.Count > 0)
+        {
+            ExecuteOptimized(spreadsheetId);
+            return;
+        }
+
+        ExecuteFullSync(spreadsheetId);
+    }
+
+    internal void ExecuteForPlaylists(string[] playlistIdentifiers)
+    {
+        Logger.Info("Selective sync initiated for {0} playlist(s)", playlistIdentifiers.Length);
+
+        var spreadsheetId = GetOrCreateSpreadsheet();
+        var resolvedPlaylists = ResolvePlaylistIdentifiers(playlistIdentifiers);
+
+        if (resolvedPlaylists.Count == 0)
+        {
+            Logger.Error("No matching playlists found for the provided identifiers.");
+            Logger.End(success: false, "No matching playlists");
+            return;
+        }
+
+        Logger.Info("Syncing {0} playlist(s):", resolvedPlaylists.Count);
+        foreach (var playlist in resolvedPlaylists)
+            Logger.Info("  • {0}", playlist.Title);
+
+        var isFirstPlaylist = state.PlaylistSnapshots.Count == 0;
+        var processedCount = ProcessPlaylistsWithProgress(
+            resolvedPlaylists,
+            spreadsheetId,
+            isFirstPlaylist
+        );
+
+        if (!ct.IsCancellationRequested)
+        {
+            Logger.Success("Done! Synced {0} playlist(s).", processedCount);
+            Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Logger.End(success: true, $"Synced {processedCount} playlists (selective)");
+        }
+        else
+        {
+            Logger.Interrupted("Interrupted during selective sync");
+        }
+    }
+
+    List<YouTubePlaylist> ResolvePlaylistIdentifiers(string[] identifiers)
+    {
+        List<YouTubePlaylist> resolved = [];
+
+        foreach (var identifier in identifiers)
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            var playlist = ResolvePlaylistIdentifier(identifier);
+            if (playlist != null)
+                resolved.Add(playlist);
+            else
+                Logger.Warning("Could not resolve: {0}", identifier);
+        }
+
+        return resolved;
+    }
+
+    YouTubePlaylist? ResolvePlaylistIdentifier(string identifier)
+    {
+        if (state.PlaylistSnapshots.TryGetValue(identifier, out var snapshot))
+        {
+            Logger.Debug("Resolved '{0}' from cached snapshot", identifier);
+            return new YouTubePlaylist(
+                Id: snapshot.PlaylistId,
+                Title: snapshot.Title,
+                VideoCount: snapshot.ReportedVideoCount,
+                VideoIds: youtubeService.GetPlaylistVideoIds(snapshot.PlaylistId, ct),
+                ETag: snapshot.ETag
+            );
+        }
+
+        var titleMatch = state.PlaylistSnapshots.Values.FirstOrDefault(s =>
+            s.Title.Equals(identifier, StringComparison.OrdinalIgnoreCase)
+        );
+
+        if (titleMatch != null)
+        {
+            Logger.Debug("Resolved '{0}' by title match", identifier);
+            return new YouTubePlaylist(
+                Id: titleMatch.PlaylistId,
+                Title: titleMatch.Title,
+                VideoCount: titleMatch.ReportedVideoCount,
+                VideoIds: youtubeService.GetPlaylistVideoIds(titleMatch.PlaylistId, ct),
+                ETag: titleMatch.ETag
+            );
+        }
+
+        if (
+            identifier.StartsWith("PL")
+            || identifier.StartsWith("UU")
+            || identifier.StartsWith("FL")
+        )
+        {
+            Logger.Debug("Fetching playlist by ID: {0}", identifier);
+            var videoIds = youtubeService.GetPlaylistVideoIds(identifier, ct);
+            if (videoIds.Count > 0)
+            {
+                if (youtubeService.GetPlaylistSummary(identifier, ct) is { } summary)
+                {
+                    return new YouTubePlaylist(
+                        Id: identifier,
+                        Title: summary.Title,
+                        VideoCount: summary.VideoCount,
+                        VideoIds: videoIds,
+                        ETag: summary.ETag
+                    );
+                }
+            }
+        }
+
+        return null;
+    }
+
+    void ExecuteOptimized(string spreadsheetId)
+    {
+        Logger.Info("Optimized sync: checking metadata only...");
+
+        var summaries = youtubeService.GetPlaylistSummaries(ct);
+
+        if (ct.IsCancellationRequested)
+        {
+            Logger.Interrupted("Interrupted while fetching playlist metadata");
+            return;
+        }
+
+        var apiCallsSaved = state.PlaylistSnapshots.Count;
+        Logger.Debug("Skipped {0} playlist video ID fetches (cached)", apiCallsSaved);
+        Logger.Info("API calls saved: ~{0} (using cached video IDs)", apiCallsSaved);
+
+        var changes = YouTubeChangeDetector.DetectOptimizedChanges(
+            summaries,
+            state.PlaylistSnapshots
+        );
+
+        if (!changes.HasAnyChanges)
+        {
+            Logger.Info("No changes detected. Everything is up to date.");
+            Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Logger.End(success: true, "Already up to date (optimized check)");
+            return;
+        }
+
+        YouTubeChangeDetector.LogOptimizedChanges(changes);
+
+        foreach (var deletedId in changes.DeletedIds)
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            var snapshot = state.PlaylistSnapshots.GetValueOrDefault(deletedId);
+            if (snapshot != null)
+            {
+                ArchiveDeletedPlaylist(snapshot);
+                sheetsService.DeleteSubsheet(spreadsheetId, SanitizeSheetName(snapshot.Title));
+                state.PlaylistSnapshots.Remove(deletedId);
+                SaveState();
+            }
+        }
+
+        foreach (var rename in changes.Renamed)
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            Logger.Info("Renaming: {0} → {1}", rename.OldTitle, rename.NewTitle);
+
+            sheetsService.RenameSubsheet(
+                spreadsheetId,
+                oldName: SanitizeSheetName(rename.OldTitle),
+                newName: SanitizeSheetName(rename.NewTitle)
+            );
+
+            if (state.PlaylistSnapshots.TryGetValue(rename.PlaylistId, out var snapshot))
+            {
+                state.PlaylistSnapshots[rename.PlaylistId] = snapshot with
+                {
+                    Title = rename.NewTitle,
+                };
+                SaveState();
+            }
+        }
+
+        var playlistsNeedingVideoFetch = changes.NewIds.Concat(changes.ModifiedIds).ToList();
+
+        if (playlistsNeedingVideoFetch.Count > 0)
+        {
+            Logger.Info(
+                "Fetching details for {0} changed playlists...",
+                playlistsNeedingVideoFetch.Count
+            );
+
+            List<YouTubePlaylist> playlistsToProcess = [];
+
+            foreach (var playlistId in playlistsNeedingVideoFetch)
+            {
+                if (ct.IsCancellationRequested)
+                    break;
+
+                var summary = summaries.First(s => s.Id == playlistId);
+                Logger.Debug("Fetching video IDs for: {0}", summary.Title);
+
+                var videoIds = youtubeService.GetPlaylistVideoIds(playlistId, ct);
+
+                if (ct.IsCancellationRequested)
+                    break;
+
+                playlistsToProcess.Add(
+                    new YouTubePlaylist(
+                        Id: playlistId,
+                        Title: summary.Title,
+                        VideoCount: summary.VideoCount,
+                        VideoIds: videoIds
+                    )
+                );
+            }
+
+            if (!ct.IsCancellationRequested && playlistsToProcess.Count > 0)
+            {
+                var isFirstPlaylist = state.PlaylistSnapshots.Count == 0;
+                var processedCount = ProcessPlaylistsWithProgress(
+                    playlistsToProcess,
+                    spreadsheetId,
+                    isFirstPlaylist
+                );
+
+                foreach (var playlist in playlistsToProcess)
+                {
+                    var summary = summaries.First(s => s.Id == playlist.Id);
+                    state.PlaylistSnapshots[playlist.Id] = new PlaylistSnapshot(
+                        PlaylistId: playlist.Id,
+                        Title: playlist.Title,
+                        VideoIds: playlist.VideoIds,
+                        LastUpdated: DateTime.Now,
+                        ReportedVideoCount: playlist.VideoCount,
+                        ETag: summary.ETag
+                    );
+                }
+                SaveState();
+
+                Logger.Success("Done! Updated {0} playlists.", processedCount);
+                Logger.End(success: true, $"Updated {processedCount} playlists (optimized)");
+            }
+        }
+        else
+        {
+            Logger.Success("Done! Only metadata changes applied.");
+            Logger.End(success: true, "Metadata updates only");
+        }
+
+        if (!ct.IsCancellationRequested)
+        {
+            Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+        }
+        else
+        {
+            Logger.Interrupted("Interrupted during optimized sync");
+        }
+    }
+
+    void ExecuteFullSync(string spreadsheetId)
+    {
+        List<YouTubePlaylist> playlists;
+
+        if (state.CachedPlaylists != null && state.CachedPlaylists.Count > 0)
+        {
+            playlists = state.CachedPlaylists;
+            var alreadyHaveVideoIds = state.VideoIdFetchIndex;
+            Logger.Info(
+                "Resuming with {0} cached playlists ({1} have video IDs)",
+                playlists.Count,
+                alreadyHaveVideoIds
+            );
+        }
+        else
+        {
+            playlists = youtubeService.GetPlaylistMetadata(ct);
+
+            if (ct.IsCancellationRequested)
+            {
+                Logger.Interrupted("Interrupted while fetching playlist metadata");
+                return;
+            }
+
+            state.CachedPlaylists = playlists;
+            state.VideoIdFetchIndex = 0;
+            SaveState();
+            Logger.Info("Fetched {0} playlists from YouTube API", playlists.Count);
+        }
+
+        if (playlists.Count == 0)
+        {
+            Logger.Info("No playlists found.");
+            Logger.End(success: true, "No playlists to sync");
+            return;
+        }
+
+        var needVideoIdFetch = state.VideoIdFetchIndex < playlists.Count;
+        if (needVideoIdFetch)
+        {
+            var interrupted = false;
+            var interruptedAt = 0;
+
+            AnsiConsole
+                .Progress()
+                .AutoClear(true)
+                .HideCompleted(false)
+                .Columns([
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new RemainingTimeColumn(),
+                    new SpinnerColumn(),
+                ])
+                .Start(ctx =>
+                {
+                    var task = ctx.AddTask(
+                        description: "[cyan]Fetching playlist video IDs[/]",
+                        maxValue: playlists.Count
+                    );
+                    task.Value = state.VideoIdFetchIndex;
+
+                    for (var i = state.VideoIdFetchIndex; i < playlists.Count; i++)
+                    {
+                        if (ct.IsCancellationRequested)
+                        {
+                            interrupted = true;
+                            interruptedAt = i;
+                            return;
+                        }
+
+                        var playlist = playlists[i];
+                        task.Description = $"[cyan]{Markup.Escape(playlist.Title)}[/]";
+
+                        var videoIds = youtubeService.GetPlaylistVideoIds(playlist.Id, ct);
+
+                        if (ct.IsCancellationRequested)
+                        {
+                            interrupted = true;
+                            interruptedAt = i;
+                            return;
+                        }
+
+                        playlists[i] = playlist with { VideoIds = videoIds };
+                        state.CachedPlaylists = playlists;
+                        state.VideoIdFetchIndex = i + 1;
+                        SaveState();
+
+                        task.Increment(1);
+                    }
+
+                    task.Value = task.MaxValue;
+                });
+
+            if (interrupted)
+            {
+                Logger.Interrupted(
+                    $"Video ID fetch interrupted at {interruptedAt}/{playlists.Count} playlists"
+                );
+                return;
+            }
+        }
+
+        var playlistChanges = YouTubeChangeDetector.DetectPlaylistChanges(
+            playlists,
+            state.PlaylistSnapshots
+        );
+
+        if (!playlistChanges.HasChanges && state.FetchComplete)
+        {
+            Logger.Info("All playlists already synced. No changes detected.");
+            Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Logger.End(success: true, "Already up to date");
+            return;
+        }
+
+        YouTubeChangeDetector.LogDetectedChanges(playlistChanges);
+
+        foreach (var deletedId in playlistChanges.DeletedPlaylistIds)
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            var snapshot = state.PlaylistSnapshots.GetValueOrDefault(deletedId);
+            if (snapshot != null)
+            {
+                ArchiveDeletedPlaylist(snapshot);
+                var sheetName = SanitizeSheetName(snapshot.Title);
+                sheetsService.DeleteSubsheet(spreadsheetId, sheetName);
+                state.PlaylistSnapshots.Remove(deletedId);
+                SaveState();
+            }
+        }
+
+        var isFirstPlaylist = state.PlaylistSnapshots.Count == 0;
+        var firstPlaylistTitle = playlists.FirstOrDefault()?.Title;
+
+        var playlistsToProcess = playlists
+            .Where(p =>
+                playlistChanges.NewPlaylistIds.Contains(p.Id)
+                || playlistChanges.ModifiedPlaylistIds.Contains(p.Id)
+                || !state.PlaylistSnapshots.ContainsKey(p.Id)
+            )
+            .ToList();
+
+        var skippedCount = playlists.Count - playlistsToProcess.Count;
+        var processedCount = 0;
+
+        if (skippedCount > 0)
+            Logger.Info("Skipping {0} unchanged playlists", skippedCount);
+
+        if (playlistsToProcess.Count > 0)
+        {
+            processedCount = ProcessPlaylistsWithProgress(
+                playlistsToProcess,
+                spreadsheetId,
+                isFirstPlaylist
+            );
+        }
+
+        if (!ct.IsCancellationRequested)
+        {
+            state.FetchComplete = true;
+            state.CachedPlaylists = null;
+            SaveState();
+
+            if (!IsNullOrEmpty(firstPlaylistTitle))
+            {
+                var sanitizedFirst = SanitizeSheetName(firstPlaylistTitle);
+                sheetsService.RenameSubsheet(
+                    spreadsheetId,
+                    oldName: "Sheet1",
+                    newName: sanitizedFirst
+                );
+            }
+            else
+            {
+                sheetsService.CleanupDefaultSheet(spreadsheetId);
+            }
+
+            Logger.Success(
+                "Done! Synced {0} playlists ({1} processed, {2} unchanged).",
+                playlists.Count,
+                processedCount,
+                playlists.Count - processedCount
+            );
+            Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Logger.End(
+                success: true,
+                $"Synced {playlists.Count} playlists ({processedCount} updated, {playlists.Count - processedCount} unchanged)"
+            );
+        }
+        else
+        {
+            Logger.Interrupted(
+                $"{state.PlaylistSnapshots.Count} playlists completed before interrupt"
+            );
+        }
+    }
+
+    int ProcessPlaylistsWithProgress(
+        List<YouTubePlaylist> playlistsToProcess,
+        string spreadsheetId,
+        bool isFirstPlaylist
+    )
+    {
+        var processedCount = 0;
+        var totalVideos = playlistsToProcess.Sum(p => p.VideoIds.Count);
+        var videosProcessed = 0;
+
+        AnsiConsole
+            .Progress()
+            .AutoClear(true)
+            .HideCompleted(false)
+            .Columns([
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new SpinnerColumn(),
+            ])
+            .Start(ctx =>
+            {
+                var overallTask = ctx.AddTask(
+                    description: $"[cyan]Syncing {playlistsToProcess.Count} playlists[/]",
+                    maxValue: totalVideos
+                );
+
+                foreach (var playlist in playlistsToProcess)
+                {
+                    if (ct.IsCancellationRequested)
+                        break;
+
+                    overallTask.Description = $"[cyan]{Markup.Escape(playlist.Title)}[/]";
+
+                    ProcessPlaylistWithContext(
+                        playlist: playlist,
+                        spreadsheetId: spreadsheetId,
+                        isFirstPlaylist: isFirstPlaylist && processedCount == 0,
+                        onVideoProgress: (count) =>
+                        {
+                            overallTask.Value = videosProcessed + count;
+                        }
+                    );
+
+                    videosProcessed += playlist.VideoIds.Count;
+                    overallTask.Value = videosProcessed;
+                    processedCount++;
+                }
+
+                overallTask.Value = overallTask.MaxValue;
+            });
+
+        return processedCount;
+    }
+
+    void ProcessPlaylistWithContext(
+        YouTubePlaylist playlist,
+        string spreadsheetId,
+        bool isFirstPlaylist,
+        Action<int> onVideoProgress
+    )
+    {
+        var alreadyFetched = 0;
+
+        if (state.CurrentPlaylistId == playlist.Id)
+            alreadyFetched = state.CurrentPlaylistVideosFetched;
+
+        List<YouTubeVideo> videos = [];
+
+        if (alreadyFetched > 0)
+        {
+            var cached = StateManager.Load<List<YouTubeVideo>>(GetPlaylistCacheFile(playlist.Id));
+            videos.AddRange(cached);
+            onVideoProgress(alreadyFetched);
+        }
+
+        var remainingIds = playlist.VideoIds.Skip(alreadyFetched).ToList();
+        var cacheFile = GetPlaylistCacheFile(playlist.Id);
+
+        var newVideos = youtubeService.GetVideoDetailsForIds(
+            videoIds: remainingIds,
+            onBatchComplete: (allFetchedSoFar) =>
+            {
+                List<YouTubeVideo> combinedVideos = [.. videos, .. allFetchedSoFar];
+
+                StateManager.Save(cacheFile, combinedVideos);
+
+                state.UpdatePlaylistProgress(
+                    playlistId: playlist.Id,
+                    videosFetched: alreadyFetched + allFetchedSoFar.Count
+                );
+                SaveState();
+
+                onVideoProgress(alreadyFetched + allFetchedSoFar.Count);
+            },
+            ct: ct
+        );
+
+        videos.AddRange(newVideos);
+
+        if (ct.IsCancellationRequested)
+            return;
+
+        WritePlaylist(playlist, videos, spreadsheetId, isFirstPlaylist);
+
+        PlaylistSnapshot snapshot = new(
+            PlaylistId: playlist.Id,
+            Title: playlist.Title,
+            VideoIds: playlist.VideoIds,
+            LastUpdated: DateTime.Now,
+            ReportedVideoCount: playlist.VideoCount,
+            ETag: playlist.ETag
+        );
+        state.PlaylistSnapshots[playlist.Id] = snapshot;
+        state.ClearCurrentProgress();
+        SaveState();
+
+        StateManager.Delete(GetPlaylistCacheFile(playlist.Id));
+    }
+
+    string GetOrCreateSpreadsheet() =>
+        sheetsService.GetOrCreateSpreadsheet(
+            currentSpreadsheetId: state.SpreadsheetId,
+            defaultSpreadsheetId: SpreadsheetConfig.YouTubeSpreadsheetId,
+            spreadsheetTitle: SpreadsheetConfig.YouTubeSpreadsheetTitle,
+            onSpreadsheetResolved: id =>
+            {
+                state.SpreadsheetId = id;
+                SaveState();
+            }
+        );
+
+    internal void SaveState() => StateManager.Save(StateManager.YouTubeStateFile, state);
+
+    static void ArchiveDeletedPlaylist(PlaylistSnapshot snapshot)
+    {
+        CreateDirectory(DeletedPlaylistsDirectory);
+
+        var safeTitle = SanitizeSheetName(snapshot.Title);
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
+        var fileName = $"{safeTitle}_{timestamp}.json";
+        var filePath = GetFullPath(Combine(DeletedPlaylistsDirectory, fileName));
+
+        var archive = new
+        {
+            snapshot.PlaylistId,
+            snapshot.Title,
+            snapshot.VideoIds,
+            snapshot.ReportedVideoCount,
+            snapshot.ETag,
+            snapshot.LastUpdated,
+            ArchivedAt = DateTime.Now,
+        };
+
+        WriteAllText(filePath, JsonSerializer.Serialize(archive, StateManager.JsonOptions));
+
+        Logger.Warning("Playlist deleted: {0}", snapshot.Title);
+        Logger.Info("Archived to: {0}", filePath);
+    }
+
+    static string GetPlaylistCacheFile(string playlistId) => $"playlist_{playlistId}";
+
+    void WritePlaylist(
+        YouTubePlaylist playlist,
+        List<YouTubeVideo> videos,
+        string spreadsheetId,
+        bool isFirstPlaylist
+    )
+    {
+        var sheetName = SanitizeSheetName(playlist.Title);
+
+        Logger.Info("Writing {0} videos to sheet '{1}'", videos.Count, sheetName);
+
+        if (isFirstPlaylist)
+        {
+            sheetsService.RenameSubsheet(spreadsheetId, oldName: "Sheet1", newName: sheetName);
+            sheetsService.ClearSubsheet(spreadsheetId, sheetName);
+            sheetsService.WriteRows(
+                spreadsheetId,
+                sheetName,
+                [
+                    [.. VideoHeaders],
+                ]
+            );
+        }
+        else
+        {
+            sheetsService.EnsureSubsheetExists(spreadsheetId, sheetName, VideoHeaders);
+            sheetsService.ClearSubsheet(spreadsheetId, sheetName);
+        }
+
+        var rows = videos
+            .Select(v =>
+                (IList<object>)
+                    [
+                        v.Title,
+                        v.Description,
+                        v.FormattedDuration,
+                        $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
+                        v.VideoUrl,
+                    ]
+            )
+            .ToList();
+
+        sheetsService.WriteRows(spreadsheetId, sheetName, rows);
+    }
+
+    static string SanitizeSheetName(string name) =>
+        name.Replace(":", " -")
+            .Replace("/", "-")
+            .Replace("\\", "-")
+            .Replace("?", "")
+            .Replace("*", "")
+            .Replace("[", "(")
+            .Replace("]", ")");
+
+    static string EscapeFormulaString(string value) => value.Replace("\"", "\"\"");
+
+    internal static void ExportSheetsAsCSVs(string outputDirectory = "ScrapedYouTubePlaylists")
+    {
+        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
+
+        if (IsNullOrEmpty(state.SpreadsheetId))
+            throw new InvalidOperationException(
+                "No YouTube spreadsheet found. Run sync first to create it."
+            );
+
+        var projectRoot = GetDirectoryName(
+            GetDirectoryName(GetDirectoryName(GetDirectoryName(AppContext.BaseDirectory)!)!)!
+        )!;
+        var fullOutputPath = Combine(projectRoot, outputDirectory);
+
+        var sheetsService = new GoogleSheetsService(
+            clientId: AuthenticationConfig.GoogleClientId,
+            clientSecret: AuthenticationConfig.GoogleClientSecret
+        );
+
+        sheetsService.ExportEachSheetAsCSV(state.SpreadsheetId, fullOutputPath);
+        Logger.Success("YouTube playlists exported to: {0}", GetFullPath(fullOutputPath));
+    }
+}
