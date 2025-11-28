@@ -7,8 +7,8 @@ foreach ($file in $ps1Files) {
     . $file.FullName
 }
 
-function GoToScripts { Set-Location $ScriptRoot }
-function Desktop { Set-Location "$env:USERPROFILE\Desktop" }
+function Enter-ScriptsDirectory { Set-Location $ScriptRoot }
+function Enter-DesktopDirectory { Set-Location "$env:USERPROFILE\Desktop" }
 
-Set-Alias top Desktop
-Set-Alias scripts GoToScripts
+Set-Alias -Name top -Value Enter-DesktopDirectory
+Set-Alias -Name scripts -Value Enter-ScriptsDirectory

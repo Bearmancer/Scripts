@@ -1,69 +1,147 @@
-function Whisper([string]$FilePath, [string]$Model = 'large-v3', [string]$Language = $null, [switch]$Translate) {
-    if (-not (Test-Path -Path $FilePath)) { Write-Error "File not found: $FilePath"; return }
+function Invoke-Whisper {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Alias('Path', 'FullName')]
+        [string]$FilePath,
 
-    $env:PYTHONWARNINGS = "ignore"
-    
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Processing: $(Split-Path -Leaf -Path $FilePath)"
-    
-    $arguments = @(
-        '--model', $Model,
-        '--compute_type', 'int8',
-        '--output_format', 'srt',
-        '--output_dir', (Get-Item -Path $FilePath).Directory.FullName,
-        $FilePath
+        [string]$Language = 'en',
+        [string]$Model,
+        [switch]$Translate
     )
 
-    if ($Language) { $arguments += @('--language', $Language) }
-    if ($Translate) { $arguments += @('--task', 'translate') }
+    if (-not (Test-Path -Path $FilePath)) {
+        throw "File not found: $FilePath"
+    }
 
-    & 'whisper-ctranslate2' @arguments
+    $file = Get-Item -Path $FilePath
+    $Model ??= $Language -eq 'en' ? 'distil-large-v3.5' : 'medium'
+
+    $env:PYTHONWARNINGS = 'ignore'
+
+    $whisperArgs = @(
+        '--model', $Model
+        '--compute_type', 'int8'
+        '--output_format', 'srt'
+        '--output_dir', $outDir
+        '--batched', 'True'
+        '--batch_size', '8'
+        '--language', $Language
+    )
+
+    if ($Translate) { $whisperArgs += '--task', 'translate' }
+    $whisperArgs += $FilePath
+
+    & whisper-ctranslate2 @whisperArgs
+
+    [PSCustomObject]@{
+        File     = $file.Name
+        Model    = $Model
+        Language = $Language
+        Output   = Join-Path $outDir ($file.BaseName + '.srt')
+    }
 }
 
-function Whisp([string] $FilePath) {
-    Whisper $FilePath -Model 'distil-large-v3.5' -Language 'en'
-}
+function Invoke-WhisperFolder {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [System.IO.DirectoryInfo]$Directory = (Get-Item .),
 
-function WhisperJapanese([string] $FilePath) {
-    Whisper $FilePath -Language 'ja'
-}
+        [string]$Language = 'en',
+        [string]$Model,
+        [switch]$Translate,
+        [switch]$Force
+    )
 
-function WhisperJapaneseFolder([System.IO.DirectoryInfo] $FolderPath) {
-    $files = Get-ChildItem $FolderPath
+    $extensions = '.mp4', '.mkv', '.avi', '.mp3', '.flac', '.wav', '.webm', '.m4a', '.opus', '.ogg'
+    $files = Get-ChildItem $Directory -Recurse -File | Where-Object { $_.Extension.ToLower() -in $extensions }
+    $total = $files.Count
+    $processed = 0
 
     foreach ($file in $files) {
-        WhisperJapanese $file.FullName
+        $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, '.srt')
+
+        if ((Test-Path $srtPath) -and -not $Force) {
+            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -NoNewline
+            Write-Host 'Skipped: ' -ForegroundColor Yellow -NoNewline
+            Write-Host "$($file.Name) (SRT exists)"
+            continue
+        }
+
+        $processed++
+        Write-Host "[$processed/$total] " -ForegroundColor DarkGray -NoNewline
+
+        Invoke-Whisper -FilePath $file.FullName -Language $Language -Model $Model -Translate:$Translate
     }
+
+    Write-Host "`nCompleted: $processed/$total files" -ForegroundColor Green
+}
+
+function Invoke-WhisperJapanese {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Alias('Path', 'FullName')]
+        [string]$FilePath,
+        [string]$Model,
+        [switch]$Translate
+    )
+
+    Invoke-Whisper -FilePath $FilePath -Language ja -Model $Model -Translate:$Translate
+}
+
+function Invoke-WhisperJapaneseFolder {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [System.IO.DirectoryInfo]$Directory = (Get-Item .),
+        [string]$Model,
+        [switch]$Translate,
+        [switch]$Force
+    )
+
+    Invoke-WhisperFolder -Directory $Directory -Language ja -Model $Model -Translate:$Translate -Force:$Force
 }
 
 function Save-YouTubeVideo {
+    [CmdletBinding()]
     param(
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]$Links,
-        [switch]$Foreign
+        [Parameter(Mandatory, Position 0= 0, ValueFromRemainingArguments)]
+        [string[]]$Urls,
+        [string]$Language = 'en',
+        [string]$Model,
+        [switch]$Translate,
+        [switch]$NoTranscribe,
+        [System.IO.DirectoryInfo]$OutputDir = (Get-Item .)
     )
 
-    foreach ($link in $Links) {
-        $filePath = & 'yt-dlp' --print filename $link --windows-filenames
-        $fileExists = Test-Path -Path $filePath
+    Push-Location $OutputDir
 
-        if ($fileExists) {
-            Remove-Item $filePath
-            Write-Host "Deleted pre-existing file at: $filePath"
+    foreach ($url in $Urls) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -NoNewline
+        Write-Host 'Downloading: ' -ForegroundColor Cyan -NoNewline
+        Write-Host $url
+
+        $filePath = & yt-dlp --print filename $url --windows-filenames -o '%(title)s.%(ext)s'
+
+        if (Test-Path -Path $filePath) {
+            Remove-Item $filePath -Force
+            Write-Host '  Replaced existing file' -ForegroundColor Yellow
         }
 
-        & 'yt-dlp' $link --windows-filenames
+        & yt-dlp $url --windows-filenames -o '%(title)s.%(ext)s'
 
-        if ($Foreign) {
-            Whisper $filePath -Translate
+        if (-not $NoTranscribe -and (Test-Path $filePath)) {
+            Invoke-Whisper -FilePath $filePath -Language $Language -Model $Model -Translate:$Translate
         }
-        else {
-            Whisp $filePath
-        }
-        
     }
+
+    Pop-Location
 }
 
-Set-Alias -Name wp -Value WhisperFolder
-Set-Alias -Name wj -Value WhisperJapanese
-Set-Alias -Name wpj -Value WhisperJapaneseFolder
+Set-Alias -Name whisper -Value Invoke-Whisper
+Set-Alias -Name whispdir -Value Invoke-WhisperFolder
+Set-Alias -Name whispjp -Value Invoke-WhisperJapanese
+Set-Alias -Name whispjpdir -Value Invoke-WhisperJapaneseFolder
 Set-Alias -Name yt -Value Save-YouTubeVideo
