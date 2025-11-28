@@ -1,9 +1,30 @@
-.idea
-Help
-Modules
-Scripts
-obj
-bin
+# Build outputs
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.pdb
+
+# Python
+__pycache__/
+
+# IDE/Editor
+.idea/
+.vs/
+.vscode/
+*.suo
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temp/logs
+*.tmp
+*.log
+logs/
+
+# Project-specific
 *.csv
 .fake
-__pycache__
+state/
