@@ -794,7 +794,11 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             clientSecret: AuthenticationConfig.GoogleClientSecret
         );
 
-        sheetsService.ExportEachSheetAsCSV(state.SpreadsheetId, fullOutputPath);
-        Logger.Success("YouTube playlists exported to: {0}", GetFullPath(fullOutputPath));
+        var exported = sheetsService.ExportEachSheetAsCSV(state.SpreadsheetId, fullOutputPath);
+
+        if (exported > 0)
+            Logger.Success("Exported {0} playlists to: {1}", exported, GetFullPath(fullOutputPath));
+        else
+            Logger.Info("All playlists already exported to: {0}", GetFullPath(fullOutputPath));
     }
 }
