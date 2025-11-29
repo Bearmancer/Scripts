@@ -12,6 +12,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         "Album",
     ]);
 
+    readonly Dictionary<string, Spreadsheet> spreadsheetCache = [];
+
     internal static string GetSpreadsheetUrl(string spreadsheetId) =>
         $"https://docs.google.com/spreadsheets/d/{spreadsheetId}";
 
@@ -30,6 +32,31 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             ApplicationName = "CSharpScripts",
         }
     );
+
+    Spreadsheet GetSpreadsheetMetadata(string spreadsheetId, bool forceRefresh = false)
+    {
+        if (!forceRefresh && spreadsheetCache.TryGetValue(spreadsheetId, out var cached))
+            return cached;
+
+        var spreadsheet = ApiConfig.ExecuteWithRetry(
+            operationName: "Sheets.Get",
+            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+        );
+
+        spreadsheetCache[spreadsheetId] = spreadsheet;
+        return spreadsheet;
+    }
+
+    void InvalidateCache(string spreadsheetId) => spreadsheetCache.Remove(spreadsheetId);
+
+    Sheet? FindSheet(string spreadsheetId, string sheetName, bool forceRefresh = false)
+    {
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId, forceRefresh);
+        return spreadsheet.Sheets?.FirstOrDefault(s =>
+            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
+        );
+    }
 
     internal string CreateSpreadsheet(string title = SpreadsheetTitle)
     {
@@ -83,14 +110,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         IEnumerable<object> headers
     )
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var existingSheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
-        );
+        var existingSheet = FindSheet(spreadsheetId, sheetName);
 
         if (existingSheet == null)
         {
@@ -112,6 +132,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                 action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
                 postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             );
+            InvalidateCache(spreadsheetId);
         }
 
         EnsureHeadersForSheet(spreadsheetId, sheetName, headers);
@@ -119,15 +140,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     internal void DeleteSubsheet(string spreadsheetId, string sheetName)
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
-        );
-
+        var sheet = FindSheet(spreadsheetId, sheetName);
         if (sheet?.Properties?.SheetId == null)
             return;
 
@@ -146,15 +159,12 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
+        InvalidateCache(spreadsheetId);
     }
 
     internal List<string> GetSubsheetNames(string spreadsheetId)
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
         return spreadsheet
                 .Sheets?.Select(s => s.Properties?.Title ?? "")
                 .Where(t => !IsNullOrEmpty(t))
@@ -202,15 +212,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     internal void RenameSubsheet(string spreadsheetId, string oldName, string newName)
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(oldName, StringComparison.OrdinalIgnoreCase) == true
-        );
-
+        var sheet = FindSheet(spreadsheetId, oldName);
         if (sheet?.Properties?.SheetId == null)
             return;
 
@@ -237,22 +239,18 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
+        InvalidateCache(spreadsheetId);
         Logger.Debug("Renamed sheet '{0}' to '{1}'", oldName, newName);
     }
 
     internal void CleanupDefaultSheet(string spreadsheetId)
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
 
         if (spreadsheet.Sheets?.Count <= 1)
             return;
 
         var defaultSheet = spreadsheet.Sheets?.FirstOrDefault(s => s.Properties?.Title == "Sheet1");
-
         if (defaultSheet?.Properties?.SheetId == null)
             return;
 
@@ -274,6 +272,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
+        InvalidateCache(spreadsheetId);
     }
 
     void EnsureHeadersForSheet(string spreadsheetId, string sheetName, IEnumerable<object> headers)
@@ -313,17 +312,13 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     internal void EnsureSheetExists(string spreadsheetId)
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase) == true
-        );
+        var sheet = FindSheet(spreadsheetId, SheetName);
 
         if (sheet == null)
+        {
+            var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
             RenameDefaultSheet(spreadsheetId, spreadsheet);
+        }
 
         EnsureHeaders(spreadsheetId);
     }
@@ -360,6 +355,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
+        InvalidateCache(spreadsheetId);
     }
 
     void EnsureHeaders(string spreadsheetId)
@@ -479,22 +475,10 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     internal bool SheetExists(string spreadsheetId)
     {
-        try
-        {
-            var spreadsheet = ApiConfig.ExecuteWithRetry(
-                operationName: "Sheets.Get",
-                action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-            );
-            return spreadsheet.Sheets?.Any(s =>
-                    s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase)
-                    == true
-                ) ?? false;
-        }
-        catch
-        {
-            return false;
-        }
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
+        return spreadsheet.Sheets?.Any(s =>
+                s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase) == true
+            ) ?? false;
     }
 
     internal int GetScrobbleCount(string spreadsheetId)
@@ -595,14 +579,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     int GetSheetId(string spreadsheetId)
     {
-        var sheets = ApiConfig
-            .ExecuteWithRetry(
-                operationName: "Sheets.Get.SheetId",
-                action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-            )
-            .Sheets;
-        var sheet = sheets?.FirstOrDefault(s => s.Properties.Title == SheetName);
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
+        var sheet = spreadsheet.Sheets?.FirstOrDefault(s => s.Properties.Title == SheetName);
         return sheet?.Properties?.SheetId
             ?? throw new InvalidOperationException($"Sheet '{SheetName}' not found.");
     }
@@ -614,15 +592,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         bool ascending = true
     )
     {
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
-        );
-
+        var sheet = FindSheet(spreadsheetId, sheetName);
         if (sheet?.Properties?.SheetId == null)
         {
             Logger.Warning("Sheet '{0}' not found for sorting", sheetName);
@@ -677,15 +647,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         if (rowIndices.Count == 0)
             return;
 
-        var spreadsheet = ApiConfig.ExecuteWithRetry(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-        );
-        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
-        );
-
+        var sheet = FindSheet(spreadsheetId, sheetName);
         if (sheet?.Properties?.SheetId == null)
         {
             Logger.Warning("Sheet '{0}' not found for row deletion", sheetName);
@@ -720,7 +682,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute(),
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
-
+        InvalidateCache(spreadsheetId);
         Logger.Debug("Deleted {0} rows from sheet '{1}'", rowIndices.Count, sheetName);
     }
 

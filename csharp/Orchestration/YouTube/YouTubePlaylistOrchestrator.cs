@@ -600,27 +600,27 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         var remainingIds = playlist.VideoIds.Skip(alreadyFetched).ToList();
         var cacheFile = GetPlaylistCacheFile(playlist.Id);
+        var videosFetchedSoFar = alreadyFetched;
 
         var newVideos = youtubeService.GetVideoDetailsForIds(
             videoIds: remainingIds,
-            onBatchComplete: (allFetchedSoFar) =>
+            onBatchComplete: (batchVideos) =>
             {
-                List<YouTubeVideo> combinedVideos = [.. videos, .. allFetchedSoFar];
+                videos.AddRange(batchVideos);
+                videosFetchedSoFar += batchVideos.Count;
 
-                StateManager.Save(cacheFile, combinedVideos);
+                StateManager.Save(cacheFile, videos);
 
                 state.UpdatePlaylistProgress(
                     playlistId: playlist.Id,
-                    videosFetched: alreadyFetched + allFetchedSoFar.Count
+                    videosFetched: videosFetchedSoFar
                 );
                 SaveState();
 
-                onVideoProgress(alreadyFetched + allFetchedSoFar.Count);
+                onVideoProgress(videosFetchedSoFar);
             },
             ct: ct
         );
-
-        videos.AddRange(newVideos);
 
         if (ct.IsCancellationRequested)
             return;

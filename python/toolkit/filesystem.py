@@ -22,7 +22,9 @@ def run_command(cmd, cwd=None):
     result, error = process.communicate()
 
     if process.returncode != 0:
-        raise subprocess.CalledProcessError(process.returncode, cmd, output=result, stderr=error)
+        raise subprocess.CalledProcessError(
+            process.returncode, cmd, output=result, stderr=error
+        )
 
     return unidecode(result), unidecode(error)
 
@@ -37,7 +39,9 @@ def list_directories(path, sort_order="0", indent=0):
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
     print(output)
 
-    entries = [(entry, get_folder_size(entry)) for entry in path.iterdir() if entry.is_dir()]
+    entries = [
+        (entry, get_folder_size(entry)) for entry in path.iterdir() if entry.is_dir()
+    ]
 
     entries.sort(
         key=lambda e: e[0].name if sort_order == "1" else e[1],
@@ -69,7 +73,7 @@ def list_files_and_directories(path, sort_order=False, indent=0):
         list_files_and_directories(entry, sort_order, indent + 2)
 
     for entry in files:
-        file_size_mb = entry.stat().st_size / (1024 ** 2)
+        file_size_mb = entry.stat().st_size / (1024**2)
         file_output = f"{indentation}  {entry.name} ({file_size_mb:.2f} MB)"
         print(file_output)
 
@@ -86,14 +90,20 @@ def rename_file_red(path):
         relative_path_length = len(str(file.relative_to(root_path)))
 
         if relative_path_length > 180:
-            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_length = (
+                180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            )
             new_name = file.stem[:new_length] + file.suffix
             new_file_path = file.with_name(new_name)
             file.rename(new_file_path)
             renamed_count += 1
             logger.info(f"Renamed: {file.name}")
 
-    logger.info(f"Renamed {renamed_count} files" if renamed_count else "No files needed renaming")
+    logger.info(
+        f"Renamed {renamed_count} files"
+        if renamed_count
+        else "No files needed renaming"
+    )
 
 
 def make_torrents(folder):
