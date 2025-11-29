@@ -746,7 +746,9 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         sheetsService.WriteRows(
             spreadsheetId,
             sheetName,
-            [[.. VideoHeaders]]
+            [
+                [.. VideoHeaders],
+            ]
         );
 
         var rows = videos
@@ -776,7 +778,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     static string EscapeFormulaString(string value) => value.Replace("\"", "\"\"");
 
-    internal static void ExportSheetsAsCSVs(string outputDirectory = "ScrapedYouTubePlaylists")
+    internal static void ExportSheetsAsCSVs(string outputDirectory = "YouTube Playlists")
     {
         var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
 
@@ -785,10 +787,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 "No YouTube spreadsheet found. Run sync first to create it."
             );
 
-        var projectRoot = GetDirectoryName(
-            GetDirectoryName(GetDirectoryName(GetDirectoryName(AppContext.BaseDirectory)!)!)!
-        )!;
-        var fullOutputPath = Combine(projectRoot, outputDirectory);
+        var fullOutputPath = Combine(Paths.ProjectRoot, outputDirectory);
 
         var sheetsService = new GoogleSheetsService(
             clientId: AuthenticationConfig.GoogleClientId,

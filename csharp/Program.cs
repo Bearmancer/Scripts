@@ -31,12 +31,6 @@ internal class Program
 {
     static readonly CancellationTokenSource cts = new();
 
-    static readonly string ProjectRoot = GetDirectoryName(
-        GetDirectoryName(GetDirectoryName(GetDirectoryName(AppContext.BaseDirectory)!)!)!
-    )!;
-
-    static readonly string StateDirectory = Combine(ProjectRoot, "state");
-
     static int Main(string[] args)
     {
         Logger.CurrentLogLevel = Info;
@@ -508,8 +502,8 @@ internal class Program
             Logger.Success("YouTube state cleared.");
         }
 
-        var binDir = Combine(ProjectRoot, "CSharpScripts", "bin");
-        var objDir = Combine(ProjectRoot, "CSharpScripts", "obj");
+        var binDir = Combine(Paths.ProjectRoot, "csharp", "bin");
+        var objDir = Combine(Paths.ProjectRoot, "csharp", "obj");
 
         if (Directory.Exists(binDir))
         {
@@ -526,7 +520,7 @@ internal class Program
         Logger.NewLine();
         Logger.Info("Rebuilding...");
 
-        var csprojDir = Combine(ProjectRoot, "CSharpScripts");
+        var csprojDir = Combine(Paths.ProjectRoot, "csharp");
         var process = Process.Start(
             new ProcessStartInfo
             {
@@ -657,7 +651,7 @@ internal class Program
         if (checkLastFm)
         {
             Logger.Info("=== Last.fm ===");
-            var stateFile = Combine(StateDirectory, StateManager.FetchStateFile);
+            var stateFile = Combine(Paths.StateDirectory, StateManager.FetchStateFile);
             var hasState = File.Exists(stateFile);
             var spreadsheetUrl =
                 $"https://docs.google.com/spreadsheets/d/{SpreadsheetConfig.LastFmSpreadsheetId}";
@@ -691,7 +685,7 @@ internal class Program
         if (checkYouTube)
         {
             Logger.Info("=== YouTube ===");
-            var stateFile = Combine(StateDirectory, StateManager.YouTubeStateFile);
+            var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeStateFile);
             var cached = File.Exists(stateFile);
 
             if (cached)

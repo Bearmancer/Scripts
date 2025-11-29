@@ -102,7 +102,7 @@ internal class LastFmService(string apiKey, string username)
             operationName: "LastFm.GetRecentTracks",
             action: () =>
                 client.User.GetRecentTracksAsync(username, limit: PerPage, page: page).Result,
-            postAction: () => { },
+            postAction: () => ApiConfig.Delay(ServiceType.LastFm),
             ct: ct
         );
 

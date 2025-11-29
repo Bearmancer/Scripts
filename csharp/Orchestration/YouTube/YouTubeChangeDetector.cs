@@ -21,7 +21,7 @@ internal static class YouTubeChangeDetector
         var storedSet = storedVideoIds.ToHashSet();
 
         var addedIds = currentVideoIds.Where(id => !storedSet.Contains(id)).ToList();
-        
+
         List<int> removedIndices = [];
         for (var i = 0; i < storedVideoIds.Count; i++)
         {
