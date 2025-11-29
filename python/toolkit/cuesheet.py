@@ -1,14 +1,14 @@
-import argparse
 import chardet
 import ffmpeg
-import logging
 import os
-import sys
 from dataclasses import dataclass, field
 from deflacue.deflacue import CueParser
 from pathlib import Path
 from pathvalidate import sanitize_filename
 from tqdm import tqdm
+from toolkit.cli import get_logger
+
+logger = get_logger("cuesheet")
 
 
 @dataclass
@@ -39,7 +39,6 @@ def extract_track_data(cue_data):
 
     for track in tracks:
         start_time_sec = track.start / 44100
-
         metadata = album_info | track.data
 
         track_info = TrackInfo(
@@ -77,8 +76,10 @@ def process_tracks(tracks, cue_file, volume_adjustment=0.0):
     track_count = len(tracks)
     cue_directory = cue_file.parent
 
-    for index, track in tqdm(enumerate(tracks, 1), total=track_count, desc=f"Converting {cue_file.parent} to FLAC"):
-        track_number = str(track.track_num).rjust(2, '0')
+    for track in tqdm(
+        tracks, total=track_count, desc=f"Converting {cue_file.parent.name}"
+    ):
+        track_number = str(track.track_num).rjust(2, "0")
         output_filename = f"{track_number}. {sanitize_filename(track.title)}.flac"
         output_path = cue_directory / output_filename
 
@@ -120,32 +121,8 @@ def process_cue_file(cue_file, volume_adjustment=0.0):
     os.chdir(cue_directory)
 
     cue_data = parse_cue_file(cue_file)
-
     tracks = extract_track_data(cue_data)
     tracks = calculate_track_durations(tracks)
-
     process_tracks(tracks, cue_file, volume_adjustment)
 
     os.chdir(original_dir)
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Split DFF audio files using CUE sheets"
-    )
-    parser.add_argument("cuefile", help="Path to the CUE file")
-    parser.add_argument(
-        "--volume", type=float, default=0.0, help="Volume adjustment in dB"
-    )
-
-    args = parser.parse_args()
-
-    try:
-        process_cue_file(args.cuefile, args.volume)
-    except Exception as e:
-        logging.error(f"Error: {e}")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

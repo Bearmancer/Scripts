@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace CSharpScripts.Infrastructure;
 
 internal enum LogLevel
@@ -17,15 +19,12 @@ internal enum ServiceType
 
 internal static class Logger
 {
-    static readonly string ProjectRoot = GetDirectoryName(
-        GetDirectoryName(GetDirectoryName(GetDirectoryName(AppContext.BaseDirectory)!)!)!
-    )!;
-    static readonly string LogDirectory = Combine(ProjectRoot, "logs");
-
     static readonly Lock WriteLock = new();
+    static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
     internal static LogLevel CurrentLogLevel { get; set; } = LogLevel.Info;
     internal static ServiceType? ActiveService { get; set; }
+    static string? SessionId { get; set; }
 
     internal static void Info(string message, params object?[] args) =>
         Log(level: LogLevel.Info, label: "Info", color: "blue", message: message, args: args);
@@ -46,7 +45,7 @@ internal static class Logger
             color: "red",
             message: message,
             args: args,
-            filePrefix: "ERROR: "
+            operation: "error"
         );
 
     internal static void Debug(string message, params object?[] args) =>
@@ -91,7 +90,8 @@ internal static class Logger
     internal static void Start(ServiceType service)
     {
         ActiveService = service;
-        WriteToFile("--- Session started ---");
+        SessionId = Guid.NewGuid().ToString("N")[..8];
+        WriteJsonLog(level: "Info", operation: "session_start", message: "Session started");
     }
 
     internal static void End(bool success, string? summary = null)
@@ -99,10 +99,10 @@ internal static class Logger
         if (ActiveService == null)
             return;
 
-        var status = success ? "completed successfully" : "ended with errors";
-        WriteToFile(summary != null ? $"Session {status}: {summary}" : $"Session {status}");
-        WriteToFile("");
+        var status = success ? "completed" : "failed";
+        WriteJsonLog(level: "Info", operation: "session_end", message: summary ?? "Session ended", data: new { status });
         ActiveService = null;
+        SessionId = null;
     }
 
     internal static void Interrupted(string? progress = null)
@@ -110,35 +110,21 @@ internal static class Logger
         if (ActiveService == null)
             return;
 
-        WriteToFile(
-            progress != null ? $"Session interrupted: {progress}" : "Session interrupted by user"
-        );
-        WriteToFile("");
+        WriteJsonLog(level: "Warning", operation: "session_interrupted", message: progress ?? "Session interrupted by user");
         ActiveService = null;
+        SessionId = null;
     }
 
     internal static void FileError(string message, Exception? ex = null)
     {
-        WriteToFile($"ERROR: {message}");
-        if (ex is null)
-            return;
-
-        WriteToFile($"  Type: {ex.GetType().FullName}");
-        WriteToFile($"  Message: {ex.Message}");
-
-        if (ex.InnerException is not null)
+        var data = ex is null ? null : new
         {
-            WriteToFile(
-                $"  Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}"
-            );
-        }
-
-        if (ex.StackTrace is not null)
-        {
-            WriteToFile("  Stack Trace:");
-            foreach (var line in ex.StackTrace.Split('\n').Take(10))
-                WriteToFile($"    {line.Trim()}");
-        }
+            exceptionType = ex.GetType().FullName,
+            exceptionMessage = ex.Message,
+            innerException = ex.InnerException?.Message,
+            stackTrace = ex.StackTrace?.Split('\n').Take(5).Select(l => l.Trim()).ToArray()
+        };
+        WriteJsonLog(level: "Error", operation: "file_error", message: message, data: data);
     }
 
     static void Log(
@@ -148,7 +134,7 @@ internal static class Logger
         string message,
         object?[] args,
         bool writeToFile = true,
-        string? filePrefix = null
+        string? operation = null
     )
     {
         if (CurrentLogLevel > level)
@@ -161,29 +147,43 @@ internal static class Logger
         );
 
         if (writeToFile)
-            WriteToFile((filePrefix ?? "") + formatted);
+            WriteJsonLog(level: label, operation: operation ?? "log", message: formatted);
     }
 
-    static void WriteToFile(string message)
+    static void WriteJsonLog(string level, string operation, string message, object? data = null)
     {
         if (ActiveService is not ServiceType service)
             return;
 
-        CreateDirectory(LogDirectory);
+        CreateDirectory(Paths.LogDirectory);
 
-        var logLine = $"[{DateTime.Now:yyyy/MM/dd HH:mm:ss}] {message}";
+        var logEntry = new Dictionary<string, object?>
+        {
+            ["timestamp"] = DateTime.UtcNow.ToString("o"),
+            ["level"] = level,
+            ["service"] = service.ToString().ToLowerInvariant(),
+            ["sessionId"] = SessionId,
+            ["operation"] = operation,
+            ["message"] = message
+        };
+
+        if (data is not null)
+            logEntry["data"] = data;
+
         var logPath = Combine(
-            LogDirectory,
+            Paths.LogDirectory,
             service switch
             {
-                ServiceType.LastFm => "lastfm.log",
-                ServiceType.YouTube => "youtube.log",
-                ServiceType.Sheets => "sheets.log",
-                _ => "general.log",
+                ServiceType.LastFm => "lastfm.jsonl",
+                ServiceType.YouTube => "youtube.jsonl",
+                ServiceType.Sheets => "sheets.jsonl",
+                _ => "general.jsonl",
             }
         );
 
+        var json = JsonSerializer.Serialize(logEntry, JsonOptions);
+
         lock (WriteLock)
-            AppendAllText(logPath, logLine + Environment.NewLine);
+            AppendAllText(logPath, json + Environment.NewLine);
     }
 }

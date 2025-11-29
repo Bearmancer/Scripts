@@ -106,6 +106,8 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
             ct: ct
         );
 
+        NewLine();
+
         if (ct.IsCancellationRequested)
             Warning("Stopped at page {0} ({1} scrobbles)", state.LastPage, state.TotalFetched);
     }

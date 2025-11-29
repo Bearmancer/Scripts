@@ -2,11 +2,6 @@ namespace CSharpScripts.Infrastructure;
 
 internal static class StateManager
 {
-    static readonly string ProjectRoot = GetDirectoryName(
-        GetDirectoryName(GetDirectoryName(GetDirectoryName(AppContext.BaseDirectory)!)!)!
-    )!;
-    static readonly string StateDirectory = Combine(ProjectRoot, "state");
-
     internal const string ScrobblesFile = "scrobbles.json";
     internal const string FetchStateFile = "scrobblefetchstate.json";
     internal const string YouTubeStateFile = "youtubefetchstate.json";
@@ -16,7 +11,7 @@ internal static class StateManager
     internal static T Load<T>(string fileName)
         where T : class, new()
     {
-        CreateDirectory(StateDirectory);
+        CreateDirectory(Paths.StateDirectory);
         var path = GetPath(fileName);
         if (!File.Exists(path))
             return new T();
@@ -27,7 +22,7 @@ internal static class StateManager
 
     internal static void Save<T>(string fileName, T state)
     {
-        CreateDirectory(StateDirectory);
+        CreateDirectory(Paths.StateDirectory);
         WriteAllText(GetPath(fileName), JsonSerializer.Serialize(state, JsonOptions));
     }
 
@@ -48,11 +43,11 @@ internal static class StateManager
     internal static void DeleteYouTubeStates()
     {
         Delete(YouTubeStateFile);
-        foreach (var file in GetFiles(StateDirectory, "playlist_*.json"))
+        foreach (var file in GetFiles(Paths.StateDirectory, "playlist_*.json"))
             File.Delete(file);
         Logger.Debug("Deleted YouTube state files");
     }
 
     static string GetPath(string fileName) =>
-        Combine(StateDirectory, fileName.EndsWith(".json") ? fileName : $"{fileName}.json");
+        Combine(Paths.StateDirectory, fileName.EndsWith(".json") ? fileName : $"{fileName}.json");
 }
