@@ -215,7 +215,7 @@ internal class Program
 
         ytCsvCommand.SetHandler(() =>
         {
-            YouTubePlaylistOrchestrator.ExportSheetsAsCSVs();
+            YouTubePlaylistOrchestrator.ExportSheetsAsCSVs(ct: cts.Token);
         });
 
         csvCommand.AddCommand(ytCsvCommand);

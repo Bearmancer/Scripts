@@ -785,14 +785,15 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         return newId;
     }
 
-    internal int ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory)
+    internal int ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory, CancellationToken ct = default)
     {
         CreateDirectory(outputDirectory);
 
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets),
+            ct: ct
         );
 
         var sheets = spreadsheet.Sheets?.Where(s => s.Properties?.SheetId != null).ToList() ?? [];
@@ -804,7 +805,11 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         if (toExport.Count == 0)
             return 0;
 
+        var totalSheets = sheets.Count;
+        var alreadyExported = totalSheets - toExport.Count;
         var exported = 0;
+
+        Logger.SuppressConsole = true;
 
         AnsiConsole
             .Progress()
@@ -820,12 +825,16 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             .Start(ctx =>
             {
                 var task = ctx.AddTask(
-                    $"Exporting {toExport.Count} sheets",
-                    maxValue: toExport.Count
+                    $"Exporting sheets ({alreadyExported}/{totalSheets} done)",
+                    maxValue: totalSheets
                 );
+                task.Value = alreadyExported;
 
                 foreach (var sheet in toExport)
                 {
+                    if (ct.IsCancellationRequested)
+                        break;
+
                     var sheetTitle = sheet.Properties!.Title!;
                     var sheetId = sheet.Properties.SheetId;
                     var safeFileName = SanitizeForFileName(sheetTitle);
@@ -848,7 +857,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                     var response = ApiConfig.ExecuteWithRetry(
                         operationName: "Sheets.ExportCSV",
                         action: () => httpClient.GetByteArrayAsync(exportUrl).Result,
-                        postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+                        postAction: () => ApiConfig.Delay(ServiceType.Sheets),
+                        ct: ct
                     );
 
                     WriteAllBytes(outputPath, response);
@@ -856,6 +866,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                     task.Increment(1);
                 }
             });
+
+        Logger.SuppressConsole = false;
 
         return exported;
     }
