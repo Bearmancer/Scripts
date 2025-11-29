@@ -785,9 +785,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         return newId;
     }
 
-    internal void ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory)
+    internal int ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory)
     {
-        Logger.Info("Exporting each sheet as CSV to: {0}", outputDirectory);
         CreateDirectory(outputDirectory);
 
         var spreadsheet = ApiConfig.ExecuteWithRetry(
@@ -796,41 +795,69 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
 
-        foreach (var sheet in spreadsheet.Sheets ?? [])
-        {
-            var sheetTitle = sheet.Properties?.Title ?? "Untitled";
-            var sheetId = sheet.Properties?.SheetId;
+        var sheets = spreadsheet.Sheets?.Where(s => s.Properties?.SheetId != null).ToList() ?? [];
+        var existingFiles = GetFiles(outputDirectory, "*.csv").Select(GetFileName).ToHashSet();
+        var toExport = sheets
+            .Where(s => !existingFiles.Contains($"{SanitizeForFileName(s.Properties!.Title!)}.csv"))
+            .ToList();
 
-            if (sheetId == null)
-                continue;
+        if (toExport.Count == 0)
+            return 0;
 
-            var safeFileName = SanitizeForFileName(sheetTitle);
-            var outputPath = Combine(outputDirectory, $"{safeFileName}.csv");
+        var exported = 0;
 
-            Logger.Debug("Exporting sheet '{0}' to {1}", sheetTitle, outputPath);
-
-            var exportUrl =
-                $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetId}";
-
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Bearer",
-                    GoogleCredentialService.GetAccessToken(
-                        driveService.HttpClientInitializer as UserCredential
-                    )
+        AnsiConsole
+            .Progress()
+            .AutoClear(true)
+            .HideCompleted(false)
+            .Columns(
+                new TaskDescriptionColumn(),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new RemainingTimeColumn(),
+                new SpinnerColumn()
+            )
+            .Start(ctx =>
+            {
+                var task = ctx.AddTask(
+                    $"Exporting {toExport.Count} sheets",
+                    maxValue: toExport.Count
                 );
 
-            var response = ApiConfig.ExecuteWithRetry(
-                operationName: "Sheets.ExportCSV",
-                action: () => httpClient.GetByteArrayAsync(exportUrl).Result,
-                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
-            );
+                foreach (var sheet in toExport)
+                {
+                    var sheetTitle = sheet.Properties!.Title!;
+                    var sheetId = sheet.Properties.SheetId;
+                    var safeFileName = SanitizeForFileName(sheetTitle);
+                    var outputPath = Combine(outputDirectory, $"{safeFileName}.csv");
 
-            WriteAllBytes(outputPath, response);
-        }
+                    task.Description = $"Exporting: {sheetTitle}";
 
-        Logger.Success("Exported {0} sheets as CSV", spreadsheet.Sheets?.Count ?? 0);
+                    var exportUrl =
+                        $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetId}";
+
+                    using var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue(
+                            "Bearer",
+                            GoogleCredentialService.GetAccessToken(
+                                driveService.HttpClientInitializer as UserCredential
+                            )
+                        );
+
+                    var response = ApiConfig.ExecuteWithRetry(
+                        operationName: "Sheets.ExportCSV",
+                        action: () => httpClient.GetByteArrayAsync(exportUrl).Result,
+                        postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+                    );
+
+                    WriteAllBytes(outputPath, response);
+                    exported++;
+                    task.Increment(1);
+                }
+            });
+
+        return exported;
     }
 
     internal List<(string Id, string Url)> FindDuplicateSpreadsheets(string title)

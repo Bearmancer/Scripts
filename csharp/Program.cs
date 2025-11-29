@@ -56,13 +56,11 @@ internal class Program
         var statusCommand = BuildStatusCommand();
         var clearCommand = BuildClearCommand();
         var exportCommand = BuildExportCommand();
-        var dupesCommand = BuildDupesCommand();
 
         rootCommand.AddCommand(syncCommand);
         rootCommand.AddCommand(statusCommand);
         rootCommand.AddCommand(clearCommand);
         rootCommand.AddCommand(exportCommand);
-        rootCommand.AddCommand(dupesCommand);
 
         return rootCommand.Invoke(args);
     }
@@ -75,65 +73,27 @@ internal class Program
             Sync data to Google Sheets.
 
             SUBCOMMANDS:
-              yt [ids]    Sync YouTube playlists
-              lastfm      Sync Last.fm scrobbles
-
-            OPTIONS:
-              -r, --refresh       Clear local cache before sync
-              -c, --clear-sheet   Clear spreadsheet content before sync
+              yt        Sync YouTube playlists
+              lastfm    Sync Last.fm scrobbles
 
             EXAMPLES:
               dotnet run sync yt
-              dotnet run sync yt PLxxxxxx
-              dotnet run sync yt -r
               dotnet run sync lastfm
-              dotnet run sync lastfm -c
             """
-        );
-
-        Option<bool> refreshOption = new(
-            aliases: ["--refresh", "-r"],
-            description: "Clear local cache before syncing"
-        );
-
-        Option<bool> clearSheetOption = new(
-            aliases: ["--clear-sheet", "-c"],
-            description: "Clear spreadsheet content before syncing"
         );
 
         Command ytCommand = new(name: "yt", description: "Sync YouTube playlists to Google Sheets");
         ytCommand.AddAlias("youtube");
 
-        Argument<string[]> playlistIdsArg = new(
-            name: "playlist-ids",
-            description: "Playlist ID(s) or title(s) to sync (omit for all)"
-        )
-        {
-            Arity = ArgumentArity.ZeroOrMore,
-        };
-
-        ytCommand.AddArgument(playlistIdsArg);
-        ytCommand.AddOption(refreshOption);
-        ytCommand.AddOption(clearSheetOption);
-
         ytCommand.SetHandler(
-            (verbose, refresh, clearSheet, playlistIds) =>
+            (verbose) =>
             {
                 if (verbose)
                     Logger.CurrentLogLevel = LogLevel.Debug;
 
-                if (refresh)
-                    StateManager.DeleteYouTubeStates();
-
-                if (clearSheet)
-                    ClearYouTubeSheetContent();
-
-                RunYouTube(playlistIds);
+                RunYouTube();
             },
-            verboseOption,
-            refreshOption,
-            clearSheetOption,
-            playlistIdsArg
+            verboseOption
         );
 
         Command lastfmCommand = new(
@@ -141,36 +101,15 @@ internal class Program
             description: "Sync Last.fm scrobbles to Google Sheets"
         );
 
-        Option<bool> lastfmRefreshOption = new(
-            aliases: ["--refresh", "-r"],
-            description: "Clear local cache before syncing"
-        );
-
-        Option<bool> lastfmClearSheetOption = new(
-            aliases: ["--clear-sheet", "-c"],
-            description: "Clear spreadsheet content before syncing"
-        );
-
-        lastfmCommand.AddOption(lastfmRefreshOption);
-        lastfmCommand.AddOption(lastfmClearSheetOption);
-
         lastfmCommand.SetHandler(
-            (verbose, refresh, clearSheet) =>
+            (verbose) =>
             {
                 if (verbose)
                     Logger.CurrentLogLevel = LogLevel.Debug;
 
-                if (refresh)
-                    StateManager.DeleteLastFmStates();
-
-                if (clearSheet)
-                    ClearLastFmSheetContent();
-
                 RunLastFm();
             },
-            verboseOption,
-            lastfmRefreshOption,
-            lastfmClearSheetOption
+            verboseOption
         );
 
         syncCommand.AddCommand(ytCommand);
@@ -190,7 +129,7 @@ internal class Program
               dotnet run status [service]
 
             ARGUMENTS:
-              service    yt, lastfm (omit for all)
+              service   yt, lastfm (omit for all)
 
             EXAMPLES:
               dotnet run status
@@ -218,10 +157,10 @@ internal class Program
         Command clearCommand = new(
             name: "clear",
             description: """
-            Clear state, cache, and rebuild project.
+            Clear state, cache, spreadsheets, and rebuild project.
 
-            Clears local state/cache files, optionally clears spreadsheet content,
-            deletes build artifacts (bin/obj), and runs a fresh build.
+            Clears local state/cache files, spreadsheet content, deletes
+            build artifacts (bin/obj), and runs a fresh build.
 
             USAGE:
               dotnet run clear [service]
@@ -229,14 +168,10 @@ internal class Program
             ARGUMENTS:
               service    yt, lastfm, all (default: all)
 
-            OPTIONS:
-              --sheet    Also clear spreadsheet content (keeps the spreadsheet)
-
             EXAMPLES:
               dotnet run clear
               dotnet run clear yt
-              dotnet run clear lastfm --sheet
-              dotnet run clear all --sheet
+              dotnet run clear lastfm
             """
         );
 
@@ -249,22 +184,9 @@ internal class Program
         };
         serviceArg.SetDefaultValue("all");
 
-        Option<bool> clearSheetOption = new(
-            aliases: ["--sheet"],
-            description: "Also clear spreadsheet content (keeps the spreadsheet)"
-        );
-
         clearCommand.AddArgument(serviceArg);
-        clearCommand.AddOption(clearSheetOption);
 
-        clearCommand.SetHandler(
-            (service, clearSheet) =>
-            {
-                ClearAndRebuild(service, clearSheet);
-            },
-            serviceArg,
-            clearSheetOption
-        );
+        clearCommand.SetHandler(ClearAndRebuild, serviceArg);
 
         return clearCommand;
     }
@@ -300,43 +222,6 @@ internal class Program
         exportCommand.AddCommand(csvCommand);
 
         return exportCommand;
-    }
-
-    static Command BuildDupesCommand()
-    {
-        Command dupesCommand = new(
-            name: "dupes",
-            description: """
-            Check for and manage duplicate spreadsheets in Google Drive.
-
-            Searches for spreadsheets with matching names and allows you to
-            delete duplicates interactively.
-
-            USAGE:
-              dotnet run dupes [service]
-
-            ARGUMENTS:
-              service    yt, lastfm, all (default: all)
-
-            EXAMPLES:
-              dotnet run dupes
-              dotnet run dupes yt
-            """
-        );
-
-        Argument<string> serviceArg = new(
-            name: "service",
-            description: "Service to check: yt, lastfm, all"
-        )
-        {
-            Arity = ArgumentArity.ZeroOrOne,
-        };
-        serviceArg.SetDefaultValue("all");
-
-        dupesCommand.AddArgument(serviceArg);
-        dupesCommand.SetHandler(CheckAndManageDuplicates, serviceArg);
-
-        return dupesCommand;
     }
 
     static void RunWithErrorHandling(ServiceType service, Action action)
@@ -394,54 +279,17 @@ internal class Program
             }
         );
 
-    static void RunYouTube(string[] playlistIds) =>
+    static void RunYouTube() =>
         RunWithErrorHandling(
             YouTube,
             () =>
             {
                 Logger.Info("Starting YouTube sync...");
-                var orchestrator = new YouTubePlaylistOrchestrator(cts.Token);
-
-                if (playlistIds.Length > 0)
-                    orchestrator.ExecuteForPlaylists(playlistIds);
-                else
-                    orchestrator.Execute();
+                new YouTubePlaylistOrchestrator(cts.Token).Execute();
             }
         );
 
-    static void ClearLastFmSheetContent()
-    {
-        var state = StateManager.Load<FetchState>(StateManager.FetchStateFile);
-        if (IsNullOrEmpty(state.SpreadsheetId))
-            return;
-
-        var sheets = new GoogleSheetsService(
-            clientId: AuthenticationConfig.GoogleClientId,
-            clientSecret: AuthenticationConfig.GoogleClientSecret
-        );
-        sheets.ClearSubsheet(state.SpreadsheetId, "Scrobbles");
-        Logger.Info("Cleared Last.fm spreadsheet content.");
-    }
-
-    static void ClearYouTubeSheetContent()
-    {
-        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
-        if (IsNullOrEmpty(state.SpreadsheetId))
-            return;
-
-        var sheets = new GoogleSheetsService(
-            clientId: AuthenticationConfig.GoogleClientId,
-            clientSecret: AuthenticationConfig.GoogleClientSecret
-        );
-
-        var sheetNames = sheets.GetSubsheetNames(state.SpreadsheetId);
-        foreach (var sheet in sheetNames.Where(s => s != "README"))
-            sheets.DeleteSubsheet(state.SpreadsheetId, sheet);
-
-        Logger.Info("Cleared YouTube spreadsheet content.");
-    }
-
-    static void ClearAndRebuild(string service, bool clearSheet)
+    static void ClearAndRebuild(string service)
     {
         var normalizedService = service.ToLowerInvariant();
         var clearAll = normalizedService == "all";
@@ -460,18 +308,15 @@ internal class Program
         {
             Logger.Info("Clearing Last.fm...");
 
-            if (clearSheet)
+            var state = StateManager.Load<FetchState>(StateManager.FetchStateFile);
+            if (!IsNullOrEmpty(state.SpreadsheetId))
             {
-                var state = StateManager.Load<FetchState>(StateManager.FetchStateFile);
-                if (!IsNullOrEmpty(state.SpreadsheetId))
-                {
-                    sheets ??= new GoogleSheetsService(
-                        clientId: AuthenticationConfig.GoogleClientId,
-                        clientSecret: AuthenticationConfig.GoogleClientSecret
-                    );
-                    sheets.ClearSubsheet(state.SpreadsheetId, "Scrobbles");
-                    Logger.Success("Last.fm spreadsheet content cleared.");
-                }
+                sheets ??= new GoogleSheetsService(
+                    clientId: AuthenticationConfig.GoogleClientId,
+                    clientSecret: AuthenticationConfig.GoogleClientSecret
+                );
+                sheets.ClearSubsheet(state.SpreadsheetId, "Scrobbles");
+                Logger.Success("Last.fm spreadsheet content cleared.");
             }
 
             StateManager.DeleteLastFmStates();
@@ -482,20 +327,17 @@ internal class Program
         {
             Logger.Info("Clearing YouTube...");
 
-            if (clearSheet)
+            var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
+            if (!IsNullOrEmpty(state.SpreadsheetId))
             {
-                var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
-                if (!IsNullOrEmpty(state.SpreadsheetId))
-                {
-                    sheets ??= new GoogleSheetsService(
-                        clientId: AuthenticationConfig.GoogleClientId,
-                        clientSecret: AuthenticationConfig.GoogleClientSecret
-                    );
-                    var sheetNames = sheets.GetSubsheetNames(state.SpreadsheetId);
-                    foreach (var sheet in sheetNames.Where(s => s != "README"))
-                        sheets.DeleteSubsheet(state.SpreadsheetId, sheet);
-                    Logger.Success("YouTube spreadsheet content cleared.");
-                }
+                sheets ??= new GoogleSheetsService(
+                    clientId: AuthenticationConfig.GoogleClientId,
+                    clientSecret: AuthenticationConfig.GoogleClientSecret
+                );
+                var sheetNames = sheets.GetSubsheetNames(state.SpreadsheetId);
+                foreach (var sheet in sheetNames.Where(s => s != "README"))
+                    sheets.DeleteSubsheet(state.SpreadsheetId, sheet);
+                Logger.Success("YouTube spreadsheet content cleared.");
             }
 
             StateManager.DeleteYouTubeStates();
@@ -539,98 +381,6 @@ internal class Program
             Logger.Success("Clear complete. Project rebuilt successfully.");
         else
             Logger.Error("Build failed. Run 'dotnet build' manually to see errors.");
-    }
-
-    static void CheckAndManageDuplicates(string service)
-    {
-        var normalizedService = service.ToLowerInvariant();
-        var checkAll = normalizedService == "all";
-        var checkLastFm = checkAll || normalizedService == "lastfm";
-        var checkYouTube = checkAll || normalizedService is "youtube" or "yt";
-
-        if (!checkLastFm && !checkYouTube)
-        {
-            Logger.Warning("Invalid service: {0}. Use: yt, lastfm, or all", service);
-            return;
-        }
-
-        var sheets = new GoogleSheetsService(
-            clientId: AuthenticationConfig.GoogleClientId,
-            clientSecret: AuthenticationConfig.GoogleClientSecret
-        );
-
-        List<(string Title, List<(string Id, string Url)> Duplicates)> allDupes = [];
-
-        if (checkLastFm)
-        {
-            var dupes = sheets.FindDuplicateSpreadsheets(SpreadsheetConfig.LastFmSpreadsheetTitle);
-            if (dupes.Count > 1)
-                allDupes.Add((SpreadsheetConfig.LastFmSpreadsheetTitle, dupes));
-        }
-
-        if (checkYouTube)
-        {
-            var dupes = sheets.FindDuplicateSpreadsheets(SpreadsheetConfig.YouTubeSpreadsheetTitle);
-            if (dupes.Count > 1)
-                allDupes.Add((SpreadsheetConfig.YouTubeSpreadsheetTitle, dupes));
-        }
-
-        if (allDupes.Count == 0)
-        {
-            Logger.Success("No duplicate spreadsheets found.");
-            return;
-        }
-
-        foreach (var (title, dupes) in allDupes)
-        {
-            Logger.Warning("Found {0} spreadsheets named \"{1}\":", dupes.Count, title);
-            Logger.NewLine();
-
-            for (var i = 0; i < dupes.Count; i++)
-            {
-                var (id, url) = dupes[i];
-                Logger.Info("  [{0}] {1}", i + 1, url);
-            }
-
-            Logger.NewLine();
-            Logger.Info(
-                "Enter numbers to DELETE (comma-separated, e.g., 1,3) or press Enter to skip:"
-            );
-
-            var input = Console.ReadLine()?.Trim();
-            if (IsNullOrEmpty(input))
-            {
-                Logger.Info("Skipped.");
-                continue;
-            }
-
-            var toDelete = input
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(s => int.TryParse(s, out var n) ? n : -1)
-                .Where(n => n >= 1 && n <= dupes.Count)
-                .Distinct()
-                .ToList();
-
-            if (toDelete.Count == 0)
-            {
-                Logger.Warning("No valid selections.");
-                continue;
-            }
-
-            Logger.Warning("Will delete {0} spreadsheet(s).", toDelete.Count);
-            if (!AnsiConsole.Confirm("Confirm deletion?", defaultValue: false))
-            {
-                Logger.Info("Cancelled.");
-                continue;
-            }
-
-            foreach (var idx in toDelete)
-            {
-                var (id, _) = dupes[idx - 1];
-                sheets.DeleteSpreadsheet(id);
-                Logger.Success("Deleted spreadsheet {0}", id);
-            }
-        }
     }
 
     static void CheckStatus(string? service)
