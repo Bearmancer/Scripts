@@ -785,7 +785,11 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         return newId;
     }
 
-    internal int ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory, CancellationToken ct = default)
+    internal int ExportEachSheetAsCSV(
+        string spreadsheetId,
+        string outputDirectory,
+        CancellationToken ct = default
+    )
     {
         CreateDirectory(outputDirectory);
 
