@@ -100,7 +100,12 @@ internal static class Logger
             return;
 
         var status = success ? "completed" : "failed";
-        WriteJsonLog(level: "Info", operation: "session_end", message: summary ?? "Session ended", data: new { status });
+        WriteJsonLog(
+            level: "Info",
+            operation: "session_end",
+            message: summary ?? "Session ended",
+            data: new { status }
+        );
         ActiveService = null;
         SessionId = null;
     }
@@ -110,20 +115,26 @@ internal static class Logger
         if (ActiveService == null)
             return;
 
-        WriteJsonLog(level: "Warning", operation: "session_interrupted", message: progress ?? "Session interrupted by user");
+        WriteJsonLog(
+            level: "Warning",
+            operation: "session_interrupted",
+            message: progress ?? "Session interrupted by user"
+        );
         ActiveService = null;
         SessionId = null;
     }
 
     internal static void FileError(string message, Exception? ex = null)
     {
-        var data = ex is null ? null : new
-        {
-            exceptionType = ex.GetType().FullName,
-            exceptionMessage = ex.Message,
-            innerException = ex.InnerException?.Message,
-            stackTrace = ex.StackTrace?.Split('\n').Take(5).Select(l => l.Trim()).ToArray()
-        };
+        var data = ex is null
+            ? null
+            : new
+            {
+                exceptionType = ex.GetType().FullName,
+                exceptionMessage = ex.Message,
+                innerException = ex.InnerException?.Message,
+                stackTrace = ex.StackTrace?.Split('\n').Take(5).Select(l => l.Trim()).ToArray(),
+            };
         WriteJsonLog(level: "Error", operation: "file_error", message: message, data: data);
     }
 
@@ -164,7 +175,7 @@ internal static class Logger
             ["service"] = service.ToString().ToLowerInvariant(),
             ["sessionId"] = SessionId,
             ["operation"] = operation,
-            ["message"] = message
+            ["message"] = message,
         };
 
         if (data is not null)

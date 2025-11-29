@@ -25,9 +25,9 @@ internal static class ApiConfig
 {
     internal const int MaxRetries = 10;
     internal const int BaseDelaySeconds = 60;
-    internal const int YouTubeDelayMs = 200;
-    internal const int SheetsDelayMs = 1100;
-    internal const int LastFmDelayMs = 1000;
+    internal const int YouTubeDelayMs = 1500;
+    internal const int SheetsDelayMs = 1500;
+    internal const int LastFmDelayMs = 1500;
 
     internal static bool IsDailyQuotaExceeded(string message) =>
         message.Contains("daily limit", StringComparison.OrdinalIgnoreCase)

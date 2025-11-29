@@ -67,7 +67,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             ApiConfig.ExecuteWithRetry(
                 operationName: "Sheets.Get",
                 action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => { }
+                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             );
             return true;
         }
@@ -86,7 +86,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var existingSheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
@@ -122,7 +122,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
@@ -153,7 +153,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         return spreadsheet
                 .Sheets?.Select(s => s.Properties?.Title ?? "")
@@ -205,7 +205,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(oldName, StringComparison.OrdinalIgnoreCase) == true
@@ -245,7 +245,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
 
         if (spreadsheet.Sheets?.Count <= 1)
@@ -316,7 +316,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase) == true
@@ -369,7 +369,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             .ExecuteWithRetry(
                 operationName: "Sheets.Values.Get.Headers",
                 action: () => service.Spreadsheets.Values.Get(spreadsheetId, range).Execute(),
-                postAction: () => { }
+                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             )
             .Values;
 
@@ -422,7 +422,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                         .UNFORMATTEDVALUE;
                     return request.Execute();
                 },
-                postAction: () => { }
+                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             );
 
             if (response.Values == null || response.Values.Count == 0)
@@ -484,7 +484,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             var spreadsheet = ApiConfig.ExecuteWithRetry(
                 operationName: "Sheets.Get",
                 action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => { }
+                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             );
             return spreadsheet.Sheets?.Any(s =>
                     s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase)
@@ -507,7 +507,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                 var request = service.Spreadsheets.Values.Get(spreadsheetId, range);
                 return request.Execute();
             },
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
 
         if (response.Values == null || response.Values.Count <= 1)
@@ -599,7 +599,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             .ExecuteWithRetry(
                 operationName: "Sheets.Get.SheetId",
                 action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => { }
+                postAction: () => ApiConfig.Delay(ServiceType.Sheets)
             )
             .Sheets;
         var sheet = sheets?.FirstOrDefault(s => s.Properties.Title == SheetName);
@@ -617,7 +617,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
@@ -680,7 +680,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => { }
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
         var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
             s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
