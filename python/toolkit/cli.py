@@ -1,11 +1,12 @@
+import argparse
 import json
 import logging
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
-import typer
 
 console = Console()
 
@@ -35,7 +36,7 @@ class JsonFileHandler(logging.Handler):
             log_entry["data"] = record.data
 
         with open(self.log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(log_entry) + "\n")
+            print(json.dumps(log_entry), file=f)
 
 
 def configure_logging(service_name="toolkit"):
@@ -45,7 +46,9 @@ def configure_logging(service_name="toolkit"):
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
 
-    logger.addHandler(RichHandler(console=console, rich_tracebacks=True, show_time=False))
+    logger.addHandler(
+        RichHandler(console=console, rich_tracebacks=True, show_time=False)
+    )
     logger.addHandler(JsonFileHandler(service_name))
 
     return logger
@@ -53,109 +56,58 @@ def configure_logging(service_name="toolkit"):
 
 logger = configure_logging()
 
-app = typer.Typer(
-    name="toolkit",
-    help="Personal toolkit for audio, video, and file operations.",
-    no_args_is_help=True,
-)
 
-audio_app = typer.Typer(help="Audio conversion and processing tools.")
-video_app = typer.Typer(help="Video processing and extraction tools.")
-filesystem_app = typer.Typer(help="Filesystem operations and torrent creation.")
-
-app.add_typer(audio_app, name="audio")
-app.add_typer(video_app, name="video")
-app.add_typer(filesystem_app, name="filesystem")
+def get_logger(service_name="toolkit"):
+    return configure_logging(service_name)
 
 
-@audio_app.command("convert")
-def audio_convert(
-    directory=typer.Option(
-        Path("."), "--directory", "-d", help="Directory containing audio files"
-    ),
-    mode=typer.Option(
-        "convert", "--mode", "-m", help="Mode: 'convert' for FLAC or 'extract' for SACD"
-    ),
-    format=typer.Option(
-        "all", "--format", "-f", help="Output format: 24-bit, flac, mp3, all"
-    ),
-):
-    """Convert audio files to various formats or extract SACD ISOs."""
+def cmd_audio_convert(args):
     from toolkit.audio import convert_audio, process_sacd_directory, prepare_directory
 
-    resolved = directory.resolve()
+    resolved = args.directory.resolve()
     if not resolved.exists():
         logger.error(f"Directory not found: {resolved}")
-        raise typer.Exit(1)
+        sys.exit(1)
 
     prepared = prepare_directory(resolved)
 
-    match mode:
+    match args.mode:
         case "convert":
-            convert_audio(1, prepared, format)
+            convert_audio(1, prepared, args.format)
         case "extract":
-            process_sacd_directory(prepared, format)
+            process_sacd_directory(prepared, args.format)
 
     logger.info("Processing completed")
 
 
-@audio_app.command("rename")
-def audio_rename(
-    directory=typer.Option(
-        Path("."), "--directory", "-d", help="Directory containing audio files"
-    ),
-):
-    """Rename files with excessively long paths."""
+def cmd_audio_rename(args):
     from toolkit.audio import rename_file_red
 
-    rename_file_red(directory.resolve())
+    rename_file_red(args.directory.resolve())
 
 
-@audio_app.command("art-report")
-def audio_art_report(
-    directory=typer.Option(
-        Path("."), "--directory", "-d", help="Directory containing FLAC files"
-    ),
-):
-    """Report embedded artwork sizes in FLAC files."""
+def cmd_audio_art_report(args):
     from toolkit.audio import calculate_image_size
 
-    calculate_image_size(directory.resolve())
+    calculate_image_size(args.directory.resolve())
 
 
-@video_app.command("remux")
-def video_remux(
-    path=typer.Option(Path("."), "--path", "-p", help="Path to disc folder"),
-    skip_mediainfo=typer.Option(
-        False, "--skip-mediainfo", help="Skip MediaInfo generation"
-    ),
-):
-    """Remux DVD/Blu-ray discs to MKV."""
+def cmd_video_remux(args):
     from toolkit.video import remux_disc
 
-    remux_disc(path.resolve(), not skip_mediainfo)
+    remux_disc(args.path.resolve(), not args.skip_mediainfo)
 
 
-@video_app.command("compress")
-def video_compress(
-    directory=typer.Option(
-        Path("."), "--directory", "-d", help="Directory containing MKV files"
-    ),
-):
-    """Batch compress MKV files using HandBrake."""
+def cmd_video_compress(args):
     from toolkit.video import batch_compression
 
-    batch_compression(directory.resolve())
+    batch_compression(args.directory.resolve())
 
 
-@video_app.command("chapters")
-def video_chapters(
-    path=typer.Option(Path("."), "--path", "-p", help="Video file or directory"),
-):
-    """Extract chapters from video files."""
+def cmd_video_chapters(args):
     from toolkit.video import extract_chapters, VIDEO_EXTENSIONS
 
-    resolved = path.resolve()
+    resolved = args.path.resolve()
     video_files = (
         [resolved]
         if resolved.is_file()
@@ -164,14 +116,10 @@ def video_chapters(
     extract_chapters(video_files)
 
 
-@video_app.command("resolutions")
-def video_resolutions(
-    path=typer.Option(Path("."), "--path", "-p", help="Video file or directory"),
-):
-    """Print resolution information for video files."""
+def cmd_video_resolutions(args):
     from toolkit.video import print_video_resolution, VIDEO_EXTENSIONS
 
-    resolved = path.resolve()
+    resolved = args.path.resolve()
     video_files = (
         [resolved]
         if resolved.is_file()
@@ -180,81 +128,223 @@ def video_resolutions(
     print_video_resolution(video_files)
 
 
-@video_app.command("gif")
-def video_gif(
-    input_path=typer.Option(..., "--input", "-i", help="Input video file"),
-    start=typer.Option("00:00", "--start", "-s", help="Start time (mm:ss)"),
-    duration=typer.Option(30, "--duration", "-d", help="Duration in seconds"),
-    max_size=typer.Option(300, "--max-size", "-m", help="Maximum GIF size in MiB"),
-    output_dir=typer.Option(
-        Path.home() / "Desktop", "--output", "-o", help="Output directory"
-    ),
-):
-    """Create optimized GIF from video file."""
+def cmd_video_gif(args):
     from toolkit.video import create_gif_optimized
 
     create_gif_optimized(
-        input_path.resolve(), start, duration, max_size, output_dir.resolve()
+        args.input.resolve(),
+        args.start,
+        args.duration,
+        args.max_size,
+        args.output.resolve(),
     )
 
 
-@video_app.command("thumbnails")
-def video_thumbnails(
-    path=typer.Option(..., "--path", "-p", help="Video file"),
-):
-    """Extract thumbnail grid and full-size images from video."""
+def cmd_video_thumbnails(args):
     from toolkit.video import extract_images
 
-    extract_images(path.resolve())
+    extract_images(args.path.resolve())
 
 
-@filesystem_app.command("tree")
-def filesystem_tree(
-    directory=typer.Option(Path("."), "--directory", "-d", help="Directory to list"),
-    sort=typer.Option("size", "--sort", "-s", help="Sort by: size or name"),
-    include_files=typer.Option(
-        False, "--include-files", "-f", help="Include files in listing"
-    ),
-):
-    """List directory tree with sizes."""
+def cmd_filesystem_tree(args):
     from toolkit.filesystem import list_directories, list_files_and_directories
 
-    resolved = directory.resolve()
-    sort_by_name = sort == "name"
+    resolved = args.directory.resolve()
+    sort_by_name = args.sort == "name"
 
-    if include_files:
+    if args.include_files:
         list_files_and_directories(resolved, sort_by_name)
     else:
         list_directories(resolved, "1" if sort_by_name else "0")
 
 
-@filesystem_app.command("torrents")
-def filesystem_torrents(
-    directory=typer.Option(
-        Path("."), "--directory", "-d", help="Directory to create torrent for"
-    ),
-    include_subdirectories=typer.Option(
-        False, "--include-subdirectories", help="Create torrents for each subdirectory"
-    ),
-):
-    """Create RED and OPS torrents for directory."""
+def cmd_filesystem_torrents(args):
     from toolkit.filesystem import make_torrents
 
-    resolved = directory.resolve()
+    resolved = args.directory.resolve()
 
-    if include_subdirectories:
+    if args.include_subdirectories:
         for entry in (e for e in resolved.iterdir() if e.is_dir()):
             make_torrents(entry)
     else:
         make_torrents(resolved)
 
 
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="toolkit",
+        description="Personal toolkit for audio, video, and file operations.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    audio = subparsers.add_parser("audio", help="Audio conversion and processing tools")
+    audio_sub = audio.add_subparsers(dest="audio_command", required=True)
+
+    audio_convert = audio_sub.add_parser(
+        "convert", help="Convert audio files to various formats or extract SACD ISOs"
+    )
+    audio_convert.add_argument(
+        "-d",
+        "--directory",
+        type=Path,
+        default=Path("."),
+        help="Directory containing audio files",
+    )
+    audio_convert.add_argument(
+        "-m",
+        "--mode",
+        default="convert",
+        choices=["convert", "extract"],
+        help="Mode: convert for FLAC or extract for SACD",
+    )
+    audio_convert.add_argument(
+        "-f",
+        "--format",
+        default="all",
+        choices=["24-bit", "flac", "mp3", "all"],
+        help="Output format",
+    )
+    audio_convert.set_defaults(func=cmd_audio_convert)
+
+    audio_rename = audio_sub.add_parser(
+        "rename", help="Rename files with excessively long paths"
+    )
+    audio_rename.add_argument(
+        "-d",
+        "--directory",
+        type=Path,
+        default=Path("."),
+        help="Directory containing audio files",
+    )
+    audio_rename.set_defaults(func=cmd_audio_rename)
+
+    audio_art = audio_sub.add_parser(
+        "art-report", help="Report embedded artwork sizes in FLAC files"
+    )
+    audio_art.add_argument(
+        "-d",
+        "--directory",
+        type=Path,
+        default=Path("."),
+        help="Directory containing FLAC files",
+    )
+    audio_art.set_defaults(func=cmd_audio_art_report)
+
+    video = subparsers.add_parser("video", help="Video processing and extraction tools")
+    video_sub = video.add_subparsers(dest="video_command", required=True)
+
+    video_remux = video_sub.add_parser("remux", help="Remux DVD/Blu-ray discs to MKV")
+    video_remux.add_argument(
+        "-p", "--path", type=Path, default=Path("."), help="Path to disc folder"
+    )
+    video_remux.add_argument(
+        "--skip-mediainfo", action="store_true", help="Skip MediaInfo generation"
+    )
+    video_remux.set_defaults(func=cmd_video_remux)
+
+    video_compress = video_sub.add_parser(
+        "compress", help="Batch compress MKV files using HandBrake"
+    )
+    video_compress.add_argument(
+        "-d",
+        "--directory",
+        type=Path,
+        default=Path("."),
+        help="Directory containing MKV files",
+    )
+    video_compress.set_defaults(func=cmd_video_compress)
+
+    video_chapters = video_sub.add_parser(
+        "chapters", help="Extract chapters from video files"
+    )
+    video_chapters.add_argument(
+        "-p", "--path", type=Path, default=Path("."), help="Video file or directory"
+    )
+    video_chapters.set_defaults(func=cmd_video_chapters)
+
+    video_resolutions = video_sub.add_parser(
+        "resolutions", help="Print resolution information for video files"
+    )
+    video_resolutions.add_argument(
+        "-p", "--path", type=Path, default=Path("."), help="Video file or directory"
+    )
+    video_resolutions.set_defaults(func=cmd_video_resolutions)
+
+    video_gif = video_sub.add_parser("gif", help="Create optimized GIF from video file")
+    video_gif.add_argument(
+        "-i", "--input", type=Path, required=True, help="Input video file"
+    )
+    video_gif.add_argument("-s", "--start", default="00:00", help="Start time (mm:ss)")
+    video_gif.add_argument(
+        "-d", "--duration", type=int, default=30, help="Duration in seconds"
+    )
+    video_gif.add_argument(
+        "-m", "--max-size", type=int, default=300, help="Maximum GIF size in MiB"
+    )
+    video_gif.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path.home() / "Desktop",
+        help="Output directory",
+    )
+    video_gif.set_defaults(func=cmd_video_gif)
+
+    video_thumbnails = video_sub.add_parser(
+        "thumbnails", help="Extract thumbnail grid and full-size images from video"
+    )
+    video_thumbnails.add_argument(
+        "-p", "--path", type=Path, required=True, help="Video file"
+    )
+    video_thumbnails.set_defaults(func=cmd_video_thumbnails)
+
+    filesystem = subparsers.add_parser(
+        "filesystem", help="Filesystem operations and torrent creation"
+    )
+    filesystem_sub = filesystem.add_subparsers(dest="filesystem_command", required=True)
+
+    filesystem_tree = filesystem_sub.add_parser(
+        "tree", help="List directory tree with sizes"
+    )
+    filesystem_tree.add_argument(
+        "-d", "--directory", type=Path, default=Path("."), help="Directory to list"
+    )
+    filesystem_tree.add_argument(
+        "-s",
+        "--sort",
+        default="size",
+        choices=["size", "name"],
+        help="Sort by: size or name",
+    )
+    filesystem_tree.add_argument(
+        "-f", "--include-files", action="store_true", help="Include files in listing"
+    )
+    filesystem_tree.set_defaults(func=cmd_filesystem_tree)
+
+    filesystem_torrents = filesystem_sub.add_parser(
+        "torrents", help="Create RED and OPS torrents for directory"
+    )
+    filesystem_torrents.add_argument(
+        "-d",
+        "--directory",
+        type=Path,
+        default=Path("."),
+        help="Directory to create torrent for",
+    )
+    filesystem_torrents.add_argument(
+        "--include-subdirectories",
+        action="store_true",
+        help="Create torrents for each subdirectory",
+    )
+    filesystem_torrents.set_defaults(func=cmd_filesystem_torrents)
+
+    return parser
+
+
 def main():
-    app()
-
-
-def get_logger(service_name="toolkit"):
-    return configure_logging(service_name)
+    parser = build_parser()
+    args = parser.parse_args()
+    args.func(args)
 
 
 if __name__ == "__main__":

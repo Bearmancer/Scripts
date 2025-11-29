@@ -11,7 +11,9 @@ from toolkit.cli import get_logger
 logger = get_logger("video")
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi", ".webm"]
-HANDBRAKE_PATH = r"C:\Users\Lance\AppData\Local\Personal\HandBrakeCLI 1.8.0\HandBrakeCLI.exe"
+HANDBRAKE_PATH = (
+    r"C:\Users\Lance\AppData\Local\Personal\HandBrakeCLI 1.8.0\HandBrakeCLI.exe"
+)
 MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 
 from toolkit.filesystem import run_command
@@ -36,7 +38,9 @@ def extract_chapters(video_files):
             )
 
             (
-                ffmpeg.input(str(video_file), ss=chapter["start_time"], to=chapter["end_time"])
+                ffmpeg.input(
+                    str(video_file), ss=chapter["start_time"], to=chapter["end_time"]
+                )
                 .output(str(output_file_name), c="copy", avoid_negative_ts="make_zero")
                 .run(quiet=True)
             )
@@ -50,8 +54,12 @@ def batch_compression(path):
         output_file_path = file.with_suffix(".mp4")
 
         command = [
-            HANDBRAKE_PATH, "--preset-import-gui",
-            "-i", str(file), "-o", str(output_file_path),
+            HANDBRAKE_PATH,
+            "--preset-import-gui",
+            "-i",
+            str(file),
+            "-o",
+            str(output_file_path),
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
@@ -65,7 +73,8 @@ def batch_compression(path):
 
 def remux_disc(path, fetch_mediainfo=True):
     remuxable_files = [
-        f for f in path.rglob("*")
+        f
+        for f in path.rglob("*")
         if f.name in ("VIDEO_TS.IFO", "index.bdmv") and "BACKUP" not in f.parts
     ]
 
@@ -85,15 +94,21 @@ def remux_disc(path, fetch_mediainfo=True):
 
 def convert_disc_to_mkv(file, dvd_folder):
     makemkv_command = [
-        MAKEMKV_PATH, "mkv", f"file:{file}",
-        "all", str(dvd_folder), "--minlength=180",
+        MAKEMKV_PATH,
+        "mkv",
+        f"file:{file}",
+        "all",
+        str(dvd_folder),
+        "--minlength=180",
     ]
     run_command(makemkv_command, cwd=str(dvd_folder))
 
 
 def get_mediainfo(video_path):
     logger.info(f"Getting MediaInfo for {video_path.name}")
-    output_file = Path.home() / "Desktop" / f"{video_path.parent.name} - {video_path.name}.txt"
+    output_file = (
+        Path.home() / "Desktop" / f"{video_path.parent.name} - {video_path.name}.txt"
+    )
 
     result = subprocess.run(
         ["mediainfo", "--Output=TXT", str(video_path)], capture_output=True, text=True
@@ -191,7 +206,9 @@ def create_gif_optimized(input_path, start, duration, max_size, output_dir):
 
 def get_video_info_for_gif(input_path):
     probe = ffmpeg.probe(str(input_path))
-    video_stream = next((s for s in probe["streams"] if s["codec_type"] == "video"), None)
+    video_stream = next(
+        (s for s in probe["streams"] if s["codec_type"] == "video"), None
+    )
 
     if not video_stream:
         return 10, 320
@@ -246,9 +263,9 @@ def extract_frame(video_path, timestamp, video_info, target_width=None):
         target_height = int(target_width * aspect_ratio)
         input_stream = input_stream.filter("scale", target_width, target_height)
 
-    out, _ = input_stream.output("pipe:", vframes=1, format="image2", vcodec="mjpeg").run(
-        capture_stdout=True, capture_stderr=True
-    )
+    out, _ = input_stream.output(
+        "pipe:", vframes=1, format="image2", vcodec="mjpeg"
+    ).run(capture_stdout=True, capture_stderr=True)
     img = Image.open(io.BytesIO(out))
     return add_timestamp(img, timestamp)
 

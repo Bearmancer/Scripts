@@ -44,11 +44,13 @@ def progress_indicator(step, message):
     border = "=" * terminal_width
     core = f"STEP {step}: {message}"
 
-    print()
-    print(border)
-    print(core.center(terminal_width))
-    print(border)
-    print()
+    print(
+        f"""
+{border}
+{core.center(terminal_width)}
+{border}
+"""
+    )
 
 
 def create_output_directory(directory, suffix):
@@ -79,7 +81,9 @@ def rename_file_red(path):
 
         if relative_path_length > 180:
             old_files_list.append(file)
-            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_length = (
+                180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            )
             new_name = file.stem[:new_length] + file.suffix
             new_file_path = file.with_name(new_name)
             file.rename(new_file_path)
@@ -149,7 +153,11 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
 
     channel_configs = [
         ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-e", "-c", "-C"]),
-        ("Speaker config: (Multichannel|5|6)", "Multichannel", ["-m", "-e", "-c", "-C"]),
+        (
+            "Speaker config: (Multichannel|5|6)",
+            "Multichannel",
+            ["-m", "-e", "-c", "-C"],
+        ),
     ]
 
     out_dirs = []
@@ -162,7 +170,9 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
             output_disc_dir = channel_dir / f"Disc {disc_number:02d}"
             old_dirs = set(Path(channel_dir).glob("*/"))
 
-            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir))
+            run_command(
+                ["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir)
+            )
             logger.info(f"{suffix} audio extracted from {iso_path.name}")
 
             new_dirs = set(Path(channel_dir).glob("*/"))
@@ -258,8 +268,18 @@ def downsample_flac(file, tier):
     file.rename(temp_a)
 
     cmd = [
-        "sox", "-S", str(temp_a), "-b", str(bit_depth),
-        "-R", "-G", str(temp_b), "rate", "-v", "-L", str(sample_rate),
+        "sox",
+        "-S",
+        str(temp_a),
+        "-b",
+        str(bit_depth),
+        "-R",
+        "-G",
+        str(temp_b),
+        "rate",
+        "-v",
+        "-L",
+        str(sample_rate),
     ]
 
     run_command(cmd)
@@ -280,7 +300,9 @@ def convert_to_mp3(directory):
 
         (
             ffmpeg.input(str(f))
-            .output(str(output), acodec="libmp3lame", audio_bitrate="320k", format="mp3")
+            .output(
+                str(output), acodec="libmp3lame", audio_bitrate="320k", format="mp3"
+            )
             .run(quiet=True)
         )
 
@@ -288,7 +310,8 @@ def convert_to_mp3(directory):
 def get_metadata(file):
     probe_result = ffmpeg.probe(str(file))
     audio_stream = next(
-        stream for stream in probe_result.get("streams", [])
+        stream
+        for stream in probe_result.get("streams", [])
         if stream.get("codec_type") == "audio"
     )
 

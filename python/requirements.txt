@@ -1,4 +1,3 @@
-typer[all]
 rich
 tqdm
 py3createtorrent

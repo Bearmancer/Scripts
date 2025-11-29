@@ -19,13 +19,42 @@ internal enum ServiceType
 
 internal static class Logger
 {
+    static readonly Lock StateLock = new();
     static readonly Lock WriteLock = new();
     static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
 
-    internal static LogLevel CurrentLogLevel { get; set; } = LogLevel.Info;
-    internal static ServiceType? ActiveService { get; set; }
-    internal static bool SuppressConsole { get; set; }
-    static string? SessionId { get; set; }
+    internal static LogLevel CurrentLogLevel
+    {
+        get
+        {
+            lock (StateLock)
+                return _currentLogLevel;
+        }
+        set
+        {
+            lock (StateLock)
+                _currentLogLevel = value;
+        }
+    }
+
+    internal static bool SuppressConsole
+    {
+        get
+        {
+            lock (StateLock)
+                return _suppressConsole;
+        }
+        set
+        {
+            lock (StateLock)
+                _suppressConsole = value;
+        }
+    }
+
+    static LogLevel _currentLogLevel = LogLevel.Info;
+    static bool _suppressConsole;
+    static ServiceType? _activeService;
+    static string? _sessionId;
 
     internal static void Info(string message, params object?[] args) =>
         Log(level: LogLevel.Info, label: "Info", color: "blue", message: message, args: args);
@@ -90,15 +119,23 @@ internal static class Logger
 
     internal static void Start(ServiceType service)
     {
-        ActiveService = service;
-        SessionId = Guid.NewGuid().ToString("N")[..8];
+        lock (StateLock)
+        {
+            _activeService = service;
+            _sessionId = Guid.NewGuid().ToString("N")[..8];
+        }
         WriteJsonLog(level: "Info", operation: "session_start", message: "Session started");
     }
 
     internal static void End(bool success, string? summary = null)
     {
-        if (ActiveService == null)
-            return;
+        ServiceType? service;
+        lock (StateLock)
+        {
+            service = _activeService;
+            if (service == null)
+                return;
+        }
 
         var status = success ? "completed" : "failed";
         WriteJsonLog(
@@ -107,22 +144,35 @@ internal static class Logger
             message: summary ?? "Session ended",
             data: new { status }
         );
-        ActiveService = null;
-        SessionId = null;
+
+        lock (StateLock)
+        {
+            _activeService = null;
+            _sessionId = null;
+        }
     }
 
     internal static void Interrupted(string? progress = null)
     {
-        if (ActiveService == null)
-            return;
+        ServiceType? service;
+        lock (StateLock)
+        {
+            service = _activeService;
+            if (service == null)
+                return;
+        }
 
         WriteJsonLog(
             level: "Warning",
             operation: "session_interrupted",
             message: progress ?? "Session interrupted by user"
         );
-        ActiveService = null;
-        SessionId = null;
+
+        lock (StateLock)
+        {
+            _activeService = null;
+            _sessionId = null;
+        }
     }
 
     internal static void FileError(string message, Exception? ex = null)
@@ -168,17 +218,26 @@ internal static class Logger
 
     static void WriteJsonLog(string level, string operation, string message, object? data = null)
     {
-        if (ActiveService is not ServiceType service)
+        ServiceType? service;
+        string? sessionId;
+
+        lock (StateLock)
+        {
+            service = _activeService;
+            sessionId = _sessionId;
+        }
+
+        if (service is not ServiceType svc)
             return;
 
         CreateDirectory(Paths.LogDirectory);
 
-        var logEntry = new Dictionary<string, object?>
+        Dictionary<string, object?> logEntry = new()
         {
             ["timestamp"] = DateTime.UtcNow.ToString("o"),
             ["level"] = level,
-            ["service"] = service.ToString().ToLowerInvariant(),
-            ["sessionId"] = SessionId,
+            ["service"] = svc.ToString().ToLowerInvariant(),
+            ["sessionId"] = sessionId,
             ["operation"] = operation,
             ["message"] = message,
         };
@@ -188,7 +247,7 @@ internal static class Logger
 
         var logPath = Combine(
             Paths.LogDirectory,
-            service switch
+            svc switch
             {
                 ServiceType.LastFm => "lastfm.jsonl",
                 ServiceType.YouTube => "youtube.jsonl",

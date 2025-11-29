@@ -256,7 +256,7 @@ internal class YouTubeService(string clientId, string clientSecret)
                 break;
 
             videos.AddRange(batchVideos);
-            onBatchComplete(videos);
+            onBatchComplete(batchVideos);
         }
 
         return videos;
