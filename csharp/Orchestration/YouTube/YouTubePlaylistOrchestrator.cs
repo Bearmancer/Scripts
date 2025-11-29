@@ -2,13 +2,14 @@ namespace CSharpScripts.Orchestration.YouTube;
 
 internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 {
-    static readonly FrozenSet<object> VideoHeaders = FrozenSet.ToFrozenSet<object>([
+    static readonly IReadOnlyList<object> VideoHeaders =
+    [
         "Title",
         "Description",
         "Duration",
         "Channel",
         "Video URL",
-    ]);
+    ];
 
     readonly YouTubeService youtubeService = new(
         clientId: AuthenticationConfig.GoogleClientId,
@@ -229,28 +230,53 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
             List<YouTubePlaylist> playlistsToProcess = [];
 
-            foreach (var playlistId in playlistsNeedingVideoFetch)
-            {
-                if (ct.IsCancellationRequested)
-                    break;
+            Logger.SuppressConsole = true;
 
-                var summary = summaries.First(s => s.Id == playlistId);
-                Logger.Debug("Fetching video IDs for: {0}", summary.Title);
+            AnsiConsole
+                .Progress()
+                .AutoClear(true)
+                .HideCompleted(false)
+                .Columns(
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new RemainingTimeColumn(),
+                    new SpinnerColumn()
+                )
+                .Start(ctx =>
+                {
+                    var task = ctx.AddTask(
+                        description: $"[cyan]Fetching video IDs (0/{playlistsNeedingVideoFetch.Count})[/]",
+                        maxValue: playlistsNeedingVideoFetch.Count
+                    );
 
-                var videoIds = youtubeService.GetPlaylistVideoIds(playlistId, ct);
+                    foreach (var playlistId in playlistsNeedingVideoFetch)
+                    {
+                        if (ct.IsCancellationRequested)
+                            break;
 
-                if (ct.IsCancellationRequested)
-                    break;
+                        var summary = summaries.First(s => s.Id == playlistId);
+                        task.Description = $"[cyan]{Markup.Escape(summary.Title)}[/]";
 
-                playlistsToProcess.Add(
-                    new YouTubePlaylist(
-                        Id: playlistId,
-                        Title: summary.Title,
-                        VideoCount: summary.VideoCount,
-                        VideoIds: videoIds
-                    )
-                );
-            }
+                        var videoIds = youtubeService.GetPlaylistVideoIds(playlistId, ct);
+
+                        if (ct.IsCancellationRequested)
+                            break;
+
+                        playlistsToProcess.Add(
+                            new YouTubePlaylist(
+                                Id: playlistId,
+                                Title: summary.Title,
+                                VideoCount: summary.VideoCount,
+                                VideoIds: videoIds
+                            )
+                        );
+
+                        task.Increment(1);
+                    }
+                });
+
+            Logger.SuppressConsole = false;
 
             if (!ct.IsCancellationRequested && playlistsToProcess.Count > 0)
             {
@@ -612,8 +638,6 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         state.PlaylistSnapshots[playlist.Id] = snapshot;
         state.ClearCurrentProgress();
         SaveState();
-
-        StateManager.Delete(GetPlaylistCacheFile(playlist.Id));
     }
 
     string GetOrCreateSpreadsheet() =>
@@ -779,7 +803,10 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     static string EscapeFormulaString(string value) => value.Replace("\"", "\"\"");
 
-    internal static void ExportSheetsAsCSVs(CancellationToken ct = default, string outputDirectory = "YouTube Playlists")
+    internal static void ExportSheetsAsCSVs(
+        CancellationToken ct = default,
+        string outputDirectory = "YouTube Playlists"
+    )
     {
         var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
 
@@ -795,7 +822,11 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             clientSecret: AuthenticationConfig.GoogleClientSecret
         );
 
-        var exported = sheetsService.ExportEachSheetAsCSV(spreadsheetId: state.SpreadsheetId, outputDirectory: fullOutputPath, ct: ct);
+        var exported = sheetsService.ExportEachSheetAsCSV(
+            spreadsheetId: state.SpreadsheetId,
+            outputDirectory: fullOutputPath,
+            ct: ct
+        );
 
         if (exported > 0)
             Logger.Success("Exported {0} playlists to: {1}", exported, GetFullPath(fullOutputPath));

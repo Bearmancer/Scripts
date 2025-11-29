@@ -85,15 +85,22 @@ internal class Program
         Command ytCommand = new(name: "yt", description: "Sync YouTube playlists to Google Sheets");
         ytCommand.AddAlias("youtube");
 
+        Option<bool> forceOption = new(
+            aliases: ["--force", "-f"],
+            description: "Clear cache and re-fetch all data from YouTube API"
+        );
+        ytCommand.AddOption(forceOption);
+
         ytCommand.SetHandler(
-            (verbose) =>
+            (verbose, force) =>
             {
                 if (verbose)
                     Logger.CurrentLogLevel = LogLevel.Debug;
 
-                RunYouTube();
+                RunYouTube(force: force);
             },
-            verboseOption
+            verboseOption,
+            forceOption
         );
 
         Command lastfmCommand = new(
@@ -279,12 +286,16 @@ internal class Program
             }
         );
 
-    static void RunYouTube() =>
+    static void RunYouTube(bool force = false) =>
         RunWithErrorHandling(
             YouTube,
             () =>
             {
-                Logger.Info("Starting YouTube sync...");
+                if (force)
+                {
+                    Logger.Info("Force sync: clearing cache and re-fetching all data...");
+                    StateManager.DeleteYouTubeStates();
+                }
                 new YouTubePlaylistOrchestrator(cts.Token).Execute();
             }
         );

@@ -25,9 +25,7 @@ internal static class ApiConfig
 {
     internal const int MaxRetries = 10;
     internal const int BaseDelaySeconds = 60;
-    internal const int YouTubeDelayMs = 1500;
-    internal const int SheetsDelayMs = 1500;
-    internal const int LastFmDelayMs = 1500;
+    internal const int ApiDelayMs = 2000;
 
     internal static bool IsDailyQuotaExceeded(string message) =>
         message.Contains("daily limit", StringComparison.OrdinalIgnoreCase)
@@ -47,16 +45,7 @@ internal static class ApiConfig
             || message.Contains("429", StringComparison.OrdinalIgnoreCase)
         );
 
-    internal static void Delay(ServiceType service) =>
-        Thread.Sleep(
-            service switch
-            {
-                ServiceType.YouTube => YouTubeDelayMs,
-                ServiceType.Sheets => SheetsDelayMs,
-                ServiceType.LastFm => LastFmDelayMs,
-                _ => 100,
-            }
-        );
+    internal static void Delay(ServiceType service) => Thread.Sleep(ApiDelayMs);
 
     internal static T ExecuteWithRetry<T>(
         string operationName,
