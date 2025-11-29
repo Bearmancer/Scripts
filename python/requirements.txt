@@ -1,7 +1,6 @@
+typer[all]
+rich
 tqdm
-langid
-pandas
-pylast
 py3createtorrent
 unidecode
 ffmpeg-python
@@ -9,7 +8,4 @@ pathvalidate
 pyperclip
 chardet
 deflacue
-google-generativeai
-pandas
-Playwright 
-bs4 
+Pillow

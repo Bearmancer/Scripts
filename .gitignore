@@ -22,9 +22,7 @@ Thumbs.db
 # Temp/logs
 *.tmp
 *.log
-logs/
 
 # Project-specific
 *.csv
 .fake
-state/

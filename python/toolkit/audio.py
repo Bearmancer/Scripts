@@ -1,31 +1,24 @@
-import argparse
-import ffmpeg
-import logging
 import os
 import re
 import subprocess
+import pyperclip
+import ffmpeg
 from pathlib import Path
 from pathvalidate import sanitize_filename
 from tqdm import tqdm
 from unidecode import unidecode
-from misc import run_command
-from split_cuesheet import process_cue_file
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s - %(asctime)s - %(message)s",
-    datefmt="%H:%M:%S",
-)
+from toolkit.filesystem import run_command
+from toolkit.cuesheet import process_cue_file
+from toolkit.cli import get_logger
+
+logger = get_logger("audio")
 
 FLAC_44 = [(176400, 24), (88200, 24), (44100, 16)]
-
 FLAC_48 = [(192000, 24), (96000, 24), (48000, 16)]
 
 
-### -------------- HELPER FUNCTION ------------- ###
-
-
-def prepare_directory(directory: Path):
+def prepare_directory(directory):
     def sanitize_name(p):
         return p.rename(p.with_name(sanitize_filename(unidecode(p.name)))) or p
 
@@ -40,32 +33,26 @@ def prepare_directory(directory: Path):
             new_name = f"Disc {int(number):02d}"
             new_path = folder.parent / new_name
 
-            try:
+            if folder != new_path:
                 folder.rename(new_path)
-
-            except FileExistsError as e:
-                raise FileExistsError(
-                    f"Could not rename {folder.name} to {new_name}.\n{e}"
-                )
 
     return directory
 
 
-def progress_indicator(step: int, message: str):
-    core = f"STEP {step}: {message}"
+def progress_indicator(step, message):
     terminal_width = os.get_terminal_size().columns
     border = "=" * terminal_width
+    core = f"STEP {step}: {message}"
 
     print()
-    print(border.center(os.get_terminal_size().columns))
-    print(core.center(os.get_terminal_size().columns))
-    print(border.center(os.get_terminal_size().columns))
+    print(border)
+    print(core.center(terminal_width))
+    print(border)
     print()
 
 
 def create_output_directory(directory, suffix):
     destination = directory.parent / f"{directory.name} [{suffix}]"
-
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
 
     rc = subprocess.run(
@@ -74,20 +61,71 @@ def create_output_directory(directory, suffix):
     ).returncode
 
     if rc >= 8:
-        logging.error(f"Robocopy failed with code {rc}")
         raise RuntimeError(f"Robocopy failed with code {rc}")
 
     return destination
 
 
-### -------------- SACD FUNCTIONS ------------- ###
+def rename_file_red(path):
+    if not path.exists() or not path.is_dir():
+        logger.error(f"Path does not exist: {path}")
+        return
+
+    root_path = path.parent
+    old_files_list, new_files_list = [], []
+
+    for file in path.rglob("*"):
+        relative_path_length = len(str(file.relative_to(root_path)))
+
+        if relative_path_length > 180:
+            old_files_list.append(file)
+            new_length = 180 - (relative_path_length - len(file.name)) - len(file.suffix)
+            new_name = file.stem[:new_length] + file.suffix
+            new_file_path = file.with_name(new_name)
+            file.rename(new_file_path)
+            new_files_list.append(new_file_path)
+
+            logger.info(f"Renamed: {file.name} -> {new_file_path.name}")
+
+    if new_files_list:
+        new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
+        pyperclip.copy(new_file_names)
+        logger.info(f"Renamed {len(new_files_list)} files")
+    else:
+        logger.info("No files needed renaming")
 
 
-def process_sacd_directory(directory: Path, fmt="all"):
+def calculate_image_size(path):
+    exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
+    problematic_files = []
+
+    for flac_file in path.glob("*.flac"):
+        result = subprocess.run(
+            [exif_tool, "-PictureLength", "-s", "-s", "-s", str(flac_file)],
+            capture_output=True,
+            text=True,
+        )
+
+        if not result.stdout.strip():
+            continue
+
+        image_size_kb = round(int(result.stdout.strip()) / 1024, 2)
+
+        if image_size_kb > 1024:
+            logger.warning(f"{flac_file.name}: {image_size_kb} KB")
+            problematic_files.append(flac_file)
+
+    if problematic_files:
+        logger.warning(f"Found {len(problematic_files)} files with artwork > 1MB")
+    else:
+        logger.info("No files with embedded artwork larger than 1MB")
+
+
+def process_sacd_directory(directory, fmt="all"):
     iso_files = list(directory.rglob("*.iso"))
     output_dirs = []
 
-    progress_indicator(1, "Converting all ISOs → DFF + CUE sheets")
+    progress_indicator(1, "Converting all ISOs -> DFF + CUE sheets")
 
     for disc_number, iso in enumerate(iso_files, 1):
         dirs = convert_iso_to_dff_and_cue(iso, directory, disc_number)
@@ -111,11 +149,7 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
 
     channel_configs = [
         ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-e", "-c", "-C"]),
-        (
-            "Speaker config: (Multichannel|5|6)",
-            "Multichannel",
-            ["-m", "-e", "-c", "-C"],
-        ),
+        ("Speaker config: (Multichannel|5|6)", "Multichannel", ["-m", "-e", "-c", "-C"]),
     ]
 
     out_dirs = []
@@ -126,14 +160,10 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
             channel_dir.mkdir(exist_ok=True, parents=True)
 
             output_disc_dir = channel_dir / f"Disc {disc_number:02d}"
-
             old_dirs = set(Path(channel_dir).glob("*/"))
 
-            run_command(
-                ["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir)
-            )
-
-            logging.info(f"{suffix} audio extracted from {iso_path.name}.")
+            run_command(["sacd_extract", *cmd, "-i", str(iso_path)], cwd=str(channel_dir))
+            logger.info(f"{suffix} audio extracted from {iso_path.name}")
 
             new_dirs = set(Path(channel_dir).glob("*/"))
             new_dir = next(iter(new_dirs - old_dirs), None)
@@ -141,11 +171,6 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
             if new_dir:
                 new_dir.rename(output_disc_dir)
                 out_dirs.append(output_disc_dir)
-
-            else:
-                logging.warning(
-                    f"No new directories were created by sacd_extract for {iso_path.name}."
-                )
 
     return out_dirs
 
@@ -155,10 +180,9 @@ def convert_dff_to_flac(dff_dir):
     dff_file = next(dff_dir.rglob("*.dff"))
 
     if not cue_file.exists():
-        raise FileNotFoundError(f"Could not find {cue_file.name}")
+        raise FileNotFoundError(f"CUE file not found: {cue_file}")
 
     gain_db = calculate_gain(dff_file)
-
     process_cue_file(cue_file, gain_db)
 
     if dff_file.exists():
@@ -167,7 +191,7 @@ def convert_dff_to_flac(dff_dir):
 
 def calculate_gain(dff_file, target_headroom_db=-0.5):
     if not dff_file.exists():
-        raise FileNotFoundError(f"Could not find {dff_file.name}")
+        raise FileNotFoundError(f"DFF file not found: {dff_file}")
 
     peaks = []
 
@@ -185,19 +209,16 @@ def calculate_gain(dff_file, target_headroom_db=-0.5):
         peaks.append(float(m.group(1)))
 
     if not peaks:
-        raise RuntimeError("Could not detect any peak levels.")
+        raise RuntimeError("Could not detect peak levels")
 
     return target_headroom_db - max(peaks)
-
-
-### -------------- CONVERSION FUNCTIONS ------------- ###
 
 
 def convert_audio(current_step, directory, fmt="all"):
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
-        logging.warning("No FLAC files found")
+        logger.warning("No FLAC files found")
         return
 
     bd, sr = next(
@@ -213,7 +234,7 @@ def convert_audio(current_step, directory, fmt="all"):
         flac_directory_conversion(directory, t)
 
     if fmt in ["mp3", "all"]:
-        progress_indicator(current_step, "Converting FLAC to MP3")
+        progress_indicator(current_step + len(flac_tiers), "Converting FLAC to MP3")
         convert_to_mp3(directory)
 
 
@@ -223,14 +244,9 @@ def flac_directory_conversion(directory, tier):
 
     destination = create_output_directory(directory, suffix)
 
-    sample_rate, bit_depth = tier
-
     flac_files = list(destination.rglob("*.flac"))
 
-    for f in tqdm(
-        flac_files,
-        desc=f"Converting {directory.name} to {bit_depth}-bit/{sample_rate} Hz",
-    ):
+    for f in tqdm(flac_files, desc=f"Converting to {bit_depth}-bit/{sample_rate} Hz"):
         downsample_flac(f, tier)
 
 
@@ -239,76 +255,47 @@ def downsample_flac(file, tier):
     temp_a = file.with_name("a.flac")
     temp_b = file.with_name("b.flac")
 
-    try:
-        file.rename(temp_a)
+    file.rename(temp_a)
 
-        cmd = [
-            "sox",
-            "-S",
-            str(temp_a),
-            "-b",
-            str(bit_depth),
-            "-R",
-            "-G",
-            str(temp_b),
-            "rate",
-            "-v",
-            "-L",
-            str(sample_rate),
-        ]
+    cmd = [
+        "sox", "-S", str(temp_a), "-b", str(bit_depth),
+        "-R", "-G", str(temp_b), "rate", "-v", "-L", str(sample_rate),
+    ]
 
-        run_command(cmd)
-        temp_a.unlink()
-        temp_b.rename(file)
-
-    finally:
-        if temp_a.exists():
-            temp_a.rename(file)
-
-        if temp_b.exists():
-            temp_b.unlink()
+    run_command(cmd)
+    temp_a.unlink()
+    temp_b.rename(file)
 
 
 def convert_to_mp3(directory):
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
-        raise FileNotFoundError(f"No FLAC files found.")
+        raise FileNotFoundError("No FLAC files found")
 
     destination = create_output_directory(directory, "MP3")
 
-    for f in tqdm(flac_files, desc=f"Converting FLAC to MP3 in {directory.name}"):
+    for f in tqdm(flac_files, desc="Converting to MP3"):
         output = destination / f.with_suffix(".mp3").name
 
         (
             ffmpeg.input(str(f))
-            .output(
-                str(output),
-                acodec="libmp3lame",
-                audio_bitrate="320k",
-                format="mp3",
-            )
-            .run()
+            .output(str(output), acodec="libmp3lame", audio_bitrate="320k", format="mp3")
+            .run(quiet=True)
         )
 
 
 def get_metadata(file):
-    try:
-        probe_result = ffmpeg.probe(str(file))
+    probe_result = ffmpeg.probe(str(file))
+    audio_stream = next(
+        stream for stream in probe_result.get("streams", [])
+        if stream.get("codec_type") == "audio"
+    )
 
-        audio_stream = next(
-            stream
-            for stream in probe_result.get("streams", [])
-            if stream.get("codec_type") == "audio"
-        )
-
-        return {
-            "bits_per_raw_sample": audio_stream.get("bits_per_raw_sample"),
-            "sample_rate": audio_stream.get("sample_rate"),
-        }
-
-    except Exception as e:
-        raise Exception(f"Error reading metadata for {file}: {e}")
+    return {
+        "bits_per_raw_sample": audio_stream.get("bits_per_raw_sample"),
+        "sample_rate": audio_stream.get("sample_rate"),
+    }
 
 
 def get_flac_tiers(sample_rate, bit_depth, fmt="all"):
@@ -317,65 +304,6 @@ def get_flac_tiers(sample_rate, bit_depth, fmt="all"):
     for i, (tier_sr, tier_bd) in enumerate(tiers):
         if sample_rate > tier_sr and bit_depth >= tier_bd:
             result = [tier for tier in tiers[i:] if fmt != "24-bit" or tier[1] == 24]
+            return result or []
 
-            return result or None
-
-    raise ValueError(
-        f"No suitable conversion tier found for {bit_depth}-bit/{sample_rate}Hz"
-    )
-
-
-### -------------- MAIN FUNCTION ------------- ###
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Audio format conversion and SACD extraction tool."
-    )
-
-    parser.add_argument(
-        "-m",
-        "--mode",
-        choices=["convert", "extract"],
-        help="Select mode: 'convert' to process FLAC files or 'extract' to rip SACD ISOs to FLAC.",
-    )
-
-    parser.add_argument(
-        "-f",
-        "--format",
-        choices=["24-bit", "flac", "mp3", "all"],
-        default="all",
-        help='Output format(s): "24-bit" for high-res only, "flac" for 24- and 16-bit output, '
-        '"mp3" for 320kbps MP3 alone, "all" for everything (default).',
-    )
-
-    parser.add_argument(
-        "-d",
-        "--directory",
-        type=Path,
-        help="Path to input directory containing audio files to process",
-    )
-
-    args = parser.parse_args()
-
-    mode = args.mode
-    directory = args.directory.resolve()
-
-    if not directory.exists():
-        raise FileNotFoundError(f"Directory {directory} does not exist.")
-
-    os.system("cls")
-
-    directory = prepare_directory(directory)
-    fmt = args.format
-
-    if mode == "convert":
-        convert_audio(1, directory, fmt)
-    elif mode == "extract":
-        process_sacd_directory(directory, fmt)
-
-    logging.info("Processing completed")
-
-
-if __name__ == "__main__":
-    main()
+    raise ValueError(f"No suitable tier for {bit_depth}-bit/{sample_rate}Hz")

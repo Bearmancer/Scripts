@@ -668,6 +668,94 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         Logger.Debug("Sorted sheet '{0}' by column {1}", sheetName, columnIndex);
     }
 
+    internal void DeleteRowsFromSubsheet(
+        string spreadsheetId,
+        string sheetName,
+        List<int> rowIndices
+    )
+    {
+        if (rowIndices.Count == 0)
+            return;
+
+        var spreadsheet = ApiConfig.ExecuteWithRetry(
+            operationName: "Sheets.Get",
+            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
+            postAction: () => { }
+        );
+        var sheet = spreadsheet.Sheets?.FirstOrDefault(s =>
+            s.Properties?.Title?.Equals(sheetName, StringComparison.OrdinalIgnoreCase) == true
+        );
+
+        if (sheet?.Properties?.SheetId == null)
+        {
+            Logger.Warning("Sheet '{0}' not found for row deletion", sheetName);
+            return;
+        }
+
+        var sortedIndices = rowIndices.OrderByDescending(i => i).ToList();
+
+        List<Request> requests = [];
+        foreach (var rowIndex in sortedIndices)
+        {
+            requests.Add(
+                new Request
+                {
+                    DeleteDimension = new DeleteDimensionRequest
+                    {
+                        Range = new DimensionRange
+                        {
+                            SheetId = sheet.Properties.SheetId,
+                            Dimension = "ROWS",
+                            StartIndex = rowIndex - 1,
+                            EndIndex = rowIndex,
+                        },
+                    },
+                }
+            );
+        }
+
+        BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
+        ApiConfig.ExecuteWithRetry(
+            operationName: "Sheets.BatchUpdate.DeleteRows",
+            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute(),
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+        );
+
+        Logger.Debug("Deleted {0} rows from sheet '{1}'", rowIndices.Count, sheetName);
+    }
+
+    internal void AppendRows(string spreadsheetId, string sheetName, IList<IList<object>> rows)
+    {
+        if (rows.Count == 0)
+            return;
+
+        var escapedName = EscapeSheetName(sheetName);
+        ValueRange body = new() { Values = rows };
+        var range = $"{escapedName}!A:E";
+
+        ApiConfig.ExecuteWithRetry(
+            operationName: "Sheets.Values.Append",
+            action: () =>
+            {
+                var appendRequest = service.Spreadsheets.Values.Append(body, spreadsheetId, range);
+                appendRequest.ValueInputOption = SpreadsheetsResource
+                    .ValuesResource
+                    .AppendRequest
+                    .ValueInputOptionEnum
+                    .USERENTERED;
+                appendRequest.InsertDataOption = SpreadsheetsResource
+                    .ValuesResource
+                    .AppendRequest
+                    .InsertDataOptionEnum
+                    .INSERTROWS;
+                return appendRequest.Execute();
+            },
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+        );
+
+        Logger.Debug("Appended {0} rows to sheet '{1}'", rows.Count, sheetName);
+    }
+
     internal string GetOrCreateSpreadsheet(
         string? currentSpreadsheetId,
         string? defaultSpreadsheetId,
@@ -747,7 +835,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
     internal List<(string Id, string Url)> FindDuplicateSpreadsheets(string title)
     {
-        var query = $"name = '{title.Replace("'", "\\'")}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
+        var query =
+            $"name = '{title.Replace("'", "\\'")}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
 
         var request = driveService.Files.List();
         request.Q = query;
@@ -759,8 +848,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             postAction: () => ApiConfig.Delay(ServiceType.Sheets)
         );
 
-        return response.Files?
-            .Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))
-            .ToList() ?? [];
+        return response
+                .Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))
+                .ToList() ?? [];
     }
 }

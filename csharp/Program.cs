@@ -659,12 +659,15 @@ internal class Program
             Logger.Info("=== Last.fm ===");
             var stateFile = Combine(StateDirectory, StateManager.FetchStateFile);
             var hasState = File.Exists(stateFile);
-            var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{SpreadsheetConfig.LastFmSpreadsheetId}";
+            var spreadsheetUrl =
+                $"https://docs.google.com/spreadsheets/d/{SpreadsheetConfig.LastFmSpreadsheetId}";
 
             if (hasState)
             {
                 var json = ReadAllText(stateFile);
-                var state = JsonSerializer.Deserialize<FetchState>(json, StateManager.JsonOptions) ?? new FetchState();
+                var state =
+                    JsonSerializer.Deserialize<FetchState>(json, StateManager.JsonOptions)
+                    ?? new FetchState();
                 Logger.Info("Scrobbles: {0}", state.TotalFetched);
                 Logger.Info("Cached: Yes");
                 Logger.Info("Last sync: {0}", state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss"));
@@ -694,14 +697,21 @@ internal class Program
             if (cached)
             {
                 var json = ReadAllText(stateFile);
-                var state = JsonSerializer.Deserialize<YouTubeFetchState>(json, StateManager.JsonOptions) ?? new YouTubeFetchState();
+                var state =
+                    JsonSerializer.Deserialize<YouTubeFetchState>(json, StateManager.JsonOptions)
+                    ?? new YouTubeFetchState();
                 var totalVideos = state.PlaylistSnapshots.Values.Sum(s => s.VideoIds.Count);
-                var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{state.SpreadsheetId}";
+                var spreadsheetUrl =
+                    $"https://docs.google.com/spreadsheets/d/{state.SpreadsheetId}";
 
                 if (!state.FetchComplete)
                     Logger.Warning("Fetch incomplete - run sync to resume");
 
-                Logger.Info("Playlists: {0} | Videos: {1}", state.PlaylistSnapshots.Count, totalVideos);
+                Logger.Info(
+                    "Playlists: {0} | Videos: {1}",
+                    state.PlaylistSnapshots.Count,
+                    totalVideos
+                );
                 Logger.Info("Cached: Yes");
                 Logger.Info("Last sync: {0}", state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss"));
                 Logger.Link(spreadsheetUrl, "Spreadsheet");

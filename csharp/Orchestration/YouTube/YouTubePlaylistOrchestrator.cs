@@ -2,8 +2,6 @@ namespace CSharpScripts.Orchestration.YouTube;
 
 internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 {
-    const string DeletedPlaylistsDirectory = "deleted_playlists";
-
     static readonly FrozenSet<object> VideoHeaders = FrozenSet.ToFrozenSet<object>([
         "Title",
         "Description",
@@ -633,12 +631,12 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     static void ArchiveDeletedPlaylist(PlaylistSnapshot snapshot)
     {
-        CreateDirectory(DeletedPlaylistsDirectory);
+        CreateDirectory(Paths.ArchivesDirectory);
 
         var safeTitle = SanitizeSheetName(snapshot.Title);
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
         var fileName = $"{safeTitle}_{timestamp}.json";
-        var filePath = GetFullPath(Combine(DeletedPlaylistsDirectory, fileName));
+        var filePath = Combine(Paths.ArchivesDirectory, fileName);
 
         var archive = new
         {
@@ -667,26 +665,89 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
     )
     {
         var sheetName = SanitizeSheetName(playlist.Title);
-
-        Logger.Info("Writing {0} videos to sheet '{1}'", videos.Count, sheetName);
+        var existingSnapshot = state.PlaylistSnapshots.GetValueOrDefault(playlist.Id);
 
         if (isFirstPlaylist)
         {
             sheetsService.RenameSubsheet(spreadsheetId, oldName: "Sheet1", newName: sheetName);
-            sheetsService.ClearSubsheet(spreadsheetId, sheetName);
-            sheetsService.WriteRows(
-                spreadsheetId,
-                sheetName,
-                [
-                    [.. VideoHeaders],
-                ]
-            );
+            WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            return;
         }
-        else
+
+        if (existingSnapshot == null)
         {
             sheetsService.EnsureSubsheetExists(spreadsheetId, sheetName, VideoHeaders);
-            sheetsService.ClearSubsheet(spreadsheetId, sheetName);
+            WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            return;
         }
+
+        var videoChanges = YouTubeChangeDetector.DetectVideoChanges(
+            currentVideoIds: playlist.VideoIds,
+            storedVideoIds: existingSnapshot.VideoIds
+        );
+
+        if (videoChanges.RequiresFullRewrite)
+        {
+            Logger.Debug("Order changed in '{0}', full rewrite required", playlist.Title);
+            WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            return;
+        }
+
+        if (!videoChanges.HasChanges)
+        {
+            Logger.Debug("No video changes in '{0}'", playlist.Title);
+            return;
+        }
+
+        Logger.Info(
+            "Incremental update for '{0}': +{1} -{2}",
+            playlist.Title,
+            videoChanges.AddedVideoIds.Count,
+            videoChanges.RemovedRowIndices.Count
+        );
+
+        if (videoChanges.RemovedRowIndices.Count > 0)
+        {
+            sheetsService.DeleteRowsFromSubsheet(
+                spreadsheetId,
+                sheetName,
+                videoChanges.RemovedRowIndices
+            );
+        }
+
+        if (videoChanges.AddedVideoIds.Count > 0)
+        {
+            var addedVideos = videos
+                .Where(v => videoChanges.AddedVideoIds.Contains(v.VideoId))
+                .ToList();
+
+            var rows = addedVideos
+                .Select(v =>
+                    (IList<object>)
+                        [
+                            v.Title,
+                            v.Description,
+                            v.FormattedDuration,
+                            $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
+                            v.VideoUrl,
+                        ]
+                )
+                .ToList();
+
+            sheetsService.AppendRows(spreadsheetId, sheetName, rows);
+        }
+    }
+
+    void WriteFullPlaylist(string sheetName, List<YouTubeVideo> videos, string spreadsheetId)
+    {
+        Logger.Debug("Full write: {0} videos to '{1}'", videos.Count, sheetName);
+
+        sheetsService.ClearSubsheet(spreadsheetId, sheetName);
+        sheetsService.WriteRows(
+            spreadsheetId,
+            sheetName,
+            [[.. VideoHeaders]]
+        );
 
         var rows = videos
             .Select(v =>

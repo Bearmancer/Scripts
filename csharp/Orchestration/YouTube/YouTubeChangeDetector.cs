@@ -1,7 +1,50 @@
 namespace CSharpScripts.Orchestration.YouTube;
 
+internal record VideoChanges(
+    List<string> AddedVideoIds,
+    List<int> RemovedRowIndices,
+    bool RequiresFullRewrite
+)
+{
+    internal bool HasChanges =>
+        AddedVideoIds.Count > 0 || RemovedRowIndices.Count > 0 || RequiresFullRewrite;
+}
+
 internal static class YouTubeChangeDetector
 {
+    internal static VideoChanges DetectVideoChanges(
+        List<string> currentVideoIds,
+        List<string> storedVideoIds
+    )
+    {
+        var currentSet = currentVideoIds.ToHashSet();
+        var storedSet = storedVideoIds.ToHashSet();
+
+        var addedIds = currentVideoIds.Where(id => !storedSet.Contains(id)).ToList();
+        
+        List<int> removedIndices = [];
+        for (var i = 0; i < storedVideoIds.Count; i++)
+        {
+            if (!currentSet.Contains(storedVideoIds[i]))
+                removedIndices.Add(i + 2);
+        }
+
+        var requiresFullRewrite = false;
+        if (addedIds.Count == 0 && removedIndices.Count == 0)
+        {
+            for (var i = 0; i < Math.Min(currentVideoIds.Count, storedVideoIds.Count); i++)
+            {
+                if (currentVideoIds[i] != storedVideoIds[i])
+                {
+                    requiresFullRewrite = true;
+                    break;
+                }
+            }
+        }
+
+        return new VideoChanges(addedIds, removedIndices, requiresFullRewrite);
+    }
+
     internal static PlaylistChanges DetectPlaylistChanges(
         List<YouTubePlaylist> currentPlaylists,
         Dictionary<string, PlaylistSnapshot> snapshots
