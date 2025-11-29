@@ -24,6 +24,7 @@ internal static class Logger
 
     internal static LogLevel CurrentLogLevel { get; set; } = LogLevel.Info;
     internal static ServiceType? ActiveService { get; set; }
+    internal static bool SuppressConsole { get; set; }
     static string? SessionId { get; set; }
 
     internal static void Info(string message, params object?[] args) =>
@@ -152,10 +153,14 @@ internal static class Logger
             return;
 
         var formatted = args.Length > 0 ? Format(message, args) : message;
-        var timestamp = DateTime.Now.ToString("HH:mm:ss");
-        AnsiConsole.MarkupLine(
-            $"[{color}][[{label}]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
-        );
+
+        if (!SuppressConsole)
+        {
+            var timestamp = DateTime.Now.ToString("HH:mm:ss");
+            AnsiConsole.MarkupLine(
+                $"[{color}][[{label}]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
+            );
+        }
 
         if (writeToFile)
             WriteJsonLog(level: label, operation: operation ?? "log", message: formatted);

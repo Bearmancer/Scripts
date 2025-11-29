@@ -337,6 +337,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             var interrupted = false;
             var interruptedAt = 0;
+            var alreadyFetched = state.VideoIdFetchIndex;
 
             AnsiConsole
                 .Progress()
@@ -352,10 +353,10 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 .Start(ctx =>
                 {
                     var task = ctx.AddTask(
-                        description: "[cyan]Fetching playlist video IDs[/]",
+                        description: $"[cyan]Fetching video IDs ({alreadyFetched}/{playlists.Count} done)[/]",
                         maxValue: playlists.Count
                     );
-                    task.Value = state.VideoIdFetchIndex;
+                    task.Value = alreadyFetched;
 
                     for (var i = state.VideoIdFetchIndex; i < playlists.Count; i++)
                     {
@@ -778,7 +779,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     static string EscapeFormulaString(string value) => value.Replace("\"", "\"\"");
 
-    internal static void ExportSheetsAsCSVs(string outputDirectory = "YouTube Playlists")
+    internal static void ExportSheetsAsCSVs(CancellationToken ct = default, string outputDirectory = "YouTube Playlists")
     {
         var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
 
@@ -794,7 +795,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             clientSecret: AuthenticationConfig.GoogleClientSecret
         );
 
-        var exported = sheetsService.ExportEachSheetAsCSV(state.SpreadsheetId, fullOutputPath);
+        var exported = sheetsService.ExportEachSheetAsCSV(spreadsheetId: state.SpreadsheetId, outputDirectory: fullOutputPath, ct: ct);
 
         if (exported > 0)
             Logger.Success("Exported {0} playlists to: {1}", exported, GetFullPath(fullOutputPath));
