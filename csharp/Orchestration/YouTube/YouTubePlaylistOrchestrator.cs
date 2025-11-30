@@ -828,4 +828,15 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         else
             Logger.Info("All playlists already exported to: {0}", GetFullPath(fullOutputPath));
     }
+
+    internal static void CountPlaylists(CancellationToken ct = default)
+    {
+        var youtubeService = new YouTubeService(
+            clientId: AuthenticationConfig.GoogleClientId,
+            clientSecret: AuthenticationConfig.GoogleClientSecret
+        );
+
+        var playlists = youtubeService.GetPlaylistSummaries(ct: ct);
+        Logger.Info("Playlists: {0}", playlists.Count);
+    }
 }

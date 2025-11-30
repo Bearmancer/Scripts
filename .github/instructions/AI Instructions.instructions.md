@@ -2,6 +2,10 @@
 applyTo: '**'
 ---
 
+- Do not stop operations mid-way to ask for confirmations. Execute requested task. Do not waste my premium requests with interruptions that force me to send another request.
+
+- Never terminate pre-existing tasks to execute commands. If a build fails due to active tasks, report the failure without interrupting or stopping those tasks.
+
 - Prohibit:
     - Comments
     - Positional arguments
