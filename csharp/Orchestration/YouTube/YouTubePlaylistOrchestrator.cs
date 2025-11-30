@@ -810,7 +810,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 "No YouTube spreadsheet found. Run sync first to create it."
             );
 
-        var fullOutputPath = Combine(Paths.ProjectRoot, outputDirectory);
+        var desktopPath = GetFolderPath(SpecialFolder.Desktop);
+        var fullOutputPath = Combine(desktopPath, outputDirectory);
 
         var sheetsService = new GoogleSheetsService(
             clientId: AuthenticationConfig.GoogleClientId,
