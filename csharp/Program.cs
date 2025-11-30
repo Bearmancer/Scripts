@@ -55,6 +55,8 @@ internal class Program
         rootCommand.AddCommand(BuildSyncCommand(verboseOption));
         rootCommand.AddCommand(BuildStatusCommand());
         rootCommand.AddCommand(BuildClearCommand());
+        rootCommand.AddCommand(BuildCleanCommand());
+        rootCommand.AddCommand(BuildResetCommand());
         rootCommand.AddCommand(BuildExportCommand());
 
         return rootCommand.Invoke(args);
@@ -145,7 +147,7 @@ internal class Program
         Command clearCommand = new(
             name: "clear",
             description: """
-            Clear state, cache, spreadsheets, and optionally rebuild the project.
+            Clear state and spreadsheet data (does not rebuild).
 
             ARGUMENTS:
               service    yt, lastfm, all (default: all)
@@ -161,11 +163,6 @@ internal class Program
         };
         serviceArg.SetDefaultValue("all");
 
-        Option<bool> noRebuildOption = new(
-            aliases: ["--no-rebuild"],
-            description: "Skip deleting bin/obj and rebuilding the project"
-        );
-
         Option<bool> localOnlyOption = new(
             aliases: ["--local-only"],
             description: "Clear only local state files, keep spreadsheets"
@@ -177,19 +174,56 @@ internal class Program
         );
 
         clearCommand.AddArgument(serviceArg);
-        clearCommand.AddOption(noRebuildOption);
         clearCommand.AddOption(localOnlyOption);
         clearCommand.AddOption(remoteOnlyOption);
 
         clearCommand.SetHandler(
             ClearHandler.Execute,
             serviceArg,
-            noRebuildOption,
             localOnlyOption,
             remoteOnlyOption
         );
 
         return clearCommand;
+    }
+
+    static Command BuildCleanCommand()
+    {
+        Command cleanCommand = new(
+            name: "clean",
+            description: "Delete bin/obj folders and rebuild the project."
+        );
+
+        cleanCommand.SetHandler(CleanHandler.Execute);
+
+        return cleanCommand;
+    }
+
+    static Command BuildResetCommand()
+    {
+        Command resetCommand = new(
+            name: "reset",
+            description: """
+            Full reset: clear all state/spreadsheets AND rebuild project.
+
+            ARGUMENTS:
+              service    yt, lastfm, all (default: all)
+            """
+        );
+
+        Argument<string> serviceArg = new(
+            name: "service",
+            description: "Service to reset: yt, lastfm, all"
+        )
+        {
+            Arity = ArgumentArity.ZeroOrOne,
+        };
+        serviceArg.SetDefaultValue("all");
+
+        resetCommand.AddArgument(serviceArg);
+        resetCommand.SetHandler(ResetHandler.Execute, serviceArg);
+
+        return resetCommand;
     }
 
     static Command BuildExportCommand()

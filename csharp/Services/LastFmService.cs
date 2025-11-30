@@ -37,24 +37,18 @@ internal class LastFmService(string apiKey, string username)
             if (fetchAfter is not null)
             {
                 var newScrobbles = batch.Where(s => s.PlayedAt > fetchAfter).ToList();
-                Logger.Debug(
-                    "Filtered batch: {0} total, {1} newer than {2:yyyy/MM/dd HH:mm:ss}",
-                    batch.Count,
-                    newScrobbles.Count,
-                    fetchAfter
-                );
 
-                foreach (var s in batch.Take(5))
-                    Logger.Debug(
-                        "  Track: {0} at {1:yyyy/MM/dd HH:mm:ss} (newer: {2})",
-                        s.TrackName,
-                        s.PlayedAt,
-                        s.PlayedAt > fetchAfter
-                    );
+                foreach (var s in newScrobbles)
+                    Logger.Debug("  New: {0} at {1:yyyy/MM/dd HH:mm:ss}", s.TrackName, s.PlayedAt);
 
                 if (newScrobbles.Count == 0)
                 {
-                    Logger.Debug("Reached existing data, stopping");
+                    var firstExisting = batch.First();
+                    Logger.Debug(
+                        "  Exists: {0} at {1:yyyy/MM/dd HH:mm:ss}",
+                        firstExisting.TrackName,
+                        firstExisting.PlayedAt
+                    );
                     break;
                 }
 
@@ -63,7 +57,12 @@ internal class LastFmService(string apiKey, string username)
 
                 if (newScrobbles.Count < batch.Count)
                 {
-                    Logger.Debug("Partial batch (older data found), stopping");
+                    var firstExisting = batch.First(s => s.PlayedAt <= fetchAfter);
+                    Logger.Debug(
+                        "  Exists: {0} at {1:yyyy/MM/dd HH:mm:ss}",
+                        firstExisting.TrackName,
+                        firstExisting.PlayedAt
+                    );
                     StateManager.Save(StateManager.ScrobblesFile, scrobbles);
                     onProgress(page, totalFetched, stopwatch.Elapsed);
                     break;
