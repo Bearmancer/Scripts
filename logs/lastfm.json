@@ -1,0 +1,12 @@
+{
+  "Sessions": [
+    {
+      "Id": "5db7a532",
+      "Date": "2025-11-30",
+      "Started": "20:00:59",
+      "Ended": "20:01:23",
+      "Status": "completed",
+      "Summary": "Wrote 6 scrobbles to sheet"
+    }
+  ]
+}

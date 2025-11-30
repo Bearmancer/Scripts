@@ -14,7 +14,7 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
         clientSecret: AuthenticationConfig.GoogleClientSecret
     );
 
-    FetchState state = StateManager.Load<FetchState>(StateManager.FetchStateFile);
+    FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
 
     void LogResumeInfo()
     {
@@ -138,5 +138,5 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
             }
         );
 
-    internal void SaveState() => StateManager.Save(StateManager.FetchStateFile, state);
+    internal void SaveState() => StateManager.Save(StateManager.LastFmSyncFile, state);
 }

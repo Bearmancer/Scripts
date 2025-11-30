@@ -39,7 +39,7 @@ internal static class ClearHandler
     {
         Logger.Info("Clearing Last.fm...");
 
-        var state = StateManager.Load<FetchState>(StateManager.FetchStateFile);
+        var state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
         if (clearRemote && !IsNullOrEmpty(state.SpreadsheetId))
         {
             sheets ??= new GoogleSheetsService(
@@ -61,7 +61,7 @@ internal static class ClearHandler
     {
         Logger.Info("Clearing YouTube...");
 
-        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
+        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeSyncFile);
         if (clearRemote && !IsNullOrEmpty(state.SpreadsheetId))
         {
             sheets ??= new GoogleSheetsService(

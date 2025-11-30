@@ -114,6 +114,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
         if (existingSheet == null)
         {
+            var targetIndex = GetAlphabeticalInsertIndex(spreadsheetId, sheetName);
+
             BatchUpdateSpreadsheetRequest request = new()
             {
                 Requests =
@@ -122,7 +124,11 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
                     {
                         AddSheet = new AddSheetRequest
                         {
-                            Properties = new SheetProperties { Title = sheetName },
+                            Properties = new SheetProperties
+                            {
+                                Title = sheetName,
+                                Index = targetIndex,
+                            },
                         },
                     },
                 ],
@@ -136,6 +142,73 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
         }
 
         EnsureHeadersForSheet(spreadsheetId, sheetName, headers);
+    }
+
+    int GetAlphabeticalInsertIndex(string spreadsheetId, string newSheetName)
+    {
+        var existingNames = GetSubsheetNames(spreadsheetId);
+        existingNames.Add(newSheetName);
+        existingNames.Sort(StringComparer.OrdinalIgnoreCase);
+        return existingNames.IndexOf(newSheetName);
+    }
+
+    internal void ReorderSheetsAlphabetically(string spreadsheetId)
+    {
+        var spreadsheet = GetSpreadsheetMetadata(spreadsheetId, forceRefresh: true);
+        var sheets =
+            spreadsheet
+                .Sheets?.Where(s => s.Properties?.Title != null && s.Properties?.SheetId != null)
+                .ToList() ?? [];
+
+        if (sheets.Count <= 1)
+            return;
+
+        var sortedSheets = sheets
+            .OrderBy(s => s.Properties!.Title, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var needsReorder = false;
+        for (var i = 0; i < sheets.Count; i++)
+        {
+            if (sheets[i].Properties!.SheetId != sortedSheets[i].Properties!.SheetId)
+            {
+                needsReorder = true;
+                break;
+            }
+        }
+
+        if (!needsReorder)
+            return;
+
+        Logger.Info("Reordering {0} sheets alphabetically...", sheets.Count);
+
+        List<Request> requests = [];
+        for (var i = 0; i < sortedSheets.Count; i++)
+        {
+            requests.Add(
+                new Request
+                {
+                    UpdateSheetProperties = new UpdateSheetPropertiesRequest
+                    {
+                        Properties = new SheetProperties
+                        {
+                            SheetId = sortedSheets[i].Properties!.SheetId,
+                            Index = i,
+                        },
+                        Fields = "index",
+                    },
+                }
+            );
+        }
+
+        BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
+        ApiConfig.ExecuteWithRetry(
+            operationName: "Sheets.BatchUpdate.ReorderSheets",
+            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute(),
+            postAction: () => ApiConfig.Delay(ServiceType.Sheets)
+        );
+        InvalidateCache(spreadsheetId);
+        Logger.Success("Sheets reordered alphabetically");
     }
 
     internal void DeleteSubsheet(string spreadsheetId, string sheetName)

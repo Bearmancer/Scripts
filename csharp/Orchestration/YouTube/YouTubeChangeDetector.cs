@@ -31,6 +31,15 @@ internal static class YouTubeChangeDetector
                 removedIndices.Add(i + 2);
         }
 
+        Logger.Debug(
+            "VideoChanges: current={0}, stored={1}, added={2}, removed={3}, removedIndices={4}",
+            currentVideoIds.Count,
+            storedVideoIds.Count,
+            addedIds.Count,
+            removedIds.Count,
+            removedIndices.Count
+        );
+
         var requiresFullRewrite = false;
         if (addedIds.Count == 0 && removedIndices.Count == 0)
         {

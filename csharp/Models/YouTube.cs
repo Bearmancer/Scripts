@@ -40,6 +40,7 @@ internal record YouTubeFetchState
     public string? CurrentPlaylistId { get; set; }
     public int CurrentPlaylistVideosFetched { get; set; }
     public DateTime LastUpdated { get; set; } = DateTime.Now;
+    public DateTime LastChecked { get; set; } = DateTime.Now;
     public bool FetchComplete { get; set; }
 
     internal void UpdatePlaylistProgress(string playlistId, int videosFetched)

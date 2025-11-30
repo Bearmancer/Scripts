@@ -63,7 +63,7 @@ internal class LastFmService(string apiKey, string username)
                         firstExisting.TrackName,
                         firstExisting.PlayedAt
                     );
-                    StateManager.Save(StateManager.ScrobblesFile, scrobbles);
+                    StateManager.Save(StateManager.LastFmScrobblesFile, scrobbles);
                     onProgress(page, totalFetched, stopwatch.Elapsed);
                     break;
                 }
@@ -74,7 +74,7 @@ internal class LastFmService(string apiKey, string username)
                 totalFetched += batch.Count;
             }
 
-            StateManager.Save(StateManager.ScrobblesFile, scrobbles);
+            StateManager.Save(StateManager.LastFmScrobblesFile, scrobbles);
             onProgress(page, totalFetched, stopwatch.Elapsed);
 
             if (batch.Count < PerPage)
@@ -120,7 +120,8 @@ internal class LastFmService(string apiKey, string username)
     }
 
     internal static List<Scrobble> LoadScrobbles() =>
-        StateManager.Load<List<Scrobble>>(StateManager.ScrobblesFile);
+        StateManager.Load<List<Scrobble>>(StateManager.LastFmScrobblesFile);
 
-    internal static void DeleteScrobblesCache() => StateManager.Delete(StateManager.ScrobblesFile);
+    internal static void DeleteScrobblesCache() =>
+        StateManager.Delete(StateManager.LastFmScrobblesFile);
 }
