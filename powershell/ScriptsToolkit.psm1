@@ -413,15 +413,16 @@ function Register-ScheduledSyncTask {
     $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
     if ($existingTask) {
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+        Write-Host "Removed existing task '$TaskName'" -ForegroundColor Yellow
     }
 
     $dllPath = Join-Path -Path $Script:CSharpRoot -ChildPath 'bin\Debug\net10.0\CSharpScripts.dll'
     $noBuildFlag = if (Test-Path -Path $dllPath) { '--no-build ' } else { '' }
 
     $pwsh = (Get-Command -Name pwsh).Source
-    $argument = "-NoProfile -NoLogo -Command `"Set-Location '$Script:CSharpRoot'; dotnet run $($noBuildFlag)$Command`""
+    $argument = "-NoProfile -NoLogo -WindowStyle Hidden -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $($noBuildFlag)$Command; exit `$LASTEXITCODE`""
 
-    $action = New-ScheduledTaskAction -Execute $pwsh -Argument $argument -WorkingDirectory $Script:CSharpRoot
+    $action = New-ScheduledTaskAction -Execute $pwsh -Argument $argument
     $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun
 
     $start = [datetime]::Today.Add($DailyTime)

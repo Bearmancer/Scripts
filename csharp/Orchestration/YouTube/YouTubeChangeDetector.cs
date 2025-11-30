@@ -2,12 +2,13 @@ namespace CSharpScripts.Orchestration.YouTube;
 
 internal record VideoChanges(
     List<string> AddedVideoIds,
+    List<string> RemovedVideoIds,
     List<int> RemovedRowIndices,
     bool RequiresFullRewrite
 )
 {
     internal bool HasChanges =>
-        AddedVideoIds.Count > 0 || RemovedRowIndices.Count > 0 || RequiresFullRewrite;
+        AddedVideoIds.Count > 0 || RemovedVideoIds.Count > 0 || RequiresFullRewrite;
 }
 
 internal static class YouTubeChangeDetector
@@ -21,6 +22,7 @@ internal static class YouTubeChangeDetector
         var storedSet = storedVideoIds.ToHashSet();
 
         var addedIds = currentVideoIds.Where(id => !storedSet.Contains(id)).ToList();
+        var removedIds = storedVideoIds.Where(id => !currentSet.Contains(id)).ToList();
 
         List<int> removedIndices = [];
         for (var i = 0; i < storedVideoIds.Count; i++)
@@ -42,7 +44,7 @@ internal static class YouTubeChangeDetector
             }
         }
 
-        return new VideoChanges(addedIds, removedIndices, requiresFullRewrite);
+        return new VideoChanges(addedIds, removedIds, removedIndices, requiresFullRewrite);
     }
 
     internal static PlaylistChanges DetectPlaylistChanges(
@@ -132,18 +134,16 @@ internal static class YouTubeChangeDetector
                     )
                 );
 
-            var countChanged = snapshot.ReportedVideoCount != summary.VideoCount;
             var etagChanged =
                 !IsNullOrEmpty(snapshot.ETag)
                 && !IsNullOrEmpty(summary.ETag)
                 && snapshot.ETag != summary.ETag;
 
-            if (countChanged || etagChanged)
+            if (etagChanged)
             {
                 modifiedIds.Add(summary.Id);
                 Logger.Debug(
-                    "  MODIFIED ({0}): {1} ({2} → {3} videos)",
-                    countChanged ? "count" : "etag",
+                    "  MODIFIED (etag changed): {0} (count: {1} → {2})",
                     summary.Title,
                     snapshot.ReportedVideoCount,
                     summary.VideoCount

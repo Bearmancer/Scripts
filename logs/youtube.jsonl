@@ -141,3 +141,37 @@
 {"timestamp":"2025-11-29T21:30:46.0088566Z","level":"Info","service":"youtube","sessionId":"644892c9","operation":"session_start","message":"Session started"}
 {"timestamp":"2025-11-29T21:30:46.1809500Z","level":"Info","service":"youtube","sessionId":"644892c9","operation":"log","message":"Starting YouTube sync..."}
 {"timestamp":"2025-11-29T21:30:49.1791788Z","level":"Info","service":"youtube","sessionId":"644892c9","operation":"log","message":"Fixing headers for 136 sheets..."}
+{"timestamp":"2025-11-30T04:30:01.6015176Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"session_start","message":"Session started"}
+{"timestamp":"2025-11-30T04:30:11.3438753Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Optimized sync: checking metadata only..."}
+{"timestamp":"2025-11-30T04:30:18.4428054Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"API calls saved: ~136 (using cached video IDs)"}
+{"timestamp":"2025-11-30T04:30:18.4479693Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"New playlists: 1"}
+{"timestamp":"2025-11-30T04:30:18.4492162Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Modified playlists: 12"}
+{"timestamp":"2025-11-30T04:30:18.4507533Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Fetching details for 13 changed playlists..."}
+{"timestamp":"2025-11-30T04:31:37.0001730Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Bernard Haitink\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:31:41.7536273Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Christian Thielemann\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:31:48.5134057Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Comedy\u0027: \u002B7 -14"}
+{"timestamp":"2025-11-30T04:32:00.1863068Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Cristian M\u0103celaru\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:04.7748164Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Documentaries and FRONTLINE\u0027: \u002B5 -17"}
+{"timestamp":"2025-11-30T04:32:17.2044371Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Gennady Rozhdestvensky\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:31.1614167Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Herbert von Karajan\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:35.8099939Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Kent Nagano\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:40.3353022Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Leonard Bernstein\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:49.7253510Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Leopold Stokowski\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:32:56.7186524Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Riccardo Muti\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:33:01.5250592Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Incremental update for \u0027Yevgeny Svetlanov\u0027: \u002B1 -0"}
+{"timestamp":"2025-11-30T04:33:03.9277220Z","level":"Success","service":"youtube","sessionId":"8e7be9f3","operation":"log","message":"Done! Updated 13 playlists."}
+{"timestamp":"2025-11-30T04:33:03.9289785Z","level":"Info","service":"youtube","sessionId":"8e7be9f3","operation":"session_end","message":"Updated 13 playlists (optimized)","data":{"status":"completed"}}
+{"timestamp":"2025-11-30T09:48:07.2491861Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"session_start","message":"Session started"}
+{"timestamp":"2025-11-30T09:48:07.7440094Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Migrated 13 playlist cache files to new format"}
+{"timestamp":"2025-11-30T09:48:16.6241933Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Optimized sync: checking metadata only..."}
+{"timestamp":"2025-11-30T09:48:23.7145462Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"API calls saved: ~137 (using cached video IDs)"}
+{"timestamp":"2025-11-30T09:48:23.7211167Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Modified playlists: 1"}
+{"timestamp":"2025-11-30T09:48:23.7230839Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Fetching details for 1 changed playlists..."}
+{"timestamp":"2025-11-30T09:48:28.3224639Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Incremental update for \u0027Documentaries and FRONTLINE\u0027: \u002B0 -1"}
+{"timestamp":"2025-11-30T09:48:33.5612494Z","level":"Success","service":"youtube","sessionId":"bbb3d97e","operation":"log","message":"Done! Updated 1 playlists."}
+{"timestamp":"2025-11-30T09:48:33.5627037Z","level":"Info","service":"youtube","sessionId":"bbb3d97e","operation":"session_end","message":"Updated 1 playlists (optimized)","data":{"status":"completed"}}
+{"timestamp":"2025-11-30T09:52:54.5554131Z","level":"Info","service":"youtube","sessionId":"eb7673bb","operation":"session_start","message":"Session started"}
+{"timestamp":"2025-11-30T09:52:57.9124863Z","level":"Info","service":"youtube","sessionId":"eb7673bb","operation":"log","message":"Optimized sync: checking metadata only..."}
+{"timestamp":"2025-11-30T09:53:04.9551627Z","level":"Info","service":"youtube","sessionId":"eb7673bb","operation":"log","message":"API calls saved: ~137 (using cached video IDs)"}
+{"timestamp":"2025-11-30T09:53:04.9593758Z","level":"Info","service":"youtube","sessionId":"eb7673bb","operation":"log","message":"No changes detected. Everything is up to date."}
+{"timestamp":"2025-11-30T09:53:04.9635722Z","level":"Info","service":"youtube","sessionId":"eb7673bb","operation":"session_end","message":"Already up to date (optimized check)","data":{"status":"completed"}}

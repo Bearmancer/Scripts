@@ -112,7 +112,7 @@ internal static class Logger
 
         var formatted = args.Length > 0 ? Format(message, args) : message;
         var timestamp = DateTime.Now.ToString("HH:mm:ss");
-        AnsiConsole.Markup(
+        AnsiConsole.MarkupLine(
             $"\r[cyan][[Progress]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
         );
     }
