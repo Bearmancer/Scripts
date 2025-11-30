@@ -1,0 +1,140 @@
+{
+  "Sessions": [
+    {
+      "Id": "a7b54c80",
+      "Date": "2025-11-30",
+      "Started": "20:14:39",
+      "Ended": "20:54:46",
+      "Status": "completed",
+      "Summary": "Synced 137 playlists (129 updated, 8 unchanged)"
+    },
+    {
+      "Id": "33c7e5cd",
+      "Date": "2025-11-30",
+      "Started": "21:00:54",
+      "Ended": "21:01:06",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "024a229c",
+      "Date": "2025-11-30",
+      "Started": "21:01:45",
+      "Ended": "21:02:05",
+      "Status": "completed",
+      "Summary": "Updated 1 playlists (optimized)",
+      "PlaylistsProcessed": 1,
+      "Actions": [
+        {
+          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
+          "Title": "Documentaries and FRONTLINE",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": null,
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        }
+      ]
+    },
+    {
+      "Id": "6db95879",
+      "Date": "2025-11-30",
+      "Started": "21:04:02",
+      "Ended": "21:04:12",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "27d19fe1",
+      "Date": "2025-11-30",
+      "Started": "21:05:00",
+      "Ended": "21:05:20",
+      "Status": "completed",
+      "Summary": "Updated 1 playlists (optimized)",
+      "PlaylistsProcessed": 1,
+      "Actions": [
+        {
+          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
+          "Title": "Documentaries and FRONTLINE",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": null,
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        }
+      ]
+    },
+    {
+      "Id": "b19075eb",
+      "Date": "2025-11-30",
+      "Started": "21:07:03",
+      "Ended": "21:07:18",
+      "Status": "completed",
+      "Summary": "Updated 1 playlists (optimized)",
+      "PlaylistsSkipped": 1
+    },
+    {
+      "Id": "e0713cb5",
+      "Date": "2025-11-30",
+      "Started": "21:07:58",
+      "Ended": "21:08:08",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "add4b2f8",
+      "Date": "2025-11-30",
+      "Started": "21:08:24",
+      "Ended": "21:08:34",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "d0c835bc",
+      "Date": "2025-11-30",
+      "Started": "21:11:43",
+      "Ended": "21:11:53",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "42449770",
+      "Date": "2025-11-30",
+      "Started": "21:12:19",
+      "Ended": "21:12:39",
+      "Status": "completed",
+      "Summary": "Updated 1 playlists (optimized)",
+      "PlaylistsProcessed": 1,
+      "Actions": [
+        {
+          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
+          "Title": "Documentaries and FRONTLINE",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": null,
+          "RemovedVideos": [
+            "\u0022Red States\u0022 Are a Myth with Trae Crowder",
+            "Age of Easy Money (full documentary) | FRONTLINE"
+          ],
+          "RenamedFrom": null
+        }
+      ]
+    },
+    {
+      "Id": "4216f385",
+      "Date": "2025-11-30",
+      "Started": "21:15:26",
+      "Ended": "21:15:36",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "50d169a9",
+      "Date": "2025-11-30",
+      "Started": "21:15:49",
+      "Ended": "21:15:59",
+      "Status": "completed",
+      "Summary": "Already up to date (optimized check)"
+    }
+  ]
+}

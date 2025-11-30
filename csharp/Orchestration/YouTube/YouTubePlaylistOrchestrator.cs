@@ -22,7 +22,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
     );
 
     readonly YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
-        StateManager.YouTubeStateFile
+        StateManager.YouTubeSyncFile
     );
 
     internal void Execute()
@@ -154,7 +154,10 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     void ExecuteOptimized(string spreadsheetId)
     {
-        Logger.Info("Checking for changes since {0:yyyy/MM/dd HH:mm:ss}", state.LastUpdated);
+        Logger.Info("Last change: {0:yyyy/MM/dd HH:mm:ss}", state.LastUpdated);
+        state.LastChecked = DateTime.Now;
+        state.LastUpdated = DateTime.Now;
+        SaveState();
 
         var summaries = youtubeService.GetPlaylistSummaries(ct);
 
@@ -189,6 +192,11 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             {
                 ArchiveDeletedPlaylist(snapshot);
                 sheetsService.DeleteSubsheet(spreadsheetId, SanitizeSheetName(snapshot.Title));
+                Logger.RecordPlaylistDeleted(
+                    snapshot.PlaylistId,
+                    snapshot.Title,
+                    snapshot.VideoIds.Count
+                );
                 state.PlaylistSnapshots.Remove(deletedId);
                 SaveState();
             }
@@ -200,6 +208,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 break;
 
             Logger.Info("Renaming: {0} → {1}", rename.OldTitle, rename.NewTitle);
+            Logger.RecordPlaylistRenamed(rename.PlaylistId, rename.OldTitle, rename.NewTitle);
 
             sheetsService.RenameSubsheet(
                 spreadsheetId,
@@ -502,6 +511,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 sheetsService.CleanupDefaultSheet(spreadsheetId);
             }
 
+            sheetsService.ReorderSheetsAlphabetically(spreadsheetId);
+
             Logger.Success(
                 "Done! Synced {0} playlists ({1} processed, {2} unchanged).",
                 playlists.Count,
@@ -587,6 +598,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         var alreadyFetched = 0;
         List<YouTubeVideo> videos = [];
         var existingCache = StateManager.LoadPlaylistCache(playlist.Title);
+        List<YouTubeVideo> previousVideos = [.. existingCache];
 
         if (state.CurrentPlaylistId == playlist.Id && existingCache.Count > 0)
         {
@@ -621,7 +633,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         if (ct.IsCancellationRequested)
             return;
 
-        WritePlaylist(playlist, videos, spreadsheetId, isFirstPlaylist);
+        WritePlaylist(playlist, videos, previousVideos, spreadsheetId, isFirstPlaylist);
 
         PlaylistSnapshot snapshot = new(
             PlaylistId: playlist.Id,
@@ -648,7 +660,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             }
         );
 
-    internal void SaveState() => StateManager.Save(StateManager.YouTubeStateFile, state);
+    internal void SaveState() => StateManager.Save(StateManager.YouTubeSyncFile, state);
 
     static void ArchiveDeletedPlaylist(PlaylistSnapshot snapshot)
     {
@@ -661,6 +673,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
     void WritePlaylist(
         YouTubePlaylist playlist,
         List<YouTubeVideo> videos,
+        List<YouTubeVideo> previousVideos,
         string spreadsheetId,
         bool isFirstPlaylist
     )
@@ -672,6 +685,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             sheetsService.RenameSubsheet(spreadsheetId, oldName: "Sheet1", newName: sheetName);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            Logger.RecordPlaylistCreated(playlist.Id, playlist.Title, videos.Count);
+            Logger.RecordPlaylistProcessed();
             return;
         }
 
@@ -679,6 +694,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             sheetsService.EnsureSubsheetExists(spreadsheetId, sheetName, VideoHeaders);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            Logger.RecordPlaylistCreated(playlist.Id, playlist.Title, videos.Count);
+            Logger.RecordPlaylistProcessed();
             return;
         }
 
@@ -687,35 +704,56 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             storedVideoIds: existingSnapshot.VideoIds
         );
 
+        var removedTitles = videoChanges
+            .RemovedVideoIds.Select(id =>
+                previousVideos.FirstOrDefault(v => v.VideoId == id)?.Title
+            )
+            .Where(t => t != null)
+            .Cast<string>()
+            .ToList();
+
+        var addedVideos = videos
+            .Where(v => videoChanges.AddedVideoIds.Contains(v.VideoId))
+            .ToList();
+        var addedTitles = addedVideos.Select(v => v.Title).ToList();
+
         if (videoChanges.RequiresFullRewrite)
         {
             Logger.Debug("Order changed in '{0}', full rewrite required", playlist.Title);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
+            Logger.RecordPlaylistUpdated(
+                playlistId: playlist.Id,
+                title: playlist.Title,
+                addedVideos: addedTitles.Count > 0 ? addedTitles : null,
+                removedVideos: removedTitles.Count > 0 ? removedTitles : null
+            );
+            Logger.RecordPlaylistProcessed();
             return;
         }
 
         if (!videoChanges.HasChanges)
         {
             Logger.Debug("No video changes in '{0}'", playlist.Title);
+            Logger.RecordPlaylistSkipped();
             return;
         }
+
+        var removedSet = videoChanges.RemovedVideoIds.ToHashSet();
 
         Logger.Info(
             "Incremental update for '{0}': +{1} -{2}",
             playlist.Title,
-            videoChanges.AddedVideoIds.Count,
-            videoChanges.RemovedVideoIds.Count
+            addedTitles.Count,
+            removedTitles.Count
         );
 
-        var existingVideos = StateManager.LoadPlaylistCache(playlist.Title);
-        var removedSet = videoChanges.RemovedVideoIds.ToHashSet();
-
-        foreach (var removedId in videoChanges.RemovedVideoIds)
-        {
-            var removedVideo = existingVideos.FirstOrDefault(v => v.VideoId == removedId);
-            if (removedVideo != null)
-                Logger.Debug("  Removed: {0}", removedVideo.Title);
-        }
+        Logger.RecordPlaylistUpdated(
+            playlistId: playlist.Id,
+            title: playlist.Title,
+            addedVideos: addedTitles.Count > 0 ? addedTitles : null,
+            removedVideos: removedTitles.Count > 0 ? removedTitles : null
+        );
+        Logger.RecordPlaylistProcessed();
 
         if (videoChanges.RemovedRowIndices.Count > 0)
         {
@@ -726,15 +764,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             );
         }
 
-        if (videoChanges.AddedVideoIds.Count > 0)
+        if (addedVideos.Count > 0)
         {
-            var addedVideos = videos
-                .Where(v => videoChanges.AddedVideoIds.Contains(v.VideoId))
-                .ToList();
-
-            foreach (var addedVideo in addedVideos)
-                Logger.Debug("  Added: {0}", addedVideo.Title);
-
             var rows = addedVideos
                 .Select(v =>
                     (IList<object>)
@@ -751,7 +782,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             sheetsService.AppendRows(spreadsheetId, sheetName, rows);
         }
 
-        var updatedVideos = existingVideos
+        var updatedVideos = previousVideos
             .Where(v => !removedSet.Contains(v.VideoId))
             .Concat(videos.Where(v => videoChanges.AddedVideoIds.Contains(v.VideoId)))
             .ToList();
@@ -803,7 +834,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         string outputDirectory = "YouTube Playlists"
     )
     {
-        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeStateFile);
+        var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeSyncFile);
 
         if (IsNullOrEmpty(state.SpreadsheetId))
             throw new InvalidOperationException(

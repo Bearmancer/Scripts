@@ -5,7 +5,6 @@ internal static class Paths
     internal static readonly string ProjectRoot = FindAncestorContaining(".git");
     internal static readonly string LogDirectory = Combine(ProjectRoot, "logs");
     internal static readonly string StateDirectory = Combine(ProjectRoot, "state");
-    internal static readonly string ArchivesDirectory = Combine(LogDirectory, "archives");
 
     static string FindAncestorContaining(string marker)
     {

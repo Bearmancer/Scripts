@@ -27,7 +27,7 @@ internal static class StatusHandler
     static void ShowLastFmStatus()
     {
         Logger.Info("=== Last.fm ===");
-        var stateFile = Combine(Paths.StateDirectory, StateManager.FetchStateFile);
+        var stateFile = Combine(Paths.StateDirectory, StateManager.LastFmSyncFile);
         var hasState = File.Exists(stateFile);
         var spreadsheetUrl =
             $"https://docs.google.com/spreadsheets/d/{SpreadsheetConfig.LastFmSpreadsheetId}";
@@ -61,7 +61,7 @@ internal static class StatusHandler
     static void ShowYouTubeStatus()
     {
         Logger.Info("=== YouTube ===");
-        var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeStateFile);
+        var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeSyncFile);
         var cached = File.Exists(stateFile);
 
         if (cached)

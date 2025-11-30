@@ -2,16 +2,19 @@ namespace CSharpScripts.Infrastructure;
 
 internal static class StateManager
 {
-    internal const string ScrobblesFile = "scrobbles.json";
-    internal const string FetchStateFile = "scrobblefetchstate.json";
-    internal const string YouTubeStateFile = "youtubefetchstate.json";
-    const string PlaylistsSubdirectory = "playlists";
-    const string DeletedSubdirectory = "deleted";
+    internal const string LastFmSyncFile = "lastfm/sync.json";
+    internal const string LastFmScrobblesFile = "lastfm/scrobbles.json";
+    internal const string YouTubeSyncFile = "youtube/sync.json";
+
+    const string YouTubePlaylistsSubdirectory = "youtube/playlists";
+    const string YouTubeDeletedSubdirectory = "youtube/deleted";
 
     internal static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    static string PlaylistsDirectory => Combine(Paths.StateDirectory, PlaylistsSubdirectory);
-    static string DeletedPlaylistsDirectory => Combine(PlaylistsDirectory, DeletedSubdirectory);
+    static string YouTubePlaylistsDirectory =>
+        Combine(Paths.StateDirectory, YouTubePlaylistsSubdirectory);
+    static string YouTubeDeletedDirectory =>
+        Combine(Paths.StateDirectory, YouTubeDeletedSubdirectory);
 
     internal static T Load<T>(string fileName)
         where T : class, new()
@@ -40,7 +43,7 @@ internal static class StateManager
 
     internal static List<YouTubeVideo> LoadPlaylistCache(string playlistTitle)
     {
-        CreateDirectory(PlaylistsDirectory);
+        CreateDirectory(YouTubePlaylistsDirectory);
         var path = GetPlaylistPath(playlistTitle);
         if (!File.Exists(path))
             return [];
@@ -51,7 +54,7 @@ internal static class StateManager
 
     internal static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
     {
-        CreateDirectory(PlaylistsDirectory);
+        CreateDirectory(YouTubePlaylistsDirectory);
         WriteAllText(GetPlaylistPath(playlistTitle), JsonSerializer.Serialize(videos, JsonOptions));
     }
 
@@ -73,20 +76,17 @@ internal static class StateManager
 
     internal static void DeleteLastFmStates()
     {
-        Delete(FetchStateFile);
-        Delete(ScrobblesFile);
+        Delete(LastFmSyncFile);
+        Delete(LastFmScrobblesFile);
         Logger.Debug("Deleted Last.fm state files");
     }
 
     internal static void DeleteYouTubeStates()
     {
-        Delete(YouTubeStateFile);
+        Delete(YouTubeSyncFile);
 
-        foreach (var file in GetFiles(Paths.StateDirectory, "playlist_*.json"))
-            File.Delete(file);
-
-        if (Directory.Exists(PlaylistsDirectory))
-            Directory.Delete(PlaylistsDirectory, recursive: true);
+        if (Directory.Exists(YouTubePlaylistsDirectory))
+            Directory.Delete(YouTubePlaylistsDirectory, recursive: true);
 
         Logger.Debug("Deleted YouTube state files");
     }
@@ -94,10 +94,15 @@ internal static class StateManager
     internal static void MigratePlaylistFiles(Dictionary<string, PlaylistSnapshot> snapshots)
     {
         var oldFiles = GetFiles(Paths.StateDirectory, "playlist_*.json").ToList();
+
+        var oldPlaylistsDir = Combine(Paths.StateDirectory, "playlists");
+        if (Directory.Exists(oldPlaylistsDir))
+            oldFiles.AddRange(GetFiles(oldPlaylistsDir, "*.json"));
+
         if (oldFiles.Count == 0)
             return;
 
-        CreateDirectory(PlaylistsDirectory);
+        CreateDirectory(YouTubePlaylistsDirectory);
         var migrated = 0;
 
         foreach (var oldFile in oldFiles)
@@ -126,6 +131,9 @@ internal static class StateManager
             }
         }
 
+        if (Directory.Exists(oldPlaylistsDir) && !GetFiles(oldPlaylistsDir, "*").Any())
+            Directory.Delete(oldPlaylistsDir, recursive: true);
+
         if (migrated > 0)
             Logger.Info("Migrated {0} playlist cache files to new format", migrated);
     }
@@ -135,12 +143,9 @@ internal static class StateManager
 
     internal static string ArchivePlaylistCache(string playlistTitle)
     {
-        CreateDirectory(DeletedPlaylistsDirectory);
+        CreateDirectory(YouTubeDeletedDirectory);
         var sourcePath = GetPlaylistPath(playlistTitle);
-        var destPath = Combine(
-            DeletedPlaylistsDirectory,
-            $"{SanitizeFileName(playlistTitle)}.json"
-        );
+        var destPath = Combine(YouTubeDeletedDirectory, $"{SanitizeFileName(playlistTitle)}.json");
 
         if (File.Exists(sourcePath))
             File.Move(sourcePath, destPath);
@@ -148,11 +153,20 @@ internal static class StateManager
         return destPath;
     }
 
-    static string GetPath(string fileName) =>
-        Combine(Paths.StateDirectory, fileName.EndsWith(".json") ? fileName : $"{fileName}.json");
+    static string GetPath(string fileName)
+    {
+        var fullPath = Combine(
+            Paths.StateDirectory,
+            fileName.EndsWith(".json") ? fileName : $"{fileName}.json"
+        );
+        var directory = GetDirectoryName(fullPath);
+        if (!IsNullOrEmpty(directory))
+            CreateDirectory(directory);
+        return fullPath;
+    }
 
     static string GetPlaylistPath(string playlistTitle) =>
-        Combine(PlaylistsDirectory, $"{SanitizeFileName(playlistTitle)}.json");
+        Combine(YouTubePlaylistsDirectory, $"{SanitizeFileName(playlistTitle)}.json");
 
     static string SanitizeFileName(string name) =>
         name.Replace(":", " -")
