@@ -29,6 +29,52 @@ function Invoke-ToolkitPython {
 
 #region Utilities
 
+function Get-ToolkitFunctions {
+    [CmdletBinding()]
+    param()
+
+    $functions = @(
+        @{ Category = 'Utilities'; Name = 'Get-ToolkitFunctions'; Alias = 'tkfn'; Description = 'List all toolkit functions' }
+        @{ Category = 'Utilities'; Name = 'Open-CommandHistory'; Alias = 'hist'; Description = 'Open PowerShell history file' }
+        @{ Category = 'Utilities'; Name = 'Show-ToolkitHelp'; Alias = 'tkhelp'; Description = 'Open toolkit documentation' }
+        @{ Category = 'Utilities'; Name = 'Invoke-ToolkitAnalyzer'; Alias = 'tklint'; Description = 'Run PSScriptAnalyzer' }
+        @{ Category = 'Filesystem'; Name = 'Get-Directories'; Alias = 'dirs'; Description = 'List directories with sizes' }
+        @{ Category = 'Filesystem'; Name = 'Get-FilesAndDirectories'; Alias = 'tree'; Description = 'List all items with sizes' }
+        @{ Category = 'Filesystem'; Name = 'New-Torrents'; Alias = 'torrent'; Description = 'Create .torrent files' }
+        @{ Category = 'Video'; Name = 'Start-DiscRemux'; Alias = 'remux'; Description = 'Remux video discs to MKV' }
+        @{ Category = 'Video'; Name = 'Start-BatchCompression'; Alias = 'compress'; Description = 'Compress videos in batch' }
+        @{ Category = 'Video'; Name = 'Get-VideoChapters'; Alias = 'chapters'; Description = 'Extract chapter timestamps' }
+        @{ Category = 'Video'; Name = 'Get-VideoResolution'; Alias = 'res'; Description = 'Report video resolutions' }
+        @{ Category = 'Audio'; Name = 'Convert-Audio'; Alias = 'audio'; Description = 'Convert audio files' }
+        @{ Category = 'Audio'; Name = 'Convert-ToMP3'; Alias = 'tomp3'; Description = 'Convert to MP3' }
+        @{ Category = 'Audio'; Name = 'Convert-ToFLAC'; Alias = 'toflac'; Description = 'Convert to FLAC' }
+        @{ Category = 'Audio'; Name = 'Convert-SACD'; Alias = 'sacd'; Description = 'Extract SACD ISO files' }
+        @{ Category = 'Audio'; Name = 'Rename-MusicFiles'; Alias = 'rename'; Description = 'Rename files using RED naming' }
+        @{ Category = 'Audio'; Name = 'Get-EmbeddedImageSize'; Alias = 'artsize'; Description = 'Report embedded art sizes' }
+        @{ Category = 'Audio'; Name = 'Invoke-Propolis'; Alias = 'propolis'; Description = 'Run Propolis analyzer' }
+        @{ Category = 'Transcription'; Name = 'Invoke-Whisper'; Alias = 'whisper'; Description = 'Transcribe single file' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperFolder'; Alias = 'whisperf'; Description = 'Transcribe folder' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapanese'; Alias = 'whisperj'; Description = 'Transcribe Japanese audio' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapaneseFolder'; Alias = 'whisperjf'; Description = 'Transcribe Japanese folder' }
+        @{ Category = 'YouTube'; Name = 'Save-YouTubeVideo'; Alias = 'ytdl'; Description = 'Download YouTube videos' }
+        @{ Category = 'Tasks'; Name = 'Register-ScheduledSyncTask'; Alias = 'regtask'; Description = 'Create scheduled task' }
+        @{ Category = 'Tasks'; Name = 'Register-AllSyncTasks'; Alias = 'regall'; Description = 'Register all sync tasks' }
+    )
+
+    Write-Host "`nScriptsToolkit Functions" -ForegroundColor Cyan
+    Write-Host "========================`n" -ForegroundColor Cyan
+
+    $functions | Group-Object -Property Category | ForEach-Object {
+        Write-Host "$($_.Name)" -ForegroundColor Yellow
+        $_.Group | ForEach-Object {
+            Write-Host "  $($_.Alias.PadRight(10))" -ForegroundColor Green -NoNewline
+            Write-Host "$($_.Name.PadRight(30))" -ForegroundColor White -NoNewline
+            Write-Host "$($_.Description)" -ForegroundColor DarkGray
+        }
+        Write-Host ""
+    }
+}
+
 function Open-CommandHistory {
     [CmdletBinding()]
     param()
@@ -239,12 +285,13 @@ function Invoke-Whisper {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('Path','FullName')]
+        [Alias('Path', 'FullName')]
         [string]$FilePath,
 
-        [string]$Language = 'en',
+        [string]$Language,
         [string]$Model,
         [switch]$Translate,
+        [switch]$Force,
         [string]$OutputDir = (Get-Location).Path
     )
 
@@ -253,31 +300,66 @@ function Invoke-Whisper {
     }
 
     $file = Get-Item -Path $FilePath
-    if (-not $Model) { $Model = if ($Language -eq 'en') { 'distil-large-v3.5' } else { 'medium' } }
+    $srtPath = Join-Path $OutputDir ($file.BaseName + '.srt')
+
+    if ((Test-Path $srtPath) -and -not $Force) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -ForegroundColor DarkGray -NoNewline
+        Write-Host "Skipped: " -ForegroundColor Yellow -NoNewline
+        Write-Host "$($file.Name) " -NoNewline
+        Write-Host "(SRT exists, use -Force to overwrite)" -ForegroundColor DarkGray
+        return
+    }
+
+    $detectedLanguage = $null
+    if (-not $Language) {
+        $detectedLanguage = '(auto-detect)'
+        $effectiveModel = if ($Model) { $Model } else { 'medium' }
+    }
+    else {
+        $effectiveModel = if ($Model) { $Model } elseif ($Language -eq 'en') { 'distil-large-v3.5' } else { 'medium' }
+    }
+
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -ForegroundColor DarkGray -NoNewline
+    Write-Host "Transcribing: " -ForegroundColor Cyan -NoNewline
+    Write-Host $file.Name
+    Write-Host "             Model: " -ForegroundColor DarkGray -NoNewline
+    Write-Host $effectiveModel -ForegroundColor White -NoNewline
+    Write-Host " | Language: " -ForegroundColor DarkGray -NoNewline
+    if ($detectedLanguage) {
+        Write-Host $detectedLanguage -ForegroundColor Yellow
+    }
+    else {
+        Write-Host $Language -ForegroundColor White
+    }
 
     $env:PYTHONWARNINGS = 'ignore'
 
     $whisperArgs = @(
-        '--model', $Model,
+        '--model', $effectiveModel,
         '--compute_type', 'int8',
         '--output_format', 'srt',
         '--output_dir', $OutputDir,
         '--batched', 'True',
-        '--batch_size', '8',
-        '--language', $Language
+        '--batch_size', '8'
     )
 
-    if ($Translate) { $whisperArgs += '--task'; $whisperArgs += 'translate' }
+    if ($Language) {
+        $whisperArgs += '--language'
+        $whisperArgs += $Language
+    }
+
+    if ($Translate) {
+        $whisperArgs += '--task'
+        $whisperArgs += 'translate'
+    }
+
     $whisperArgs += $FilePath
 
     & whisper-ctranslate2 @whisperArgs
 
-    [PSCustomObject]@{
-        File     = $file.Name
-        Model    = $Model
-        Language = $Language
-        Output   = Join-Path $OutputDir ($file.BaseName + '.srt')
-    }
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -ForegroundColor DarkGray -NoNewline
+    Write-Host "Completed: " -ForegroundColor Green -NoNewline
+    Write-Host $file.Name
 }
 
 function Invoke-WhisperFolder {
@@ -296,39 +378,69 @@ function Invoke-WhisperFolder {
     $extensions = '.mp4', '.mkv', '.avi', '.mp3', '.flac', '.wav', '.webm', '.m4a', '.opus', '.ogg'
     $files = Get-ChildItem $Directory -Recurse -File | Where-Object { $_.Extension.ToLower() -in $extensions }
     $total = $files.Count
-    $processed = 0
+
+    $skipped = @()
+    $toProcess = @()
 
     foreach ($file in $files) {
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, '.srt')
-
         if ((Test-Path $srtPath) -and -not $Force) {
-            Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -NoNewline
-            Write-Host 'Skipped: ' -ForegroundColor Yellow -NoNewline
-            Write-Host "$($file.Name) (SRT exists)"
-            continue
+            $skipped += $file
         }
-
-        $processed++
-        Write-Host "[$processed/$total] " -ForegroundColor DarkGray -NoNewline
-
-        Invoke-Whisper -FilePath $file.FullName -Language $Language -Model $Model -Translate:$Translate -OutputDir $OutputDir
+        else {
+            $toProcess += $file
+        }
     }
 
-    Write-Host "`nCompleted: $processed/$total files" -ForegroundColor Green
+    if ($skipped.Count -gt 0) {
+        Write-Host "`nSkipped " -ForegroundColor Yellow -NoNewline
+        Write-Host "$($skipped.Count)" -ForegroundColor White -NoNewline
+        Write-Host " files (SRT exists):" -ForegroundColor Yellow
+        foreach ($file in $skipped) {
+            Write-Host "  $($file.Name)" -ForegroundColor DarkGray
+        }
+        Write-Host ""
+    }
+
+    if ($toProcess.Count -eq 0) {
+        Write-Host "Nothing to transcribe. Use " -ForegroundColor Yellow -NoNewline
+        Write-Host "-Force" -ForegroundColor Cyan -NoNewline
+        Write-Host " to overwrite existing files." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Transcribing " -ForegroundColor Cyan -NoNewline
+    Write-Host "$($toProcess.Count)" -ForegroundColor White -NoNewline
+    Write-Host " files:" -ForegroundColor Cyan
+    Write-Host ""
+
+    $current = 0
+    foreach ($file in $toProcess) {
+        $current++
+        Write-Host "[$current/$($toProcess.Count)] " -ForegroundColor DarkGray -NoNewline
+        Invoke-Whisper -FilePath $file.FullName -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir
+        Write-Host ""
+    }
+
+    Write-Host "Completed: $current/$($toProcess.Count) transcribed" -ForegroundColor Green
+    if ($skipped.Count -gt 0) {
+        Write-Host "           $($skipped.Count) skipped (already existed)" -ForegroundColor DarkGray
+    }
 }
 
 function Invoke-WhisperJapanese {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('Path','FullName')]
+        [Alias('Path', 'FullName')]
         [string]$FilePath,
         [string]$Model,
         [switch]$Translate,
+        [switch]$Force,
         [string]$OutputDir = (Get-Location).Path
     )
 
-    Invoke-Whisper -FilePath $FilePath -Language ja -Model $Model -Translate:$Translate -OutputDir $OutputDir
+    Invoke-Whisper -FilePath $FilePath -Language ja -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir
 }
 
 function Invoke-WhisperJapaneseFolder {
@@ -447,4 +559,34 @@ function Register-AllSyncTasks {
 
 #endregion
 
-Export-ModuleMember -Function *
+#region Aliases
+
+Set-Alias -Name tkfn -Value Get-ToolkitFunctions
+Set-Alias -Name hist -Value Open-CommandHistory
+Set-Alias -Name tkhelp -Value Show-ToolkitHelp
+Set-Alias -Name tklint -Value Invoke-ToolkitAnalyzer
+Set-Alias -Name dirs -Value Get-Directories
+Set-Alias -Name tree -Value Get-FilesAndDirectories
+Set-Alias -Name torrent -Value New-Torrents
+Set-Alias -Name remux -Value Start-DiscRemux
+Set-Alias -Name compress -Value Start-BatchCompression
+Set-Alias -Name chapters -Value Get-VideoChapters
+Set-Alias -Name res -Value Get-VideoResolution
+Set-Alias -Name audio -Value Convert-Audio
+Set-Alias -Name tomp3 -Value Convert-ToMP3
+Set-Alias -Name toflac -Value Convert-ToFLAC
+Set-Alias -Name sacd -Value Convert-SACD
+Set-Alias -Name rename -Value Rename-MusicFiles
+Set-Alias -Name artsize -Value Get-EmbeddedImageSize
+Set-Alias -Name propolis -Value Invoke-Propolis
+Set-Alias -Name whisper -Value Invoke-Whisper
+Set-Alias -Name whisperf -Value Invoke-WhisperFolder
+Set-Alias -Name whisperj -Value Invoke-WhisperJapanese
+Set-Alias -Name whisperjf -Value Invoke-WhisperJapaneseFolder
+Set-Alias -Name ytdl -Value Save-YouTubeVideo
+Set-Alias -Name regtask -Value Register-ScheduledSyncTask
+Set-Alias -Name regall -Value Register-AllSyncTasks
+
+#endregion
+
+Export-ModuleMember -Function * -Alias *

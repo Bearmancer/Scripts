@@ -755,6 +755,8 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
     {
         CreateDirectory(outputDirectory);
 
+        Logger.Info("Fetching spreadsheet metadata...");
+
         var spreadsheet = ApiConfig.ExecuteWithRetry(
             operationName: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
@@ -769,7 +771,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
             .ToList();
 
         if (toExport.Count == 0)
-            return 0;
+            return sheets.Count;
 
         var totalSheets = sheets.Count;
         var alreadyExported = totalSheets - toExport.Count;
@@ -835,7 +837,7 @@ internal class GoogleSheetsService(string clientId, string clientSecret)
 
         Logger.SuppressConsole = false;
 
-        return exported;
+        return sheets.Count;
     }
 
     internal List<(string Id, string Url)> FindDuplicateSpreadsheets(string title)
