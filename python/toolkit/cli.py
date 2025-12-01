@@ -18,9 +18,24 @@ LOG_DIR.mkdir(exist_ok=True)
 class JsonFileHandler(logging.Handler):
     def __init__(self, service_name):
         super().__init__()
-        self.log_path = LOG_DIR / f"{service_name}.jsonl"
+        self.log_path = LOG_DIR / f"{service_name}.json"
+        self.lock_path = LOG_DIR / f"{service_name}.lock"
         self.session_id = uuid.uuid4().hex[:8]
         self.service_name = service_name
+        self.started_at = datetime.now(timezone.utc).isoformat()
+        self.session_closed = False
+        self._handle_stale_lock()
+        self._write_lock()
+        self._append_entry(
+            {
+                "timestamp": self.started_at,
+                "level": "INFO",
+                "service": self.service_name,
+                "sessionId": self.session_id,
+                "operation": "SessionStart",
+                "message": "Session started",
+            }
+        )
 
     def emit(self, record):
         log_entry = {
@@ -30,13 +45,80 @@ class JsonFileHandler(logging.Handler):
             "sessionId": self.session_id,
             "operation": getattr(record, "operation", "log"),
             "message": record.getMessage(),
+            "context": {
+                "module": record.module,
+                "function": record.funcName,
+                "line": record.lineno,
+            },
         }
 
         if hasattr(record, "data"):
             log_entry["data"] = record.data
 
-        with open(self.log_path, "a", encoding="utf-8") as f:
-            print(json.dumps(log_entry), file=f)
+        self._append_entry(log_entry)
+
+    def close(self):
+        if not self.session_closed:
+            self._append_entry(
+                {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "level": "INFO",
+                    "service": self.service_name,
+                    "sessionId": self.session_id,
+                    "operation": "SessionEnd",
+                    "message": "Session ended",
+                }
+            )
+            self.session_closed = True
+        self._delete_lock()
+        super().close()
+
+    def _handle_stale_lock(self):
+        if not self.lock_path.exists():
+            return
+        raw = self.lock_path.read_text(encoding="utf-8").strip()
+        parts = raw.split("|") if raw else []
+        crashed_session = parts[0] if len(parts) > 0 else "unknown"
+        start_time = parts[1] if len(parts) > 1 else "unknown"
+        self._append_entry(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "level": "ERROR",
+                "service": self.service_name,
+                "sessionId": crashed_session,
+                "operation": "SessionCrashed",
+                "message": "Previous session did not shut down cleanly",
+                "data": {
+                    "originalStart": start_time,
+                },
+            }
+        )
+        self._delete_lock()
+
+    def _write_lock(self):
+        self.lock_path.write_text(
+            f"{self.session_id}|{self.started_at}", encoding="utf-8"
+        )
+
+    def _delete_lock(self):
+        if self.lock_path.exists():
+            self.lock_path.unlink()
+
+    def _append_entry(self, entry):
+        entries = self._load_entries()
+        entries.append(entry)
+        temp_path = self.log_path.with_name(self.log_path.name + ".tmp")
+        temp_path.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+        temp_path.replace(self.log_path)
+
+    def _load_entries(self):
+        if not self.log_path.exists():
+            return []
+        content = self.log_path.read_text(encoding="utf-8").strip()
+        if not content:
+            return []
+        data = json.loads(content)
+        return data if isinstance(data, list) else []
 
 
 def configure_logging(service_name="toolkit"):

@@ -1,20 +1,50 @@
-{
-  "Sessions": [
-    {
-      "Id": "5db7a532",
-      "Date": "2025-11-30",
-      "Started": "20:00:59",
-      "Ended": "20:01:23",
-      "Status": "completed",
-      "Summary": "Wrote 6 scrobbles to sheet"
+[
+  {
+    "Timestamp": "2025-11-30 20:00:59",
+    "Event": "SessionStart",
+    "SessionId": "5db7a532",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 20:01:23",
+    "Event": "SessionEnd",
+    "SessionId": "5db7a532",
+    "Data": {
+      "Summary": "Wrote 6 scrobbles to sheet",
+      "Status": "completed"
     },
-    {
-      "Id": "43ba909c",
-      "Date": "2025-12-01",
-      "Started": "09:00:02",
-      "Ended": "09:00:13",
-      "Status": "completed",
-      "Summary": "Already up to date"
-    }
-  ]
-}
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 09:00:02",
+    "Event": "SessionStart",
+    "SessionId": "43ba909c",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 09:00:13",
+    "Event": "SessionEnd",
+    "SessionId": "43ba909c",
+    "Data": {
+      "Summary": "Already up to date",
+      "Status": "completed"
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "SessionStart",
+    "SessionId": "c2c7ba95",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:38",
+    "Event": "SessionEnd",
+    "SessionId": "c2c7ba95",
+    "Data": {
+      "Summary": "Wrote 7 scrobbles to sheet",
+      "Status": "completed"
+    },
+    "Level": "Info"
+  }
+]

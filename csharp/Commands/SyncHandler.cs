@@ -49,10 +49,7 @@ internal static class SyncHandler
         catch (AggregateException aex)
         {
             foreach (var ex in aex.InnerExceptions)
-            {
                 Logger.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-                Logger.FileError(ex.Message, ex);
-            }
             Logger.End(
                 success: false,
                 summary: $"Failed with {aex.InnerExceptions.Count} error(s)"
@@ -66,7 +63,6 @@ internal static class SyncHandler
         catch (Exception ex)
         {
             Logger.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            Logger.FileError(ex.Message, ex);
             Logger.End(success: false, summary: ex.Message);
         }
     }

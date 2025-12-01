@@ -9,7 +9,11 @@ internal static class StateManager
     const string YouTubePlaylistsSubdirectory = "youtube/playlists";
     const string YouTubeDeletedSubdirectory = "youtube/deleted";
 
-    internal static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    internal static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     static string YouTubePlaylistsDirectory =>
         Combine(Paths.StateDirectory, YouTubePlaylistsSubdirectory);

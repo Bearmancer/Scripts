@@ -192,11 +192,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             {
                 ArchiveDeletedPlaylist(snapshot);
                 sheetsService.DeleteSubsheet(spreadsheetId, SanitizeSheetName(snapshot.Title));
-                Logger.RecordPlaylistDeleted(
-                    snapshot.PlaylistId,
-                    snapshot.Title,
-                    snapshot.VideoIds.Count
-                );
+                Logger.PlaylistDeleted(snapshot.Title, snapshot.VideoIds.Count);
                 state.PlaylistSnapshots.Remove(deletedId);
                 SaveState();
             }
@@ -208,7 +204,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 break;
 
             Logger.Info("Renaming: {0} → {1}", rename.OldTitle, rename.NewTitle);
-            Logger.RecordPlaylistRenamed(rename.PlaylistId, rename.OldTitle, rename.NewTitle);
+            Logger.PlaylistRenamed(rename.OldTitle, rename.NewTitle);
 
             sheetsService.RenameSubsheet(
                 spreadsheetId,
@@ -685,8 +681,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             sheetsService.RenameSubsheet(spreadsheetId, oldName: "Sheet1", newName: sheetName);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
-            Logger.RecordPlaylistCreated(playlist.Id, playlist.Title, videos.Count);
-            Logger.RecordPlaylistProcessed();
+            Logger.PlaylistCreated(playlist.Title, videos.Count);
             return;
         }
 
@@ -694,8 +689,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             sheetsService.EnsureSubsheetExists(spreadsheetId, sheetName, VideoHeaders);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
-            Logger.RecordPlaylistCreated(playlist.Id, playlist.Title, videos.Count);
-            Logger.RecordPlaylistProcessed();
+            Logger.PlaylistCreated(playlist.Title, videos.Count);
             return;
         }
 
@@ -721,39 +715,32 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             Logger.Debug("Order changed in '{0}', full rewrite required", playlist.Title);
             WriteFullPlaylist(sheetName, videos, spreadsheetId);
-            Logger.RecordPlaylistUpdated(
-                playlistId: playlist.Id,
-                title: playlist.Title,
-                addedVideos: addedTitles.Count > 0 ? addedTitles : null,
-                removedVideos: removedTitles.Count > 0 ? removedTitles : null
+            Logger.PlaylistUpdated(
+                playlist.Title,
+                addedTitles.Count,
+                removedTitles.Count,
+                addedTitles,
+                removedTitles
             );
-            Logger.RecordPlaylistProcessed();
             return;
         }
 
         if (!videoChanges.HasChanges)
         {
             Logger.Debug("No video changes in '{0}'", playlist.Title);
-            Logger.RecordPlaylistSkipped();
+            Logger.PlaylistSkipped(playlist.Title);
             return;
         }
 
         var removedSet = videoChanges.RemovedVideoIds.ToHashSet();
 
-        Logger.Info(
-            "Incremental update for '{0}': +{1} -{2}",
+        Logger.PlaylistUpdated(
             playlist.Title,
             addedTitles.Count,
-            removedTitles.Count
+            removedTitles.Count,
+            addedTitles,
+            removedTitles
         );
-
-        Logger.RecordPlaylistUpdated(
-            playlistId: playlist.Id,
-            title: playlist.Title,
-            addedVideos: addedTitles.Count > 0 ? addedTitles : null,
-            removedVideos: removedTitles.Count > 0 ? removedTitles : null
-        );
-        Logger.RecordPlaylistProcessed();
 
         if (videoChanges.RemovedRowIndices.Count > 0)
         {

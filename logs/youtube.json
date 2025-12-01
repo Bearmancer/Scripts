@@ -1,208 +1,425 @@
-{
-  "Sessions": [
-    {
-      "Id": "a7b54c80",
-      "Date": "2025-11-30",
-      "Started": "20:14:39",
-      "Ended": "20:54:46",
-      "Status": "completed",
-      "Summary": "Synced 137 playlists (129 updated, 8 unchanged)"
+[
+  {
+    "Timestamp": "2025-11-30 20:14:39",
+    "Event": "SessionStart",
+    "SessionId": "a7b54c80",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 20:54:46",
+    "Event": "SessionEnd",
+    "SessionId": "a7b54c80",
+    "Data": {
+      "Summary": "Synced 137 playlists (129 updated, 8 unchanged)",
+      "Status": "completed"
     },
-    {
-      "Id": "33c7e5cd",
-      "Date": "2025-11-30",
-      "Started": "21:00:54",
-      "Ended": "21:01:06",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:00:54",
+    "Event": "SessionStart",
+    "SessionId": "33c7e5cd",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:01:06",
+    "Event": "SessionEnd",
+    "SessionId": "33c7e5cd",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "024a229c",
-      "Date": "2025-11-30",
-      "Started": "21:01:45",
-      "Ended": "21:02:05",
-      "Status": "completed",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:01:45",
+    "Event": "SessionStart",
+    "SessionId": "024a229c",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:01:45",
+    "Event": "PlaylistUpdated",
+    "SessionId": "024a229c",
+    "Data": {
+      "Title": "Documentaries and FRONTLINE",
+      "Removed": 0,
+      "Added": 0
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:02:05",
+    "Event": "SessionEnd",
+    "SessionId": "024a229c",
+    "Data": {
       "Summary": "Updated 1 playlists (optimized)",
-      "PlaylistsProcessed": 1,
-      "Actions": [
-        {
-          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
-          "Title": "Documentaries and FRONTLINE",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": null,
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        }
-      ]
+      "Status": "completed"
     },
-    {
-      "Id": "6db95879",
-      "Date": "2025-11-30",
-      "Started": "21:04:02",
-      "Ended": "21:04:12",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:04:02",
+    "Event": "SessionStart",
+    "SessionId": "6db95879",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:04:12",
+    "Event": "SessionEnd",
+    "SessionId": "6db95879",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "27d19fe1",
-      "Date": "2025-11-30",
-      "Started": "21:05:00",
-      "Ended": "21:05:20",
-      "Status": "completed",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:05:00",
+    "Event": "SessionStart",
+    "SessionId": "27d19fe1",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:05:00",
+    "Event": "PlaylistUpdated",
+    "SessionId": "27d19fe1",
+    "Data": {
+      "Title": "Documentaries and FRONTLINE",
+      "Removed": 0,
+      "Added": 0
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:05:20",
+    "Event": "SessionEnd",
+    "SessionId": "27d19fe1",
+    "Data": {
       "Summary": "Updated 1 playlists (optimized)",
-      "PlaylistsProcessed": 1,
-      "Actions": [
-        {
-          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
-          "Title": "Documentaries and FRONTLINE",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": null,
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        }
-      ]
+      "Status": "completed"
     },
-    {
-      "Id": "b19075eb",
-      "Date": "2025-11-30",
-      "Started": "21:07:03",
-      "Ended": "21:07:18",
-      "Status": "completed",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:07:03",
+    "Event": "SessionStart",
+    "SessionId": "b19075eb",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:07:18",
+    "Event": "SessionEnd",
+    "SessionId": "b19075eb",
+    "Data": {
       "Summary": "Updated 1 playlists (optimized)",
-      "PlaylistsSkipped": 1
+      "Status": "completed"
     },
-    {
-      "Id": "e0713cb5",
-      "Date": "2025-11-30",
-      "Started": "21:07:58",
-      "Ended": "21:08:08",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:07:58",
+    "Event": "SessionStart",
+    "SessionId": "e0713cb5",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:08:08",
+    "Event": "SessionEnd",
+    "SessionId": "e0713cb5",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "add4b2f8",
-      "Date": "2025-11-30",
-      "Started": "21:08:24",
-      "Ended": "21:08:34",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:08:24",
+    "Event": "SessionStart",
+    "SessionId": "add4b2f8",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:08:34",
+    "Event": "SessionEnd",
+    "SessionId": "add4b2f8",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "d0c835bc",
-      "Date": "2025-11-30",
-      "Started": "21:11:43",
-      "Ended": "21:11:53",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:11:43",
+    "Event": "SessionStart",
+    "SessionId": "d0c835bc",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:11:53",
+    "Event": "SessionEnd",
+    "SessionId": "d0c835bc",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "42449770",
-      "Date": "2025-11-30",
-      "Started": "21:12:19",
-      "Ended": "21:12:39",
-      "Status": "completed",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:12:19",
+    "Event": "SessionStart",
+    "SessionId": "42449770",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:12:19",
+    "Event": "PlaylistUpdated",
+    "SessionId": "42449770",
+    "Data": {
+      "RemovedVideos": [
+        "\"Red States\" Are a Myth with Trae Crowder",
+        "Age of Easy Money (full documentary) | FRONTLINE"
+      ],
+      "Title": "Documentaries and FRONTLINE",
+      "Removed": 2,
+      "Added": 0
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:12:39",
+    "Event": "SessionEnd",
+    "SessionId": "42449770",
+    "Data": {
       "Summary": "Updated 1 playlists (optimized)",
-      "PlaylistsProcessed": 1,
-      "Actions": [
-        {
-          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
-          "Title": "Documentaries and FRONTLINE",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": null,
-          "RemovedVideos": [
-            "\u0022Red States\u0022 Are a Myth with Trae Crowder",
-            "Age of Easy Money (full documentary) | FRONTLINE"
-          ],
-          "RenamedFrom": null
-        }
-      ]
+      "Status": "completed"
     },
-    {
-      "Id": "4216f385",
-      "Date": "2025-11-30",
-      "Started": "21:15:26",
-      "Ended": "21:15:36",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:15:26",
+    "Event": "SessionStart",
+    "SessionId": "4216f385",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:15:36",
+    "Event": "SessionEnd",
+    "SessionId": "4216f385",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "50d169a9",
-      "Date": "2025-11-30",
-      "Started": "21:15:49",
-      "Ended": "21:15:59",
-      "Status": "completed",
-      "Summary": "Already up to date (optimized check)"
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:15:49",
+    "Event": "SessionStart",
+    "SessionId": "50d169a9",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-11-30 21:15:59",
+    "Event": "SessionEnd",
+    "SessionId": "50d169a9",
+    "Data": {
+      "Summary": "Already up to date (optimized check)",
+      "Status": "completed"
     },
-    {
-      "Id": "9a3e9c6c",
-      "Date": "2025-12-01",
-      "Started": "10:00:01",
-      "Ended": "10:01:03",
-      "Status": "completed",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "SessionStart",
+    "SessionId": "9a3e9c6c",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "PlaylistUpdated",
+    "SessionId": "9a3e9c6c",
+    "Data": {
+      "Title": "Andris Nelsons",
+      "Removed": 0,
+      "AddedVideos": [
+        "Respighi: 'Pines of Rome'　A. Nelsons / BSO 2014 live"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "PlaylistUpdated",
+    "SessionId": "9a3e9c6c",
+    "Data": {
+      "Title": "Comedy",
+      "Removed": 0,
+      "AddedVideos": [
+        "Crowd Work: Mood Killing Meds, Bad Therapists, and Swallowing Disorders | Gianmarco Soresi Comedy"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "PlaylistUpdated",
+    "SessionId": "9a3e9c6c",
+    "Data": {
+      "Title": "Documentaries and FRONTLINE",
+      "Removed": 0,
+      "AddedVideos": [
+        "\"Red States\" Are a Myth with Trae Crowder",
+        "Age of Easy Money (full documentary) | FRONTLINE",
+        "Why China's manufacturing economy is dominating — Arthur Kroeber"
+      ],
+      "Added": 3
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "PlaylistUpdated",
+    "SessionId": "9a3e9c6c",
+    "Data": {
+      "Title": "Kent Nagano",
+      "Removed": 0,
+      "AddedVideos": [
+        "RNO 20th Anniversary: Kent Nagano conducts Beethoven, Strauss, Ravel (Moscow, 2010)"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:00:01",
+    "Event": "PlaylistUpdated",
+    "SessionId": "9a3e9c6c",
+    "Data": {
+      "Title": "Neeme Jarvi",
+      "Removed": 0,
+      "AddedVideos": [
+        "Dvorak: Symphony No.5    Neeme Järvi / CSO  2017 live in Chicago"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 10:01:03",
+    "Event": "SessionEnd",
+    "SessionId": "9a3e9c6c",
+    "Data": {
       "Summary": "Updated 5 playlists (optimized)",
-      "PlaylistsProcessed": 5,
-      "Actions": [
-        {
-          "PlaylistId": "PL1zgNCoWt_7atf86nll2v6WdPi1qvuqdB",
-          "Title": "Andris Nelsons",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": [
-            "Respighi: \u0027Pines of Rome\u0027\u3000A. Nelsons / BSO 2014 live"
-          ],
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        },
-        {
-          "PlaylistId": "PL1zgNCoWt_7ZLReKV3NOUXPmugtDCKyUn",
-          "Title": "Comedy",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": [
-            "Crowd Work: Mood Killing Meds, Bad Therapists, and Swallowing Disorders | Gianmarco Soresi Comedy"
-          ],
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        },
-        {
-          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
-          "Title": "Documentaries and FRONTLINE",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": [
-            "\u0022Red States\u0022 Are a Myth with Trae Crowder",
-            "Age of Easy Money (full documentary) | FRONTLINE",
-            "Why China\u0027s manufacturing economy is dominating \u2014 Arthur Kroeber"
-          ],
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        },
-        {
-          "PlaylistId": "PL1zgNCoWt_7alXaygFtxdNvMLXk6Jhd4X",
-          "Title": "Kent Nagano",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": [
-            "RNO 20th Anniversary: Kent Nagano conducts Beethoven, Strauss, Ravel (Moscow, 2010)"
-          ],
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        },
-        {
-          "PlaylistId": "PL1zgNCoWt_7aS0UH6rl5_83OOTS6mB9hz",
-          "Title": "Neeme Jarvi",
-          "Action": "updated",
-          "VideoCount": null,
-          "AddedVideos": [
-            "Dvorak: Symphony No.5    Neeme J\u00E4rvi / CSO  2017 live in Chicago"
-          ],
-          "RemovedVideos": null,
-          "RenamedFrom": null
-        }
-      ]
-    }
-  ]
-}
+      "Status": "completed"
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "SessionStart",
+    "SessionId": "7025bbe1",
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "PlaylistUpdated",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "Title": "Comedy",
+      "Removed": 0,
+      "AddedVideos": [
+        "Dressing Room Tour with Heidi Gardner - SNL"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "PlaylistUpdated",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "RemovedVideos": [
+        "Emergency Powers: Trump’s Favorite Loophole | The Weekly Show with Jon Stewart",
+        "Is Elon Musk the Ultimate Scam Artist? with Max Chafkin | What Now? with Trevor Noah Podcast",
+        "Inside Putin’s dark rise to power | Full documentary",
+        "The Secret History of the Credit Card (full documentary) | FRONTLINE",
+        "Age of Easy Money (full documentary) | FRONTLINE"
+      ],
+      "Added": 14,
+      "Title": "Documentaries and FRONTLINE",
+      "AddedVideos": [
+        "Gambled away in the financial crisis - The Deutsche Bank story | DW Documentary",
+        "The first Nuremberg trial | DW Documentary",
+        "Why the US is almost always at war | DW Documentary",
+        "Trump, Putin & Co. - Deutsche Bank’s questionable clientele | DW Documentary",
+        "Intercepted: What Russian soldiers think about the war | DW Documentary",
+        "India at a crossroads - 100 years of the Hindu nationalist RSS movement | DW Documentary",
+        "Junk food, sugar and additives - The dark side of the food industry | DW Documentary",
+        "Syria - The rise and fall of the Assad regime | DW Documentary",
+        "Exploiting Africa - How China and Europe hunt for the raw materials of the future | DW Documentary",
+        "Yemen and the Houthis: Pirates, terrorists, freedom fighters? | DW Documentary",
+        "The Stasi and the Berlin Wall | DW Documentary",
+        "NATO - The largest military alliance in the world | DW Documentary",
+        "TikTok, China and the fear of digital propaganda | DW Documentary",
+        "Farewell to pacifism: Japan is rearming | DW Documentary"
+      ],
+      "Removed": 5
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "PlaylistUpdated",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "Title": "Georg Solti",
+      "Removed": 0,
+      "AddedVideos": [
+        "Tchaikovsky: Symphony No.6 'Pathetic'     G. Solti / CSO live at Proms 1978"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "PlaylistUpdated",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "Title": "Nathalie Stutzmann",
+      "Removed": 0,
+      "AddedVideos": [
+        "Wagner - Tannhäuser-Ouvertüre | Nathalie Stutzmann | BRSO"
+      ],
+      "Added": 1
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:44:15",
+    "Event": "PlaylistUpdated",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "RemovedVideos": [
+        "1980年　E.スヴェトラーノフ＆USSR国立響　ガーシュイン「パリのアメリカ人」"
+      ],
+      "Title": "Yevgeny Svetlanov",
+      "Removed": 1,
+      "Added": 0
+    },
+    "Level": "Info"
+  },
+  {
+    "Timestamp": "2025-12-01 20:45:30",
+    "Event": "SessionEnd",
+    "SessionId": "7025bbe1",
+    "Data": {
+      "Summary": "Updated 5 playlists (optimized)",
+      "Status": "completed"
+    },
+    "Level": "Info"
+  }
+]
