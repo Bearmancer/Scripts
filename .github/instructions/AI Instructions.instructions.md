@@ -28,7 +28,7 @@ applyTo: '**'
 - Throw exceptions for warning-level errors instead of logerror
 
 - Auto run formatter after agent execution:
-    - C#: dotnet csharpier .
+    - C#: csharpier format .
     - Python: black .
 
 - Always download latest version of all libraries

@@ -91,7 +91,6 @@ internal static class ApiConfig
                         delay.ToString(@"hh\:mm\:ss"),
                         DateTime.Now.Add(delay)
                     );
-                    Logger.FileError($"Retry {attempt}/{MaxRetries} for {operationName}", ex);
 
                     for (var remaining = (int)delay.TotalSeconds; remaining > 0; remaining--)
                     {

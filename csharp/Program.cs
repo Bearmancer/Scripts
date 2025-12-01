@@ -29,16 +29,16 @@ namespace CSharpScripts;
 
 internal class Program
 {
-    static readonly CancellationTokenSource cts = new();
+    static readonly CancellationTokenSource Cts = new();
 
     static int Main(string[] args)
     {
-        Logger.CurrentLogLevel = Info;
+        Logger.ConsoleLevel = Info;
 
         Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
-            cts.Cancel();
+            Cts.Cancel();
             Logger.Error("Shutdown requested...");
         };
 
@@ -88,8 +88,11 @@ internal class Program
             (verbose, force) =>
             {
                 if (verbose)
-                    Logger.CurrentLogLevel = LogLevel.Debug;
-                SyncHandler.YouTube(ct: cts.Token, force: force);
+                {
+                    Logger.ConsoleLevel = LogLevel.Debug;
+                    Logger.FileLevel = LogLevel.Debug;
+                }
+                SyncHandler.YouTube(ct: Cts.Token, force: force);
             },
             verboseOption,
             forceOption
@@ -104,8 +107,11 @@ internal class Program
             (verbose) =>
             {
                 if (verbose)
-                    Logger.CurrentLogLevel = LogLevel.Debug;
-                SyncHandler.LastFm(ct: cts.Token);
+                {
+                    Logger.ConsoleLevel = LogLevel.Debug;
+                    Logger.FileLevel = LogLevel.Debug;
+                }
+                SyncHandler.LastFm(ct: Cts.Token);
             },
             verboseOption
         );
@@ -244,7 +250,7 @@ internal class Program
             description: "Export YouTube playlists as individual CSV files"
         );
 
-        ytCsvCommand.SetHandler(() => ExportHandler.YouTubeCsv(ct: cts.Token));
+        ytCsvCommand.SetHandler(() => ExportHandler.YouTubeCsv(ct: Cts.Token));
 
         csvCommand.AddCommand(ytCsvCommand);
         exportCommand.AddCommand(csvCommand);
