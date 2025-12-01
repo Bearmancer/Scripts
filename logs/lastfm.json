@@ -7,6 +7,14 @@
       "Ended": "20:01:23",
       "Status": "completed",
       "Summary": "Wrote 6 scrobbles to sheet"
+    },
+    {
+      "Id": "43ba909c",
+      "Date": "2025-12-01",
+      "Started": "09:00:02",
+      "Ended": "09:00:13",
+      "Status": "completed",
+      "Summary": "Already up to date"
     }
   ]
 }

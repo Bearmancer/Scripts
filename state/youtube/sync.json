@@ -489,11 +489,12 @@
         "MNEEYtp5l6g",
         "Ma8NopLCkVk",
         "iZY_RejdSDI",
-        "I_vF22ehF88"
+        "I_vF22ehF88",
+        "oeuNVN1_5Ck"
       ],
-      "LastUpdated": "2025-11-30T20:12:01.6239429+05:30",
-      "ReportedVideoCount": 64,
-      "ETag": "LUDGt46fDZc8moV9fl_HsDvhMjg"
+      "LastUpdated": "2025-12-01T10:01:03.7164917+05:30",
+      "ReportedVideoCount": 65,
+      "ETag": "9f6AK8y7tjvbSOdgS6wDQhcpGaU"
     },
     "PL1zgNCoWt_7Z00dvD3mXW354WMJxO9oq0": {
       "PlaylistId": "PL1zgNCoWt_7Z00dvD3mXW354WMJxO9oq0",
@@ -1361,6 +1362,7 @@
       "PlaylistId": "PL1zgNCoWt_7ZLReKV3NOUXPmugtDCKyUn",
       "Title": "Comedy",
       "VideoIds": [
+        "uvW8sNNRgUU",
         "l75Ew6wV174",
         "wa4syN0bBbw",
         "HoMOdkqkhZc",
@@ -1429,9 +1431,9 @@
         "wApU51_oLEg",
         "NvHS1X8ETus"
       ],
-      "LastUpdated": "2025-11-30T20:19:45.7035207+05:30",
-      "ReportedVideoCount": 67,
-      "ETag": "AFOAzNyGSy_9rYMM04n-zK6KKj0"
+      "LastUpdated": "2025-12-01T10:01:03.7164994+05:30",
+      "ReportedVideoCount": 68,
+      "ETag": "XjXlifDOBDizUWxmU9wEkaR5_vA"
     },
     "PL1zgNCoWt_7ZwDkfWP1wfa1UUv9lbQcsT": {
       "PlaylistId": "PL1zgNCoWt_7ZwDkfWP1wfa1UUv9lbQcsT",
@@ -1842,11 +1844,14 @@
         "sD6mtlQzP18",
         "JN8FM1NCOSk",
         "WvCld2vKug8",
-        "UsIhpw_Kqec"
+        "UsIhpw_Kqec",
+        "DXfaVtYV5AY",
+        "EpMLAQbSYAw",
+        "qb644F-iE_s"
       ],
-      "LastUpdated": "2025-11-30T21:12:39.4404601+05:30",
-      "ReportedVideoCount": 24,
-      "ETag": "HvjuBQoMwIPFAPyb2TKt6Pxchpg"
+      "LastUpdated": "2025-12-01T10:01:03.7165037+05:30",
+      "ReportedVideoCount": 27,
+      "ETag": "gkVok81JQE1-FfnZLZdYu4Q5HIA"
     },
     "PL1zgNCoWt_7Y6s_G_UBytJXwyC9wu7OA9": {
       "PlaylistId": "PL1zgNCoWt_7Y6s_G_UBytJXwyC9wu7OA9",
@@ -4760,11 +4765,12 @@
         "XikrPlgDCng",
         "oicVWlNfd3s",
         "IxTJldJH8H8",
-        "6zsWtTxZJbM"
+        "6zsWtTxZJbM",
+        "tpT6kWcddq0"
       ],
-      "LastUpdated": "2025-11-30T20:34:19.3598655+05:30",
-      "ReportedVideoCount": 35,
-      "ETag": "MW36L7ROi-AhrzkdNx64okVkHd0"
+      "LastUpdated": "2025-12-01T10:01:03.7165103+05:30",
+      "ReportedVideoCount": 36,
+      "ETag": "kfPbl6ryKpeBbIuVrLlgD5BflK0"
     },
     "PL1zgNCoWt_7a6A7Nt9ZGWUR98mPooHSL7": {
       "PlaylistId": "PL1zgNCoWt_7a6A7Nt9ZGWUR98mPooHSL7",
@@ -6247,11 +6253,12 @@
         "_zRHVSJkCjw",
         "0zHQAkkkUkw",
         "KHIecIYgADI",
-        "oCRHpKsfKEA"
+        "oCRHpKsfKEA",
+        "c3sq0qZFUFg"
       ],
-      "LastUpdated": "2025-11-30T20:40:56.8361016+05:30",
-      "ReportedVideoCount": 20,
-      "ETag": "bTCSV-EHa0bbHqM8yQufAjexFo4"
+      "LastUpdated": "2025-12-01T10:01:03.7165155+05:30",
+      "ReportedVideoCount": 21,
+      "ETag": "55m4B70kR33QZkRSXNQf34kZBXE"
     },
     "PL1zgNCoWt_7YFgeeHUMbed5xOzPL-MRYY": {
       "PlaylistId": "PL1zgNCoWt_7YFgeeHUMbed5xOzPL-MRYY",
@@ -8592,7 +8599,7 @@
   "VideoIdFetchIndex": 137,
   "CurrentPlaylistId": null,
   "CurrentPlaylistVideosFetched": 0,
-  "LastUpdated": "2025-11-30T21:12:39.4366114+05:30",
-  "LastChecked": "2025-11-30T21:15:52.1923688+05:30",
+  "LastUpdated": "2025-12-01T10:01:03.7134371+05:30",
+  "LastChecked": "2025-12-01T10:00:11.593442+05:30",
   "FetchComplete": true
 }

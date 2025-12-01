@@ -135,6 +135,74 @@
       "Ended": "21:15:59",
       "Status": "completed",
       "Summary": "Already up to date (optimized check)"
+    },
+    {
+      "Id": "9a3e9c6c",
+      "Date": "2025-12-01",
+      "Started": "10:00:01",
+      "Ended": "10:01:03",
+      "Status": "completed",
+      "Summary": "Updated 5 playlists (optimized)",
+      "PlaylistsProcessed": 5,
+      "Actions": [
+        {
+          "PlaylistId": "PL1zgNCoWt_7atf86nll2v6WdPi1qvuqdB",
+          "Title": "Andris Nelsons",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": [
+            "Respighi: \u0027Pines of Rome\u0027\u3000A. Nelsons / BSO 2014 live"
+          ],
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        },
+        {
+          "PlaylistId": "PL1zgNCoWt_7ZLReKV3NOUXPmugtDCKyUn",
+          "Title": "Comedy",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": [
+            "Crowd Work: Mood Killing Meds, Bad Therapists, and Swallowing Disorders | Gianmarco Soresi Comedy"
+          ],
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        },
+        {
+          "PlaylistId": "PL1zgNCoWt_7aVsRa9hjBiU2qT50j939ep",
+          "Title": "Documentaries and FRONTLINE",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": [
+            "\u0022Red States\u0022 Are a Myth with Trae Crowder",
+            "Age of Easy Money (full documentary) | FRONTLINE",
+            "Why China\u0027s manufacturing economy is dominating \u2014 Arthur Kroeber"
+          ],
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        },
+        {
+          "PlaylistId": "PL1zgNCoWt_7alXaygFtxdNvMLXk6Jhd4X",
+          "Title": "Kent Nagano",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": [
+            "RNO 20th Anniversary: Kent Nagano conducts Beethoven, Strauss, Ravel (Moscow, 2010)"
+          ],
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        },
+        {
+          "PlaylistId": "PL1zgNCoWt_7aS0UH6rl5_83OOTS6mB9hz",
+          "Title": "Neeme Jarvi",
+          "Action": "updated",
+          "VideoCount": null,
+          "AddedVideos": [
+            "Dvorak: Symphony No.5    Neeme J\u00E4rvi / CSO  2017 live in Chicago"
+          ],
+          "RemovedVideos": null,
+          "RenamedFrom": null
+        }
+      ]
     }
   ]
 }
