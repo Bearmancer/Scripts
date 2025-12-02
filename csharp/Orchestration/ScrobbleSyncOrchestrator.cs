@@ -28,7 +28,7 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
 
     internal void Execute()
     {
-        Info("Sync initiated");
+        Debug("Sync initiated");
 
         var spreadsheetId = GetOrCreateSpreadsheet();
         var fetchAfter = sheetsService.GetLatestScrobbleTime(spreadsheetId);
@@ -77,8 +77,7 @@ internal class ScrobbleSyncOrchestrator(CancellationToken ct)
 
         if (scrobbles.Count == 0)
         {
-            Info("Sheet is up to date.");
-            End(success: true, summary: "Already up to date");
+            End(success: true, summary: "No changes detected");
             return;
         }
 

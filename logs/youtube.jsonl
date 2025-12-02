@@ -1,0 +1,56 @@
+{"Timestamp":"2025-11-30 20:14:39","Level":"Info","Event":"SessionStart","SessionId":"a7b54c80","Data":null}
+{"Timestamp":"2025-11-30 20:54:46","Level":"Info","Event":"SessionEnd","SessionId":"a7b54c80","Data":{"Summary":"Synced 137 playlists (129 updated, 8 unchanged)","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:00:54","Level":"Info","Event":"SessionStart","SessionId":"33c7e5cd","Data":null}
+{"Timestamp":"2025-11-30 21:01:06","Level":"Info","Event":"SessionEnd","SessionId":"33c7e5cd","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:01:45","Level":"Info","Event":"SessionStart","SessionId":"024a229c","Data":null}
+{"Timestamp":"2025-11-30 21:01:45","Level":"Info","Event":"PlaylistUpdated","SessionId":"024a229c","Data":{"Title":"Documentaries and FRONTLINE","Removed":0,"Added":0}}
+{"Timestamp":"2025-11-30 21:02:05","Level":"Info","Event":"SessionEnd","SessionId":"024a229c","Data":{"Summary":"Updated 1 playlists","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:04:02","Level":"Info","Event":"SessionStart","SessionId":"6db95879","Data":null}
+{"Timestamp":"2025-11-30 21:04:12","Level":"Info","Event":"SessionEnd","SessionId":"6db95879","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:05:00","Level":"Info","Event":"SessionStart","SessionId":"27d19fe1","Data":null}
+{"Timestamp":"2025-11-30 21:05:00","Level":"Info","Event":"PlaylistUpdated","SessionId":"27d19fe1","Data":{"Title":"Documentaries and FRONTLINE","Removed":0,"Added":0}}
+{"Timestamp":"2025-11-30 21:05:20","Level":"Info","Event":"SessionEnd","SessionId":"27d19fe1","Data":{"Summary":"Updated 1 playlists","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:07:03","Level":"Info","Event":"SessionStart","SessionId":"b19075eb","Data":null}
+{"Timestamp":"2025-11-30 21:07:18","Level":"Info","Event":"SessionEnd","SessionId":"b19075eb","Data":{"Summary":"Updated 1 playlists","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:07:58","Level":"Info","Event":"SessionStart","SessionId":"e0713cb5","Data":null}
+{"Timestamp":"2025-11-30 21:08:08","Level":"Info","Event":"SessionEnd","SessionId":"e0713cb5","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:08:24","Level":"Info","Event":"SessionStart","SessionId":"add4b2f8","Data":null}
+{"Timestamp":"2025-11-30 21:08:34","Level":"Info","Event":"SessionEnd","SessionId":"add4b2f8","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:11:43","Level":"Info","Event":"SessionStart","SessionId":"d0c835bc","Data":null}
+{"Timestamp":"2025-11-30 21:11:53","Level":"Info","Event":"SessionEnd","SessionId":"d0c835bc","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:12:19","Level":"Info","Event":"SessionStart","SessionId":"42449770","Data":null}
+{"Timestamp":"2025-11-30 21:12:19","Level":"Info","Event":"PlaylistUpdated","SessionId":"42449770","Data":{"RemovedVideos":["\"Red States\"Are a Myth with Trae Crowder","Age of Easy Money (full documentary) | FRONTLINE"],"Title":"Documentaries and FRONTLINE","Removed":2,"Added":0}}
+{"Timestamp":"2025-11-30 21:12:39","Level":"Info","Event":"SessionEnd","SessionId":"42449770","Data":{"Summary":"Updated 1 playlists","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:15:26","Level":"Info","Event":"SessionStart","SessionId":"4216f385","Data":null}
+{"Timestamp":"2025-11-30 21:15:36","Level":"Info","Event":"SessionEnd","SessionId":"4216f385","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-11-30 21:15:49","Level":"Info","Event":"SessionStart","SessionId":"50d169a9","Data":null}
+{"Timestamp":"2025-11-30 21:15:59","Level":"Info","Event":"SessionEnd","SessionId":"50d169a9","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"SessionStart","SessionId":"9a3e9c6c","Data":null}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"PlaylistUpdated","SessionId":"9a3e9c6c","Data":{"Title":"Andris Nelsons","Removed":0,"AddedVideos":["Respighi: 'Pines of Rome'　A. Nelsons / BSO 2014 live"],"Added":1}}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"PlaylistUpdated","SessionId":"9a3e9c6c","Data":{"Title":"Comedy","Removed":0,"AddedVideos":["Crowd Work: Mood Killing Meds, Bad Therapists, and Swallowing Disorders | Gianmarco Soresi Comedy"],"Added":1}}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"PlaylistUpdated","SessionId":"9a3e9c6c","Data":{"Title":"Documentaries and FRONTLINE","Removed":0,"AddedVideos":["\"Red States\"Are a Myth with Trae Crowder","Age of Easy Money (full documentary) | FRONTLINE","Why China's manufacturing economy is dominating — Arthur Kroeber"],"Added":3}}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"PlaylistUpdated","SessionId":"9a3e9c6c","Data":{"Title":"Kent Nagano","Removed":0,"AddedVideos":["RNO 20th Anniversary: Kent Nagano conducts Beethoven, Strauss, Ravel (Moscow, 2010)"],"Added":1}}
+{"Timestamp":"2025-12-01 10:00:01","Level":"Info","Event":"PlaylistUpdated","SessionId":"9a3e9c6c","Data":{"Title":"Neeme Jarvi","Removed":0,"AddedVideos":["Dvorak: Symphony No.5 Neeme Järvi / CSO 2017 live in Chicago"],"Added":1}}
+{"Timestamp":"2025-12-01 10:01:03","Level":"Info","Event":"SessionEnd","SessionId":"9a3e9c6c","Data":{"Summary":"Updated 5 playlists","Status":"completed"}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"SessionStart","SessionId":"7025bbe1","Data":null}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"PlaylistUpdated","SessionId":"7025bbe1","Data":{"Title":"Comedy","Removed":0,"AddedVideos":["Dressing Room Tour with Heidi Gardner - SNL"],"Added":1}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"PlaylistUpdated","SessionId":"7025bbe1","Data":{"RemovedVideos":["Emergency Powers: Trump’s Favorite Loophole | The Weekly Show with Jon Stewart","Is Elon Musk the Ultimate Scam Artist? with Max Chafkin | What Now? with Trevor Noah Podcast","Inside Putin’s dark rise to power | Full documentary","The Secret History of the Credit Card (full documentary) | FRONTLINE","Age of Easy Money (full documentary) | FRONTLINE"],"Added":14,"Title":"Documentaries and FRONTLINE","AddedVideos":["Gambled away in the financial crisis - The Deutsche Bank story | DW Documentary","The first Nuremberg trial | DW Documentary","Why the US is almost always at war | DW Documentary","Trump, Putin & Co. - Deutsche Bank’s questionable clientele | DW Documentary","Intercepted: What Russian soldiers think about the war | DW Documentary","India at a crossroads - 100 years of the Hindu nationalist RSS movement | DW Documentary","Junk food, sugar and additives - The dark side of the food industry | DW Documentary","Syria - The rise and fall of the Assad regime | DW Documentary","Exploiting Africa - How China and Europe hunt for the raw materials of the future | DW Documentary","Yemen and the Houthis: Pirates, terrorists, freedom fighters? | DW Documentary","The Stasi and the Berlin Wall | DW Documentary","NATO - The largest military alliance in the world | DW Documentary","TikTok, China and the fear of digital propaganda | DW Documentary","Farewell to pacifism: Japan is rearming | DW Documentary"],"Removed":5}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"PlaylistUpdated","SessionId":"7025bbe1","Data":{"Title":"Georg Solti","Removed":0,"AddedVideos":["Tchaikovsky: Symphony No.6 'Pathetic' G. Solti / CSO live at Proms 1978"],"Added":1}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"PlaylistUpdated","SessionId":"7025bbe1","Data":{"Title":"Nathalie Stutzmann","Removed":0,"AddedVideos":["Wagner - Tannhäuser-Ouvertüre | Nathalie Stutzmann | BRSO"],"Added":1}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"PlaylistUpdated","SessionId":"7025bbe1","Data":{"RemovedVideos":["1980年　E.スヴェトラーノフ＆USSR国立響　ガーシュイン「パリのアメリカ人」"],"Title":"Yevgeny Svetlanov","Removed":1,"Added":0}}
+{"Timestamp":"2025-12-01 20:45:30","Level":"Info","Event":"SessionEnd","SessionId":"7025bbe1","Data":{"Summary":"Updated 5 playlists","Status":"completed"}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Info","Event":"SessionStart","SessionId":"9cbc274d","Data":{"Service":"YouTube","Machine":"LANCE","ProcessId":728}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"YouTube sync started"}}
+{"Timestamp":"2025-12-02 09:47:08","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"Last change: 2025/12/01 20:45:30"}}
+{"Timestamp":"2025-12-02 09:47:15","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"Modified playlists: 1"}}
+{"Timestamp":"2025-12-02 09:47:15","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"Fetching details for 1 changed playlists..."}}
+{"Timestamp":"2025-12-02 09:47:24","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"Updated \"Comedy\": +0 -1"}}
+{"Timestamp":"2025-12-02 09:47:24","Level":"Info","Event":"PlaylistUpdated","SessionId":"9cbc274d","Data":{"Title":"Comedy","Added":0,"Removed":1,"RemovedVideos":["Furry Convention Crowd Work | Gianmarco Soresi | Stand Up Comedy"]}}
+{"Timestamp":"2025-12-02 09:47:30","Level":"Info","Event":"Message","SessionId":"9cbc274d","Data":{"Text":"YouTube sync completed: Updated 1 playlists"}}
+{"Timestamp":"2025-12-02 09:47:30","Level":"Info","Event":"SessionEnd","SessionId":"9cbc274d","Data":{"Status":"Completed","Summary":"Updated 1 playlists","EndedAt":"2025-12-02 09:47:30"}}
+{"Timestamp":"2025-12-02 10:00:02","Level":"Info","Event":"SessionStart","SessionId":"99ccbded","Data":{"Service":"YouTube","Machine":"LANCE","ProcessId":11360}}
+{"Timestamp":"2025-12-02 10:00:03","Level":"Info","Event":"Message","SessionId":"99ccbded","Data":{"Text":"YouTube sync started"}}
+{"Timestamp":"2025-12-02 10:00:09","Level":"Info","Event":"Message","SessionId":"99ccbded","Data":{"Text":"Last change: 2025/12/02 09:47:30"}}
+{"Timestamp":"2025-12-02 10:00:16","Level":"Info","Event":"Message","SessionId":"99ccbded","Data":{"Text":"No changes detected. Everything is up to date."}}
+{"Timestamp":"2025-12-02 10:00:16","Level":"Info","Event":"Message","SessionId":"99ccbded","Data":{"Text":"YouTube sync completed: Already up to date"}}
+{"Timestamp":"2025-12-02 10:00:16","Level":"Info","Event":"SessionEnd","SessionId":"99ccbded","Data":{"Status":"Completed","Summary":"Already up to date","EndedAt":"2025-12-02 10:00:16"}}

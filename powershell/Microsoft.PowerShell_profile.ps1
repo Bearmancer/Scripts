@@ -1,6 +1,8 @@
 $global:ScriptRoot = $PSScriptRoot
 Set-StrictMode -Version Latest
 
+$env:PYTHONWARNINGS = 'ignore::UserWarning'
+
 $moduleManifest = Join-Path -Path $ScriptRoot -ChildPath 'ScriptsToolkit.psd1'
 Import-Module -Name $moduleManifest -Force
 
