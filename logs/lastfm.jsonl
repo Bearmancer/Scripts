@@ -1,0 +1,19 @@
+{"Timestamp":"2025-11-30 20:00:59","Level":"Info","Event":"SessionStart","SessionId":"5db7a532","Data":null}
+{"Timestamp":"2025-11-30 20:01:23","Level":"Info","Event":"SessionEnd","SessionId":"5db7a532","Data":{"Summary":"Wrote 6 scrobbles to sheet","Status":"completed"}}
+{"Timestamp":"2025-12-01 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"43ba909c","Data":null}
+{"Timestamp":"2025-12-01 09:00:13","Level":"Info","Event":"SessionEnd","SessionId":"43ba909c","Data":{"Summary":"Already up to date","Status":"completed"}}
+{"Timestamp":"2025-12-01 20:44:15","Level":"Info","Event":"SessionStart","SessionId":"c2c7ba95","Data":null}
+{"Timestamp":"2025-12-01 20:44:38","Level":"Info","Event":"SessionEnd","SessionId":"c2c7ba95","Data":{"Summary":"Wrote 7 scrobbles to sheet","Status":"completed"}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Warning","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Detected crashed session ff9c7f01 started at 2025-12-02 09:33:25"}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Error","Event":"SessionCrashed","SessionId":"ff9c7f01","Data":{"OriginalStart":"2025-12-02 09:33:25","DetectedAt":"2025-12-02 09:47:01"}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Info","Event":"SessionStart","SessionId":"71ddfcf4","Data":{"Service":"LastFm","Machine":"LANCE","ProcessId":884}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"LastFm sync started"}}
+{"Timestamp":"2025-12-02 09:47:01","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Starting Last.fm sync..."}}
+{"Timestamp":"2025-12-02 09:47:02","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Sync initiated"}}
+{"Timestamp":"2025-12-02 09:47:08","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Latest in sheet: 2025/12/01 14:38:21"}}
+{"Timestamp":"2025-12-02 09:47:08","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Incremental sync from 2025/12/01 14:38:21"}}
+{"Timestamp":"2025-12-02 09:47:08","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Fetching from Last.fm..."}}
+{"Timestamp":"2025-12-02 09:47:11","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Fetch complete: 5 scrobbles from 1 pages"}}
+{"Timestamp":"2025-12-02 09:47:18","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"Writing 5 scrobbles..."}}
+{"Timestamp":"2025-12-02 09:47:23","Level":"Info","Event":"Message","SessionId":"71ddfcf4","Data":{"Text":"LastFm sync completed: Wrote 5 scrobbles to sheet"}}
+{"Timestamp":"2025-12-02 09:47:23","Level":"Info","Event":"SessionEnd","SessionId":"71ddfcf4","Data":{"Status":"Completed","Summary":"Wrote 5 scrobbles to sheet","EndedAt":"2025-12-02 09:47:23"}}

@@ -42,7 +42,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     internal void ExecuteForPlaylists(string[] playlistIdentifiers)
     {
-        Logger.Info("Selective sync initiated for {0} playlist(s)", playlistIdentifiers.Length);
+        Logger.Debug("Selective sync initiated for {0} playlist(s)", playlistIdentifiers.Length);
 
         var spreadsheetId = GetOrCreateSpreadsheet();
         var resolvedPlaylists = ResolvePlaylistIdentifiers(playlistIdentifiers);
@@ -154,7 +154,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     void ExecuteOptimized(string spreadsheetId)
     {
-        Logger.Info("Last change: {0:yyyy/MM/dd HH:mm:ss}", state.LastUpdated);
+        Logger.Debug("Last change: {0:yyyy/MM/dd HH:mm:ss}", state.LastUpdated);
         state.LastChecked = DateTime.Now;
         state.LastUpdated = DateTime.Now;
         SaveState();
@@ -174,9 +174,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         if (!changes.HasAnyChanges)
         {
-            Logger.Info("No changes detected. Everything is up to date.");
             Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
-            Logger.End(success: true, "Already up to date (optimized check)");
+            Logger.End(success: true, "No changes detected");
             return;
         }
 
@@ -228,7 +227,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         if (playlistsNeedingVideoFetch.Count > 0)
         {
-            Logger.Info(
+            Logger.Debug(
                 "Fetching details for {0} changed playlists...",
                 playlistsNeedingVideoFetch.Count
             );
@@ -307,7 +306,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 SaveState();
 
                 Logger.Success("Done! Updated {0} playlists.", processedCount);
-                Logger.End(success: true, $"Updated {processedCount} playlists (optimized)");
+                Logger.End(success: true, $"Updated {processedCount} playlists");
             }
         }
         else
@@ -322,7 +321,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
         }
         else
         {
-            Logger.Interrupted("Interrupted during optimized sync");
+            Logger.Interrupted("Interrupted during sync");
         }
     }
 
@@ -353,7 +352,7 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             state.CachedPlaylists = playlists;
             state.VideoIdFetchIndex = 0;
             SaveState();
-            Logger.Info("Fetched {0} playlists from YouTube API", playlists.Count);
+            Logger.Debug("Fetched {0} playlists from YouTube API", playlists.Count);
         }
 
         if (playlists.Count == 0)
@@ -437,9 +436,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         if (!playlistChanges.HasChanges && state.FetchComplete)
         {
-            Logger.Info("All playlists already synced. No changes detected.");
             Logger.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
-            Logger.End(success: true, "Already up to date");
+            Logger.End(success: true, "No changes detected");
             return;
         }
 
@@ -720,7 +718,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
                 addedTitles.Count,
                 removedTitles.Count,
                 addedTitles,
-                removedTitles
+                removedTitles,
+                videoChanges.RemovedVideoIds
             );
             return;
         }
@@ -739,7 +738,8 @@ internal class YouTubePlaylistOrchestrator(CancellationToken ct)
             addedTitles.Count,
             removedTitles.Count,
             addedTitles,
-            removedTitles
+            removedTitles,
+            videoChanges.RemovedVideoIds
         );
 
         if (videoChanges.RemovedRowIndices.Count > 0)

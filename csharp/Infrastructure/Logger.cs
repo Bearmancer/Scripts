@@ -6,6 +6,7 @@ internal enum LogLevel
 {
     Debug,
     Info,
+    Success,
     Warning,
     Error,
     Fatal,
@@ -32,7 +33,6 @@ internal static class Logger
     static readonly JsonSerializerOptions JsonOptions = new()
     {
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        WriteIndented = true,
     };
 
     internal static LogLevel ConsoleLevel { get; set; } = LogLevel.Info;
@@ -58,11 +58,8 @@ internal static class Logger
     internal static void Fatal(string message, params object?[] args) =>
         Log(LogLevel.Fatal, message, args);
 
-    internal static void Success(string message, params object?[] args)
-    {
-        var formatted = args.Length > 0 ? Format(message, args) : message;
-        WriteConsole(LogLevel.Info, "green", formatted);
-    }
+    internal static void Success(string message, params object?[] args) =>
+        Log(LogLevel.Success, message, args);
 
     internal static void Progress(string message, params object?[] args)
     {
@@ -97,20 +94,13 @@ internal static class Logger
         CurrentSessionId = SessionId;
 
         CreateDirectory(Paths.LogDirectory);
-        HandleStaleLock(service);
-        CreateLockFile(service);
+        DetectCrashedSessions(service);
 
         WriteJsonEntry(
             LogLevel.Info,
             "SessionStart",
-            new()
-            {
-                ["Service"] = service.ToString(),
-                ["Machine"] = Environment.MachineName,
-                ["ProcessId"] = Environment.ProcessId,
-            }
+            new() { ["Service"] = service.ToString(), ["ProcessId"] = ProcessId }
         );
-        Log(LogLevel.Info, "{0} sync started", service);
     }
 
     internal static void End(bool success, string? summary = null)
@@ -123,7 +113,7 @@ internal static class Logger
         Dictionary<string, object> data = new()
         {
             ["Status"] = status,
-            ["Summary"] = summary ?? string.Empty,
+            ["Summary"] = summary ?? Empty,
             ["EndedAt"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
         };
         if (summary == null)
@@ -137,7 +127,6 @@ internal static class Logger
             summary != null ? $": {summary}" : ""
         );
         WriteJsonEntry(LogLevel.Info, "SessionEnd", data);
-        DeleteLockFile(ActiveService.Value);
         PrintLogLocation(GetLogPath(ActiveService.Value));
 
         ActiveService = null;
@@ -153,7 +142,7 @@ internal static class Logger
         Dictionary<string, object> data = new()
         {
             ["Status"] = "Interrupted",
-            ["Progress"] = progress ?? string.Empty,
+            ["Progress"] = progress ?? Empty,
             ["EndedAt"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
         };
         if (progress == null)
@@ -166,7 +155,6 @@ internal static class Logger
             progress != null ? $": {progress}" : ""
         );
         WriteJsonEntry(LogLevel.Warning, "SessionInterrupted", data);
-        DeleteLockFile(ActiveService.Value);
         PrintLogLocation(GetLogPath(ActiveService.Value));
 
         ActiveService = null;
@@ -189,7 +177,8 @@ internal static class Logger
         int added,
         int removed,
         List<string>? addedTitles = null,
-        List<string>? removedTitles = null
+        List<string>? removedTitles = null,
+        List<string>? removedVideoIds = null
     )
     {
         Log(LogLevel.Info, "Updated \"{0}\": +{1} -{2}", title, added, removed);
@@ -204,6 +193,10 @@ internal static class Logger
             data["AddedVideos"] = addedTitles;
         if (removedTitles?.Count > 0)
             data["RemovedVideos"] = removedTitles;
+        if (removedVideoIds?.Count > 0)
+            data["RemovedVideoUrls"] = removedVideoIds
+                .Select(id => $"https://www.youtube.com/watch?v={id}")
+                .ToList();
 
         WriteJsonEntry(LogLevel.Info, "PlaylistUpdated", data);
 
@@ -270,46 +263,57 @@ internal static class Logger
         );
     }
 
-    static void HandleStaleLock(ServiceType service)
+    static void DetectCrashedSessions(ServiceType service)
     {
-        var lockPath = GetLockPath(service);
-        if (!File.Exists(lockPath))
+        var logPath = GetLogPath(service);
+        if (!File.Exists(logPath))
             return;
 
-        var raw = File.ReadAllText(lockPath);
-        var parts = raw.Split('|');
-        var crashedSession = parts.Length > 0 ? parts[0] : "unknown";
-        var startedAt = parts.Length > 1 ? parts[1] : "unknown";
+        Dictionary<string, string> openSessions = [];
 
-        Warning("Detected crashed session {0} started at {1}", crashedSession, startedAt);
+        foreach (var line in ReadLines(logPath))
+        {
+            if (IsNullOrWhiteSpace(line))
+                continue;
 
-        WriteJsonEntryForService(
-            service,
-            LogLevel.Error,
-            "SessionCrashed",
-            new()
+            LogEntry? entry;
+            try
             {
-                ["OriginalStart"] = startedAt,
-                ["DetectedAt"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-            },
-            crashedSession
-        );
+                entry = JsonSerializer.Deserialize<LogEntry>(line, JsonOptions);
+            }
+            catch
+            {
+                continue;
+            }
 
-        DeleteLockFile(service);
-    }
+            if (entry?.SessionId == null)
+                continue;
 
-    static void CreateLockFile(ServiceType service)
-    {
-        var lockPath = GetLockPath(service);
-        var content = SessionId + "|" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        File.WriteAllText(lockPath, content);
-    }
+            if (entry.Event == "SessionStart")
+                openSessions[entry.SessionId] = entry.Timestamp;
+            else if (entry.Event is "SessionEnd" or "SessionInterrupted" or "SessionCrashed")
+                openSessions.Remove(entry.SessionId);
+        }
 
-    static void DeleteLockFile(ServiceType service)
-    {
-        var lockPath = GetLockPath(service);
-        if (File.Exists(lockPath))
-            File.Delete(lockPath);
+        foreach (var (crashedId, startTime) in openSessions)
+        {
+            Warning("Detected crashed session {0} started at {1}", crashedId, startTime);
+
+            AppendJsonLine(
+                logPath,
+                new LogEntry(
+                    Timestamp: DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Level: "Error",
+                    Event: "SessionCrashed",
+                    SessionId: crashedId,
+                    Data: new()
+                    {
+                        ["OriginalStart"] = startTime,
+                        ["DetectedAt"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    }
+                )
+            );
+        }
     }
 
     static void Log(LogLevel level, string message, params object?[] args)
@@ -358,28 +362,14 @@ internal static class Logger
             Data: data.Count > 0 ? data : null
         );
 
-        AppendJsonArray(GetLogPath(service), entry);
+        AppendJsonLine(GetLogPath(service), entry);
     }
 
-    static void AppendJsonArray(string path, LogEntry entry)
+    static void AppendJsonLine(string path, LogEntry entry)
     {
+        var json = JsonSerializer.Serialize(entry, JsonOptions);
         lock (WriteLock)
-        {
-            List<LogEntry> entries = [];
-            if (File.Exists(path))
-            {
-                using var existing = File.OpenRead(path);
-                entries = JsonSerializer.Deserialize<List<LogEntry>>(existing, JsonOptions) ?? [];
-            }
-
-            entries.Add(entry);
-
-            var tempPath = path + ".tmp";
-            using var tempStream = File.Create(tempPath);
-            JsonSerializer.Serialize(tempStream, entries, JsonOptions);
-            tempStream.Flush(true);
-            File.Move(tempPath, path, true);
-        }
+            AppendAllText(path, json + Environment.NewLine);
     }
 
     static string GetLogPath(ServiceType service) =>
@@ -387,20 +377,9 @@ internal static class Logger
             Paths.LogDirectory,
             service switch
             {
-                ServiceType.LastFm => "lastfm.json",
-                ServiceType.YouTube => "youtube.json",
-                _ => "general.json",
-            }
-        );
-
-    static string GetLockPath(ServiceType service) =>
-        Combine(
-            Paths.LogDirectory,
-            service switch
-            {
-                ServiceType.LastFm => "lastfm.lock",
-                ServiceType.YouTube => "youtube.lock",
-                _ => "general.lock",
+                ServiceType.LastFm => "lastfm.jsonl",
+                ServiceType.YouTube => "youtube.jsonl",
+                _ => "general.jsonl",
             }
         );
 
@@ -409,6 +388,7 @@ internal static class Logger
         {
             LogLevel.Debug => "grey",
             LogLevel.Info => "blue",
+            LogLevel.Success => "green",
             LogLevel.Warning => "yellow",
             LogLevel.Error => "red",
             LogLevel.Fatal => "red bold",
