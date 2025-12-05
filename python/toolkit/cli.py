@@ -163,7 +163,7 @@ def cmd_audio_convert(args):
 
 
 def cmd_audio_rename(args):
-    from toolkit.audio import rename_file_red
+    from toolkit.filesystem import rename_file_red
 
     rename_file_red(args.directory.resolve())
 

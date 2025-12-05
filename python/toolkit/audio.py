@@ -8,7 +8,7 @@ from pathvalidate import sanitize_filename
 from tqdm import tqdm
 from unidecode import unidecode
 
-from toolkit.filesystem import run_command
+from toolkit.filesystem import run_command, rename_file_red
 from toolkit.cuesheet import process_cue_file
 from toolkit.cli import get_logger
 
@@ -66,37 +66,6 @@ def create_output_directory(directory, suffix):
         raise RuntimeError(f"Robocopy failed with code {rc}")
 
     return destination
-
-
-def rename_file_red(path):
-    if not path.exists() or not path.is_dir():
-        logger.error(f"Path does not exist: {path}")
-        return
-
-    root_path = path.parent
-    old_files_list, new_files_list = [], []
-
-    for file in path.rglob("*"):
-        relative_path_length = len(str(file.relative_to(root_path)))
-
-        if relative_path_length > 180:
-            old_files_list.append(file)
-            new_length = (
-                180 - (relative_path_length - len(file.name)) - len(file.suffix)
-            )
-            new_name = file.stem[:new_length] + file.suffix
-            new_file_path = file.with_name(new_name)
-            file.rename(new_file_path)
-            new_files_list.append(new_file_path)
-
-            logger.info(f"Renamed: {file.name} -> {new_file_path.name}")
-
-    if new_files_list:
-        new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
-        pyperclip.copy(new_file_names)
-        logger.info(f"Renamed {len(new_files_list)} files")
-    else:
-        logger.info("No files needed renaming")
 
 
 def calculate_image_size(path):

@@ -22,6 +22,8 @@ Thumbs.db
 # Temp/logs
 *.tmp
 *.log
+logs/*.json
+logs/*.lock
 
 # Project-specific
 *.csv

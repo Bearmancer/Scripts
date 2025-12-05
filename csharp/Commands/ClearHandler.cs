@@ -35,6 +35,14 @@ internal static class ClearHandler
         Logger.Success("Clear complete.");
     }
 
+    static GoogleSheetsService GetOrCreateSheetsService(ref GoogleSheetsService? sheets)
+    {
+        return sheets ??= new GoogleSheetsService(
+            clientId: AuthenticationConfig.GoogleClientId,
+            clientSecret: AuthenticationConfig.GoogleClientSecret
+        );
+    }
+
     static void ClearLastFm(ref GoogleSheetsService? sheets, bool clearLocal, bool clearRemote)
     {
         Logger.Info("Clearing Last.fm...");
@@ -42,11 +50,8 @@ internal static class ClearHandler
         var state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
         if (clearRemote && !IsNullOrEmpty(state.SpreadsheetId))
         {
-            sheets ??= new GoogleSheetsService(
-                clientId: AuthenticationConfig.GoogleClientId,
-                clientSecret: AuthenticationConfig.GoogleClientSecret
-            );
-            sheets.ClearSubsheet(state.SpreadsheetId, "Scrobbles");
+            var service = GetOrCreateSheetsService(ref sheets);
+            service.ClearSubsheet(state.SpreadsheetId, "Scrobbles");
             Logger.Success("Last.fm spreadsheet content cleared.");
         }
 
@@ -64,13 +69,10 @@ internal static class ClearHandler
         var state = StateManager.Load<YouTubeFetchState>(StateManager.YouTubeSyncFile);
         if (clearRemote && !IsNullOrEmpty(state.SpreadsheetId))
         {
-            sheets ??= new GoogleSheetsService(
-                clientId: AuthenticationConfig.GoogleClientId,
-                clientSecret: AuthenticationConfig.GoogleClientSecret
-            );
-            var sheetNames = sheets.GetSubsheetNames(state.SpreadsheetId);
+            var service = GetOrCreateSheetsService(ref sheets);
+            var sheetNames = service.GetSubsheetNames(state.SpreadsheetId);
             foreach (var sheet in sheetNames.Where(s => s != "README"))
-                sheets.DeleteSubsheet(state.SpreadsheetId, sheet);
+                service.DeleteSubsheet(state.SpreadsheetId, sheet);
             Logger.Success("YouTube spreadsheet content cleared.");
         }
 

@@ -33,45 +33,50 @@ def get_folder_size(path):
     return sum(entry.stat().st_size for entry in path.rglob("*") if entry.is_file())
 
 
-def list_directories(path, sort_order="0", indent=0):
+def _print_directory_info(path, indent):
+    """Helper function to print directory name and size."""
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
     print(output)
 
-    entries = [
-        (entry, get_folder_size(entry)) for entry in path.iterdir() if entry.is_dir()
-    ]
 
-    entries.sort(
-        key=lambda e: e[0].name if sort_order == "1" else e[1],
-        reverse=sort_order != "1",
-    )
+def _sort_entries(entries, sort_by_name):
+    """Helper function to sort entries by name or size."""
+    if sort_by_name:
+        return sorted(entries, key=lambda e: e.name)
+    else:
+        return sorted(entries, key=lambda e: get_folder_size(e), reverse=True)
 
-    for entry, _ in entries:
+
+def list_directories(path, sort_order="0", indent=0):
+    _print_directory_info(path, indent)
+    
+    directories = [entry for entry in path.iterdir() if entry.is_dir()]
+    sorted_dirs = _sort_entries(directories, sort_order == "1")
+
+    for entry in sorted_dirs:
         list_directories(entry, sort_order, indent + 2)
 
 
 def list_files_and_directories(path, sort_order=False, indent=0):
-    indentation = "  " * indent
-    folder_size = get_folder_size(path)
-    output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
-    print(output)
+    _print_directory_info(path, indent)
 
     entries = list(path.iterdir())
     directories = [entry for entry in entries if entry.is_dir()]
     files = [entry for entry in entries if entry.is_file()]
 
+    sorted_dirs = _sort_entries(directories, sort_order)
+
     if sort_order:
-        directories.sort(key=lambda e: e.name)
         files.sort(key=lambda e: e.name)
     else:
-        directories.sort(key=lambda e: get_folder_size(e), reverse=True)
         files.sort(key=lambda e: e.stat().st_size, reverse=True)
 
-    for entry in directories:
+    for entry in sorted_dirs:
         list_files_and_directories(entry, sort_order, indent + 2)
 
+    indentation = "  " * indent
     for entry in files:
         file_size_mb = entry.stat().st_size / (1024**2)
         file_output = f"{indentation}  {entry.name} ({file_size_mb:.2f} MB)"
