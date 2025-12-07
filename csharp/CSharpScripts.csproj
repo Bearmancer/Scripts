@@ -12,14 +12,17 @@
     <InternalsVisibleTo Include="CSharpScripts.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CliFx" Version="2.3.6" />
     <PackageReference Include="Google.Apis" Version="1.72.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.70.0.3834" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.70.0.3819" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.70.0.3847" />
     <PackageReference Include="Hqub.Last.fm" Version="2.5.1" />
+    <PackageReference Include="MetaBrainz.MusicBrainz" Version="7.0.0" />
+    <PackageReference Include="ParkSquare.Discogs" Version="8.0.0" />
     <PackageReference Include="Polly" Version="8.6.5" />
+    <PackageReference Include="RestSharp" Version="113.0.0" />
     <PackageReference Include="Spectre.Console" Version="0.54.1-alpha.0.7" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 </Project>

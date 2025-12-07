@@ -50,7 +50,10 @@ function Get-ToolkitFunctions {
         @{ Category = 'Utilities'; Name = 'Open-CommandHistory'; Alias = 'hist'; Description = 'Open PowerShell history file' }
         @{ Category = 'Utilities'; Name = 'Show-ToolkitHelp'; Alias = 'tkhelp'; Description = 'Open toolkit documentation' }
         @{ Category = 'Utilities'; Name = 'Invoke-ToolkitAnalyzer'; Alias = 'tklint'; Description = 'Run PSScriptAnalyzer' }
-        @{ Category = 'Logs'; Name = 'Show-SyncLog'; Alias = 'viewlog'; Description = 'View JSONL sync logs as table' }
+        @{ Category = 'Logs'; Name = 'Show-SyncLog'; Alias = 'synclog'; Description = 'View JSONL sync logs as table' }
+        @{ Category = 'Sync'; Name = 'Invoke-YouTubeSync'; Alias = 'syncyt'; Description = 'Sync YouTube playlists' }
+        @{ Category = 'Sync'; Name = 'Invoke-LastFmSync'; Alias = 'synclf'; Description = 'Sync Last.fm scrobbles' }
+        @{ Category = 'Sync'; Name = 'Invoke-AllSyncs'; Alias = 'syncall'; Description = 'Run all daily syncs' }
         @{ Category = 'Filesystem'; Name = 'Get-Directories'; Alias = 'dirs'; Description = 'List directories with sizes' }
         @{ Category = 'Filesystem'; Name = 'Get-FilesAndDirectories'; Alias = 'tree'; Description = 'List all items with sizes' }
         @{ Category = 'Filesystem'; Name = 'New-Torrents'; Alias = 'torrent'; Description = 'Create .torrent files' }
@@ -78,11 +81,11 @@ function Get-ToolkitFunctions {
     Write-Host "========================`n" -ForegroundColor Cyan
 
     $functions | Group-Object -Property Category | ForEach-Object {
-        Write-Host "$($_.Name)" -ForegroundColor Yellow
+        Write-Host "$( $_.Name )" -ForegroundColor Yellow
         $_.Group | ForEach-Object {
-            Write-Host "  $($_.Alias.PadRight(10))" -ForegroundColor Green -NoNewline
-            Write-Host "$($_.Name.PadRight(30))" -ForegroundColor White -NoNewline
-            Write-Host "$($_.Description)" -ForegroundColor DarkGray
+            Write-Host "  $($_.Alias.PadRight(10) )" -ForegroundColor Green -NoNewline
+            Write-Host "$($_.Name.PadRight(30) )" -ForegroundColor White -NoNewline
+            Write-Host "$( $_.Description )" -ForegroundColor DarkGray
         }
         Write-Host ""
     }
@@ -178,10 +181,16 @@ function Invoke-ToolkitAnalyzer {
     Search text in log data.
 
 .PARAMETER Tail
-    Number of entries.
+    Number of entries from end (newest). Alias: -Last
+
+.PARAMETER Head
+    Number of entries from start (oldest). Alias: -First
+
+.PARAMETER SortBy
+    Sort by: date, level, event, session. Default: date
 
 .PARAMETER Chronological
-    Show oldest first.
+    Show oldest first (ascending date order).
 
 .PARAMETER List
     Display as vertical list.
@@ -194,10 +203,16 @@ function Invoke-ToolkitAnalyzer {
 
 .EXAMPLE
     Show-SyncLog -Search Comedy
+
+.EXAMPLE
+    Show-SyncLog -Head 10 -Chronological
+
+.EXAMPLE
+    Show-SyncLog -SortBy level
 #>
 function Show-SyncLog {
-    [CmdletBinding()]
-    [Alias('viewlog')]
+    [CmdletBinding(DefaultParameterSetName = 'Tail')]
+    [Alias('viewlog', 'synclog')]
     param(
         [Parameter()]
         [ValidateSet('youtube', 'lastfm', 'all')]
@@ -216,8 +231,17 @@ function Show-SyncLog {
         [Parameter()]
         [string]$Search,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'Tail')]
+        [Alias('Last')]
         [int]$Tail = 100,
+
+        [Parameter(ParameterSetName = 'Head')]
+        [Alias('First')]
+        [int]$Head,
+
+        [Parameter()]
+        [ValidateSet('date', 'level', 'event', 'session')]
+        [string]$SortBy = 'date',
 
         [Parameter()]
         [switch]$Chronological,
@@ -246,7 +270,7 @@ function Show-SyncLog {
     foreach ($logFile in $logFiles) {
         $serviceName = [System.IO.Path]::GetFileNameWithoutExtension($logFile)
         foreach ($line in [System.IO.File]::ReadLines($logFile)) {
-            if ([string]::IsNullOrWhiteSpace($line)) {
+            if ( [string]::IsNullOrWhiteSpace($line)) {
                 continue
             }
             try {
@@ -282,11 +306,34 @@ function Show-SyncLog {
         }
     }
 
-    $sorted = $Chronological ? 
-    ($entries | Sort-Object -Property ParsedTimestamp) :
-    ($entries | Sort-Object -Property ParsedTimestamp -Descending)
+    # Determine sort property
+    $sortProperty = switch ($SortBy) {
+        'date' { 'ParsedTimestamp' }
+        'level' { 'Level' }
+        'event' { 'Event' }
+        'session' { 'SessionId' }
+        default { 'ParsedTimestamp' }
+    }
 
-    $result = $sorted | Select-Object -First $Tail
+    # Sort entries
+    $sorted = if ($Chronological) {
+        $entries | Sort-Object -Property $sortProperty
+    }
+    else {
+        $entries | Sort-Object -Property $sortProperty -Descending
+    }
+
+    # Apply Head or Tail limit
+    $result = if ($Head) {
+        $sorted | Select-Object -First $Head
+    }
+    else {
+        $sorted | Select-Object -First $Tail
+    }
+
+    # Color palette for alternating rows
+    $colors = @('Cyan', 'Green', 'Yellow', 'Magenta', 'Blue', 'White')
+    $colorIndex = 0
 
     $displayObjects = $result | ForEach-Object {
         $details = if ($_.Data) {
@@ -296,7 +343,7 @@ function Show-SyncLog {
             else {
                 $separator = $List ? "`n" : " | "
                 ($_.Data.PSObject.Properties | ForEach-Object {
-                    $val = ($_.Value -is [array]) ? ($_.Value -join ", ") : $_.Value
+                    $val = ($_.Value -is [array]) ? ($_.Value -join ", "): $_.Value
                     "$($_.Name): $val"
                 }) -join $separator
             }
@@ -305,20 +352,43 @@ function Show-SyncLog {
             ''
         }
 
-        [PSCustomObject]@{
+        $obj = [PSCustomObject]@{
             Timestamp = $_.Timestamp
             Level     = $_.Level
             Event     = $_.Event
             SessionId = $_.SessionId
             Details   = $details
+            Color     = $colors[$colorIndex % $colors.Count]
         }
+        $colorIndex++
+        $obj
     }
 
     if ($List) {
-        $displayObjects | Format-List
+        $displayObjects | ForEach-Object {
+            Write-Host "─────────────────────────────────────────────────" -ForegroundColor DarkGray
+            Write-Host "Timestamp: $($_.Timestamp)" -ForegroundColor $_.Color
+            Write-Host "Level:     $($_.Level)" -ForegroundColor $_.Color
+            Write-Host "Event:     $($_.Event)" -ForegroundColor $_.Color
+            Write-Host "SessionId: $($_.SessionId)" -ForegroundColor $_.Color
+            Write-Host "Details:   $($_.Details)" -ForegroundColor $_.Color
+        }
+        Write-Host "─────────────────────────────────────────────────" -ForegroundColor DarkGray
     }
     else {
-        $displayObjects | Format-Table -Wrap
+        # Header
+        Write-Host ""
+        Write-Host ("Timestamp".PadRight(20) + "Level".PadRight(10) + "Event".PadRight(20) + "SessionId".PadRight(12) + "Details") -ForegroundColor White
+        Write-Host ("─" * 100) -ForegroundColor DarkGray
+
+        $displayObjects | ForEach-Object {
+            Write-Host ($_.Timestamp.PadRight(20)) -ForegroundColor $_.Color -NoNewline
+            Write-Host ($_.Level.PadRight(10)) -ForegroundColor $_.Color -NoNewline
+            Write-Host ($_.Event.PadRight(20)) -ForegroundColor $_.Color -NoNewline
+            Write-Host ($_.SessionId.PadRight(12)) -ForegroundColor $_.Color -NoNewline
+            Write-Host $_.Details -ForegroundColor $_.Color
+            Write-Host ("─" * 100) -ForegroundColor DarkGray
+        }
     }
 }
 
@@ -813,14 +883,14 @@ function Invoke-Whisper {
     $srtPath = Join-Path $OutputDir ($item.BaseName + '.srt')
 
     if ((Test-Path $srtPath) -and -not $Force) {
-        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Skipped: $($item.Name) (SRT exists)" -ForegroundColor Yellow
+        Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Skipped: $( $item.Name ) (SRT exists)" -ForegroundColor Yellow
         return
     }
 
     $effectiveModel = $Model ? $Model : ($Language -eq 'en' ? 'distil-large-v3.5' : 'large-v3')
     $languageDisplay = $Language ? $Language : '(auto-detect)'
 
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Transcribing: $($item.Name)" -ForegroundColor Cyan
+    Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Transcribing: $( $item.Name )" -ForegroundColor Cyan
     Write-Host "             Model: $effectiveModel | Language: $languageDisplay" -ForegroundColor DarkGray
 
     $whisperArgs = @(
@@ -858,7 +928,7 @@ function Invoke-Whisper {
 
     & whisper-ctranslate2 @whisperArgs
 
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Completed: $($item.Name)" -ForegroundColor Green
+    Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Completed: $( $item.Name )" -ForegroundColor Green
 }
 
 <#
@@ -944,8 +1014,8 @@ function Invoke-WhisperFolder {
     }
 
     if ($skipped.Count -gt 0) {
-        Write-Host "`nSkipped $($skipped.Count) files (SRT exists):" -ForegroundColor Yellow
-        $skipped | ForEach-Object { Write-Host "  $($_.Name)" -ForegroundColor DarkGray }
+        Write-Host "`nSkipped $( $skipped.Count ) files (SRT exists):" -ForegroundColor Yellow
+        $skipped | ForEach-Object { Write-Host "  $( $_.Name )" -ForegroundColor DarkGray }
         Write-Host ""
     }
 
@@ -954,19 +1024,19 @@ function Invoke-WhisperFolder {
         return
     }
 
-    Write-Host "Transcribing $($toProcess.Count) files:`n" -ForegroundColor Cyan
+    Write-Host "Transcribing $( $toProcess.Count ) files:`n" -ForegroundColor Cyan
 
     $current = 0
     foreach ($file in $toProcess) {
         $current++
-        Write-Host "[$current/$($toProcess.Count)] " -ForegroundColor DarkGray -NoNewline
+        Write-Host "[$current/$( $toProcess.Count )] " -ForegroundColor DarkGray -NoNewline
         Invoke-Whisper -Path $file.FullName -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -NoVadFilter:$NoVadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
         Write-Host ""
     }
 
-    Write-Host "Completed: $current/$($toProcess.Count) transcribed" -ForegroundColor Green
+    Write-Host "Completed: $current/$( $toProcess.Count ) transcribed" -ForegroundColor Green
     if ($skipped.Count -gt 0) {
-        Write-Host "           $($skipped.Count) skipped" -ForegroundColor DarkGray
+        Write-Host "           $( $skipped.Count ) skipped" -ForegroundColor DarkGray
     }
 }
 
@@ -1122,7 +1192,7 @@ function Save-YouTubeVideo {
     Push-Location $OutputDir
 
     foreach ($url in $Urls) {
-        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] " -NoNewline
+        Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] " -NoNewline
         Write-Host 'Downloading: ' -ForegroundColor Cyan -NoNewline
         Write-Host $url
 
@@ -1140,6 +1210,121 @@ function Save-YouTubeVideo {
         }
     }
     Pop-Location
+}
+
+#endregion
+
+#region Sync Shortcuts
+
+<#
+.SYNOPSIS
+    Sync YouTube playlists to Google Sheets.
+
+.DESCRIPTION
+    Runs the C# CLI 'sync yt' command to sync YouTube playlists.
+
+.PARAMETER Force
+    Clear cache and re-fetch all data.
+
+.PARAMETER Verbose
+    Enable verbose/debug logging.
+
+.EXAMPLE
+    Invoke-YouTubeSync
+
+.EXAMPLE
+    syncyt -Force
+#>
+function Invoke-YouTubeSync {
+    [CmdletBinding()]
+    [Alias('syncyt')]
+    param(
+        [Parameter()]
+        [switch]$Force,
+
+        [Parameter()]
+        [switch]$Verbose
+    )
+
+    Push-Location $Script:CSharpRoot
+    try {
+        $args = @('run', '--', 'sync', 'yt')
+        if ($Force) { $args += '--force' }
+        if ($Verbose) { $args += '--verbose' }
+        & dotnet @args
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+<#
+.SYNOPSIS
+    Sync Last.fm scrobbles to Google Sheets.
+
+.DESCRIPTION
+    Runs the C# CLI 'sync lastfm' command to sync scrobbles.
+
+.PARAMETER Since
+    Re-sync from date (yyyy/MM/dd). Deletes existing data on/after this date.
+
+.PARAMETER Verbose
+    Enable verbose/debug logging.
+
+.EXAMPLE
+    Invoke-LastFmSync
+
+.EXAMPLE
+    synclf -Since '2024/01/01'
+#>
+function Invoke-LastFmSync {
+    [CmdletBinding()]
+    [Alias('synclf')]
+    param(
+        [Parameter()]
+        [string]$Since,
+
+        [Parameter()]
+        [switch]$Verbose
+    )
+
+    Push-Location $Script:CSharpRoot
+    try {
+        $args = @('run', '--', 'sync', 'lastfm')
+        if ($Since) { $args += '--since', $Since }
+        if ($Verbose) { $args += '--verbose' }
+        & dotnet @args
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+<#
+.SYNOPSIS
+    Run all daily syncs (YouTube + Last.fm).
+
+.DESCRIPTION
+    Runs both sync commands sequentially.
+
+.EXAMPLE
+    Invoke-AllSyncs
+
+.EXAMPLE
+    syncall
+#>
+function Invoke-AllSyncs {
+    [CmdletBinding()]
+    [Alias('syncall')]
+    param()
+
+    Write-Host "`n[YouTube Sync]" -ForegroundColor Cyan
+    Invoke-YouTubeSync
+
+    Write-Host "`n[Last.fm Sync]" -ForegroundColor Cyan
+    Invoke-LastFmSync
+
+    Write-Host "`nAll syncs complete!" -ForegroundColor Green
 }
 
 #endregion
@@ -1200,10 +1385,15 @@ function Register-ScheduledSyncTask {
     }
 
     $dllPath = Join-Path -Path $Script:CSharpRoot -ChildPath 'bin\Debug\net10.0\CSharpScripts.dll'
-    $noBuildFlag = if (Test-Path -Path $dllPath) { '--no-build ' } else { '' }
+    $noBuildFlag = if (Test-Path -Path $dllPath) {
+        '--no-build '
+    }
+    else {
+        ''
+    }
 
     $pwsh = (Get-Command -Name pwsh).Source
-    $argument = "-NoProfile -NoLogo -WindowStyle Hidden -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $($noBuildFlag)$Command; exit `$LASTEXITCODE`""
+    $argument = "-NoProfile -NoLogo -WindowStyle Hidden -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )$Command; exit `$LASTEXITCODE`""
 
     $action = New-ScheduledTaskAction -Execute $pwsh -Argument $argument
     $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun
@@ -1217,7 +1407,7 @@ function Register-ScheduledSyncTask {
 
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description | Out-Null
 
-    Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm')) daily" -ForegroundColor Green
+    Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm') ) daily" -ForegroundColor Green
 }
 
 <#
