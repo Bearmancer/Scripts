@@ -1,9 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-/// <summary>
-/// Centralized resilience for all API/network operations.
-/// Combines Polly retry with rate limiting and quota detection.
-/// </summary>
 public static class Resilience
 {
     // ═══════════════════════════════════════════════════════════════════════════
@@ -11,10 +7,15 @@ public static class Resilience
     // ═══════════════════════════════════════════════════════════════════════════
 
     public const int MaxRetries = 10;
-    public static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(3);
-    public static readonly TimeSpan LongDelay = TimeSpan.FromSeconds(60);
-    public static readonly TimeSpan DefaultThrottle = TimeSpan.FromMilliseconds(2000);
+    public static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan LongDelay = TimeSpan.FromSeconds(90);
+    public static readonly TimeSpan DefaultThrottle = TimeSpan.FromMilliseconds(3000);
+    public static readonly TimeSpan MaxBackoffDelay = TimeSpan.FromMinutes(5);
 
+    private static readonly Random Jitter = new();
+    private static readonly SemaphoreSlim LastFmSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim SheetsSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim YouTubeSemaphore = new(1, 1);
     private static readonly SemaphoreSlim Lock = new(1, 1);
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -41,11 +42,30 @@ public static class Resilience
             || message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
         );
 
+    private static TimeSpan CalculateBackoffWithJitter(TimeSpan baseDelay, int attempt)
+    {
+        double exponential = Math.Pow(2, attempt - 1);
+        double baseSeconds = baseDelay.TotalSeconds * exponential;
+        double jitterSeconds = Jitter.NextDouble() * baseSeconds * 0.3;
+        double totalSeconds = Math.Min(baseSeconds + jitterSeconds, MaxBackoffDelay.TotalSeconds);
+        return TimeSpan.FromSeconds(totalSeconds);
+    }
+
+    private static SemaphoreSlim GetServiceSemaphore(string operationName)
+    {
+        if (operationName.StartsWith("LastFm", StringComparison.OrdinalIgnoreCase))
+            return LastFmSemaphore;
+        if (operationName.StartsWith("Sheets", StringComparison.OrdinalIgnoreCase))
+            return SheetsSemaphore;
+        if (operationName.StartsWith("YouTube", StringComparison.OrdinalIgnoreCase))
+            return YouTubeSemaphore;
+        return Lock;
+    }
+
     // ═══════════════════════════════════════════════════════════════════════════
     // Synchronous Execution with Retry
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>Execute with exponential backoff retry and quota detection.</summary>
     public static T Execute<T>(
         string operationName,
         Func<T> action,
@@ -58,87 +78,93 @@ public static class Resilience
         int attemptsMade = 0;
         TimeSpan totalWaitTime = TimeSpan.Zero;
         string serviceName = operationName.Split('.')[0];
+        SemaphoreSlim semaphore = GetServiceSemaphore(operationName);
 
         Exception? lastException = null;
         T? result = default;
         bool succeeded = false;
 
-        for (int attempt = 1; attempt <= MaxRetries; attempt++)
+        semaphore.Wait(ct);
+        try
         {
-            if (ct.IsCancellationRequested)
-                break;
-
-            try
+            for (int attempt = 1; attempt <= MaxRetries; attempt++)
             {
-                result = action();
-                succeeded = true;
-                break;
-            }
-            catch (Exception ex)
-            {
-                lastException = ex;
-                attemptsMade = attempt;
-
-                if (IsFatalQuotaError(ex.Message))
-                    throw new DailyQuotaExceededException(serviceName, ex.Message);
-
-                if (!IsRetryableError(ex.Message))
-                    throw;
-
-                if (attempt >= MaxRetries)
+                if (ct.IsCancellationRequested)
                     break;
 
-                TimeSpan waitTime = TimeSpan.FromSeconds(
-                    delay.TotalSeconds * Math.Pow(2, attempt - 1)
-                );
-                totalWaitTime += waitTime;
-
-                Console.Warning(
-                    "{0} failed (attempt {1}/{2}): {3}",
-                    operationName,
-                    attempt,
-                    MaxRetries,
-                    ex.Message
-                );
-                Console.Info(
-                    "Waiting {0} (resume at {1:HH:mm:ss})",
-                    waitTime.ToString(@"hh\:mm\:ss"),
-                    DateTime.Now.Add(waitTime)
-                );
-
-                for (int remaining = (int)waitTime.TotalSeconds; remaining > 0; remaining--)
+                try
                 {
-                    if (ct.IsCancellationRequested)
+                    result = action();
+                    succeeded = true;
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    attemptsMade = attempt;
+
+                    if (IsFatalQuotaError(ex.Message))
+                        throw new DailyQuotaExceededException(serviceName, ex.Message);
+
+                    if (!IsRetryableError(ex.Message))
+                        throw;
+
+                    if (attempt >= MaxRetries)
                         break;
-                    Thread.Sleep(1000);
+
+                    TimeSpan waitTime = CalculateBackoffWithJitter(delay, attempt);
+                    totalWaitTime += waitTime;
+
+                    Console.Warning(
+                        "{0} failed (attempt {1}/{2}): {3}",
+                        operationName,
+                        attempt,
+                        MaxRetries,
+                        ex.Message
+                    );
+                    Console.Info(
+                        "Waiting {0} (resume at {1:HH:mm:ss})",
+                        waitTime.ToString(@"hh\:mm\:ss"),
+                        DateTime.Now.Add(waitTime)
+                    );
+
+                    for (int remaining = (int)waitTime.TotalSeconds; remaining > 0; remaining--)
+                    {
+                        if (ct.IsCancellationRequested)
+                            break;
+                        Thread.Sleep(1000);
+                    }
                 }
             }
-        }
 
-        if (!succeeded && lastException is not null)
-        {
-            if (IsFatalQuotaError(lastException.Message))
-                throw new DailyQuotaExceededException(serviceName, lastException.Message);
+            if (!succeeded && lastException is not null)
+            {
+                if (IsFatalQuotaError(lastException.Message))
+                    throw new DailyQuotaExceededException(serviceName, lastException.Message);
 
-            if (attemptsMade >= MaxRetries)
-                throw new RetryExhaustedException(
-                    operationName,
-                    attemptsMade,
-                    totalWaitTime,
+                if (attemptsMade >= MaxRetries)
+                    throw new RetryExhaustedException(
+                        operationName,
+                        attemptsMade,
+                        totalWaitTime,
+                        lastException
+                    );
+
+                throw new InvalidOperationException(
+                    $"{operationName} failed: {lastException.Message}",
                     lastException
                 );
+            }
 
-            throw new InvalidOperationException(
-                $"{operationName} failed: {lastException.Message}",
-                lastException
-            );
+            postAction?.Invoke();
+            return result!;
         }
-
-        postAction?.Invoke();
-        return result!;
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
-    /// <summary>Execute void action with retry.</summary>
     public static void Execute(
         string operationName,
         Action action,
@@ -162,7 +188,6 @@ public static class Resilience
     // Async Rate-Limited Execution
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>Execute async with semaphore lock, throttle, and retry.</summary>
     public static async Task<T> ExecuteAsync<T>(
         Func<Task<T>> action,
         string source,
@@ -208,7 +233,6 @@ public static class Resilience
         }
     }
 
-    /// <summary>Delay helper for post-call throttling.</summary>
     public static void Delay(ServiceType service) =>
         Thread.Sleep((int)DefaultThrottle.TotalMilliseconds);
 }

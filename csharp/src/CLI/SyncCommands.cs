@@ -1,99 +1,107 @@
-using CliFx;
-using CliFx.Attributes;
-using CliFx.Exceptions;
-using CliFx.Infrastructure;
+using System.ComponentModel;
 using CSharpScripts.Orchestrators;
 using CSharpScripts.Services.Sync.Google;
+using Spectre.Console.Cli;
 
-namespace CSharpScripts.CLI;
+namespace CSharpScripts.CLI.Commands;
 
-/// <summary>
-/// NAME
-///   sync - Sync data to Google Sheets
-///
-/// DESCRIPTION
-///   Commands to synchronize YouTube playlists and Last.fm scrobbles
-///   to Google Sheets for tracking and analysis.
-///
-/// COMMANDS
-///   yt        Sync YouTube playlists to Google Sheets
-///   lastfm    Sync Last.fm scrobbles to Google Sheets
-///
-/// EXAMPLES
-///   cli sync yt
-///   cli sync yt --force --verbose
-///   cli sync lastfm
-///   cli sync lastfm --since 2024/06/15
-/// </summary>
-[Command("sync", Description = "Sync data to Google Sheets")]
-public sealed class SyncGroupCommand : ICommand
+public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
 {
-    public ValueTask ExecuteAsync(IConsole console)
+    public sealed class Settings : CommandSettings
     {
-        Console.Rule("Sync Commands");
+        [CommandOption("-v|--verbose")]
+        [Description("Enable debug logging")]
+        public bool Verbose { get; init; }
+
+        [CommandOption("-r|--reset")]
+        [Description("Clear local cache before syncing")]
+        public bool Reset { get; init; }
+    }
+
+    public override int Execute(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
+    {
+        if (settings.Verbose)
+        {
+            Console.Level = LogLevel.Debug;
+            Logger.FileLevel = LogLevel.Debug;
+        }
+
+        if (settings.Reset)
+        {
+            Console.Info("Clearing local cache...");
+            StateManager.DeleteLastFmStates();
+            StateManager.DeleteAllYouTubeStates();
+            Console.Success("Cache cleared");
+        }
+
+        Console.Rule("YouTube Sync");
+        int ytResult = RunYouTubeSync(settings.Verbose);
+
         Console.NewLine();
+        Console.Rule("Last.fm Sync");
+        int lfResult = RunLastFmSync(settings.Verbose);
 
-        Console.MarkupLine("[blue bold]COMMANDS[/]");
-        Console.MarkupLine("  [cyan]yt[/]        Sync YouTube playlists → Google Sheets");
-        Console.MarkupLine("  [cyan]lastfm[/]    Sync Last.fm scrobbles → Google Sheets");
         Console.NewLine();
+        if (ytResult == 0 && lfResult == 0)
+            Console.Success("All syncs complete!");
+        else
+            Console.Warning(
+                "Completed with errors (YouTube: {0}, Last.fm: {1})",
+                ytResult,
+                lfResult
+            );
 
-        Console.MarkupLine("[blue bold]OPTIONS[/]");
-        Console.MarkupLine("  [cyan]-v, --verbose[/]     Enable debug logging");
-        Console.MarkupLine(
-            "  [cyan]-f, --force[/]       Clear cache and re-fetch all data [grey](yt only)[/]"
-        );
-        Console.MarkupLine("  [cyan]--since[/]           Re-sync from date [grey](lastfm only)[/]");
-        Console.MarkupLine("  [cyan]--session-id[/]      Show session ID in output");
-        Console.NewLine();
+        return ytResult != 0 ? ytResult : lfResult;
+    }
 
-        Console.MarkupLine("[blue bold]EXAMPLES[/]");
-        Console.MarkupLine("  [dim]$[/] cli sync yt");
-        Console.MarkupLine("  [dim]$[/] cli sync yt --force --verbose");
-        Console.MarkupLine("  [dim]$[/] cli sync lastfm --since 2024/06/15");
+    private static int RunYouTubeSync(bool verbose)
+    {
+        Logger.Start(ServiceType.YouTube);
+        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        {
+            new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
+        });
+    }
 
-        return ValueTask.CompletedTask;
+    private static int RunLastFmSync(bool verbose)
+    {
+        Logger.Start(ServiceType.LastFm);
+        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        {
+            Console.Info("Starting Last.fm sync...");
+            new ScrobbleSyncOrchestrator(Program.Cts.Token, forceFromDate: null).Execute();
+        });
     }
 }
 
-/// <summary>
-/// NAME
-///   sync yt - Sync YouTube playlists to Google Sheets
-///
-/// DESCRIPTION
-///   Fetches all YouTube playlists and their videos, then syncs them to a
-///   Google Sheets spreadsheet. Uses incremental sync by default - only
-///   fetching changes since last run. Progress is saved so interrupted
-///   syncs can resume.
-///
-/// USAGE
-///   cli sync yt [options]
-///
-/// OPTIONS
-///   -v, --verbose     Enable debug logging to console and log file
-///   -f, --force       Clear all cached state and re-fetch everything
-///   --session-id      Display the session ID for log correlation
-///
-/// EXAMPLES
-///   cli sync yt                    # Normal incremental sync
-///   cli sync yt --force            # Full re-sync from scratch
-///   cli sync yt -v --session-id    # Debug mode with session tracking
-/// </summary>
-[Command("sync yt", Description = "Sync YouTube playlists → Google Sheets")]
-public sealed class SyncYouTubeCommand : ICommand
+public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
 {
-    [CommandOption("verbose", 'v', Description = "Enable debug logging")]
-    public bool Verbose { get; init; }
-
-    [CommandOption("force", 'f', Description = "Clear cache and re-fetch all data")]
-    public bool Force { get; init; }
-
-    [CommandOption("session-id", Description = "Show session ID in output")]
-    public bool ShowSessionId { get; init; }
-
-    public ValueTask ExecuteAsync(IConsole console)
+    public sealed class Settings : CommandSettings
     {
-        if (Verbose)
+        [CommandOption("-v|--verbose")]
+        [Description("Enable debug logging")]
+        public bool Verbose { get; init; }
+
+        [CommandOption("-r|--reset")]
+        [Description("Clear local cache before syncing")]
+        public bool Reset { get; init; }
+
+        [CommandOption("--session-id")]
+        [Description("Show session ID in output")]
+        public bool ShowSessionId { get; init; }
+    }
+
+    public override int Execute(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
+    {
+        if (settings.Verbose)
         {
             Console.Level = LogLevel.Debug;
             Logger.FileLevel = LogLevel.Debug;
@@ -101,28 +109,28 @@ public sealed class SyncYouTubeCommand : ICommand
 
         Logger.Start(ServiceType.YouTube);
 
-        ExecuteWithErrorHandling(() =>
+        return ExecuteWithErrorHandling(() =>
         {
-            if (Force)
+            if (settings.Reset)
             {
-                Console.Info("Force sync: clearing cache and re-fetching all data...");
+                Console.Info("Clearing YouTube cache...");
                 StateManager.DeleteAllYouTubeStates();
+                Console.Success("Cache cleared");
             }
 
-            if (ShowSessionId)
+            if (settings.ShowSessionId)
                 Console.Info("Session ID: {0}", Logger.CurrentSessionId);
 
             new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
         });
-
-        return ValueTask.CompletedTask;
     }
 
-    private static void ExecuteWithErrorHandling(Action action)
+    internal static int ExecuteWithErrorHandling(Action action)
     {
         try
         {
             action();
+            return 0;
         }
         catch (DailyQuotaExceededException ex)
         {
@@ -131,14 +139,14 @@ public sealed class SyncYouTubeCommand : ICommand
                 "Try again tomorrow or request quota increase from Google Cloud Console."
             );
             Logger.End(success: false, summary: "Daily quota exceeded");
-            throw new CommandException("Sync failed: daily quota exceeded", 1);
+            return 1;
         }
         catch (RetryExhaustedException ex)
         {
             Console.Error(ex.Message);
             Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
             Logger.End(success: false, summary: "Retry limit reached");
-            throw new CommandException("Sync failed: retry limit reached", 1);
+            return 1;
         }
         catch (AggregateException aex)
         {
@@ -148,72 +156,65 @@ public sealed class SyncYouTubeCommand : ICommand
                 success: false,
                 summary: $"Failed with {aex.InnerExceptions.Count} error(s)"
             );
-            throw new CommandException($"Sync failed with {aex.InnerExceptions.Count} error(s)", 1);
+            return 1;
         }
         catch (OperationCanceledException)
         {
             Console.Warning("Operation cancelled by user");
             Logger.Interrupted("Cancelled by Ctrl+C");
-            throw new CommandException("Sync cancelled", 130);
-        }
-        catch (CommandException)
-        {
-            throw;
+            return 130;
         }
         catch (Exception ex)
         {
             Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
             Logger.End(success: false, summary: ex.Message);
-            throw new CommandException($"Sync failed: {ex.Message}", 1);
+            return 1;
         }
     }
 }
 
-/// <summary>
-/// NAME
-///   sync lastfm - Sync Last.fm scrobbles to Google Sheets
-///
-/// DESCRIPTION
-///   Fetches all scrobbles from Last.fm and syncs them to a Google Sheets
-///   spreadsheet. Uses incremental sync by default - only fetching new
-///   scrobbles since last run. Use --since to re-sync from a specific date.
-///
-/// USAGE
-///   cli sync lastfm [options]
-///
-/// OPTIONS
-///   -v, --verbose     Enable debug logging to console and log file
-///   --since           Re-sync from date (yyyy/MM/dd). Deletes existing
-///                     data on/after this date before syncing.
-///
-/// EXAMPLES
-///   cli sync lastfm                    # Normal incremental sync
-///   cli sync lastfm --since 2024/06/15 # Re-sync from June 15, 2024
-///   cli sync lastfm -v                 # Debug mode
-/// </summary>
-[Command("sync lastfm", Description = "Sync Last.fm scrobbles → Google Sheets")]
-public sealed class SyncLastFmCommand : ICommand
+public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
 {
-    [CommandOption("verbose", 'v', Description = "Enable debug logging")]
-    public bool Verbose { get; init; }
-
-    [CommandOption("since", Description = "Re-sync from date (yyyy/MM/dd)")]
-    public string? Since { get; init; }
-
-    public ValueTask ExecuteAsync(IConsole console)
+    public sealed class Settings : CommandSettings
     {
-        if (Verbose)
+        [CommandOption("-v|--verbose")]
+        [Description("Enable debug logging")]
+        public bool Verbose { get; init; }
+
+        [CommandOption("-r|--reset")]
+        [Description("Clear local cache before syncing")]
+        public bool Reset { get; init; }
+
+        [CommandOption("--since")]
+        [Description("Re-sync from date (yyyy/MM/dd)")]
+        public string? Since { get; init; }
+    }
+
+    public override int Execute(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
+    {
+        if (settings.Verbose)
         {
             Console.Level = LogLevel.Debug;
             Logger.FileLevel = LogLevel.Debug;
         }
 
+        if (settings.Reset)
+        {
+            Console.Info("Clearing Last.fm local cache...");
+            StateManager.DeleteLastFmStates();
+            Console.Success("Cache cleared");
+        }
+
         DateTime? sinceDate = null;
-        if (!IsNullOrEmpty(Since))
+        if (!IsNullOrEmpty(settings.Since))
         {
             if (
                 !DateTime.TryParseExact(
-                    Since,
+                    settings.Since,
                     "yyyy/MM/dd",
                     null,
                     System.Globalization.DateTimeStyles.None,
@@ -222,8 +223,9 @@ public sealed class SyncLastFmCommand : ICommand
             )
             {
                 Console.Error("Invalid date format. Use yyyy/MM/dd (e.g. 2024/01/01)");
-                return ValueTask.CompletedTask;
+                return 1;
             }
+
             sinceDate = parsed;
             Console.Warning(
                 "Will delete existing data on/after {0} and re-sync",
@@ -233,101 +235,41 @@ public sealed class SyncLastFmCommand : ICommand
 
         Logger.Start(ServiceType.LastFm);
 
-        try
+        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
         {
             Console.Info("Starting Last.fm sync...");
             new ScrobbleSyncOrchestrator(Program.Cts.Token, sinceDate).Execute();
-        }
-        catch (DailyQuotaExceededException ex)
-        {
-            Console.Error(ex.Message);
-            Console.Error(
-                "Try again tomorrow or request quota increase from Google Cloud Console."
-            );
-            Logger.End(success: false, summary: "Daily quota exceeded");
-            throw new CommandException("Sync failed: daily quota exceeded", 1);
-        }
-        catch (RetryExhaustedException ex)
-        {
-            Console.Error(ex.Message);
-            Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
-            Logger.End(success: false, summary: "Retry limit reached");
-            throw new CommandException("Sync failed: retry limit reached", 1);
-        }
-        catch (AggregateException aex)
-        {
-            foreach (Exception ex in aex.InnerExceptions)
-                Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            Logger.End(
-                success: false,
-                summary: $"Failed with {aex.InnerExceptions.Count} error(s)"
-            );
-            throw new CommandException($"Sync failed with {aex.InnerExceptions.Count} error(s)", 1);
-        }
-        catch (OperationCanceledException)
-        {
-            Console.Warning("Operation cancelled by user");
-            Logger.Interrupted("Cancelled by Ctrl+C");
-            throw new CommandException("Sync cancelled", 130);
-        }
-        catch (CommandException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            Logger.End(success: false, summary: ex.Message);
-            throw new CommandException($"Sync failed: {ex.Message}", 1);
-        }
-
-        return ValueTask.CompletedTask;
+        });
     }
 }
 
-/// <summary>
-/// NAME
-///   status - Show sync state and cache info
-///
-/// DESCRIPTION
-///   Displays the current sync state for YouTube and/or Last.fm, including
-///   cached data counts, last sync time, and spreadsheet links.
-///
-/// USAGE
-///   cli status [service]
-///
-/// ARGUMENTS
-///   service    yt, lastfm (omit for all)
-///
-/// EXAMPLES
-///   cli status           # Show all services
-///   cli status yt        # YouTube only
-///   cli status lastfm    # Last.fm only
-/// </summary>
-[Command("status", Description = "Show sync state and cache info")]
-public sealed class StatusCommand : ICommand
+public sealed class StatusCommand : Command<StatusCommand.Settings>
 {
-    [CommandParameter(
-        0,
-        Name = "service",
-        Description = "yt, lastfm (omit for all)",
-        IsRequired = false
-    )]
-    public string? Service { get; init; }
+    public sealed class Settings : CommandSettings
+    {
+        [CommandArgument(0, "[service]")]
+        [Description("yt, lastfm (omit for all)")]
+        public string? Service { get; init; }
+    }
 
-    public ValueTask ExecuteAsync(IConsole console)
+    public override int Execute(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
     {
         bool checkLastFm =
-            IsNullOrEmpty(Service) || Service.Equals("lastfm", StringComparison.OrdinalIgnoreCase);
+            IsNullOrEmpty(settings.Service)
+            || settings.Service.Equals("lastfm", StringComparison.OrdinalIgnoreCase);
         bool checkYouTube =
-            IsNullOrEmpty(Service)
-            || Service.Equals("yt", StringComparison.OrdinalIgnoreCase)
-            || Service.Equals("youtube", StringComparison.OrdinalIgnoreCase);
+            IsNullOrEmpty(settings.Service)
+            || settings.Service.Equals("yt", StringComparison.OrdinalIgnoreCase)
+            || settings.Service.Equals("youtube", StringComparison.OrdinalIgnoreCase);
 
         if (!checkLastFm && !checkYouTube)
         {
-            Console.Warning("Unknown service: {0}. Use: yt, lastfm", Service);
-            return ValueTask.CompletedTask;
+            Console.Warning("Unknown service: {0}. Use: yt, lastfm", settings.Service);
+            return 1;
         }
 
         if (checkLastFm)
@@ -336,7 +278,7 @@ public sealed class StatusCommand : ICommand
         if (checkYouTube)
             ShowYouTubeStatus();
 
-        return ValueTask.CompletedTask;
+        return 0;
     }
 
     private static void ShowLastFmStatus()

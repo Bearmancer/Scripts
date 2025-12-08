@@ -1,10 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-/// <summary>
-/// File-based audit logger for JSONL output.
-/// All console output goes through Console class - NOT here.
-/// This class writes structured events to log files for auditing.
-/// </summary>
 public static class Logger
 {
     private static readonly Lock WriteLock = new();
@@ -28,14 +23,7 @@ public static class Logger
         CreateDirectory(Paths.LogDirectory);
         DetectCrashedSessions(service);
 
-        Event(
-            "SessionStart",
-            new Dictionary<string, object>
-            {
-                ["Service"] = service.ToString(),
-                ["ProcessId"] = ProcessId,
-            }
-        );
+        Event("SessionStart", new Dictionary<string, object> { ["Service"] = service.ToString() });
     }
 
     public static void End(bool success, string? summary = null)
@@ -269,7 +257,7 @@ public static class Logger
         string json = JsonSerializer.Serialize(entry, StateManager.JsonCompact);
         lock (WriteLock)
         {
-            AppendAllText(path, json + Environment.NewLine);
+            AppendAllText(path, json + NewLine);
         }
     }
 

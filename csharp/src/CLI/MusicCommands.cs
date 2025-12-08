@@ -1,146 +1,78 @@
-using CliFx;
-using CliFx.Attributes;
-using CliFx.Infrastructure;
+using System.ComponentModel;
 using CSharpScripts.Models;
 using CSharpScripts.Services.Music;
+using Spectre.Console.Cli;
 
-namespace CSharpScripts.CLI;
+namespace CSharpScripts.CLI.Commands;
 
-/// <summary>
-/// NAME
-///   music - Search Discogs and MusicBrainz
-///
-/// DESCRIPTION
-///   Commands to search and lookup music metadata from Discogs and
-///   MusicBrainz databases. Search by artist, album, or track, and
-///   lookup detailed release information by ID.
-///
-/// COMMANDS
-///   search    Search for releases across Discogs and MusicBrainz
-///   lookup    Get detailed release information by ID
-///
-/// ENVIRONMENT VARIABLES
-///   DISCOGS_TOKEN    Required for Discogs searches (get from discogs.com)
-///
-/// EXAMPLES
-///   cli music search --artist "David Bowie"
-///   cli music search --album "Heroes" --year 1977
-///   cli music lookup abc123 --source musicbrainz
-/// </summary>
-[Command("music", Description = "Search Discogs and MusicBrainz")]
-public sealed class MusicGroupCommand : ICommand
+public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Settings>
 {
-    public ValueTask ExecuteAsync(IConsole console)
+    public sealed class Settings : CommandSettings
     {
-        Console.Rule("Music Commands");
-        Console.NewLine();
+        [CommandOption("-a|--artist")]
+        [Description("Artist name")]
+        public string? Artist { get; init; }
 
-        Console.MarkupLine("[blue bold]COMMANDS[/]");
-        Console.MarkupLine("  [cyan]search[/]    Search for releases by artist, album, or track");
-        Console.MarkupLine("  [cyan]lookup[/]    Get detailed release information by ID");
-        Console.NewLine();
+        [CommandOption("-l|--album")]
+        [Description("Album/release title")]
+        public string? Album { get; init; }
 
-        Console.MarkupLine("[blue bold]SEARCH OPTIONS[/]");
-        Console.MarkupLine("  [cyan]-a, --artist[/]    Artist name");
-        Console.MarkupLine("  [cyan]-l, --album[/]     Album/release title");
-        Console.MarkupLine("  [cyan]-t, --track[/]     Track title [grey](Discogs only)[/]");
-        Console.MarkupLine("  [cyan]-y, --year[/]      Release year");
-        Console.MarkupLine(
-            "  [cyan]-s, --source[/]    musicbrainz, discogs, both [grey](default: both)[/]"
-        );
-        Console.MarkupLine(
-            "  [cyan]--limit[/]         Max results per source [grey](default: 10)[/]"
-        );
-        Console.NewLine();
+        [CommandOption("-t|--track")]
+        [Description("Track title (Discogs only)")]
+        public string? Track { get; init; }
 
-        Console.MarkupLine("[blue bold]EXAMPLES[/]");
-        Console.MarkupLine("  [dim]$[/] cli music search --artist \"Radiohead\"");
-        Console.MarkupLine("  [dim]$[/] cli music search --album \"OK Computer\" --year 1997");
-        Console.MarkupLine("  [dim]$[/] cli music lookup 12345 --source discogs");
+        [CommandOption("-y|--year")]
+        [Description("Release year")]
+        public int? Year { get; init; }
 
-        return ValueTask.CompletedTask;
+        [CommandOption("-s|--source")]
+        [Description("musicbrainz, discogs, both")]
+        [DefaultValue("both")]
+        public string Source { get; init; } = "both";
+
+        [CommandOption("--limit")]
+        [Description("Max results per source")]
+        [DefaultValue(10)]
+        public int Limit { get; init; } = 10;
     }
-}
 
-/// <summary>
-/// NAME
-///   music search - Search Discogs and MusicBrainz
-///
-/// DESCRIPTION
-///   Searches for releases across Discogs and/or MusicBrainz. At least one
-///   of --artist, --album, or --track must be specified. Results include
-///   release ID, title, year, and source for further lookup.
-///
-/// USAGE
-///   cli music search [options]
-///
-/// OPTIONS
-///   -a, --artist      Artist name to search for
-///   -l, --album       Album/release title to search for
-///   -t, --track       Track title to search for (Discogs only)
-///   -y, --year        Filter by release year
-///   -s, --source      Source to search: musicbrainz, discogs, both (default: both)
-///   --limit           Maximum results per source (default: 10)
-///
-/// ENVIRONMENT VARIABLES
-///   DISCOGS_TOKEN     Required for Discogs searches
-///
-/// EXAMPLES
-///   cli music search --artist "David Bowie"
-///   cli music search --artist "Radiohead" --album "OK Computer"
-///   cli music search --track "Paranoid Android" --source discogs
-///   cli music search --artist "Beatles" --year 1967 --limit 5
-/// </summary>
-[Command("music search", Description = "Search Discogs and MusicBrainz")]
-public sealed class MusicSearchCommand : ICommand
-{
-    [CommandOption("artist", 'a', Description = "Artist name")]
-    public string? Artist { get; init; }
-
-    [CommandOption("album", 'l', Description = "Album/release title")]
-    public string? Album { get; init; }
-
-    [CommandOption("track", 't', Description = "Track title (Discogs only)")]
-    public string? Track { get; init; }
-
-    [CommandOption("year", 'y', Description = "Release year")]
-    public int? Year { get; init; }
-
-    [CommandOption("source", 's', Description = "musicbrainz, discogs, both")]
-    public string Source { get; init; } = "both";
-
-    [CommandOption("limit", Description = "Max results per source")]
-    public int Limit { get; init; } = 10;
-
-    public async ValueTask ExecuteAsync(IConsole console)
+    public override async Task<int> ExecuteAsync(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
     {
-        if (IsNullOrWhiteSpace(Artist) && IsNullOrWhiteSpace(Album) && IsNullOrWhiteSpace(Track))
+        if (
+            IsNullOrWhiteSpace(settings.Artist)
+            && IsNullOrWhiteSpace(settings.Album)
+            && IsNullOrWhiteSpace(settings.Track)
+        )
         {
             Console.Error("Specify at least one of: --artist, --album, --track");
-            return;
+            return 1;
         }
 
         MusicSearchQuery query = new(
-            Artist: Artist,
-            Album: Album,
-            Track: Track,
-            Year: Year,
-            MaxResults: Limit
+            Artist: settings.Artist,
+            Album: settings.Album,
+            Track: settings.Track,
+            Year: settings.Year,
+            MaxResults: settings.Limit
         );
 
         string? discogsToken = GetEnvironmentVariable("DISCOGS_TOKEN");
         MusicMetadataService service = new(discogsToken);
 
-        Console.Info("Searching {0}...", Source);
+        Console.Info("Searching {0}...", settings.Source);
         Console.NewLine();
 
         (List<DiscogsSearchResult>? discogs, List<MusicBrainzSearchResult> musicbrainz) =
-            await service.SearchBothAsync(query, Source.ToLowerInvariant());
+            await service.SearchBothAsync(query, settings.Source.ToLowerInvariant());
 
         if (musicbrainz.Count > 0)
         {
             Console.Rule("MusicBrainz Results");
-            foreach (MusicBrainzSearchResult result in musicbrainz.Take(Limit))
+            foreach (MusicBrainzSearchResult result in musicbrainz.Take(settings.Limit))
             {
                 Console.Info(
                     "{0} - {1} ({2})",
@@ -156,7 +88,7 @@ public sealed class MusicSearchCommand : ICommand
         if (discogs?.Count > 0)
         {
             Console.Rule("Discogs Results");
-            foreach (DiscogsSearchResult result in discogs.Take(Limit))
+            foreach (DiscogsSearchResult result in discogs.Take(settings.Limit))
             {
                 Console.Info(
                     "{0} - {1} ({2})",
@@ -181,62 +113,47 @@ public sealed class MusicSearchCommand : ICommand
                 discogs?.Count ?? 0
             );
         }
+
+        return 0;
     }
 }
 
-/// <summary>
-/// NAME
-///   music lookup - Get release details by ID
-///
-/// DESCRIPTION
-///   Retrieves detailed information for a release by its ID. Specify the
-///   source (MusicBrainz or Discogs) using the --source option. Returns
-///   full metadata including tracks, credits, and identifiers.
-///
-/// USAGE
-///   cli music lookup <id> [options]
-///
-/// ARGUMENTS
-///   id          Release ID (GUID for MusicBrainz, number for Discogs)
-///
-/// OPTIONS
-///   -s, --source      Source database: musicbrainz, discogs (default: musicbrainz)
-///   -c, --credits     Include credits/personnel information
-///
-/// ENVIRONMENT VARIABLES
-///   DISCOGS_TOKEN     Required for Discogs lookups
-///
-/// EXAMPLES
-///   cli music lookup 12345 --source discogs
-///   cli music lookup a1b2c3d4-e5f6-7890-abcd-ef1234567890 --source musicbrainz
-///   cli music lookup 12345 --source discogs --credits
-/// </summary>
-[Command("music lookup", Description = "Get release details by ID")]
-public sealed class MusicLookupCommand : ICommand
+public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Settings>
 {
-    [CommandParameter(0, Name = "id", Description = "Release ID")]
-    public required string Id { get; init; }
+    public sealed class Settings : CommandSettings
+    {
+        [CommandArgument(0, "<id>")]
+        [Description("Release ID")]
+        public required string Id { get; init; }
 
-    [CommandOption("source", 's', Description = "musicbrainz, discogs")]
-    public string Source { get; init; } = "musicbrainz";
+        [CommandOption("-s|--source")]
+        [Description("musicbrainz, discogs")]
+        [DefaultValue("musicbrainz")]
+        public string Source { get; init; } = "musicbrainz";
 
-    [CommandOption("credits", 'c', Description = "Include credits/personnel")]
-    public bool IncludeCredits { get; init; }
+        [CommandOption("-c|--credits")]
+        [Description("Include credits/personnel")]
+        public bool IncludeCredits { get; init; }
+    }
 
-    public async ValueTask ExecuteAsync(IConsole console)
+    public override async Task<int> ExecuteAsync(
+        CommandContext context,
+        Settings settings,
+        CancellationToken cancellationToken
+    )
     {
         string? discogsToken = GetEnvironmentVariable("DISCOGS_TOKEN");
         MusicMetadataService service = new(discogsToken);
 
-        Console.Info("Looking up {0} from {1}...", Id, Source);
+        Console.Info("Looking up {0} from {1}...", settings.Id, settings.Source);
         Console.NewLine();
 
-        if (Source.Equals("musicbrainz", StringComparison.OrdinalIgnoreCase))
+        if (settings.Source.Equals("musicbrainz", StringComparison.OrdinalIgnoreCase))
         {
-            if (!Guid.TryParse(Id, out Guid mbId))
+            if (!Guid.TryParse(settings.Id, out Guid mbId))
             {
                 Console.Error("Invalid MusicBrainz ID (must be GUID)");
-                return;
+                return 1;
             }
 
             MusicBrainzRelease? release = await service.MusicBrainz.GetReleaseAsync(mbId);
@@ -244,7 +161,7 @@ public sealed class MusicLookupCommand : ICommand
             if (release is null)
             {
                 Console.Warning("Release not found");
-                return;
+                return 1;
             }
 
             Console.Rule(release.Title);
@@ -266,7 +183,7 @@ public sealed class MusicLookupCommand : ICommand
                 }
             }
 
-            if (IncludeCredits && release.Credits.Count > 0)
+            if (settings.IncludeCredits && release.Credits.Count > 0)
             {
                 Console.NewLine();
                 Console.Info("Credits ({0}):", release.Credits.Count);
@@ -276,18 +193,18 @@ public sealed class MusicLookupCommand : ICommand
                 }
             }
         }
-        else if (Source.Equals("discogs", StringComparison.OrdinalIgnoreCase))
+        else if (settings.Source.Equals("discogs", StringComparison.OrdinalIgnoreCase))
         {
-            if (!int.TryParse(Id, out int discogsId))
+            if (!int.TryParse(settings.Id, out int discogsId))
             {
                 Console.Error("Invalid Discogs ID (must be number)");
-                return;
+                return 1;
             }
 
             if (service.Discogs is null)
             {
                 Console.CriticalFailure("Discogs", "DISCOGS_TOKEN environment variable not set");
-                return;
+                return 1;
             }
 
             DiscogsRelease? release;
@@ -298,13 +215,13 @@ public sealed class MusicLookupCommand : ICommand
             catch (Exception ex)
             {
                 Console.CriticalFailure("Discogs", ex.Message);
-                return;
+                return 1;
             }
 
             if (release is null)
             {
                 Console.Warning("Release not found");
-                return;
+                return 1;
             }
 
             Console.Rule(release.Title);
@@ -325,7 +242,7 @@ public sealed class MusicLookupCommand : ICommand
                 }
             }
 
-            if (IncludeCredits && release.Credits.Count > 0)
+            if (settings.IncludeCredits && release.Credits.Count > 0)
             {
                 Console.NewLine();
                 Console.Info("Credits ({0}):", release.Credits.Count);
@@ -337,7 +254,10 @@ public sealed class MusicLookupCommand : ICommand
         }
         else
         {
-            Console.Error("Invalid source: {0}. Use: musicbrainz, discogs", Source);
+            Console.Error("Invalid source: {0}. Use: musicbrainz, discogs", settings.Source);
+            return 1;
         }
+
+        return 0;
     }
 }

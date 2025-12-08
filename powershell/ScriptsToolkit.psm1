@@ -32,13 +32,46 @@ function Invoke-ToolkitPython {
 
 <#
 .SYNOPSIS
-    List all toolkit functions.
+    List all toolkit functions with aliases and descriptions.
 
 .DESCRIPTION
-    Displays all functions grouped by category with aliases and descriptions.
+    Displays a formatted table of all available ScriptsToolkit functions, organized
+    by category. Each entry shows the short alias, full function name, and a brief
+    description.
+
+    Categories include:
+    - Utilities: Module management and helper functions
+    - Logs: Sync log viewing and analysis
+    - Sync: YouTube and Last.fm data synchronization
+    - Filesystem: Directory listing and torrent creation
+    - Video: Remuxing, compression, and metadata extraction
+    - Audio: Format conversion, renaming, and analysis
+    - Transcription: Whisper-based audio transcription
+    - YouTube: Video downloading
+    - Tasks: Windows Task Scheduler automation
 
 .EXAMPLE
     Get-ToolkitFunctions
+
+    Displays the complete function list with all categories and aliases.
+    Use this to discover available commands and their shortcuts.
+
+.EXAMPLE
+    tkfn
+
+    Same as above, using the short alias. Quick reference during interactive sessions.
+
+.EXAMPLE
+    Get-ToolkitFunctions | Out-String | Set-Clipboard
+
+    Copies the function list to clipboard for documentation or sharing.
+
+.NOTES
+    All functions can be invoked using either the full name or the short alias.
+    For detailed help on any function: Get-Help <FunctionName> -Full
+
+.LINK
+    Get-Command -Module ScriptsToolkit
 #>
 function Get-ToolkitFunctions {
     [CmdletBinding()]
@@ -93,13 +126,32 @@ function Get-ToolkitFunctions {
 
 <#
 .SYNOPSIS
-    Open PowerShell history file in VS Code.
+    Open PowerShell command history in VS Code.
 
 .DESCRIPTION
-    Opens PSReadLine console history file for review.
+    Opens the PSReadLine console history file in Visual Studio Code for review,
+    search, or copying previous commands. The history file contains all commands
+    typed in PowerShell sessions.
+
+    File location: %APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 
 .EXAMPLE
     Open-CommandHistory
+
+    Opens the history file in VS Code. Use Ctrl+F to search for previous commands.
+
+.EXAMPLE
+    hist
+
+    Same as above, using the short alias.
+
+.NOTES
+    Requires VS Code to be installed and available in PATH.
+    History is shared across all PowerShell sessions.
+
+.LINK
+    Get-History
+    Clear-History
 #>
 function Open-CommandHistory {
     [CmdletBinding()]
@@ -111,10 +163,27 @@ function Open-CommandHistory {
 
 <#
 .SYNOPSIS
-    Open toolkit documentation.
+    Open toolkit documentation in VS Code.
+
+.DESCRIPTION
+    Opens the ScriptsToolkit.Help.md documentation file for comprehensive help
+    on all module features, examples, and configuration options.
 
 .EXAMPLE
     Show-ToolkitHelp
+
+    Opens the documentation file in VS Code for browsing.
+
+.EXAMPLE
+    tkhelp
+
+    Same as above, using the short alias.
+
+.NOTES
+    Requires VS Code to be installed and available in PATH.
+
+.LINK
+    Get-ToolkitFunctions
 #>
 function Show-ToolkitHelp {
     [CmdletBinding()]
@@ -127,19 +196,41 @@ function Show-ToolkitHelp {
 
 <#
 .SYNOPSIS
-    Run PSScriptAnalyzer on scripts.
+    Run PSScriptAnalyzer on PowerShell scripts.
 
 .DESCRIPTION
-    Invokes PSScriptAnalyzer using the module's settings file.
+    Invokes PSScriptAnalyzer using the module's predefined settings file to check
+    for common issues, best practices violations, and potential bugs in PowerShell
+    scripts.
+
+    Uses settings from: PSScriptAnalyzerSettings.psd1
+    Reports: Error and Warning severity issues only
 
 .PARAMETER Path
-    Directory to analyze.
+    Directory or file to analyze. Defaults to the current directory.
+    Subdirectories are scanned recursively.
 
 .EXAMPLE
     Invoke-ToolkitAnalyzer
 
+    Analyzes all PowerShell files in the current directory and subdirectories.
+
 .EXAMPLE
-    Invoke-ToolkitAnalyzer -Path C:\MyProject\src
+    tklint -Path C:\MyProject\src
+
+    Analyzes scripts in a specific directory for issues.
+
+.EXAMPLE
+    Invoke-ToolkitAnalyzer | Where-Object Severity -eq 'Error'
+
+    Filters results to show only errors, ignoring warnings.
+
+.NOTES
+    Requires: PSScriptAnalyzer module (Install-Module PSScriptAnalyzer)
+
+.LINK
+    Invoke-ScriptAnalyzer
+    Get-ScriptAnalyzerRule
 #>
 function Invoke-ToolkitAnalyzer {
     [CmdletBinding()]
@@ -171,7 +262,7 @@ function Invoke-ToolkitAnalyzer {
 .PARAMETER Level
     Filter: Debug, Info, Success, Warning, Error, Fatal.
 
-.PARAMETER Event
+.PARAMETER EventType
     Filter by event type.
 
 .PARAMETER SessionId
@@ -181,19 +272,25 @@ function Invoke-ToolkitAnalyzer {
     Search text in log data.
 
 .PARAMETER Tail
-    Number of entries from end (newest). Alias: -Last
+    Number of entries from end (newest). Default: 10. Alias: -Last
 
 .PARAMETER Head
     Number of entries from start (oldest). Alias: -First
 
-.PARAMETER SortBy
-    Sort by: date, level, event, session. Default: date
+.PARAMETER Sort
+    Sort by: Date, Level, Event, Session. Default: Date
 
-.PARAMETER Chronological
-    Show oldest first (ascending date order).
+.PARAMETER Descending
+    Sort in descending order (newest/highest first).
 
 .PARAMETER List
     Display as vertical list.
+
+.PARAMETER Full
+    Show full details without truncation, wraps at column boundary. Alias: -f
+
+.PARAMETER ShowSession
+    Display Session ID column. Hidden by default. Alias: -s
 
 .EXAMPLE
     Show-SyncLog
@@ -205,10 +302,10 @@ function Invoke-ToolkitAnalyzer {
     Show-SyncLog -Search Comedy
 
 .EXAMPLE
-    Show-SyncLog -Head 10 -Chronological
+    Show-SyncLog -Head 10
 
 .EXAMPLE
-    Show-SyncLog -SortBy level
+    Show-SyncLog -Sort Level -Descending
 #>
 function Show-SyncLog {
     [CmdletBinding(DefaultParameterSetName = 'Tail')]
@@ -223,7 +320,7 @@ function Show-SyncLog {
         [string]$Level,
 
         [Parameter()]
-        [string]$Event,
+        [string]$EventType,
 
         [Parameter()]
         [string]$SessionId,
@@ -233,21 +330,29 @@ function Show-SyncLog {
 
         [Parameter(ParameterSetName = 'Tail')]
         [Alias('Last')]
-        [int]$Tail = 100,
+        [int]$Tail = 10,
 
         [Parameter(ParameterSetName = 'Head')]
         [Alias('First')]
         [int]$Head,
 
         [Parameter()]
-        [ValidateSet('date', 'level', 'event', 'session')]
-        [string]$SortBy = 'date',
+        [ValidateSet('Date', 'Level', 'Event', 'Session')]
+        [string]$Sort = 'Date',
 
         [Parameter()]
-        [switch]$Chronological,
+        [switch]$Descending,
 
         [Parameter()]
-        [switch]$List
+        [switch]$List,
+
+        [Parameter()]
+        [Alias('f')]
+        [switch]$Full,
+
+        [Parameter()]
+        [Alias('s')]
+        [switch]$ShowSession
     )
 
     $logFiles = @()
@@ -278,7 +383,7 @@ function Show-SyncLog {
                 $obj | Add-Member -NotePropertyName 'Source' -NotePropertyValue $serviceName -Force
                 $parsedTimestamp = [datetime]::ParseExact(
                     $obj.Timestamp,
-                    'yyyy-MM-dd HH:mm:ss',
+                    'yyyy/MM/dd HH:mm:ss',
                     [System.Globalization.CultureInfo]::InvariantCulture
                 )
                 $obj | Add-Member -NotePropertyName 'ParsedTimestamp' -NotePropertyValue $parsedTimestamp -Force
@@ -293,8 +398,8 @@ function Show-SyncLog {
     if ($Level) {
         $entries = $entries | Where-Object { $_.Level -eq $Level }
     }
-    if ($Event) {
-        $entries = $entries | Where-Object { $_.Event -like "*$Event*" }
+    if ($EventType) {
+        $entries = $entries | Where-Object { $_.Event -like "*$EventType*" }
     }
     if ($SessionId) {
         $entries = $entries | Where-Object { $_.SessionId -eq $SessionId }
@@ -307,20 +412,27 @@ function Show-SyncLog {
     }
 
     # Determine sort property
-    $sortProperty = switch ($SortBy) {
-        'date' { 'ParsedTimestamp' }
-        'level' { 'Level' }
-        'event' { 'Event' }
-        'session' { 'SessionId' }
+    $sortProperty = switch ($Sort) {
+        'Date' { 'ParsedTimestamp' }
+        'Level' { 'Level' }
+        'Event' { 'Event' }
+        'Session' { 'SessionId' }
         default { 'ParsedTimestamp' }
     }
 
-    # Sort entries
-    $sorted = if ($Chronological) {
-        $entries | Sort-Object -Property $sortProperty
+    # Sort entries (ascending by default)
+    $useDescending = if ($PSBoundParameters.ContainsKey('Descending')) {
+        $Descending
     }
     else {
+        $false
+    }
+
+    $sorted = if ($useDescending) {
         $entries | Sort-Object -Property $sortProperty -Descending
+    }
+    else {
+        $entries | Sort-Object -Property $sortProperty
     }
 
     # Apply Head or Tail limit
@@ -331,9 +443,15 @@ function Show-SyncLog {
         $sorted | Select-Object -First $Tail
     }
 
-    # Color palette for alternating rows
-    $colors = @('Cyan', 'Green', 'Yellow', 'Magenta', 'Blue', 'White')
-    $colorIndex = 0
+    # Level-based color mapping
+    $levelColors = @{
+        'Debug'   = 'DarkGray'
+        'Info'    = 'Cyan'
+        'Success' = 'Green'
+        'Warning' = 'Yellow'
+        'Error'   = 'Red'
+        'Fatal'   = 'Magenta'
+    }
 
     $displayObjects = $result | ForEach-Object {
         $details = if ($_.Data) {
@@ -352,42 +470,96 @@ function Show-SyncLog {
             ''
         }
 
-        $obj = [PSCustomObject]@{
+        [PSCustomObject]@{
             Timestamp = $_.Timestamp
             Level     = $_.Level
             Event     = $_.Event
+            Source    = $_.Source
             SessionId = $_.SessionId
             Details   = $details
-            Color     = $colors[$colorIndex % $colors.Count]
+            Color     = $levelColors[$_.Level]
         }
-        $colorIndex++
-        $obj
     }
 
     if ($List) {
         $displayObjects | ForEach-Object {
-            Write-Host "─────────────────────────────────────────────────" -ForegroundColor DarkGray
+            $divider = "─" * 80
+            Write-Host $divider -ForegroundColor $_.Color
             Write-Host "Timestamp: $($_.Timestamp)" -ForegroundColor $_.Color
             Write-Host "Level:     $($_.Level)" -ForegroundColor $_.Color
             Write-Host "Event:     $($_.Event)" -ForegroundColor $_.Color
-            Write-Host "SessionId: $($_.SessionId)" -ForegroundColor $_.Color
+            Write-Host "Service:   $($_.Source)" -ForegroundColor $_.Color
+            if ($ShowSession) {
+                Write-Host "SessionId: $($_.SessionId)" -ForegroundColor $_.Color
+            }
             Write-Host "Details:   $($_.Details)" -ForegroundColor $_.Color
         }
-        Write-Host "─────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ("─" * 80) -ForegroundColor DarkGray
     }
     else {
-        # Header
+        $terminalWidth = $Host.UI.RawUI.WindowSize.Width
+        $timestampWidth = 20
+        $levelWidth = 10
+        $eventWidth = 20
+        $sourceWidth = 8
+        $sessionWidth = if ($ShowSession) { 10 } else { 0 }
+        $fixedWidth = $timestampWidth + $levelWidth + $eventWidth + $sourceWidth + $sessionWidth
+        $detailsWidth = if ($Full) { $terminalWidth - $fixedWidth - 4 } else { [Math]::Min(60, $terminalWidth - $fixedWidth - 4) }
+
         Write-Host ""
-        Write-Host ("Timestamp".PadRight(20) + "Level".PadRight(10) + "Event".PadRight(20) + "SessionId".PadRight(12) + "Details") -ForegroundColor White
-        Write-Host ("─" * 100) -ForegroundColor DarkGray
+        $header = "Timestamp".PadRight($timestampWidth) + "Service".PadRight($sourceWidth) + "Level".PadRight($levelWidth) + "Event".PadRight($eventWidth)
+        if ($ShowSession) {
+            $header += "Session".PadRight($sessionWidth)
+        }
+        $header += "Details"
+        Write-Host $header -ForegroundColor White
+        Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
 
         $displayObjects | ForEach-Object {
-            Write-Host ($_.Timestamp.PadRight(20)) -ForegroundColor $_.Color -NoNewline
-            Write-Host ($_.Level.PadRight(10)) -ForegroundColor $_.Color -NoNewline
-            Write-Host ($_.Event.PadRight(20)) -ForegroundColor $_.Color -NoNewline
-            Write-Host ($_.SessionId.PadRight(12)) -ForegroundColor $_.Color -NoNewline
-            Write-Host $_.Details -ForegroundColor $_.Color
-            Write-Host ("─" * 100) -ForegroundColor DarkGray
+            $color = $_.Color
+            $details = $_.Details
+
+            # Wrap details at column boundary
+            $detailLines = @()
+            if ($Full -and $details.Length -gt $detailsWidth) {
+                $remaining = $details
+                while ($remaining.Length -gt 0) {
+                    if ($remaining.Length -le $detailsWidth) {
+                        $detailLines += $remaining
+                        $remaining = ''
+                    }
+                    else {
+                        $detailLines += $remaining.Substring(0, $detailsWidth)
+                        $remaining = $remaining.Substring($detailsWidth)
+                    }
+                }
+            }
+            else {
+                if ($details.Length -gt $detailsWidth) {
+                    $detailLines += $details.Substring(0, $detailsWidth - 3) + "..."
+                }
+                else {
+                    $detailLines += $details
+                }
+            }
+
+            # First line with all columns
+            Write-Host ($_.Timestamp.PadRight($timestampWidth)) -ForegroundColor $color -NoNewline
+            Write-Host ($_.Source.PadRight($sourceWidth)) -ForegroundColor $color -NoNewline
+            Write-Host ($_.Level.PadRight($levelWidth)) -ForegroundColor $color -NoNewline
+            Write-Host ($_.Event.PadRight($eventWidth)) -ForegroundColor $color -NoNewline
+            if ($ShowSession) {
+                Write-Host ($_.SessionId.Substring(0, [Math]::Min(8, $_.SessionId.Length)).PadRight($sessionWidth)) -ForegroundColor $color -NoNewline
+            }
+            Write-Host $detailLines[0] -ForegroundColor $color
+
+            # Continuation lines (indented to Details column)
+            for ($i = 1; $i -lt $detailLines.Count; $i++) {
+                Write-Host (' ' * $fixedWidth) -NoNewline
+                Write-Host $detailLines[$i] -ForegroundColor $color
+            }
+
+            Write-Host ("─" * $terminalWidth) -ForegroundColor $color
         }
     }
 }
@@ -399,14 +571,14 @@ function Show-SyncLog {
 .PARAMETER Directory
     Directory to scan.
 
-.PARAMETER SortBy
+.PARAMETER Sort
     Sort by size or name.
 
 .EXAMPLE
     Get-Directories
 
 .EXAMPLE
-    Get-Directories -Directory C:\Music -SortBy name
+    Get-Directories -Directory C:\Music -Sort name
 #>
 function Get-Directories {
     [CmdletBinding()]
@@ -419,10 +591,10 @@ function Get-Directories {
         [Parameter()]
         [Alias('s')]
         [ValidateSet('size', 'name')]
-        [string]$SortBy = 'size'
+        [string]$Sort = 'size'
     )
 
-    Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $SortBy)
+    Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $Sort)
 }
 
 <#
@@ -432,11 +604,11 @@ function Get-Directories {
 .PARAMETER Directory
     Directory to scan.
 
-.PARAMETER SortBy
+.PARAMETER Sort
     Sort by size or name.
 
 .EXAMPLE
-    Get-FilesAndDirectories -SortBy name
+    Get-FilesAndDirectories -Sort name
 #>
 function Get-FilesAndDirectories {
     [CmdletBinding()]
@@ -449,10 +621,10 @@ function Get-FilesAndDirectories {
         [Parameter()]
         [Alias('s')]
         [ValidateSet('size', 'name')]
-        [string]$SortBy = 'size'
+        [string]$Sort = 'size'
     )
 
-    Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $SortBy, '--include-files')
+    Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $Sort, '--include-files')
 }
 
 <#
@@ -1166,7 +1338,7 @@ function Save-YouTubeVideo {
     [CmdletBinding()]
     [Alias('ytdl')]
     param(
-        [Parameter(Mandatory, Position = 0, ValueFromRemainingArguments)]
+        [Parameter(Mandatory, Position = 0)]
         [string[]]$Urls,
 
         [Parameter()]
@@ -1221,37 +1393,55 @@ function Save-YouTubeVideo {
     Sync YouTube playlists to Google Sheets.
 
 .DESCRIPTION
-    Runs the C# CLI 'sync yt' command to sync YouTube playlists.
+    Fetches all videos from your YouTube playlists and exports them to a Google Sheets
+    spreadsheet. Tracks changes between syncs and supports incremental updates.
+
+    The sync process:
+    1. Authenticates with YouTube Data API using stored credentials
+    2. Fetches all playlists and their videos
+    3. Compares with previous sync to detect additions/removals
+    4. Updates the Google Sheets spreadsheet with current state
+
+    State is cached locally to enable incremental syncs and change detection.
 
 .PARAMETER Force
-    Clear cache and re-fetch all data.
-
-.PARAMETER Verbose
-    Enable verbose/debug logging.
+    Clears the local cache and re-fetches all data from YouTube. Use this when
+    you want a complete refresh or suspect the cache is out of sync.
 
 .EXAMPLE
     Invoke-YouTubeSync
 
+    Performs an incremental sync, fetching only changes since the last sync.
+    This is the fastest option for daily use.
+
 .EXAMPLE
     syncyt -Force
+
+    Clears all cached data and performs a complete re-sync from YouTube.
+    Use when the spreadsheet appears out of sync or after clearing remote data.
+
+.NOTES
+    Requires: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET environment variables.
+    First run will prompt for OAuth authorization in your browser.
+
+.LINK
+    https://developers.google.com/youtube/v3/docs
 #>
 function Invoke-YouTubeSync {
     [CmdletBinding()]
     [Alias('syncyt')]
     param(
         [Parameter()]
-        [switch]$Force,
-
-        [Parameter()]
-        [switch]$Verbose
+        [Alias('f')]
+        [switch]$Force
     )
 
     Push-Location $Script:CSharpRoot
     try {
-        $args = @('run', '--', 'sync', 'yt')
-        if ($Force) { $args += '--force' }
-        if ($Verbose) { $args += '--verbose' }
-        & dotnet @args
+        $arguments = @('run', '--', 'sync', 'yt')
+        if ($Force) { $arguments += '--force' }
+        if ($VerbosePreference -eq 'Continue') { $arguments += '--verbose' }
+        & dotnet @arguments
     }
     finally {
         Pop-Location
@@ -1263,37 +1453,56 @@ function Invoke-YouTubeSync {
     Sync Last.fm scrobbles to Google Sheets.
 
 .DESCRIPTION
-    Runs the C# CLI 'sync lastfm' command to sync scrobbles.
+    Fetches your scrobble history from Last.fm and exports it to a Google Sheets
+    spreadsheet. Supports incremental syncs and historical re-syncs.
+
+    The sync process:
+    1. Authenticates with Last.fm API using stored credentials
+    2. Fetches scrobbles since the last sync (or all history on first run)
+    3. Appends new scrobbles to the Google Sheets spreadsheet
+    4. Updates local state for future incremental syncs
+
+    Scrobble data includes: Artist, Track, Album, Timestamp, and play count.
 
 .PARAMETER Since
-    Re-sync from date (yyyy/MM/dd). Deletes existing data on/after this date.
-
-.PARAMETER Verbose
-    Enable verbose/debug logging.
+    Re-sync from a specific date (format: yyyy/MM/dd). This deletes all existing
+    scrobbles on or after the specified date and re-fetches them from Last.fm.
+    Useful when you've edited scrobbles on Last.fm and want to refresh the data.
 
 .EXAMPLE
     Invoke-LastFmSync
 
+    Performs an incremental sync, fetching only new scrobbles since the last sync.
+    This is the recommended daily usage.
+
 .EXAMPLE
-    synclf -Since '2024/01/01'
+    synclf -Since '2024/06/01'
+
+    Deletes all scrobbles from June 1, 2024 onward and re-fetches them.
+    Use this after making corrections on Last.fm or to fix sync issues.
+
+.NOTES
+    Requires: LASTFM_USERNAME, LASTFM_API_KEY environment variables.
+    Rate limited to respect Last.fm API guidelines.
+
+.LINK
+    https://www.last.fm/api
 #>
 function Invoke-LastFmSync {
     [CmdletBinding()]
     [Alias('synclf')]
     param(
         [Parameter()]
-        [string]$Since,
-
-        [Parameter()]
-        [switch]$Verbose
+        [Alias('s')]
+        [string]$Since
     )
 
     Push-Location $Script:CSharpRoot
     try {
-        $args = @('run', '--', 'sync', 'lastfm')
-        if ($Since) { $args += '--since', $Since }
-        if ($Verbose) { $args += '--verbose' }
-        & dotnet @args
+        $arguments = @('run', '--', 'sync', 'lastfm')
+        if ($Since) { $arguments += '--since', $Since }
+        if ($VerbosePreference -eq 'Continue') { $arguments += '--verbose' }
+        & dotnet @arguments
     }
     finally {
         Pop-Location
@@ -1305,13 +1514,35 @@ function Invoke-LastFmSync {
     Run all daily syncs (YouTube + Last.fm).
 
 .DESCRIPTION
-    Runs both sync commands sequentially.
+    Convenience command that runs both YouTube and Last.fm syncs sequentially.
+    Ideal for daily automation or manual one-command sync of all services.
+
+    Execution order:
+    1. YouTube playlist sync (typically faster, less data)
+    2. Last.fm scrobble sync (may take longer for large libraries)
+
+    Each sync runs independently - if one fails, the other still executes.
+    Use this for routine daily syncs; use individual commands for troubleshooting.
 
 .EXAMPLE
     Invoke-AllSyncs
 
+    Runs both YouTube and Last.fm syncs with default settings.
+    Progress is displayed for each service as it runs.
+
 .EXAMPLE
     syncall
+
+    Same as above, using the short alias. Recommended for interactive use.
+
+.NOTES
+    This is equivalent to running: Invoke-YouTubeSync; Invoke-LastFmSync
+    Consider using Register-AllSyncTasks to automate daily execution.
+
+.LINK
+    Invoke-YouTubeSync
+    Invoke-LastFmSync
+    Register-AllSyncTasks
 #>
 function Invoke-AllSyncs {
     [CmdletBinding()]
@@ -1319,10 +1550,20 @@ function Invoke-AllSyncs {
     param()
 
     Write-Host "`n[YouTube Sync]" -ForegroundColor Cyan
-    Invoke-YouTubeSync
+    if ($VerbosePreference -eq 'Continue') {
+        Invoke-YouTubeSync -Verbose
+    }
+    else {
+        Invoke-YouTubeSync
+    }
 
     Write-Host "`n[Last.fm Sync]" -ForegroundColor Cyan
-    Invoke-LastFmSync
+    if ($VerbosePreference -eq 'Continue') {
+        Invoke-LastFmSync -Verbose
+    }
+    else {
+        Invoke-LastFmSync
+    }
 
     Write-Host "`nAll syncs complete!" -ForegroundColor Green
 }
@@ -1333,22 +1574,53 @@ function Invoke-AllSyncs {
 
 <#
 .SYNOPSIS
-    Create scheduled task.
+    Create a Windows scheduled task for sync automation.
+
+.DESCRIPTION
+    Registers a Windows scheduled task that runs a sync command daily at a
+    specified time. The task opens a visible Windows Terminal window so you
+    can monitor progress.
+
+    Task configuration:
+    - Runs daily at the specified time
+    - Starts even if on battery power
+    - Wakes computer from sleep to run
+    - Requires network connectivity
+    - Opens in a visible terminal window
 
 .PARAMETER TaskName
-    Task name.
+    The name for the scheduled task. Must be unique. If a task with this name
+    already exists, it will be replaced.
 
 .PARAMETER Command
-    Command to run.
+    The CLI command to run (e.g., 'sync yt', 'sync lastfm').
+    This is passed to the dotnet CLI.
 
 .PARAMETER DailyTime
-    Time to run.
+    The time to run the task daily. Defaults to 09:00:00 (9 AM).
+    Format: HH:mm:ss or a TimeSpan value.
 
 .PARAMETER Description
-    Task description.
+    A description for the task shown in Task Scheduler.
 
 .EXAMPLE
-    Register-ScheduledSyncTask -TaskName MyTask -Command 'sync yt'
+    Register-ScheduledSyncTask -TaskName 'MyYouTubeSync' -Command 'sync yt' -DailyTime '08:30:00'
+
+    Creates a task named 'MyYouTubeSync' that syncs YouTube playlists daily at 8:30 AM.
+    The task appears in Windows Task Scheduler and can be managed there.
+
+.EXAMPLE
+    regtask -TaskName 'LastFmDaily' -Command 'sync lastfm' -DailyTime '21:00:00' -Description 'Evening scrobble sync'
+
+    Creates a task that syncs Last.fm scrobbles at 9 PM with a custom description.
+
+.NOTES
+    Requires: Administrator privileges to create scheduled tasks.
+    Run PowerShell as Administrator before using this command.
+
+.LINK
+    Register-AllSyncTasks
+    Unregister-ScheduledTask
 #>
 function Register-ScheduledSyncTask {
     [CmdletBinding()]
@@ -1363,10 +1635,12 @@ function Register-ScheduledSyncTask {
         [string]$Command,
 
         [Parameter()]
+        [Alias('t')]
         [TimeSpan]$DailyTime = '09:00:00',
 
         [Parameter()]
-        [string]$Description = 'Scheduled task'
+        [Alias('d')]
+        [string]$Description = 'Scheduled sync task'
     )
 
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -1392,10 +1666,19 @@ function Register-ScheduledSyncTask {
         ''
     }
 
-    $pwsh = (Get-Command -Name pwsh).Source
-    $argument = "-NoProfile -NoLogo -WindowStyle Hidden -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )$Command; exit `$LASTEXITCODE`""
+    # Use wt.exe (Windows Terminal) for visible window, fall back to pwsh
+    $terminal = Get-Command -Name 'wt.exe' -ErrorAction Ignore
+    if ($terminal) {
+        $executable = $terminal.Source
+        $argument = "pwsh -NoProfile -NoLogo -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+    }
+    else {
+        $pwsh = (Get-Command -Name pwsh).Source
+        $executable = $pwsh
+        $argument = "-NoProfile -NoLogo -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+    }
 
-    $action = New-ScheduledTaskAction -Execute $pwsh -Argument $argument
+    $action = New-ScheduledTaskAction -Execute $executable -Argument $argument
     $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun
 
     $start = [datetime]::Today.Add($DailyTime)
@@ -1407,15 +1690,42 @@ function Register-ScheduledSyncTask {
 
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description | Out-Null
 
-    Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm') ) daily" -ForegroundColor Green
+    Write-Host "Registered '$TaskName' for $( $start.ToString('HH:mm') ) daily" -ForegroundColor Green
 }
 
 <#
 .SYNOPSIS
-    Register all sync tasks.
+    Register all sync tasks with recommended schedules.
+
+.DESCRIPTION
+    Convenience command that registers both YouTube and Last.fm sync tasks
+    with sensible default schedules. Stagger times prevent API rate limiting.
+
+    Default schedule:
+    - LastFmSync:   09:00 AM daily
+    - YouTubeSync:  10:00 AM daily
+
+    Tasks open in visible Windows Terminal windows so you can monitor progress.
 
 .EXAMPLE
     Register-AllSyncTasks
+
+    Registers both sync tasks with default schedules (9 AM and 10 AM).
+    Requires administrator privileges.
+
+.EXAMPLE
+    regall
+
+    Same as above, using the short alias.
+
+.NOTES
+    Requires: Administrator privileges.
+    To customize times, use Register-ScheduledSyncTask for each task individually.
+    To remove tasks: Unregister-ScheduledTask -TaskName 'LastFmSync'
+
+.LINK
+    Register-ScheduledSyncTask
+    Get-ScheduledTask
 #>
 function Register-AllSyncTasks {
     [CmdletBinding()]

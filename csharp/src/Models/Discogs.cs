@@ -42,10 +42,11 @@ public record DiscogsRelease(
 )
 {
     public List<DiscogsCredit> Credits =>
-        ExtraArtists
-            .Where(a => !IsNullOrEmpty(a.Role))
-            .Select(a => new DiscogsCredit(a.Name, a.Role ?? "", a.Tracks))
-            .ToList();
+        [
+            .. ExtraArtists
+                .Where(a => !IsNullOrEmpty(a.Role))
+                .Select(a => new DiscogsCredit(a.Name, a.Role ?? "", a.Tracks)),
+        ];
 }
 
 public record DiscogsCredit(string Name, string Role, string? Tracks);

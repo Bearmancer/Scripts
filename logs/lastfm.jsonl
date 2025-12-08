@@ -1,0 +1,21 @@
+{"Timestamp":"2025/12/09 02:52:16","Level":"Info","Event":"SessionStart","SessionId":"7ea5c9b9","Data":{"Service":"LastFm","ProcessId":19404}}
+{"Timestamp":"2025/12/09 03:30:34","Level":"Error","Event":"SessionCrashed","SessionId":"7ea5c9b9","Data":{"OriginalStart":"2025/12/09 02:52:16","DetectedAt":"2025/12/09 03:30:34"}}
+{"Timestamp":"2025/12/09 03:30:34","Level":"Info","Event":"SessionStart","SessionId":"75de7bb1","Data":{"Service":"LastFm","ProcessId":3652}}
+{"Timestamp":"2025/12/09 03:32:17","Level":"Error","Event":"SessionCrashed","SessionId":"75de7bb1","Data":{"OriginalStart":"2025/12/09 03:30:34","DetectedAt":"2025/12/09 03:32:17"}}
+{"Timestamp":"2025/12/09 03:32:17","Level":"Info","Event":"SessionStart","SessionId":"fd2efc3e","Data":{"Service":"LastFm","ProcessId":14204}}
+{"Timestamp":"2025/12/09 03:43:49","Level":"Error","Event":"SessionCrashed","SessionId":"fd2efc3e","Data":{"OriginalStart":"2025/12/09 03:32:17","DetectedAt":"2025/12/09 03:43:49"}}
+{"Timestamp":"2025/12/09 03:43:49","Level":"Info","Event":"SessionStart","SessionId":"a7f0d7a1","Data":{"Service":"LastFm","ProcessId":17592}}
+{"Timestamp":"2025/12/09 03:52:24","Level":"Error","Event":"SessionCrashed","SessionId":"a7f0d7a1","Data":{"OriginalStart":"2025/12/09 03:43:49","DetectedAt":"2025/12/09 03:52:24"}}
+{"Timestamp":"2025/12/09 03:52:24","Level":"Info","Event":"SessionStart","SessionId":"db71147c","Data":{"Service":"LastFm","ProcessId":15868}}
+{"Timestamp":"2025/12/09 04:07:34","Level":"Info","Event":"SessionEnd","SessionId":"db71147c","Data":{"Status":"Completed","EndedAt":"2025/12/09 04:07:34","Summary":"Wrote 27270 scrobbles to sheet"}}
+{"Timestamp":"2025/12/09 04:12:34","Level":"Info","Event":"SessionStart","SessionId":"e5ab1078","Data":{"Service":"LastFm"}}
+{"Timestamp":"2025/12/09 04:12:49","Level":"Warning","Event":"SessionInterrupted","SessionId":"e5ab1078","Data":{"Status":"Interrupted","EndedAt":"2025/12/09 04:12:49","Progress":"Fetched 400 scrobbles across 2 pages"}}
+{"Timestamp":"2025/12/09 04:28:06","Level":"Info","Event":"SessionStart","SessionId":"8e5f8de9","Data":{"Service":"LastFm"}}
+{"Timestamp":"2025/12/09 04:37:25","Level":"Error","Event":"SessionCrashed","SessionId":"8e5f8de9","Data":{"OriginalStart":"2025/12/09 04:28:06","DetectedAt":"2025/12/09 04:37:25"}}
+{"Timestamp":"2025/12/09 04:37:25","Level":"Info","Event":"SessionStart","SessionId":"125a64c5","Data":{"Service":"LastFm"}}
+{"Timestamp":"2025/12/09 04:37:56","Level":"Info","Event":"SessionEnd","SessionId":"125a64c5","Data":{"Status":"Completed","EndedAt":"2025/12/09 04:37:56","Summary":"Wrote 12200 scrobbles to sheet"}}
+{"Timestamp":"2025/12/09 04:49:21","Level":"Info","Event":"SessionStart","SessionId":"8a7746be","Data":{"Service":"LastFm"}}
+{"Timestamp":"2025/12/09 04:49:53","Level":"Info","Event":"SessionEnd","SessionId":"8a7746be","Data":{"Status":"Completed","EndedAt":"2025/12/09 04:49:53","Summary":"Wrote 12200 scrobbles to sheet"}}
+{"Timestamp":"2025/12/09 05:07:30","Level":"Info","Event":"SessionStart","SessionId":"d9e9243e","Data":{"Service":"LastFm"}}
+{"Timestamp":"2025/12/09 05:08:02","Level":"Warning","Event":"SessionInterrupted","SessionId":"d9e9243e","Data":{"Status":"Interrupted","EndedAt":"2025/12/09 05:08:02","Progress":"Fetched 800 scrobbles across 4 pages"}}
+{"Timestamp":"2025/12/09 05:08:08","Level":"Info","Event":"SessionStart","SessionId":"ec867aab","Data":{"Service":"LastFm"}}

@@ -44,7 +44,7 @@ public sealed class MusicMetadataService
 
     public MusicMetadataService(string? discogsToken = null)
     {
-        Discogs = !string.IsNullOrEmpty(discogsToken) ? new DiscogsService(discogsToken) : null;
+        Discogs = !IsNullOrEmpty(discogsToken) ? new DiscogsService(discogsToken) : null;
         MusicBrainz = new MusicBrainzService();
     }
 
@@ -178,7 +178,7 @@ public sealed class MusicMetadataService
 
     static List<DiscogsSearchResult>? SortDiscogs(List<DiscogsSearchResult>? input, string? sortBy)
     {
-        if (input is null || string.IsNullOrWhiteSpace(sortBy))
+        if (input is null || IsNullOrWhiteSpace(sortBy))
             return input;
 
         string key = sortBy.ToLowerInvariant();
@@ -186,9 +186,9 @@ public sealed class MusicMetadataService
         return key switch
         {
             "releasedate" or "releaseyear" => [.. input.OrderByDescending(r => r.Year ?? 0)],
-            "artist" => [.. input.OrderBy(r => r.Artist ?? string.Empty)],
-            "album" => [.. input.OrderBy(r => r.Title ?? string.Empty)],
-            "label" => [.. input.OrderBy(r => r.Label ?? string.Empty)],
+            "artist" => [.. input.OrderBy(r => r.Artist ?? Empty)],
+            "album" => [.. input.OrderBy(r => r.Title ?? Empty)],
+            "label" => [.. input.OrderBy(r => r.Label ?? Empty)],
             _ => input,
         };
     }
@@ -198,7 +198,7 @@ public sealed class MusicMetadataService
         string? sortBy
     )
     {
-        if (string.IsNullOrWhiteSpace(sortBy))
+        if (IsNullOrWhiteSpace(sortBy))
             return input;
 
         string key = sortBy.ToLowerInvariant();
@@ -206,8 +206,8 @@ public sealed class MusicMetadataService
         return key switch
         {
             "releasedate" or "releaseyear" => [.. input.OrderByDescending(r => r.Year ?? 0)],
-            "artist" => [.. input.OrderBy(r => r.Artist ?? string.Empty)],
-            "album" => [.. input.OrderBy(r => r.Title ?? string.Empty)],
+            "artist" => [.. input.OrderBy(r => r.Artist ?? Empty)],
+            "album" => [.. input.OrderBy(r => r.Title ?? Empty)],
             _ => input,
         };
     }
@@ -275,7 +275,7 @@ public sealed class MusicMetadataService
     static UnifiedRelease ToUnified(DiscogsRelease discogs) =>
         new(
             Title: discogs.Title,
-            Artist: discogs.Artists.Count > 0 ? string.Join(", ", discogs.Artists) : null,
+            Artist: discogs.Artists.Count > 0 ? Join(", ", discogs.Artists) : null,
             Year: discogs.Year,
             Country: discogs.Country,
             Genres: discogs.Genres,
@@ -296,7 +296,7 @@ public sealed class MusicMetadataService
 
     static UnifiedRelease ApplyTrackSorting(UnifiedRelease release, string? sortBy)
     {
-        if (string.IsNullOrWhiteSpace(sortBy))
+        if (IsNullOrWhiteSpace(sortBy))
             return release;
 
         string key = sortBy.ToLowerInvariant();
@@ -321,7 +321,7 @@ public sealed class MusicMetadataService
 
     static TimeSpan? ParseDuration(string? duration)
     {
-        if (string.IsNullOrEmpty(duration))
+        if (IsNullOrEmpty(duration))
             return null;
 
         string[] parts = duration.Split(':');

@@ -7,5 +7,5 @@
     PowerShellVersion = '7.4'
     FunctionsToExport = '*'
     CmdletsToExport = @()
-    AliasesToExport = @()
+    AliasesToExport = '*'
 }
