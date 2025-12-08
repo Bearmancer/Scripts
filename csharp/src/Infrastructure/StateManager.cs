@@ -1,23 +1,17 @@
 namespace CSharpScripts.Infrastructure;
 
-/// <summary>
-/// Generic state persistence manager using JSON serialization.
-/// Service-specific state logic should be in respective feature directories.
-/// </summary>
 public static class StateManager
 {
     public const string LastFmSyncFile = "lastfm/sync.json";
     public const string LastFmScrobblesFile = "lastfm/scrobbles.json";
     public const string YouTubeSyncFile = "youtube/sync.json";
 
-    /// <summary>Shared JSON options with relaxed escaping and indentation for state files.</summary>
     public static readonly JsonSerializerOptions JsonIndented = new()
     {
         WriteIndented = true,
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    /// <summary>Shared JSON options with relaxed escaping, compact for JSONL logs.</summary>
     public static readonly JsonSerializerOptions JsonCompact = new()
     {
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
@@ -32,13 +26,13 @@ public static class StateManager
             return new T();
 
         var json = ReadAllText(path);
-        return JsonSerializer.Deserialize<T>(json, StateManager.JsonCompact) ?? new T();
+        return JsonSerializer.Deserialize<T>(json, JsonCompact) ?? new T();
     }
 
     public static void Save<T>(string fileName, T state)
     {
         CreateDirectory(Paths.StateDirectory);
-        WriteAllText(GetPath(fileName), JsonSerializer.Serialize(state, StateManager.JsonCompact));
+        WriteAllText(GetPath(fileName), JsonSerializer.Serialize(state, JsonCompact));
     }
 
     public static void Delete(string fileName)

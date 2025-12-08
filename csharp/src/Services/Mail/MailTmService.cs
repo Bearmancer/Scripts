@@ -68,7 +68,7 @@ public sealed class MailTmService
         RestRequest request = new("/domains", Method.Get);
         RestResponse response = await Client.ExecuteAsync(request);
 
-        if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
+        if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
             throw new MailTmException($"Failed to get domains: {response.StatusCode}");
 
         using JsonDocument doc = JsonDocument.Parse(response.Content);
@@ -82,7 +82,7 @@ public sealed class MailTmService
         if (domains.ValueKind == JsonValueKind.Array && domains.GetArrayLength() > 0)
         {
             string? domain = domains[0].GetProperty("domain").GetString();
-            if (!string.IsNullOrEmpty(domain))
+            if (!IsNullOrEmpty(domain))
                 return domain;
         }
 
@@ -98,7 +98,7 @@ public sealed class MailTmService
 
         RestResponse<TokenResponse> response = await Client.ExecuteAsync<TokenResponse>(request);
 
-        if (!response.IsSuccessful || string.IsNullOrEmpty(response.Data?.Token))
+        if (!response.IsSuccessful || IsNullOrEmpty(response.Data?.Token))
             throw new MailTmException($"Authentication failed: {response.StatusCode}");
 
         AuthToken = response.Data.Token;
@@ -107,7 +107,7 @@ public sealed class MailTmService
 
     public async Task<List<MailTmMessage>> GetInboxAsync()
     {
-        if (string.IsNullOrEmpty(AuthToken))
+        if (IsNullOrEmpty(AuthToken))
             throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
 
         Console.Starting("Fetching inbox");
@@ -120,7 +120,7 @@ public sealed class MailTmService
 
                 RestResponse response = await Client.ExecuteAsync(request);
 
-                if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
+                if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
                     throw new MailTmException($"Failed to fetch inbox: {response.StatusCode}");
 
                 using JsonDocument doc = JsonDocument.Parse(response.Content);
@@ -147,7 +147,7 @@ public sealed class MailTmService
 
     public async Task<MailTmMessage> ReadMessageAsync(string messageId)
     {
-        if (string.IsNullOrEmpty(AuthToken))
+        if (IsNullOrEmpty(AuthToken))
             throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
 
         Console.Starting($"Reading message: {messageId}");
@@ -160,7 +160,7 @@ public sealed class MailTmService
 
                 RestResponse response = await Client.ExecuteAsync(request);
 
-                if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
+                if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
                     throw new MailTmException(
                         $"Failed to read message: {response.StatusCode} - {response.ErrorMessage ?? response.Content}"
                     );
@@ -211,7 +211,7 @@ public sealed class MailTmService
 
     public async Task<bool> DeleteAccountAsync()
     {
-        if (string.IsNullOrEmpty(AuthToken) || string.IsNullOrEmpty(CurrentAccountId))
+        if (IsNullOrEmpty(AuthToken) || IsNullOrEmpty(CurrentAccountId))
             throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
 
         Console.Starting("Deleting account");

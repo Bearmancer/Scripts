@@ -279,6 +279,46 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         );
     }
 
+    /// <summary>
+    /// Writes records to a sheet with headers. Clears existing data first.
+    /// </summary>
+    internal void WriteRecords<T>(
+        string spreadsheetId,
+        string sheetName,
+        IReadOnlyList<object> headers,
+        IEnumerable<T> records,
+        Func<T, IList<object>> rowMapper
+    )
+    {
+        ClearSubsheet(spreadsheetId, sheetName);
+        WriteRows(
+            spreadsheetId,
+            sheetName,
+            [
+                [.. headers],
+            ]
+        );
+
+        List<IList<object>> rows = [.. records.Select(rowMapper)];
+        if (rows.Count > 0)
+            AppendRows(spreadsheetId, sheetName, rows);
+    }
+
+    /// <summary>
+    /// Appends records to an existing sheet without clearing or rewriting headers.
+    /// </summary>
+    internal void AppendRecords<T>(
+        string spreadsheetId,
+        string sheetName,
+        IEnumerable<T> records,
+        Func<T, IList<object>> rowMapper
+    )
+    {
+        List<IList<object>> rows = [.. records.Select(rowMapper)];
+        if (rows.Count > 0)
+            AppendRows(spreadsheetId, sheetName, rows);
+    }
+
     internal void RenameSubsheet(string spreadsheetId, string oldName, string newName)
     {
         var sheet = FindSheet(spreadsheetId, oldName);
@@ -352,7 +392,13 @@ public class GoogleSheetsService(string clientId, string clientSecret)
     {
         var escapedName = EscapeSheetName(sheetName);
         var range = $"{escapedName}!1:1";
-        ValueRange body = new() { Values = [headers.ToList()] };
+        ValueRange body = new()
+        {
+            Values =
+            [
+                [.. headers],
+            ],
+        };
         Resilience.Execute(
             operationName: "Sheets.Values.Update.Headers",
             action: () =>
@@ -686,7 +732,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         if (latestInSheet == null)
             return allScrobbles;
 
-        return allScrobbles.Where(s => s.PlayedAt > latestInSheet).ToList();
+        return [.. allScrobbles.Where(s => s.PlayedAt > latestInSheet)];
     }
 
     internal void WriteScrobbles(string spreadsheetId, List<Scrobble> scrobbles)

@@ -95,15 +95,15 @@ public sealed class MusicBrainzService(
     )
     {
         List<string> parts = [];
-        if (!string.IsNullOrWhiteSpace(artist))
+        if (!IsNullOrWhiteSpace(artist))
             parts.Add($"artist:\"{artist}\"");
-        if (!string.IsNullOrWhiteSpace(recording))
+        if (!IsNullOrWhiteSpace(recording))
             parts.Add($"recording:\"{recording}\"");
 
         if (parts.Count == 0)
             return [];
 
-        string query = string.Join(" AND ", parts);
+        string query = Join(" AND ", parts);
 
         return await ExecuteSafeListAsync(async () =>
         {
@@ -205,7 +205,7 @@ public sealed class MusicBrainzService(
     )
     {
         string query = BuildQuery(artist, release, year, label, genre);
-        if (string.IsNullOrEmpty(query))
+        if (IsNullOrEmpty(query))
             return [];
 
         return await ExecuteSafeListAsync(async () =>
@@ -314,16 +314,14 @@ public sealed class MusicBrainzService(
         {
             foreach (IRelationship rel in relationships)
             {
-                if (rel.Artist is { } artist && !string.IsNullOrEmpty(rel.Type))
+                if (rel.Artist is { } artist && !IsNullOrEmpty(rel.Type))
                 {
                     credits.Add(
                         new MusicBrainzCredit(
                             Name: artist.Name ?? "",
                             Role: rel.Type,
                             ArtistId: artist.Id,
-                            Attributes: rel.Attributes is { } attrs
-                                ? string.Join(", ", attrs)
-                                : null
+                            Attributes: rel.Attributes is { } attrs ? Join(", ", attrs) : null
                         )
                     );
                 }
@@ -381,15 +379,15 @@ public sealed class MusicBrainzService(
     )
     {
         List<string> parts = [];
-        if (!string.IsNullOrWhiteSpace(artist))
+        if (!IsNullOrWhiteSpace(artist))
             parts.Add($"artist:\"{artist}\"");
-        if (!string.IsNullOrWhiteSpace(releaseGroup))
+        if (!IsNullOrWhiteSpace(releaseGroup))
             parts.Add($"releasegroup:\"{releaseGroup}\"");
 
         if (parts.Count == 0)
             return [];
 
-        string query = string.Join(" AND ", parts);
+        string query = Join(" AND ", parts);
 
         return await ExecuteSafeListAsync(async () =>
         {
@@ -456,7 +454,7 @@ public sealed class MusicBrainzService(
     {
         if (credits is null || credits.Count == 0)
             return null;
-        return string.Join(
+        return Join(
             "",
             credits.Select(c => (c.Name ?? c.Artist?.Name ?? "") + (c.JoinPhrase ?? ""))
         );
@@ -480,17 +478,17 @@ public sealed class MusicBrainzService(
     )
     {
         List<string> parts = [];
-        if (!string.IsNullOrWhiteSpace(artist))
+        if (!IsNullOrWhiteSpace(artist))
             parts.Add($"artist:\"{artist}\"");
-        if (!string.IsNullOrWhiteSpace(release))
+        if (!IsNullOrWhiteSpace(release))
             parts.Add($"release:\"{release}\"");
-        if (!string.IsNullOrWhiteSpace(label))
+        if (!IsNullOrWhiteSpace(label))
             parts.Add($"label:\"{label}\"");
-        if (!string.IsNullOrWhiteSpace(genre))
+        if (!IsNullOrWhiteSpace(genre))
             parts.Add($"tag:\"{genre}\"");
         if (year.HasValue)
             parts.Add($"date:{year}");
-        return string.Join(" AND ", parts);
+        return Join(" AND ", parts);
     }
 
     #endregion

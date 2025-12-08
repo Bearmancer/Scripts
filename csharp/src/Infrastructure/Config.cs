@@ -1,8 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-/// <summary>
-/// Centralized configuration for API authentication and service settings.
-/// </summary>
 public static class Config
 {
     // ═══════════════════════════════════════════════════════════════════════════

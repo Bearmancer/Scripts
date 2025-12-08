@@ -8,11 +8,14 @@
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="Tests" />
     <InternalsVisibleTo Include="CSharpScripts.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CliFx" Version="2.3.6" />
     <PackageReference Include="Google.Apis" Version="1.72.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.70.0.3834" />
@@ -24,5 +27,6 @@
     <PackageReference Include="Polly" Version="8.6.5" />
     <PackageReference Include="RestSharp" Version="113.0.0" />
     <PackageReference Include="Spectre.Console" Version="0.54.1-alpha.0.7" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.53.1" />
   </ItemGroup>
 </Project>

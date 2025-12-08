@@ -79,7 +79,7 @@ public record MusicBrainzRelease(
     string? Annotation
 )
 {
-    public List<MusicBrainzTrack> Tracks => Media.SelectMany(m => m.Tracks).ToList();
+    public List<MusicBrainzTrack> Tracks => [.. Media.SelectMany(m => m.Tracks)];
 }
 
 public record MusicBrainzReleaseGroup(

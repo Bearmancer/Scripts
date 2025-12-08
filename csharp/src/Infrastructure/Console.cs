@@ -4,11 +4,6 @@ using SpectreTable = Spectre.Console.Table;
 
 namespace CSharpScripts.Infrastructure;
 
-/// <summary>
-/// Centralized console output using Spectre.Console.
-/// All terminal printing goes through this class - NOT Logger.
-/// Logger is for file-based audit logging only.
-/// </summary>
 public static class Console
 {
     // ═══════════════════════════════════════════════════════════════════════════
@@ -48,7 +43,7 @@ public static class Console
         string formatted = args.Length > 0 ? Format(message, args) : message;
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
         AnsiConsole.MarkupLine(
-            $"[cyan][[Progress]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
+            $"[cyan][[PROG]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
         );
     }
 
@@ -88,10 +83,6 @@ public static class Console
         AnsiConsole.Write(figlet);
     }
 
-    /// <summary>
-    /// Display a critical failure message with large red figlet text.
-    /// Used for service failures that need immediate attention.
-    /// </summary>
     public static void CriticalFailure(string service, string message)
     {
         NewLine();
@@ -121,9 +112,9 @@ public static class Console
 
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
         string escaped = Markup.Escape(url);
-        AnsiConsole.MarkupLine(
-            $"[blue][[Info]][/] [dim]{timestamp}:[/] {Markup.Escape(text)}: [link={escaped}]{escaped}[/]"
-        );
+        AnsiConsole.MarkupLine($"[blue][[INFO]][/] [dim]{timestamp}:[/] {Markup.Escape(text)}:");
+        AnsiConsole.MarkupLine($"[link={escaped}]{escaped}[/]");
+        NewLine();
     }
 
     public static void Link(int number, string url, int maxLength = 80)
@@ -137,8 +128,7 @@ public static class Console
         if (Suppress)
             return;
 
-        string uri = new Uri(path).AbsoluteUri;
-        AnsiConsole.MarkupLine($"[dim]Log:[/] [link={uri}]{uri}[/]");
+        AnsiConsole.MarkupLine($"[dim]Log:[/] [link=file:///{path}]{path}[/]");
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -186,7 +176,7 @@ public static class Console
 
     public static void AddResultRow(SpectreTable table, params string[] cells)
     {
-        string[] formatted = cells.Select(c => $"[steelblue1]{Markup.Escape(c)}[/]").ToArray();
+        string[] formatted = [.. cells.Select(c => $"[steelblue1]{Markup.Escape(c)}[/]")];
         table.AddRow(formatted);
     }
 
@@ -228,10 +218,6 @@ public static class Console
     public static void AddHelpRow(SpectreTable table, string command, string description) =>
         table.AddRow($"[green]{Markup.Escape(command)}[/]", Markup.Escape(description));
 
-    /// <summary>
-    /// Renders an option in .NET CLI style:
-    /// -s, --source &lt;SOURCE&gt;    Description. Allowed values are x, y, z. [default: x]
-    /// </summary>
     public static void HelpOption(
         string shortFlag,
         string longFlag,
@@ -262,9 +248,6 @@ public static class Console
         AnsiConsole.MarkupLine($"[yellow]{sig}[/]{new string(' ', padding)}{desc}");
     }
 
-    /// <summary>
-    /// Simplified overload for boolean flags.
-    /// </summary>
     public static void HelpFlag(
         string shortFlag,
         string longFlag,
@@ -289,6 +272,16 @@ public static class Console
     // Private Helpers
     // ═══════════════════════════════════════════════════════════════════════════
 
+    private static readonly Dictionary<LogLevel, string> LevelCodes = new()
+    {
+        [LogLevel.Debug] = "DBG!",
+        [LogLevel.Info] = "INFO",
+        [LogLevel.Success] = "OKAY",
+        [LogLevel.Warning] = "WARN",
+        [LogLevel.Error] = "ERR!",
+        [LogLevel.Fatal] = "CRIT",
+    };
+
     private static void Write(LogLevel level, string color, string message, params object?[] args)
     {
         if (Suppress || Level > level)
@@ -296,8 +289,9 @@ public static class Console
 
         string formatted = args.Length > 0 ? Format(message, args) : message;
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
+        string levelCode = LevelCodes[level];
         AnsiConsole.MarkupLine(
-            $"[{color}][[{level}]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
+            $"[{color}][[{levelCode}]][/] [dim]{timestamp}:[/] {Markup.Escape(formatted)}"
         );
     }
 
@@ -305,7 +299,7 @@ public static class Console
     {
         try
         {
-            object?[] safeArgs = args.Select(a => a ?? "null").ToArray();
+            object?[] safeArgs = [.. args.Select(a => a ?? "null")];
             return string.Format(message, safeArgs);
         }
         catch

@@ -740,22 +740,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             );
 
         if (addedVideos.Count > 0)
-        {
-            var rows = addedVideos
-                .Select(v =>
-                    (IList<object>)
-                        [
-                            v.Title,
-                            v.Description,
-                            v.FormattedDuration,
-                            $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
-                            v.VideoUrl,
-                        ]
-                )
-                .ToList();
-
-            sheetsService.AppendRows(spreadsheetId, sheetName, rows);
-        }
+            sheetsService.AppendRecords(spreadsheetId, sheetName, addedVideos, MapVideoToRow);
 
         var updatedVideos = previousVideos
             .Where(v => !removedSet.Contains(v.VideoId))
@@ -772,30 +757,17 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
     {
         Console.Debug("Full write: {0} videos to '{1}'", videos.Count, sheetName);
 
-        sheetsService.ClearSubsheet(spreadsheetId, sheetName);
-        sheetsService.WriteRows(
-            spreadsheetId,
-            sheetName,
-            [
-                [.. VideoHeaders],
-            ]
-        );
-
-        var rows = videos
-            .Select(v =>
-                (IList<object>)
-                    [
-                        v.Title,
-                        v.Description,
-                        v.FormattedDuration,
-                        $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
-                        v.VideoUrl,
-                    ]
-            )
-            .ToList();
-
-        sheetsService.WriteRows(spreadsheetId, sheetName, rows);
+        sheetsService.WriteRecords(spreadsheetId, sheetName, VideoHeaders, videos, MapVideoToRow);
     }
+
+    private static IList<object> MapVideoToRow(YouTubeVideo v) =>
+        [
+            v.Title,
+            v.Description,
+            v.FormattedDuration,
+            $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
+            v.VideoUrl,
+        ];
 
     private static string SanitizeSheetName(string name) =>
         name.Replace(":", " -")

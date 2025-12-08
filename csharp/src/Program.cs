@@ -1,4 +1,6 @@
-using CliFx;
+using CSharpScripts.CLI.Commands;
+using Spectre.Console;
+using Spectre.Console.Cli;
 
 namespace CSharpScripts;
 
@@ -6,21 +8,83 @@ public static class Program
 {
     public static readonly CancellationTokenSource Cts = new();
 
-    private static async Task<int> Main(string[] args)
+    public static int Main(string[] args)
     {
         System.Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
             Cts.Cancel();
-            Console.Error("Shutdown requested...");
+            AnsiConsole.MarkupLine("[red]Shutdown requested...[/]");
         };
 
-        return await new CliApplicationBuilder()
-            .AddCommandsFromThisAssembly()
-            .SetTitle("Lance's Utilities")
-            .SetDescription("CLI toolkit for automation and data sync")
-            .SetExecutableName("cli")
-            .Build()
-            .RunAsync(args);
+        var app = new CommandApp();
+        app.Configure(config =>
+        {
+            config.SetApplicationName("cli");
+            config.SetApplicationVersion("1.0.0");
+
+            config.AddBranch(
+                "sync",
+                sync =>
+                {
+                    sync.SetDescription("Sync data to Google Sheets");
+                    sync.SetDefaultCommand<SyncAllCommand>();
+                    sync.AddCommand<SyncAllCommand>("all")
+                        .WithDescription("Sync all services (YouTube + Last.fm)");
+                    sync.AddCommand<SyncYouTubeCommand>("yt")
+                        .WithDescription("Sync YouTube playlists to Google Sheets");
+                    sync.AddCommand<SyncLastFmCommand>("lastfm")
+                        .WithDescription("Sync Last.fm scrobbles to Google Sheets");
+                }
+            );
+
+            config.AddBranch(
+                "clean",
+                clean =>
+                {
+                    clean.SetDescription("Delete state, cache, and remote data");
+                    clean
+                        .AddCommand<CleanLocalCommand>("local")
+                        .WithDescription("Delete local state and cache files only");
+                    clean
+                        .AddCommand<CleanPurgeCommand>("purge")
+                        .WithDescription("Delete all: state, remote data, CSVs, and builds");
+                }
+            );
+
+            config.AddBranch(
+                "music",
+                music =>
+                {
+                    music.SetDescription("Search Discogs and MusicBrainz");
+                    music
+                        .AddCommand<MusicSearchCommand>("search")
+                        .WithDescription("Search for releases across Discogs and MusicBrainz");
+                    music
+                        .AddCommand<MusicLookupCommand>("lookup")
+                        .WithDescription("Get detailed release information by ID");
+                }
+            );
+
+            config.AddBranch(
+                "mail",
+                mail =>
+                {
+                    mail.SetDescription("Temporary email management");
+                    mail.AddCommand<MailCreateCommand>("create")
+                        .WithDescription("Create temporary email account");
+                    mail.AddCommand<MailCheckCommand>("check")
+                        .WithDescription("Check inbox for messages");
+                    mail.AddCommand<MailDeleteCommand>("delete")
+                        .WithDescription("Delete temporary email account");
+                }
+            );
+
+            config
+                .AddCommand<StatusCommand>("status")
+                .WithDescription("Show sync state and cache info");
+        });
+
+        return app.Run(args);
     }
 }

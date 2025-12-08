@@ -29,7 +29,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         Console.Debug("Sync initiated");
 
         var spreadsheetId = GetOrCreateSpreadsheet();
-        DateTime? fetchAfter;
 
         if (forceFromDate.HasValue)
         {
@@ -38,68 +37,114 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             state = new() { SpreadsheetId = spreadsheetId };
             SaveState();
             LastFmService.DeleteScrobblesCache();
-            fetchAfter = forceFromDate.Value.AddSeconds(-1);
+            FetchScrobbles(forceFromDate.Value.AddSeconds(-1));
+        }
+        else if (!state.FetchComplete && state.LastPage > 0)
+        {
+            // Resume interrupted fetch
+            Console.Warning(
+                "Resuming from page {0} ({1} scrobbles fetched)",
+                state.LastPage,
+                state.TotalFetched
+            );
+
+            var latestInSheet = sheetsService.GetLatestScrobbleTime(spreadsheetId);
+            FetchScrobbles(latestInSheet);
         }
         else
         {
-            fetchAfter = sheetsService.GetLatestScrobbleTime(spreadsheetId);
+            // Check local cache first
+            var cachedScrobbles = LastFmService.LoadScrobbles();
 
-            if (fetchAfter != null)
+            if (cachedScrobbles.Count > 0)
             {
+                DateTime? oldestCached = cachedScrobbles.Min(s => s.PlayedAt);
+                DateTime? newestCached = cachedScrobbles.Max(s => s.PlayedAt);
+
                 Console.Info(
-                    "Latest in sheet: {0}",
-                    fetchAfter.Value.ToString("yyyy/MM/dd HH:mm:ss")
+                    "Cache: {0} scrobbles | {1} → {2}",
+                    cachedScrobbles.Count,
+                    oldestCached?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?",
+                    newestCached?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?"
                 );
-                Console.Info(
-                    "Incremental sync from {0}",
-                    fetchAfter.Value.ToString("yyyy/MM/dd HH:mm:ss")
-                );
-                state = new() { SpreadsheetId = spreadsheetId };
-                SaveState();
-                LastFmService.DeleteScrobblesCache();
+
+                // Validate cache against tracked state
+                if (
+                    state.OldestScrobble.HasValue
+                    && state.NewestScrobble.HasValue
+                    && oldestCached.HasValue
+                    && newestCached.HasValue
+                )
+                {
+                    bool cacheComplete =
+                        oldestCached <= state.OldestScrobble
+                        && newestCached >= state.NewestScrobble;
+
+                    if (!cacheComplete)
+                    {
+                        Console.Warning(
+                            "Cache incomplete! Expected {0} → {1}",
+                            state.OldestScrobble?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?",
+                            state.NewestScrobble?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?"
+                        );
+                    }
+                }
+
+                // Fetch only new scrobbles since latest cached
+                FetchScrobbles(newestCached);
             }
             else
             {
-                Console.Info("No existing scrobbles. Fetching all...");
-                Console.Info("Full sync requested (no existing data)");
-                LogResumeInfo();
+                // No cache - check sheet for existing data
+                var latestInSheet = sheetsService.GetLatestScrobbleTime(spreadsheetId);
+
+                if (latestInSheet != null)
+                {
+                    Console.Info(
+                        "Latest in sheet: {0}",
+                        latestInSheet.Value.ToString("yyyy/MM/dd HH:mm:ss")
+                    );
+                    FetchScrobbles(latestInSheet);
+                }
+                else
+                {
+                    Console.Info("No existing data. Full sync...");
+                    FetchScrobbles(null);
+                }
             }
         }
 
-        if (!state.FetchComplete)
+        if (ct.IsCancellationRequested)
         {
-            FetchScrobbles(fetchAfter);
-
-            if (ct.IsCancellationRequested)
-            {
-                Logger.Interrupted(
-                    $"Fetched {state.TotalFetched} scrobbles across {state.LastPage} pages"
-                );
-                return;
-            }
-
-            state.FetchComplete = true;
-            SaveState();
-            Console.Info(
-                "Fetch complete: {0} scrobbles from {1} pages",
-                state.TotalFetched,
-                state.LastPage
+            Logger.Interrupted(
+                $"Fetched {state.TotalFetched} scrobbles across {state.LastPage} pages"
             );
+            return;
         }
-        else
-        {
-            Console.Debug("Using cached scrobbles");
-        }
+
+        state.FetchComplete = true;
+        SaveState();
 
         var scrobbles = LastFmService.LoadScrobbles();
 
         if (scrobbles.Count == 0)
         {
+            Console.Success("No new scrobbles to sync");
             Logger.End(true, "No changes detected");
             return;
         }
 
-        WriteToSheets(scrobbles, spreadsheetId);
+        // Filter to only scrobbles newer than what's in the sheet
+        var newScrobbles = sheetsService.GetNewScrobbles(spreadsheetId, scrobbles);
+
+        if (newScrobbles.Count == 0)
+        {
+            Console.Success("Sheet is up to date");
+            Logger.End(true, "No new scrobbles");
+            return;
+        }
+
+        WriteToSheets(newScrobbles, spreadsheetId);
     }
 
     private void FetchScrobbles(DateTime? fetchAfter)
@@ -109,9 +154,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         lastFmService.FetchScrobblesSince(
             fetchAfter: fetchAfter,
             state: state,
-            onProgress: (page, total, elapsed) =>
+            onProgress: (page, total, elapsed, oldest, newest) =>
             {
-                state.Update(page, total);
+                state.Update(page, total, oldest, newest);
                 SaveState();
                 Console.Progress(
                     "Page: {0} | Tracks: {1} | Elapsed: {2}",
