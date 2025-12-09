@@ -169,7 +169,8 @@ public static class StateManager
         Combine(YouTubePlaylistsDirectory, $"{SanitizeFileName(playlistTitle)}.json");
 
     private static string SanitizeFileName(string name) =>
-        name.Replace(":", " -")
+        name.Normalize(System.Text.NormalizationForm.FormC)
+            .Replace(":", " -")
             .Replace("/", "-")
             .Replace("\\", "-")
             .Replace("?", "")

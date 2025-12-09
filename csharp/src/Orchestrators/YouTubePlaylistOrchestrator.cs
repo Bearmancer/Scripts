@@ -6,9 +6,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
     [
         "Title",
         "Description",
+        "Channel Name",
         "Duration",
-        "Channel",
-        "Video URL",
     ];
 
     private readonly YouTubeService youtubeService = new(
@@ -762,11 +761,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
 
     private static IList<object> MapVideoToRow(YouTubeVideo v) =>
         [
-            v.Title,
+            $"=HYPERLINK(\"{v.VideoUrl}\", \"{EscapeFormulaString(v.Title)}\")",
             v.Description,
-            v.FormattedDuration,
             $"=HYPERLINK(\"{v.ChannelUrl}\", \"{EscapeFormulaString(v.ChannelName)}\")",
-            v.VideoUrl,
+            v.FormattedDuration,
         ];
 
     private static string SanitizeSheetName(string name) =>
