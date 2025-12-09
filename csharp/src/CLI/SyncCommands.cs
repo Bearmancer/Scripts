@@ -134,28 +134,44 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
         }
         catch (DailyQuotaExceededException ex)
         {
-            Console.Error(ex.Message);
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
             Console.Error(
                 "Try again tomorrow or request quota increase from Google Cloud Console."
             );
-            Logger.End(success: false, summary: "Daily quota exceeded");
+            if (ex.InnerException != null)
+                Console.Error("Inner: {0}", ex.InnerException.Message);
+            Logger.End(success: false, summary: $"DailyQuotaExceededException: {ex.Message}");
             return 1;
         }
         catch (RetryExhaustedException ex)
         {
-            Console.Error(ex.Message);
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
             Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
-            Logger.End(success: false, summary: "Retry limit reached");
+            if (ex.InnerException != null)
+                Console.Error(
+                    "Inner: {0}: {1}",
+                    ex.InnerException.GetType().Name,
+                    ex.InnerException.Message
+                );
+            Logger.End(success: false, summary: $"RetryExhaustedException: {ex.Message}");
             return 1;
         }
         catch (AggregateException aex)
         {
             foreach (Exception ex in aex.InnerExceptions)
+            {
                 Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            Logger.End(
-                success: false,
-                summary: $"Failed with {aex.InnerExceptions.Count} error(s)"
-            );
+                if (ex.InnerException != null)
+                    Console.Error(
+                        "  Inner: {0}: {1}",
+                        ex.InnerException.GetType().Name,
+                        ex.InnerException.Message
+                    );
+            }
+            Exception firstError = aex.InnerExceptions[0];
+            string summary =
+                $"AggregateException ({aex.InnerExceptions.Count} errors): {firstError.GetType().Name}: {firstError.Message}";
+            Logger.End(success: false, summary: summary);
             return 1;
         }
         catch (OperationCanceledException)
@@ -167,7 +183,24 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
         catch (Exception ex)
         {
             Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            Logger.End(success: false, summary: ex.Message);
+            if (ex.InnerException != null)
+                Console.Error(
+                    "Inner: {0}: {1}",
+                    ex.InnerException.GetType().Name,
+                    ex.InnerException.Message
+                );
+            if (ex.StackTrace != null)
+            {
+                string firstStackLine = ex.StackTrace.Split('\n')[0].Trim();
+                Console.Dim($"Stack: {firstStackLine}");
+            }
+
+            string summary =
+                ex.InnerException != null
+                    ? $"{ex.GetType().Name}: {ex.Message} (Inner: {ex.InnerException.Message})"
+                    : $"{ex.GetType().Name}: {ex.Message}";
+
+            Logger.End(success: false, summary: summary);
             return 1;
         }
     }

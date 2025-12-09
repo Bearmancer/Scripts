@@ -101,10 +101,10 @@ function Get-ToolkitFunctions {
         @{ Category = 'Audio'; Name = 'Rename-MusicFiles'; Alias = 'rename'; Description = 'Rename files using RED naming' }
         @{ Category = 'Audio'; Name = 'Get-EmbeddedImageSize'; Alias = 'artsize'; Description = 'Report embedded art sizes' }
         @{ Category = 'Audio'; Name = 'Invoke-Propolis'; Alias = 'propolis'; Description = 'Run Propolis analyzer' }
-        @{ Category = 'Transcription'; Name = 'Invoke-Whisper'; Alias = 'whisper'; Description = 'Transcribe file or folder' }
-        @{ Category = 'Transcription'; Name = 'Invoke-WhisperFolder'; Alias = 'whisperf'; Description = 'Transcribe folder (explicit)' }
-        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapanese'; Alias = 'whisperj'; Description = 'Transcribe Japanese file/folder' }
-        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapaneseFolder'; Alias = 'whisperjf'; Description = 'Transcribe Japanese folder (explicit)' }
+        @{ Category = 'Transcription'; Name = 'Invoke-Whisper'; Alias = 'whisp'; Description = 'Transcribe file or folder' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperFolder'; Alias = 'wpf'; Description = 'Transcribe folder (explicit)' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapanese'; Alias = 'wpj'; Description = 'Transcribe Japanese file/folder' }
+        @{ Category = 'Transcription'; Name = 'Invoke-WhisperJapaneseFolder'; Alias = 'wpjf'; Description = 'Transcribe Japanese folder (explicit)' }
         @{ Category = 'YouTube'; Name = 'Save-YouTubeVideo'; Alias = 'ytdl'; Description = 'Download YouTube videos' }
         @{ Category = 'Tasks'; Name = 'Register-ScheduledSyncTask'; Alias = 'regtask'; Description = 'Create scheduled task' }
         @{ Category = 'Tasks'; Name = 'Register-AllSyncTasks'; Alias = 'regall'; Description = 'Register all sync tasks' }
@@ -460,7 +460,8 @@ function Show-SyncLog {
             }
             else {
                 $separator = $List ? "`n" : " | "
-                ($_.Data.PSObject.Properties | ForEach-Object {
+                # Exclude 'Service' since it's already shown in the Source column
+                ($_.Data.PSObject.Properties | Where-Object { $_.Name -ne 'Service' } | ForEach-Object {
                     $val = ($_.Value -is [array]) ? ($_.Value -join ", "): $_.Value
                     "$($_.Name): $val"
                 }) -join $separator
@@ -1001,7 +1002,7 @@ function Invoke-Propolis {
 #>
 function Invoke-Whisper {
     [CmdletBinding()]
-    [Alias('whisper')]
+    [Alias('whisp')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias('FilePath', 'FullName')]
@@ -1125,7 +1126,7 @@ function Invoke-Whisper {
 #>
 function Invoke-WhisperFolder {
     [CmdletBinding()]
-    [Alias('whisperf')]
+    [Alias('wpf')]
     param(
         [Parameter(Position = 0)]
         [Alias('d')]
@@ -1228,7 +1229,7 @@ function Invoke-WhisperFolder {
 #>
 function Invoke-WhisperJapanese {
     [CmdletBinding()]
-    [Alias('whisperj')]
+    [Alias('wpj')]
     param(
         [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias('FilePath', 'FullName')]
@@ -1273,7 +1274,7 @@ function Invoke-WhisperJapanese {
 #>
 function Invoke-WhisperJapaneseFolder {
     [CmdletBinding()]
-    [Alias('whisperjf')]
+    [Alias('wpjf')]
     param(
         [Parameter(Position = 0)]
         [Alias('d')]

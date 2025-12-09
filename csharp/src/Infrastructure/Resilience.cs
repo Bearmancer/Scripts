@@ -39,8 +39,31 @@ public static class Resilience
             || message.Contains("backend service failed", StringComparison.OrdinalIgnoreCase)
             || message.Contains("429", StringComparison.OrdinalIgnoreCase)
             || message.Contains("503", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("502", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("500", StringComparison.OrdinalIgnoreCase)
             || message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("timed out", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("connection reset", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("connection closed", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("socket", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("network", StringComparison.OrdinalIgnoreCase)
         );
+
+    /// <summary>
+    /// Transient exception types that should always be retried regardless of message content.
+    /// These indicate server-side issues (API returning HTML instead of XML, network issues, etc.)
+    /// </summary>
+    private static bool IsTransientExceptionType(Exception ex)
+    {
+        string typeName = ex.GetType().Name;
+        return typeName.Contains("Xml", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("Http", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("Socket", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("Timeout", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("IOException", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("WebException", StringComparison.OrdinalIgnoreCase)
+            || typeName.Contains("TaskCanceled", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static TimeSpan CalculateBackoffWithJitter(TimeSpan baseDelay, int attempt)
     {
@@ -106,7 +129,8 @@ public static class Resilience
                     if (IsFatalQuotaError(ex.Message))
                         throw new DailyQuotaExceededException(serviceName, ex.Message);
 
-                    if (!IsRetryableError(ex.Message))
+                    bool isTransient = IsTransientExceptionType(ex) || IsRetryableError(ex.Message);
+                    if (!isTransient)
                         throw;
 
                     if (attempt >= MaxRetries)
