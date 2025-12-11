@@ -1671,12 +1671,12 @@ function Register-ScheduledSyncTask {
     $terminal = Get-Command -Name 'wt.exe' -ErrorAction Ignore
     if ($terminal) {
         $executable = $terminal.Source
-        $argument = "pwsh -NoProfile -NoLogo -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+        $argument = "pwsh -Command `". `$PROFILE; Set-Location '$Script:CSharpRoot'; dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
     }
     else {
         $pwsh = (Get-Command -Name pwsh).Source
         $executable = $pwsh
-        $argument = "-NoProfile -NoLogo -WorkingDirectory `"$Script:CSharpRoot`" -Command `"dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+        $argument = "-Command `". `$PROFILE; Set-Location '$Script:CSharpRoot'; dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
     }
 
     $action = New-ScheduledTaskAction -Execute $executable -Argument $argument
@@ -1689,7 +1689,18 @@ function Register-ScheduledSyncTask {
 
     $trigger = New-ScheduledTaskTrigger -Daily -At $start
 
-    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description | Out-Null
+    $task = Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description
+
+    # Log task creation to event log for tracking
+    try {
+        if (-not [Diagnostics.EventLog]::SourceExists('CSharpScripts')) {
+            New-EventLog -LogName Application -Source 'CSharpScripts' -ErrorAction Ignore
+        }
+        Write-EventLog -LogName Application -Source 'CSharpScripts' -EntryType Information -EventId 1001 -Message "Scheduled task '$TaskName' registered for $Command at $($start.ToString('HH:mm')) daily"
+    }
+    catch {
+        # Non-critical if event log write fails
+    }
 
     Write-Host "Registered '$TaskName' for $( $start.ToString('HH:mm') ) daily" -ForegroundColor Green
 }

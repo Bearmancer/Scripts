@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using CSharpScripts.Models;
-using CSharpScripts.Services.Music;
 using Spectre.Console.Cli;
 
 namespace CSharpScripts.CLI.Commands;
@@ -30,10 +28,22 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         [DefaultValue("both")]
         public string Source { get; init; } = "both";
 
-        [CommandOption("--limit")]
-        [Description("Max results per source")]
+        [CommandOption("-n|--limit")]
+        [Description("Max results")]
         [DefaultValue(10)]
         public int Limit { get; init; } = 10;
+
+        [CommandOption("--ormandy")]
+        [Description("Parse Ormandy Columbia Legacy box set from MusicBrainz")]
+        public bool Ormandy { get; init; }
+
+        [CommandOption("--refresh")]
+        [Description("Force refresh from MusicBrainz (ignore cache)")]
+        public bool Refresh { get; init; }
+
+        [CommandOption("--display")]
+        [Description("Display parsed tracks grouped by work")]
+        public bool Display { get; init; }
     }
 
     public override async Task<int> ExecuteAsync(
@@ -42,6 +52,18 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         CancellationToken cancellationToken
     )
     {
+        if (settings.Ormandy)
+        {
+            OrmandyBoxParser parser = new();
+            List<OrmandyTrack> tracks = await parser.ParseAsync(
+                settings.Refresh,
+                cancellationToken
+            );
+            if (settings.Display)
+                parser.Display(tracks);
+            return 0;
+        }
+
         if (
             IsNullOrWhiteSpace(settings.Artist)
             && IsNullOrWhiteSpace(settings.Album)
@@ -60,7 +82,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             MaxResults: settings.Limit
         );
 
-        string? discogsToken = GetEnvironmentVariable("DISCOGS_TOKEN");
+        string? discogsToken = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
         MusicMetadataService service = new(discogsToken);
 
         Console.Info("Searching {0}...", settings.Source);
@@ -132,7 +154,8 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         public string Source { get; init; } = "musicbrainz";
 
         [CommandOption("-c|--credits")]
-        [Description("Include credits/personnel")]
+        [Description("Include credits")]
+        [DefaultValue(false)]
         public bool IncludeCredits { get; init; }
     }
 
@@ -142,7 +165,7 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         CancellationToken cancellationToken
     )
     {
-        string? discogsToken = GetEnvironmentVariable("DISCOGS_TOKEN");
+        string? discogsToken = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
         MusicMetadataService service = new(discogsToken);
 
         Console.Info("Looking up {0} from {1}...", settings.Id, settings.Source);
@@ -203,7 +226,10 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
 
             if (service.Discogs is null)
             {
-                Console.CriticalFailure("Discogs", "DISCOGS_TOKEN environment variable not set");
+                Console.CriticalFailure(
+                    "Discogs",
+                    "DISCOGS_USER_TOKEN environment variable not set"
+                );
                 return 1;
             }
 

@@ -112,8 +112,9 @@ public static class Console
 
         string timestamp = DateTime.Now.ToString("HH:mm:ss");
         string escaped = Markup.Escape(url);
-        AnsiConsole.MarkupLine($"[blue][[INFO]][/] [dim]{timestamp}:[/] {Markup.Escape(text)}:");
-        AnsiConsole.MarkupLine($"[link={escaped}]{escaped}[/]");
+        AnsiConsole.MarkupLine(
+            $"[blue][[INFO]][/] [dim]{timestamp}:[/] {Markup.Escape(text)}: [link={escaped}]{escaped}[/]"
+        );
         NewLine();
     }
 
@@ -274,12 +275,12 @@ public static class Console
 
     private static readonly Dictionary<LogLevel, string> LevelCodes = new()
     {
-        [LogLevel.Debug] = "DBG!",
+        [LogLevel.Debug] = "DEBG",
         [LogLevel.Info] = "INFO",
         [LogLevel.Success] = "OKAY",
         [LogLevel.Warning] = "WARN",
-        [LogLevel.Error] = "ERR!",
-        [LogLevel.Fatal] = "CRIT",
+        [LogLevel.Error] = "ERRO",
+        [LogLevel.Fatal] = "FATL",
     };
 
     private static void Write(LogLevel level, string color, string message, params object?[] args)

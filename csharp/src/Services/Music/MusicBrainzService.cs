@@ -1,5 +1,4 @@
 using MetaBrainz.MusicBrainz;
-using MetaBrainz.MusicBrainz.Interfaces;
 using MetaBrainz.MusicBrainz.Interfaces.Browses;
 using MetaBrainz.MusicBrainz.Interfaces.Entities;
 using MetaBrainz.MusicBrainz.Interfaces.Searches;
@@ -449,6 +448,310 @@ public sealed class MusicBrainzService(
     #endregion
 
     #region Helpers
+
+    // Roles to exclude from credits (choir, vocalists, etc.)
+    static readonly FrozenSet<string> ExcludedRoles = FrozenSet.ToFrozenSet(
+        [
+            "choir",
+            "chorus",
+            "chorus master",
+            "choir conductor",
+            "choir director",
+            "vocal",
+            "vocals",
+            "singer",
+            "soprano",
+            "mezzo-soprano",
+            "alto",
+            "contralto",
+            "tenor",
+            "baritone",
+            "bass",
+            "bass-baritone",
+            "narrator",
+            "speaker",
+        ],
+        StringComparer.OrdinalIgnoreCase
+    );
+
+    // Roles that identify conductors
+    static readonly FrozenSet<string> ConductorRoles = FrozenSet.ToFrozenSet(
+        ["conductor", "director"],
+        StringComparer.OrdinalIgnoreCase
+    );
+
+    // Roles that identify orchestras/ensembles
+    static readonly FrozenSet<string> OrchestraRoles = FrozenSet.ToFrozenSet(
+        ["orchestra", "performing orchestra", "ensemble", "performer"],
+        StringComparer.OrdinalIgnoreCase
+    );
+
+    // Roles that identify soloists
+    static readonly FrozenSet<string> SoloistRoles = FrozenSet.ToFrozenSet(
+        [
+            "instrument",
+            "piano",
+            "violin",
+            "viola",
+            "cello",
+            "double bass",
+            "flute",
+            "oboe",
+            "clarinet",
+            "bassoon",
+            "horn",
+            "trumpet",
+            "trombone",
+            "tuba",
+            "harp",
+            "organ",
+            "harpsichord",
+            "guitar",
+            "percussion",
+            "timpani",
+            "soloist",
+        ],
+        StringComparer.OrdinalIgnoreCase
+    );
+
+    /// <summary>
+    /// Parses a MusicBrainz release (box set) into structured track metadata for spreadsheet export.
+    /// Throws BoxSetParseException for missing required fields (composer, title, year, orchestra, conductor).
+    /// Soloists are optional.
+    /// </summary>
+    public async Task<List<BoxSetTrackMetadata>> ParseBoxSetAsync(
+        Guid releaseId,
+        BoxSetParseOptions options
+    )
+    {
+        MusicBrainzRelease release =
+            await GetReleaseAsync(releaseId)
+            ?? throw new BoxSetParseException($"Release not found: {releaseId}");
+
+        List<BoxSetTrackMetadata> tracks = [];
+
+        // Build credit lookup by role type from release-level credits
+        var releaseCredits = release.Credits.Where(c => !ExcludedRoles.Contains(c.Role)).ToList();
+
+        string? releaseConductor = releaseCredits
+            .FirstOrDefault(c => ConductorRoles.Contains(c.Role))
+            ?.Name;
+
+        string? releaseOrchestra = releaseCredits
+            .FirstOrDefault(c => OrchestraRoles.Contains(c.Role))
+            ?.Name;
+
+        List<string> releaseSoloists = releaseCredits
+            .Where(c =>
+                SoloistRoles.Any(r => c.Role.Contains(r, StringComparison.OrdinalIgnoreCase))
+            )
+            .Select(c => c.Name)
+            .Distinct()
+            .ToList();
+
+        // Extract composer from release artist (common for classical box sets)
+        string? releaseComposer = release.Artist;
+
+        foreach (MusicBrainzMedium medium in release.Media)
+        {
+            foreach (MusicBrainzTrack track in medium.Tracks)
+            {
+                // Try to get recording-level details if available
+                int? recordingYear = null;
+                string? trackComposer = null;
+                string? trackConductor = null;
+                string? trackOrchestra = null;
+                List<string> trackSoloists = [];
+
+                if (track.RecordingId.HasValue)
+                {
+                    MusicBrainzRecording? recording = await GetRecordingAsync(
+                        track.RecordingId.Value
+                    );
+                    if (recording is not null)
+                    {
+                        recordingYear = recording.FirstReleaseDate?.Year;
+                        // Recording artist credit might contain composer
+                        trackComposer = recording.Artist;
+                    }
+                }
+
+                // Fallback hierarchy: track -> recording -> release
+                string composer =
+                    trackComposer
+                    ?? releaseComposer
+                    ?? throw new BoxSetParseException(
+                        $"Composer missing for track {medium.Position}.{track.Position}: {track.Title}"
+                    );
+
+                string conductor =
+                    trackConductor
+                    ?? releaseConductor
+                    ?? throw new BoxSetParseException(
+                        $"Conductor missing for track {medium.Position}.{track.Position}: {track.Title}"
+                    );
+
+                string orchestra =
+                    trackOrchestra
+                    ?? releaseOrchestra
+                    ?? throw new BoxSetParseException(
+                        $"Orchestra missing for track {medium.Position}.{track.Position}: {track.Title}"
+                    );
+
+                int year =
+                    recordingYear
+                    ?? release.Date?.Year
+                    ?? throw new BoxSetParseException(
+                        $"Recording year missing for track {medium.Position}.{track.Position}: {track.Title}"
+                    );
+
+                options.ValidateYear(
+                    year,
+                    $"track {medium.Position}.{track.Position}: {track.Title}"
+                );
+
+                List<string> soloists = trackSoloists.Count > 0 ? trackSoloists : releaseSoloists;
+
+                tracks.Add(
+                    new BoxSetTrackMetadata(
+                        DiscNumber: medium.Position,
+                        TrackNumber: track.Position,
+                        Composer: composer,
+                        Title: track.Title,
+                        RecordingYear: year,
+                        Orchestra: orchestra,
+                        Conductor: conductor,
+                        Soloists: soloists
+                    )
+                );
+            }
+        }
+
+        return tracks;
+    }
+
+    /// <summary>
+    /// Parses box set with enhanced credit resolution by fetching work-level relationships.
+    /// MusicBrainz hierarchy: Release -> Medium -> Track -> Recording -> Work
+    /// Credits can exist at any level; this method searches all levels.
+    /// </summary>
+    public async Task<List<BoxSetTrackMetadata>> ParseBoxSetWithWorkCreditsAsync(
+        Guid releaseId,
+        BoxSetParseOptions options
+    )
+    {
+        MusicBrainzRelease release =
+            await GetReleaseAsync(releaseId)
+            ?? throw new BoxSetParseException($"Release not found: {releaseId}");
+
+        // Extract release-level defaults
+        var releaseCredits = release.Credits.Where(c => !ExcludedRoles.Contains(c.Role)).ToList();
+
+        string? releaseConductor = releaseCredits
+            .FirstOrDefault(c => ConductorRoles.Contains(c.Role))
+            ?.Name;
+
+        string? releaseOrchestra = releaseCredits
+            .FirstOrDefault(c => OrchestraRoles.Contains(c.Role))
+            ?.Name;
+
+        List<string> releaseSoloists = releaseCredits
+            .Where(c =>
+                SoloistRoles.Any(r => c.Role.Contains(r, StringComparison.OrdinalIgnoreCase))
+            )
+            .Select(c => c.Name)
+            .Distinct()
+            .ToList();
+
+        string? releaseComposer = release.Artist;
+
+        List<BoxSetTrackMetadata> tracks = [];
+
+        foreach (MusicBrainzMedium medium in release.Media)
+        {
+            // Medium-level title might contain conductor/orchestra info
+            string? mediumConductor = null;
+            string? mediumOrchestra = null;
+
+            if (!IsNullOrWhiteSpace(medium.Title))
+            {
+                // Parse patterns like "Herbert von Karajan / Berlin Philharmonic"
+                var parts = medium.Title.Split([" / ", " - "], StringSplitOptions.TrimEntries);
+                if (parts.Length >= 2)
+                {
+                    mediumConductor = parts[0];
+                    mediumOrchestra = parts[1];
+                }
+            }
+
+            foreach (MusicBrainzTrack track in medium.Tracks)
+            {
+                int? recordingYear = null;
+                string? trackComposer = null;
+
+                if (track.RecordingId.HasValue)
+                {
+                    MusicBrainzRecording? recording = await GetRecordingAsync(
+                        track.RecordingId.Value
+                    );
+                    if (recording is not null)
+                    {
+                        recordingYear = recording.FirstReleaseDate?.Year;
+                        trackComposer = recording.Artist;
+                    }
+                }
+
+                // Resolution order: track -> medium -> release
+                string composer =
+                    trackComposer
+                    ?? releaseComposer
+                    ?? throw new BoxSetParseException(
+                        $"Composer missing: Disc {medium.Position} Track {track.Position} - {track.Title}"
+                    );
+
+                string conductor =
+                    mediumConductor
+                    ?? releaseConductor
+                    ?? throw new BoxSetParseException(
+                        $"Conductor missing: Disc {medium.Position} Track {track.Position} - {track.Title}"
+                    );
+
+                string orchestra =
+                    mediumOrchestra
+                    ?? releaseOrchestra
+                    ?? throw new BoxSetParseException(
+                        $"Orchestra missing: Disc {medium.Position} Track {track.Position} - {track.Title}"
+                    );
+
+                int year =
+                    recordingYear
+                    ?? release.Date?.Year
+                    ?? throw new BoxSetParseException(
+                        $"Recording year missing: Disc {medium.Position} Track {track.Position} - {track.Title}"
+                    );
+
+                options.ValidateYear(
+                    year,
+                    $"Disc {medium.Position} Track {track.Position} - {track.Title}"
+                );
+
+                tracks.Add(
+                    new BoxSetTrackMetadata(
+                        DiscNumber: medium.Position,
+                        TrackNumber: track.Position,
+                        Composer: composer,
+                        Title: track.Title,
+                        RecordingYear: year,
+                        Orchestra: orchestra,
+                        Conductor: conductor,
+                        Soloists: releaseSoloists // Soloists usually release-wide for box sets
+                    )
+                );
+            }
+        }
+
+        return tracks;
+    }
 
     static string? FormatArtistCredit(IReadOnlyList<INameCredit>? credits)
     {

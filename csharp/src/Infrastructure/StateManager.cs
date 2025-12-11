@@ -5,6 +5,7 @@ public static class StateManager
     public const string LastFmSyncFile = "lastfm/sync.json";
     public const string LastFmScrobblesFile = "lastfm/scrobbles.json";
     public const string YouTubeSyncFile = "youtube/sync.json";
+    public const string BoxSetCacheDirectory = "boxsets";
 
     public static readonly JsonSerializerOptions JsonIndented = new()
     {
@@ -179,6 +180,71 @@ public static class StateManager
             .Replace(">", "")
             .Replace("|", "-")
             .Replace("\"", "'");
+
+    #endregion
+
+    #region Box Set Cache Management
+
+    private static string BoxSetCachePath => Combine(Paths.StateDirectory, BoxSetCacheDirectory);
+
+    public static T? LoadBoxSetCache<T>(string boxSetName)
+        where T : class
+    {
+        CreateDirectory(BoxSetCachePath);
+        var path = GetBoxSetPath(boxSetName);
+        if (!File.Exists(path))
+            return null;
+
+        var json = ReadAllText(path);
+        return JsonSerializer.Deserialize<T>(json, JsonCompact);
+    }
+
+    public static void SaveBoxSetCache<T>(string boxSetName, T data)
+    {
+        CreateDirectory(BoxSetCachePath);
+        WriteAllText(GetBoxSetPath(boxSetName), JsonSerializer.Serialize(data, JsonIndented));
+        Console.Debug("Saved box set cache: {0}", boxSetName);
+    }
+
+    public static bool BoxSetCacheExists(string boxSetName) =>
+        File.Exists(GetBoxSetPath(boxSetName));
+
+    public static DateTime? GetBoxSetCacheAge(string boxSetName)
+    {
+        var path = GetBoxSetPath(boxSetName);
+        return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : null;
+    }
+
+    public static void DeleteBoxSetCache(string boxSetName)
+    {
+        var path = GetBoxSetPath(boxSetName);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            Console.Debug("Deleted box set cache: {0}", boxSetName);
+        }
+    }
+
+    public static void DeleteAllBoxSetCaches()
+    {
+        if (Directory.Exists(BoxSetCachePath))
+        {
+            Directory.Delete(BoxSetCachePath, true);
+            Console.Debug("Deleted all box set caches");
+        }
+    }
+
+    public static IEnumerable<string> ListBoxSetCaches()
+    {
+        if (!Directory.Exists(BoxSetCachePath))
+            yield break;
+
+        foreach (var file in GetFiles(BoxSetCachePath, "*.json"))
+            yield return GetFileNameWithoutExtension(file);
+    }
+
+    private static string GetBoxSetPath(string boxSetName) =>
+        Combine(BoxSetCachePath, $"{SanitizeFileName(boxSetName)}.json");
 
     #endregion
 

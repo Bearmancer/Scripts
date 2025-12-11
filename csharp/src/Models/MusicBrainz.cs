@@ -113,3 +113,29 @@ public record MusicBrainzSearchResult(
     string? Disambiguation,
     int? Score
 );
+
+// Box set track with classical music metadata
+public record BoxSetTrackMetadata(
+    int DiscNumber,
+    int TrackNumber,
+    string Composer,
+    string Title,
+    int RecordingYear,
+    string Orchestra,
+    string Conductor,
+    List<string> Soloists // Optional - empty list if none
+);
+
+public record BoxSetParseOptions(int MinYear, int MaxYear)
+{
+    public void ValidateYear(int? year, string context) =>
+        _ =
+            year is null ? throw new BoxSetParseException($"Recording year missing: {context}")
+            : year < MinYear || year > MaxYear
+                ? throw new BoxSetParseException(
+                    $"Recording year {year} outside range [{MinYear}-{MaxYear}]: {context}"
+                )
+            : 0;
+}
+
+public sealed class BoxSetParseException(string message) : Exception(message);

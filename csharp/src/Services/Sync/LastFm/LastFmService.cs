@@ -45,12 +45,17 @@ public class LastFmService(string apiKey, string username)
         // Load existing cache to append to
         List<Scrobble> existingScrobbles = LoadScrobbles();
         List<Scrobble> newScrobbles = [];
-        var page = state.LastPage > 0 ? state.LastPage + 1 : 1;
-        var totalFetched = state.TotalFetched;
+
+        // For incremental syncs (fetchAfter set), always start from page 1 (newest first)
+        // For resume of interrupted full syncs (no fetchAfter, LastPage > 0), continue from last page
+        var isIncremental = fetchAfter is not null;
+        var page = isIncremental ? 1 : (state.LastPage > 0 ? state.LastPage + 1 : 1);
+        var totalFetched = isIncremental ? 0 : state.TotalFetched;
         var stopwatch = Stopwatch.StartNew();
 
         Console.Debug(
-            "Starting from page {0}, {1} already fetched, {2} in cache",
+            "Mode: {0}, starting from page {1}, {2} already fetched, {3} in cache",
+            isIncremental ? "incremental" : "full",
             page,
             totalFetched,
             existingScrobbles.Count
@@ -73,13 +78,17 @@ public class LastFmService(string apiKey, string username)
                 var freshScrobbles = batch.Where(s => s.PlayedAt > fetchAfter).ToList();
 
                 foreach (var s in freshScrobbles)
-                    Console.Debug("  New: {0} at {1:yyyy/MM/dd HH:mm:ss}", s.TrackName, s.PlayedAt);
+                    Console.Debug(
+                        "New: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
+                        s.TrackName,
+                        s.PlayedAt
+                    );
 
                 if (freshScrobbles.Count == 0)
                 {
                     var firstExisting = batch.First();
                     Console.Debug(
-                        "  Exists: {0} at {1:yyyy/MM/dd HH:mm:ss}",
+                        "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
                         firstExisting.TrackName,
                         firstExisting.PlayedAt
                     );
@@ -93,7 +102,7 @@ public class LastFmService(string apiKey, string username)
                 {
                     var firstExisting = batch.First(s => s.PlayedAt <= fetchAfter);
                     Console.Debug(
-                        "  Exists: {0} at {1:yyyy/MM/dd HH:mm:ss}",
+                        "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
                         firstExisting.TrackName,
                         firstExisting.PlayedAt
                     );
