@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using CSharpScripts.Orchestrators;
-using CSharpScripts.Services.Sync.Google;
 using Spectre.Console.Cli;
 
 namespace CSharpScripts.CLI.Commands;
@@ -10,11 +8,11 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-v|--verbose")]
-        [Description("Enable debug logging")]
+        [Description("Debug logging")]
         public bool Verbose { get; init; }
 
         [CommandOption("-r|--reset")]
-        [Description("Clear local cache before syncing")]
+        [Description("Clear cache first")]
         public bool Reset { get; init; }
     }
 
@@ -83,15 +81,18 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-v|--verbose")]
-        [Description("Enable debug logging")]
+        [Description("Debug logging")]
+        [DefaultValue(false)]
         public bool Verbose { get; init; }
 
         [CommandOption("-r|--reset")]
-        [Description("Clear local cache before syncing")]
+        [Description("Clear cache first")]
+        [DefaultValue(false)]
         public bool Reset { get; init; }
 
-        [CommandOption("--session-id")]
-        [Description("Show session ID in output")]
+        [CommandOption("-i|--session-id")]
+        [Description("Show session ID")]
+        [DefaultValue(false)]
         public bool ShowSessionId { get; init; }
     }
 
@@ -211,15 +212,15 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-v|--verbose")]
-        [Description("Enable debug logging")]
+        [Description("Debug logging")]
         public bool Verbose { get; init; }
 
         [CommandOption("-r|--reset")]
-        [Description("Clear local cache before syncing")]
+        [Description("Clear cache first")]
         public bool Reset { get; init; }
 
         [CommandOption("--since")]
-        [Description("Re-sync from date (yyyy/MM/dd)")]
+        [Description("Sync from date (yyyy/MM/dd)")]
         public string? Since { get; init; }
     }
 

@@ -1,5 +1,4 @@
 using CSharpScripts.CLI.Commands;
-using Spectre.Console;
 using Spectre.Console.Cli;
 
 namespace CSharpScripts;
@@ -16,6 +15,12 @@ public static class Program
             Cts.Cancel();
             AnsiConsole.MarkupLine("[red]Shutdown requested...[/]");
         };
+
+        // Special case: direct Ormandy invocation (internal use)
+        if (args.Length > 0 && args[0].Equals("--ormandy", StringComparison.OrdinalIgnoreCase))
+        {
+            return RunOrmandy().GetAwaiter().GetResult();
+        }
 
         var app = new CommandApp();
         app.Configure(config =>
@@ -86,5 +91,30 @@ public static class Program
         });
 
         return app.Run(args);
+    }
+
+    static async Task<int> RunOrmandy()
+    {
+        try
+        {
+            // Enable debug logging for detailed output
+            Console.Level = LogLevel.Debug;
+
+            OrmandyBoxParser parser = new();
+            List<OrmandyTrack> tracks = await parser.ParseAsync();
+            parser.Display(tracks);
+
+            Console.NewLine();
+            parser.CreateAndWriteToSheet(tracks);
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+            if (ex.InnerException != null)
+                Console.Error("Inner: {0}", ex.InnerException.Message);
+            return 1;
+        }
     }
 }

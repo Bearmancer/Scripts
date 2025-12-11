@@ -324,11 +324,19 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         {
             playlists = state.CachedPlaylists;
             var alreadyHaveVideoIds = state.VideoIdFetchIndex;
+            var progressPercent = (int)((alreadyHaveVideoIds / (double)playlists.Count) * 100);
+            var currentPlaylistTitle =
+                alreadyHaveVideoIds < playlists.Count
+                    ? playlists[alreadyHaveVideoIds].Title
+                    : "(all playlists fetched)";
             Console.Info(
-                "Resuming with {0} cached playlists ({1} have video IDs)",
+                "[Phase 1/2] Resuming video ID fetch: {0}/{1} ({2}%) - {3}",
+                alreadyHaveVideoIds,
                 playlists.Count,
-                alreadyHaveVideoIds
+                progressPercent,
+                currentPlaylistTitle
             );
+            Console.Debug("Using cached playlist metadata ({0} playlists)", playlists.Count);
         }
         else
         {
@@ -343,7 +351,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             state.CachedPlaylists = playlists;
             state.VideoIdFetchIndex = 0;
             SaveState();
-            Console.Debug("Fetched {0} playlists from YouTube API", playlists.Count);
+            Console.Info("[Phase 1/2] Starting video ID fetch for {0} playlists", playlists.Count);
+            Console.Debug("Cached playlist metadata for resume capability");
         }
 
         if (playlists.Count == 0)
@@ -404,6 +413,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                         state.CachedPlaylists = playlists;
                         state.VideoIdFetchIndex = i + 1;
                         SaveState();
+                        Console.Debug(
+                            "Cached: {0} video IDs for '{1}' (resume index: {2})",
+                            videoIds.Count,
+                            playlist.Title,
+                            i + 1
+                        );
 
                         task.Increment(1);
                     }
@@ -420,6 +435,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             }
         }
 
+        Console.Info(
+            "[Phase 1/2] Video ID fetch complete - all {0} playlists ready",
+            playlists.Count
+        );
+        Console.Info("[Phase 2/2] Starting sheet write phase (processes alphabetically)...");
+
         var playlistChanges = YouTubeChangeDetector.DetectPlaylistChanges(
             playlists,
             state.PlaylistSnapshots
@@ -434,6 +455,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         YouTubeChangeDetector.LogDetectedChanges(playlistChanges);
 
+        if (ct.IsCancellationRequested)
+        {
+            Logger.Interrupted("Interrupted before processing playlist changes");
+            return;
+        }
+
         foreach (var deletedId in playlistChanges.DeletedPlaylistIds)
         {
             if (ct.IsCancellationRequested)
@@ -445,9 +472,16 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                 ArchiveDeletedPlaylist(snapshot);
                 var sheetName = SanitizeSheetName(snapshot.Title);
                 sheetsService.DeleteSubsheet(spreadsheetId, sheetName);
+                Logger.PlaylistDeleted(snapshot.Title, snapshot.VideoIds.Count);
                 state.PlaylistSnapshots.Remove(deletedId);
                 SaveState();
             }
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            Logger.Interrupted("Interrupted after processing deletions");
+            return;
         }
 
         var isFirstPlaylist = state.PlaylistSnapshots.Count == 0;
@@ -534,6 +568,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                 new TaskDescriptionColumn(),
                 new ProgressBarColumn(),
                 new PercentageColumn(),
+                new RemainingTimeColumn(),
                 new SpinnerColumn(),
             ])
             .Start(ctx =>
@@ -548,7 +583,9 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                     if (ct.IsCancellationRequested)
                         break;
 
-                    overallTask.Description = $"[cyan]{Markup.Escape(playlist.Title)}[/]";
+                    var playlistCount = $"({processedCount + 1}/{playlistsToProcess.Count})";
+                    overallTask.Description =
+                        $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/]";
 
                     ProcessPlaylistWithContext(
                         playlist,
@@ -556,7 +593,11 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                         isFirstPlaylist && processedCount == 0,
                         (count) =>
                         {
-                            overallTask.Value = videosProcessed + count;
+                            var currentVideos = videosProcessed + count;
+                            overallTask.Value = currentVideos;
+                            var videoCount = $"({currentVideos}/{totalVideos})";
+                            overallTask.Description =
+                                $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/] [dim]{videoCount}[/]";
                         }
                     );
 
@@ -588,6 +629,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             alreadyFetched = state.CurrentPlaylistVideosFetched;
             videos = existingCache;
             onVideoProgress(alreadyFetched);
+            Console.Debug(
+                "Resuming '{0}': {1}/{2} videos already fetched from cache",
+                playlist.Title,
+                alreadyFetched,
+                playlist.VideoIds.Count
+            );
         }
 
         var remainingIds = playlist.VideoIds.Skip(alreadyFetched).ToList();
@@ -607,6 +654,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                     videosFetched: videosFetchedSoFar
                 );
                 SaveState();
+                Console.Debug(
+                    "Cached: {0}/{1} video details for '{2}' (batch resume)",
+                    videosFetchedSoFar,
+                    playlist.VideoIds.Count,
+                    playlist.Title
+                );
 
                 onVideoProgress(videosFetchedSoFar);
             },

@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics;
-using CSharpScripts.Services.Sync.Google;
 using Spectre.Console.Cli;
 
 namespace CSharpScripts.CLI.Commands;

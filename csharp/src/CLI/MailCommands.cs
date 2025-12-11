@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using CSharpScripts.Services.Mail;
 using Spectre.Console.Cli;
 
 namespace CSharpScripts.CLI.Commands;
@@ -35,11 +34,11 @@ public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-w|--wait")]
-        [Description("Polling interval in seconds")]
+        [Description("Poll interval (sec)")]
         public int? WaitSeconds { get; init; }
 
         [CommandOption("-t|--timeout")]
-        [Description("Max wait time in seconds")]
+        [Description("Max wait (sec)")]
         [DefaultValue(300)]
         public int TimeoutSeconds { get; init; } = 300;
     }

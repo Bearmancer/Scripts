@@ -41,15 +41,14 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         }
         else if (!state.FetchComplete && state.LastPage > 0)
         {
-            // Resume interrupted fetch
+            // Resume interrupted full fetch - continue from last page (don't pass fetchAfter to maintain full sync mode)
             Console.Warning(
-                "Resuming from page {0} ({1} scrobbles fetched)",
-                state.LastPage,
+                "Resuming full sync from page {0} ({1} scrobbles fetched)",
+                state.LastPage + 1,
                 state.TotalFetched
             );
 
-            var latestInSheet = sheetsService.GetLatestScrobbleTime(spreadsheetId);
-            FetchScrobbles(latestInSheet);
+            FetchScrobbles(fetchAfter: null);
         }
         else
         {
@@ -61,12 +60,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
                 DateTime? oldestCached = cachedScrobbles.Min(s => s.PlayedAt);
                 DateTime? newestCached = cachedScrobbles.Max(s => s.PlayedAt);
 
-                Console.Info(
-                    "Cache: {0} scrobbles | {1} → {2}",
-                    cachedScrobbles.Count,
-                    oldestCached?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?",
-                    newestCached?.ToString("yyyy/MM/dd HH:mm:ss") ?? "?"
-                );
+                Console.Debug("Cache: {0} scrobbles", cachedScrobbles.Count);
 
                 // Validate cache against tracked state
                 if (
@@ -151,22 +145,29 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
     {
         Console.Info("Fetching from Last.fm...");
 
-        lastFmService.FetchScrobblesSince(
-            fetchAfter: fetchAfter,
-            state: state,
-            onProgress: (page, total, elapsed, oldest, newest) =>
-            {
-                state.Update(page, total, oldest, newest);
-                SaveState();
-                Console.Progress(
-                    "Page: {0} | Tracks: {1} | Elapsed: {2}",
-                    page,
-                    total,
-                    elapsed.ToString(@"hh\:mm\:ss")
-                );
-            },
-            ct: ct
-        );
+        try
+        {
+            lastFmService.FetchScrobblesSince(
+                fetchAfter: fetchAfter,
+                state: state,
+                onProgress: (page, total, elapsed, oldest, newest) =>
+                {
+                    state.Update(page, total, oldest, newest);
+                    SaveState();
+                    Console.Progress(
+                        "Page: {0} | Tracks: {1} | Elapsed: {2}",
+                        page,
+                        total,
+                        elapsed.ToString(@"hh\:mm\:ss")
+                    );
+                },
+                ct: ct
+            );
+        }
+        finally
+        {
+            SaveState();
+        }
 
         if (ct.IsCancellationRequested)
             Console.Warning(
@@ -178,6 +179,12 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
     private void WriteToSheets(List<Scrobble> scrobbles, string spreadsheetId)
     {
+        if (ct.IsCancellationRequested)
+        {
+            Logger.Interrupted("Interrupted before writing to sheets");
+            return;
+        }
+
         scrobbles.Sort(
             (a, b) => (b.PlayedAt ?? DateTime.MinValue).CompareTo(a.PlayedAt ?? DateTime.MinValue)
         );

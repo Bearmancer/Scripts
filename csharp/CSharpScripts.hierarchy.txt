@@ -1,0 +1,2142 @@
+# CSharpScripts - Type Hierarchy
+═════════════════════════════════════════════════════════════
+
+# CSharpScripts
+============================================================
+
+## CSharpScripts
+----------------------------------------
+public static class Program
+{
+	// ─── Fields ───
+	public static readonly System.Threading.CancellationTokenSource Cts;
+
+	// ─── Constructors ───
+	static Program();
+
+	// ─── Methods ───
+	public static int Main(string[] args);
+	private static System.Threading.Tasks.Task<int> RunOrmandy();
+
+}
+
+## CSharpScripts.CLI.Commands
+----------------------------------------
+public sealed class CleanLocalCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public CleanLocalCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.CleanLocalCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public string Service { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class CleanPurgeCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public CleanPurgeCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.CleanPurgeCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+	private static void PurgeLastFm(CSharpScripts.Services.Sync.Google.GoogleSheetsService& sheets);
+	private static void PurgeYouTube(CSharpScripts.Services.Sync.Google.GoogleSheetsService& sheets);
+	private static void PurgeCsvExports();
+	private static void PurgeBuildArtifacts();
+	private static void ScheduleDeferredCleanup(string binDir, string objDir);
+	private static void RebuildProject();
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public string Service { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class MailCheckCommand : Spectre.Console.Cli.AsyncCommand<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public MailCheckCommand();
+
+	// ─── Methods ───
+	public virtual System.Threading.Tasks.Task<int> ExecuteAsync(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.MailCheckCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public System.Nullable<int> WaitSeconds { get; set; }
+		public int TimeoutSeconds { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class MailCreateCommand : Spectre.Console.Cli.AsyncCommand<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public MailCreateCommand();
+
+	// ─── Methods ───
+	public virtual System.Threading.Tasks.Task<int> ExecuteAsync(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.MailCreateCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class MailDeleteCommand : Spectre.Console.Cli.AsyncCommand<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public MailDeleteCommand();
+
+	// ─── Methods ───
+	public virtual System.Threading.Tasks.Task<int> ExecuteAsync(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.MailDeleteCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class MusicLookupCommand : Spectre.Console.Cli.AsyncCommand<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public MusicLookupCommand();
+
+	// ─── Methods ───
+	public virtual System.Threading.Tasks.Task<int> ExecuteAsync(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.MusicLookupCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public string Id { get; set; }
+		public string Source { get; set; }
+		public bool IncludeCredits { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class MusicSearchCommand : Spectre.Console.Cli.AsyncCommand<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public MusicSearchCommand();
+
+	// ─── Methods ───
+	public virtual System.Threading.Tasks.Task<int> ExecuteAsync(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.MusicSearchCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public string Artist { get; set; }
+		public string Album { get; set; }
+		public string Track { get; set; }
+		public System.Nullable<int> Year { get; set; }
+		public string Source { get; set; }
+		public int Limit { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public string Service { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public string Service { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public System.Nullable<int> WaitSeconds { get; set; }
+	public int TimeoutSeconds { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public string Artist { get; set; }
+	public string Album { get; set; }
+	public string Track { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Source { get; set; }
+	public int Limit { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public string Id { get; set; }
+	public string Source { get; set; }
+	public bool IncludeCredits { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public bool Verbose { get; set; }
+	public bool Reset { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public bool Verbose { get; set; }
+	public bool Reset { get; set; }
+	public bool ShowSessionId { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public bool Verbose { get; set; }
+	public bool Reset { get; set; }
+	public string Since { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class Settings : Spectre.Console.Cli.CommandSettings
+{
+	// ─── Properties ───
+	public string Service { get; set; }
+
+	// ─── Constructors ───
+	public Settings();
+
+}
+public sealed class StatusCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public StatusCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.StatusCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+	private static void ShowLastFmStatus();
+	private static void ShowYouTubeStatus();
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public string Service { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class SyncAllCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public SyncAllCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.SyncAllCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+	private static int RunYouTubeSync(bool verbose);
+	private static int RunLastFmSync(bool verbose);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public bool Verbose { get; set; }
+		public bool Reset { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class SyncLastFmCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public SyncLastFmCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.SyncLastFmCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public bool Verbose { get; set; }
+		public bool Reset { get; set; }
+		public string Since { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+public sealed class SyncYouTubeCommand : Spectre.Console.Cli.Command<Settings>, Spectre.Console.Cli.ICommand<Settings>, Spectre.Console.Cli.ICommandLimiter<Settings>, Spectre.Console.Cli.ICommand
+{
+	// ─── Constructors ───
+	public SyncYouTubeCommand();
+
+	// ─── Methods ───
+	public virtual int Execute(Spectre.Console.Cli.CommandContext context, CSharpScripts.CLI.Commands.SyncYouTubeCommand+Settings settings, System.Threading.CancellationToken cancellationToken);
+	internal static int ExecuteWithErrorHandling(System.Action action);
+
+	// ─── Nested Types ───
+	public sealed class Settings : Spectre.Console.Cli.CommandSettings
+	{
+		// ─── Properties ───
+		public bool Verbose { get; set; }
+		public bool Reset { get; set; }
+		public bool ShowSessionId { get; set; }
+
+		// ─── Constructors ───
+		public Settings();
+
+	}
+}
+
+## CSharpScripts.Infrastructure
+----------------------------------------
+public static class Config
+{
+	// ─── Fields ───
+	public static readonly string GoogleClientId;
+	public static readonly string GoogleClientSecret;
+	public static readonly string LastFmApiKey;
+	public static readonly string LastFmApiSecret;
+	public const string LastFmUsername;
+	public const string LastFmSpreadsheetId;
+	public const string LastFmSpreadsheetTitle;
+	public const string YouTubeSpreadsheetId;
+	public const string YouTubeSpreadsheetTitle;
+	public static readonly string DiscogsUserToken;
+	public static readonly string MusicBrainzApiKey;
+
+	// ─── Constructors ───
+	static Config();
+
+}
+public static class Console
+{
+	// ─── Fields ───
+	private static readonly System.Collections.Generic.Dictionary<LogLevel, string> LevelCodes;
+
+	// ─── Properties ───
+	public static CSharpScripts.Infrastructure.LogLevel Level { get; set; }
+	public static bool Suppress { get; set; }
+
+	// ─── Constructors ───
+	static Console();
+
+	// ─── Methods ───
+	public static void Debug(string message, object[] args);
+	public static void Info(string message, object[] args);
+	public static void Success(string message, object[] args);
+	public static void Warning(string message, object[] args);
+	public static void Error(string message, object[] args);
+	public static void Fatal(string message, object[] args);
+	public static void Progress(string message, object[] args);
+	public static void Starting(string operation);
+	public static void Complete(string operation);
+	public static void Failed(string operation);
+	public static void KeyValue(string key, string value);
+	public static void Dim(string text);
+	public static void Tip(string text);
+	public static void Rule(string text);
+	public static void Figlet(string text, System.Nullable<Color> color);
+	public static void CriticalFailure(string service, string message);
+	public static void NewLine();
+	public static void Clear();
+	public static void WriteLine(string text);
+	public static void MarkupLine(string markup);
+	public static void Link(string url, string text);
+	public static void Link(int number, string url, int maxLength);
+	public static void FileLink(string path);
+	public static void Table(string title, System.Collections.Generic.Dictionary<string, string> data);
+	public static void Table(string title, System.Collections.Generic.IEnumerable<string[]> rows, string[] columns);
+	internal static Spectre.Console.Table CreateResultTable(string title, string titleColor);
+	public static void AddResultColumn(Spectre.Console.Table table, string header);
+	public static void AddResultRow(Spectre.Console.Table table, string[] cells);
+	public static void Write(Spectre.Console.Table table);
+	public static void Write(Spectre.Console.Rendering.IRenderable renderable);
+	internal static Spectre.Console.Panel CreatePanel(string content, string header);
+	internal static Spectre.Console.Progress CreateProgress();
+	public static void Section(string title);
+	public static void HelpUsage(string usage);
+	public static void HelpExample(string example);
+	internal static Spectre.Console.Table CreateHelpTable();
+	public static void AddHelpRow(Spectre.Console.Table table, string command, string description);
+	public static void HelpOption(string shortFlag, string longFlag, string valuePlaceholder, string description, string[] allowedValues, string defaultValue);
+	public static void HelpFlag(string shortFlag, string longFlag, string description, bool defaultValue);
+	private static void Write(CSharpScripts.Infrastructure.LogLevel level, string color, string message, object[] args);
+	private static string Format(string message, object[] args);
+
+}
+public sealed class DailyQuotaExceededException : System.Exception, System.Runtime.Serialization.ISerializable
+{
+	// ─── Properties ───
+	internal string Service { get; }
+
+	// ─── Constructors ───
+	public DailyQuotaExceededException(string service, string message);
+
+}
+public record LogEntry : System.IEquatable<LogEntry>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Timestamp { get; set; }
+	public string Level { get; set; }
+	public string Event { get; set; }
+	public string SessionId { get; set; }
+	public System.Collections.Generic.Dictionary<string, object> Data { get; set; }
+
+	// ─── Constructors ───
+	public LogEntry(string Timestamp, string Level, string Event, string SessionId, System.Collections.Generic.Dictionary<string, object> Data);
+	internal LogEntry(CSharpScripts.Infrastructure.LogEntry original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Infrastructure.LogEntry other);
+	public virtual CSharpScripts.Infrastructure.LogEntry <Clone>$();
+	public void Deconstruct(System.String& Timestamp, System.String& Level, System.String& Event, System.String& SessionId, System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Data);
+
+}
+public static class Logger
+{
+	// ─── Fields ───
+	private static readonly System.Threading.Lock WriteLock;
+	private static System.Nullable<ServiceType> ActiveService;
+	private static string SessionId;
+
+	// ─── Properties ───
+	public static CSharpScripts.Infrastructure.LogLevel FileLevel { get; set; }
+	public static string CurrentSessionId { get; set; }
+
+	// ─── Constructors ───
+	static Logger();
+
+	// ─── Methods ───
+	public static void Start(CSharpScripts.Infrastructure.ServiceType service);
+	public static void End(bool success, string summary);
+	public static void Interrupted(string progress);
+	public static void Event(string eventName, System.Collections.Generic.Dictionary<string, object> data, CSharpScripts.Infrastructure.LogLevel level);
+	public static void Message(CSharpScripts.Infrastructure.LogLevel level, string text);
+	public static void PlaylistCreated(string title, int videoCount);
+	public static void PlaylistUpdated(string title, int added, int removed, System.Collections.Generic.List<string> addedTitles, System.Collections.Generic.List<string> removedTitles, System.Collections.Generic.List<string> removedVideoIds);
+	public static void PlaylistRenamed(string oldTitle, string newTitle);
+	public static void PlaylistDeleted(string title, int videoCount);
+	public static void ScrobblesProcessed(int fetched, int written);
+	public static void ApiError(string api, string error, System.Nullable<int> statusCode);
+	public static void NetworkError(string operation, string error);
+	private static void DetectCrashedSessions(CSharpScripts.Infrastructure.ServiceType service);
+	private static void WriteJsonEntry(CSharpScripts.Infrastructure.ServiceType service, CSharpScripts.Infrastructure.LogLevel level, string eventName, System.Collections.Generic.Dictionary<string, object> data, string sessionId);
+	private static void AppendJsonLine(string path, CSharpScripts.Infrastructure.LogEntry entry);
+	private static string GetLogPath(CSharpScripts.Infrastructure.ServiceType service);
+
+}
+public enum LogLevel : System.Enum, System.IComparable, System.ISpanFormattable, System.IFormattable, System.IConvertible
+{
+	// ─── Fields ───
+	public int value__;
+	public const CSharpScripts.Infrastructure.LogLevel Debug;
+	public const CSharpScripts.Infrastructure.LogLevel Info;
+	public const CSharpScripts.Infrastructure.LogLevel Success;
+	public const CSharpScripts.Infrastructure.LogLevel Warning;
+	public const CSharpScripts.Infrastructure.LogLevel Error;
+	public const CSharpScripts.Infrastructure.LogLevel Fatal;
+
+}
+public static class Paths
+{
+	// ─── Fields ───
+	public static readonly string ProjectRoot;
+	public static readonly string LogDirectory;
+	public static readonly string StateDirectory;
+
+	// ─── Constructors ───
+	static Paths();
+
+	// ─── Methods ───
+	private static string FindAncestorContaining(string marker);
+
+}
+public static class Resilience
+{
+	// ─── Fields ───
+	public const int MaxRetries;
+	public static readonly System.TimeSpan BaseDelay;
+	public static readonly System.TimeSpan LongDelay;
+	public static readonly System.TimeSpan DefaultThrottle;
+	public static readonly System.TimeSpan MaxBackoffDelay;
+	private static readonly System.Random Jitter;
+	private static readonly System.Threading.SemaphoreSlim LastFmSemaphore;
+	private static readonly System.Threading.SemaphoreSlim SheetsSemaphore;
+	private static readonly System.Threading.SemaphoreSlim YouTubeSemaphore;
+	private static readonly System.Threading.SemaphoreSlim Lock;
+
+	// ─── Constructors ───
+	static Resilience();
+
+	// ─── Methods ───
+	public static bool IsFatalQuotaError(string message);
+	public static bool IsRetryableError(string message);
+	private static bool IsTransientExceptionType(System.Exception ex);
+	private static System.TimeSpan CalculateBackoffWithJitter(System.TimeSpan baseDelay, int attempt);
+	private static System.Threading.SemaphoreSlim GetServiceSemaphore(string operationName);
+	public static T Execute<T>(string operationName, Func<T> action, System.Action postAction, System.Threading.CancellationToken ct, System.Nullable<TimeSpan> baseDelay);
+	public static void Execute(string operationName, System.Action action, System.Action postAction, System.Threading.CancellationToken ct, System.Nullable<TimeSpan> baseDelay);
+	public static Task<T> ExecuteAsync<T>(Func<Task<T>> action, string source, System.Nullable<TimeSpan> throttle, int maxRetries);
+	public static void Delay(CSharpScripts.Infrastructure.ServiceType service);
+
+}
+public sealed class RetryExhaustedException : System.Exception, System.Runtime.Serialization.ISerializable
+{
+	// ─── Properties ───
+	internal int Attempts { get; }
+	internal System.TimeSpan TotalWait { get; }
+
+	// ─── Constructors ───
+	public RetryExhaustedException(string operation, int attempts, System.TimeSpan totalWait, System.Exception inner);
+
+}
+public enum ServiceType : System.Enum, System.IComparable, System.ISpanFormattable, System.IFormattable, System.IConvertible
+{
+	// ─── Fields ───
+	public int value__;
+	public const CSharpScripts.Infrastructure.ServiceType LastFm;
+	public const CSharpScripts.Infrastructure.ServiceType YouTube;
+	public const CSharpScripts.Infrastructure.ServiceType Sheets;
+
+}
+public static class StateManager
+{
+	// ─── Fields ───
+	public const string LastFmSyncFile;
+	public const string LastFmScrobblesFile;
+	public const string YouTubeSyncFile;
+	public const string BoxSetCacheDirectory;
+	public static readonly System.Text.Json.JsonSerializerOptions JsonIndented;
+	public static readonly System.Text.Json.JsonSerializerOptions JsonCompact;
+	private const string YouTubePlaylistsSubdirectory;
+	private const string YouTubeDeletedSubdirectory;
+
+	// ─── Properties ───
+	private static string YouTubePlaylistsDirectory { get; }
+	private static string YouTubeDeletedDirectory { get; }
+	private static string BoxSetCachePath { get; }
+
+	// ─── Constructors ───
+	static StateManager();
+
+	// ─── Methods ───
+	public static T Load<T>(string fileName);
+	public static void Save<T>(string fileName, T state);
+	public static void Delete(string fileName);
+	public static void DeleteLastFmStates();
+	internal static System.Collections.Generic.List<YouTubeVideo> LoadPlaylistCache(string playlistTitle);
+	public static void SavePlaylistCache(string playlistTitle, System.Collections.Generic.List<YouTubeVideo> videos);
+	public static void DeletePlaylistCache(string playlistTitle);
+	public static void RenamePlaylistCache(string oldTitle, string newTitle);
+	public static bool PlaylistCacheExists(string playlistTitle);
+	public static string ArchivePlaylistCache(string playlistTitle);
+	public static void DeleteAllYouTubeStates();
+	public static void MigratePlaylistFiles(System.Collections.Generic.Dictionary<string, PlaylistSnapshot> snapshots);
+	private static string GetPlaylistPath(string playlistTitle);
+	private static string SanitizeFileName(string name);
+	public static T LoadBoxSetCache<T>(string boxSetName);
+	public static void SaveBoxSetCache<T>(string boxSetName, T data);
+	public static bool BoxSetCacheExists(string boxSetName);
+	public static System.Nullable<DateTime> GetBoxSetCacheAge(string boxSetName);
+	public static void DeleteBoxSetCache(string boxSetName);
+	public static void DeleteAllBoxSetCaches();
+	public static System.Collections.Generic.IEnumerable<string> ListBoxSetCaches();
+	private static string GetBoxSetPath(string boxSetName);
+	private static string GetPath(string fileName);
+
+}
+
+## CSharpScripts.Models
+----------------------------------------
+public sealed class BoxSetParseException : System.Exception, System.Runtime.Serialization.ISerializable
+{
+	// ─── Constructors ───
+	public BoxSetParseException(string message);
+
+}
+public record BoxSetParseOptions : System.IEquatable<BoxSetParseOptions>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int MinYear { get; set; }
+	public int MaxYear { get; set; }
+
+	// ─── Constructors ───
+	public BoxSetParseOptions(int MinYear, int MaxYear);
+	internal BoxSetParseOptions(CSharpScripts.Models.BoxSetParseOptions original);
+
+	// ─── Methods ───
+	public void ValidateYear(System.Nullable<int> year, string context);
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.BoxSetParseOptions other);
+	public virtual CSharpScripts.Models.BoxSetParseOptions <Clone>$();
+	public void Deconstruct(System.Int32& MinYear, System.Int32& MaxYear);
+
+}
+public record BoxSetTrackMetadata : System.IEquatable<BoxSetTrackMetadata>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int DiscNumber { get; set; }
+	public int TrackNumber { get; set; }
+	public string Composer { get; set; }
+	public string Title { get; set; }
+	public int RecordingYear { get; set; }
+	public string Orchestra { get; set; }
+	public string Conductor { get; set; }
+	public System.Collections.Generic.List<string> Soloists { get; set; }
+
+	// ─── Constructors ───
+	public BoxSetTrackMetadata(int DiscNumber, int TrackNumber, string Composer, string Title, int RecordingYear, string Orchestra, string Conductor, System.Collections.Generic.List<string> Soloists);
+	internal BoxSetTrackMetadata(CSharpScripts.Models.BoxSetTrackMetadata original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.BoxSetTrackMetadata other);
+	public virtual CSharpScripts.Models.BoxSetTrackMetadata <Clone>$();
+	public void Deconstruct(System.Int32& DiscNumber, System.Int32& TrackNumber, System.String& Composer, System.String& Title, System.Int32& RecordingYear, System.String& Orchestra, System.String& Conductor, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Soloists);
+
+}
+public record DiscogsArtist : System.IEquatable<DiscogsArtist>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Name { get; set; }
+	public string RealName { get; set; }
+	public string Profile { get; set; }
+	public string ResourceUrl { get; set; }
+	public System.Collections.Generic.List<string> NameVariations { get; set; }
+	public System.Collections.Generic.List<string> Aliases { get; set; }
+	public System.Collections.Generic.List<DiscogsImage> Images { get; set; }
+	public System.Collections.Generic.List<string> Urls { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsArtist(int Id, string Name, string RealName, string Profile, string ResourceUrl, System.Collections.Generic.List<string> NameVariations, System.Collections.Generic.List<string> Aliases, System.Collections.Generic.List<DiscogsImage> Images, System.Collections.Generic.List<string> Urls);
+	internal DiscogsArtist(CSharpScripts.Models.DiscogsArtist original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsArtist other);
+	public virtual CSharpScripts.Models.DiscogsArtist <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Name, System.String& RealName, System.String& Profile, System.String& ResourceUrl, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& NameVariations, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Aliases, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsImage, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Images, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Urls);
+
+}
+public record DiscogsArtistRef : System.IEquatable<DiscogsArtistRef>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Name { get; set; }
+	public string Anv { get; set; }
+	public string Join { get; set; }
+	public string Role { get; set; }
+	public string Tracks { get; set; }
+	public string ResourceUrl { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsArtistRef(int Id, string Name, string Anv, string Join, string Role, string Tracks, string ResourceUrl);
+	internal DiscogsArtistRef(CSharpScripts.Models.DiscogsArtistRef original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsArtistRef other);
+	public virtual CSharpScripts.Models.DiscogsArtistRef <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Name, System.String& Anv, System.String& Join, System.String& Role, System.String& Tracks, System.String& ResourceUrl);
+
+}
+public record DiscogsCommunity : System.IEquatable<DiscogsCommunity>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Have { get; set; }
+	public int Want { get; set; }
+	public System.Nullable<double> Rating { get; set; }
+	public System.Nullable<int> RatingCount { get; set; }
+	public string Status { get; set; }
+	public string DataQuality { get; set; }
+	public CSharpScripts.Models.DiscogsSubmitter Submitter { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsCommunity(int Have, int Want, System.Nullable<double> Rating, System.Nullable<int> RatingCount, string Status, string DataQuality, CSharpScripts.Models.DiscogsSubmitter Submitter);
+	internal DiscogsCommunity(CSharpScripts.Models.DiscogsCommunity original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsCommunity other);
+	public virtual CSharpScripts.Models.DiscogsCommunity <Clone>$();
+	public void Deconstruct(System.Int32& Have, System.Int32& Want, System.Nullable`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Rating, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RatingCount, System.String& Status, System.String& DataQuality, CSharpScripts.Models.DiscogsSubmitter& Submitter);
+
+}
+public record DiscogsCompany : System.IEquatable<DiscogsCompany>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Name { get; set; }
+	public string CatalogNumber { get; set; }
+	public string EntityType { get; set; }
+	public string EntityTypeName { get; set; }
+	public string ResourceUrl { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsCompany(int Id, string Name, string CatalogNumber, string EntityType, string EntityTypeName, string ResourceUrl);
+	internal DiscogsCompany(CSharpScripts.Models.DiscogsCompany original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsCompany other);
+	public virtual CSharpScripts.Models.DiscogsCompany <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Name, System.String& CatalogNumber, System.String& EntityType, System.String& EntityTypeName, System.String& ResourceUrl);
+
+}
+public record DiscogsCredit : System.IEquatable<DiscogsCredit>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Name { get; set; }
+	public string Role { get; set; }
+	public string Tracks { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsCredit(string Name, string Role, string Tracks);
+	internal DiscogsCredit(CSharpScripts.Models.DiscogsCredit original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsCredit other);
+	public virtual CSharpScripts.Models.DiscogsCredit <Clone>$();
+	public void Deconstruct(System.String& Name, System.String& Role, System.String& Tracks);
+
+}
+public record DiscogsFormat : System.IEquatable<DiscogsFormat>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Name { get; set; }
+	public string Quantity { get; set; }
+	public string Text { get; set; }
+	public System.Collections.Generic.List<string> Descriptions { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsFormat(string Name, string Quantity, string Text, System.Collections.Generic.List<string> Descriptions);
+	internal DiscogsFormat(CSharpScripts.Models.DiscogsFormat original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsFormat other);
+	public virtual CSharpScripts.Models.DiscogsFormat <Clone>$();
+	public void Deconstruct(System.String& Name, System.String& Quantity, System.String& Text, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Descriptions);
+
+}
+public record DiscogsIdentifier : System.IEquatable<DiscogsIdentifier>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Type { get; set; }
+	public string Value { get; set; }
+	public string Description { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsIdentifier(string Type, string Value, string Description);
+	internal DiscogsIdentifier(CSharpScripts.Models.DiscogsIdentifier original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsIdentifier other);
+	public virtual CSharpScripts.Models.DiscogsIdentifier <Clone>$();
+	public void Deconstruct(System.String& Type, System.String& Value, System.String& Description);
+
+}
+public record DiscogsImage : System.IEquatable<DiscogsImage>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Type { get; set; }
+	public string Uri { get; set; }
+	public string Uri150 { get; set; }
+	public System.Nullable<int> Width { get; set; }
+	public System.Nullable<int> Height { get; set; }
+	public string ResourceUrl { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsImage(string Type, string Uri, string Uri150, System.Nullable<int> Width, System.Nullable<int> Height, string ResourceUrl);
+	internal DiscogsImage(CSharpScripts.Models.DiscogsImage original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsImage other);
+	public virtual CSharpScripts.Models.DiscogsImage <Clone>$();
+	public void Deconstruct(System.String& Type, System.String& Uri, System.String& Uri150, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Width, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Height, System.String& ResourceUrl);
+
+}
+public record DiscogsLabel : System.IEquatable<DiscogsLabel>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Name { get; set; }
+	public string CatalogNumber { get; set; }
+	public string EntityType { get; set; }
+	public string EntityTypeName { get; set; }
+	public string ResourceUrl { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsLabel(int Id, string Name, string CatalogNumber, string EntityType, string EntityTypeName, string ResourceUrl);
+	internal DiscogsLabel(CSharpScripts.Models.DiscogsLabel original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsLabel other);
+	public virtual CSharpScripts.Models.DiscogsLabel <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Name, System.String& CatalogNumber, System.String& EntityType, System.String& EntityTypeName, System.String& ResourceUrl);
+
+}
+public record DiscogsMaster : System.IEquatable<DiscogsMaster>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Title { get; set; }
+	public int Year { get; set; }
+	public int MainReleaseId { get; set; }
+	public int MostRecentReleaseId { get; set; }
+	public string MainReleaseUrl { get; set; }
+	public string MostRecentReleaseUrl { get; set; }
+	public string VersionsUrl { get; set; }
+	public string ResourceUrl { get; set; }
+	public string Uri { get; set; }
+	public string DataQuality { get; set; }
+	public System.Collections.Generic.List<DiscogsArtistRef> Artists { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Collections.Generic.List<string> Styles { get; set; }
+	public System.Collections.Generic.List<DiscogsTrack> Tracks { get; set; }
+	public System.Collections.Generic.List<DiscogsImage> Images { get; set; }
+	public System.Collections.Generic.List<DiscogsVideo> Videos { get; set; }
+	public System.Nullable<int> QuantityForSale { get; set; }
+	public System.Nullable<decimal> LowestPrice { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsMaster(int Id, string Title, int Year, int MainReleaseId, int MostRecentReleaseId, string MainReleaseUrl, string MostRecentReleaseUrl, string VersionsUrl, string ResourceUrl, string Uri, string DataQuality, System.Collections.Generic.List<DiscogsArtistRef> Artists, System.Collections.Generic.List<string> Genres, System.Collections.Generic.List<string> Styles, System.Collections.Generic.List<DiscogsTrack> Tracks, System.Collections.Generic.List<DiscogsImage> Images, System.Collections.Generic.List<DiscogsVideo> Videos, System.Nullable<int> QuantityForSale, System.Nullable<decimal> LowestPrice);
+	internal DiscogsMaster(CSharpScripts.Models.DiscogsMaster original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsMaster other);
+	public virtual CSharpScripts.Models.DiscogsMaster <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Title, System.Int32& Year, System.Int32& MainReleaseId, System.Int32& MostRecentReleaseId, System.String& MainReleaseUrl, System.String& MostRecentReleaseUrl, System.String& VersionsUrl, System.String& ResourceUrl, System.String& Uri, System.String& DataQuality, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsArtistRef, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Artists, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Styles, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsTrack, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Tracks, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsImage, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Images, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsVideo, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Videos, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& QuantityForSale, System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& LowestPrice);
+
+}
+public record DiscogsRelease : System.IEquatable<DiscogsRelease>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Title { get; set; }
+	public int Year { get; set; }
+	public string Country { get; set; }
+	public string Released { get; set; }
+	public string ReleasedFormatted { get; set; }
+	public System.Nullable<int> MasterId { get; set; }
+	public string MasterUrl { get; set; }
+	public string Status { get; set; }
+	public string DataQuality { get; set; }
+	public string Notes { get; set; }
+	public string Uri { get; set; }
+	public string ResourceUrl { get; set; }
+	public System.Collections.Generic.List<DiscogsArtistRef> Artists { get; set; }
+	public System.Collections.Generic.List<DiscogsArtistRef> ExtraArtists { get; set; }
+	public System.Collections.Generic.List<DiscogsLabel> Labels { get; set; }
+	public System.Collections.Generic.List<DiscogsCompany> Companies { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Collections.Generic.List<string> Styles { get; set; }
+	public System.Collections.Generic.List<DiscogsTrack> Tracks { get; set; }
+	public System.Collections.Generic.List<DiscogsFormat> Formats { get; set; }
+	public System.Collections.Generic.List<DiscogsIdentifier> Identifiers { get; set; }
+	public System.Collections.Generic.List<DiscogsImage> Images { get; set; }
+	public System.Collections.Generic.List<DiscogsVideo> Videos { get; set; }
+	public CSharpScripts.Models.DiscogsCommunity Community { get; set; }
+	public System.Nullable<int> EstimatedWeight { get; set; }
+	public System.Collections.Generic.List<DiscogsCredit> Credits { get; }
+
+	// ─── Constructors ───
+	public DiscogsRelease(int Id, string Title, int Year, string Country, string Released, string ReleasedFormatted, System.Nullable<int> MasterId, string MasterUrl, string Status, string DataQuality, string Notes, string Uri, string ResourceUrl, System.Collections.Generic.List<DiscogsArtistRef> Artists, System.Collections.Generic.List<DiscogsArtistRef> ExtraArtists, System.Collections.Generic.List<DiscogsLabel> Labels, System.Collections.Generic.List<DiscogsCompany> Companies, System.Collections.Generic.List<string> Genres, System.Collections.Generic.List<string> Styles, System.Collections.Generic.List<DiscogsTrack> Tracks, System.Collections.Generic.List<DiscogsFormat> Formats, System.Collections.Generic.List<DiscogsIdentifier> Identifiers, System.Collections.Generic.List<DiscogsImage> Images, System.Collections.Generic.List<DiscogsVideo> Videos, CSharpScripts.Models.DiscogsCommunity Community, System.Nullable<int> EstimatedWeight);
+	internal DiscogsRelease(CSharpScripts.Models.DiscogsRelease original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsRelease other);
+	public virtual CSharpScripts.Models.DiscogsRelease <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Title, System.Int32& Year, System.String& Country, System.String& Released, System.String& ReleasedFormatted, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& MasterId, System.String& MasterUrl, System.String& Status, System.String& DataQuality, System.String& Notes, System.String& Uri, System.String& ResourceUrl, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsArtistRef, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Artists, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsArtistRef, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& ExtraArtists, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsLabel, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Labels, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsCompany, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Companies, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Styles, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsTrack, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Tracks, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsFormat, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Formats, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsIdentifier, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Identifiers, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsImage, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Images, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsVideo, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Videos, CSharpScripts.Models.DiscogsCommunity& Community, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& EstimatedWeight);
+
+}
+public record DiscogsSearchResult : System.IEquatable<DiscogsSearchResult>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int ReleaseId { get; set; }
+	public System.Nullable<int> MasterId { get; set; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Country { get; set; }
+	public string Format { get; set; }
+	public string Label { get; set; }
+	public string CatalogNumber { get; set; }
+	public string Type { get; set; }
+	public string Thumb { get; set; }
+	public string CoverImage { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Collections.Generic.List<string> Styles { get; set; }
+	public System.Collections.Generic.List<string> Barcodes { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsSearchResult(int ReleaseId, System.Nullable<int> MasterId, string Title, string Artist, System.Nullable<int> Year, string Country, string Format, string Label, string CatalogNumber, string Type, string Thumb, string CoverImage, System.Collections.Generic.List<string> Genres, System.Collections.Generic.List<string> Styles, System.Collections.Generic.List<string> Barcodes);
+	internal DiscogsSearchResult(CSharpScripts.Models.DiscogsSearchResult original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsSearchResult other);
+	public virtual CSharpScripts.Models.DiscogsSearchResult <Clone>$();
+	public void Deconstruct(System.Int32& ReleaseId, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& MasterId, System.String& Title, System.String& Artist, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& Country, System.String& Format, System.String& Label, System.String& CatalogNumber, System.String& Type, System.String& Thumb, System.String& CoverImage, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Styles, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Barcodes);
+
+}
+public record DiscogsSubmitter : System.IEquatable<DiscogsSubmitter>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Username { get; set; }
+	public string ResourceUrl { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsSubmitter(string Username, string ResourceUrl);
+	internal DiscogsSubmitter(CSharpScripts.Models.DiscogsSubmitter original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsSubmitter other);
+	public virtual CSharpScripts.Models.DiscogsSubmitter <Clone>$();
+	public void Deconstruct(System.String& Username, System.String& ResourceUrl);
+
+}
+public record DiscogsTrack : System.IEquatable<DiscogsTrack>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Position { get; set; }
+	public string Title { get; set; }
+	public string Duration { get; set; }
+	public string Type { get; set; }
+	public System.Collections.Generic.List<DiscogsArtistRef> Artists { get; set; }
+	public System.Collections.Generic.List<DiscogsArtistRef> ExtraArtists { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsTrack(string Position, string Title, string Duration, string Type, System.Collections.Generic.List<DiscogsArtistRef> Artists, System.Collections.Generic.List<DiscogsArtistRef> ExtraArtists);
+	internal DiscogsTrack(CSharpScripts.Models.DiscogsTrack original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsTrack other);
+	public virtual CSharpScripts.Models.DiscogsTrack <Clone>$();
+	public void Deconstruct(System.String& Position, System.String& Title, System.String& Duration, System.String& Type, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsArtistRef, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Artists, System.Collections.Generic.List`1[[CSharpScripts.Models.DiscogsArtistRef, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& ExtraArtists);
+
+}
+public record DiscogsVersion : System.IEquatable<DiscogsVersion>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Id { get; set; }
+	public string Title { get; set; }
+	public string Format { get; set; }
+	public string Label { get; set; }
+	public string Country { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string CatalogNumber { get; set; }
+	public string Status { get; set; }
+	public string ResourceUrl { get; set; }
+	public string Thumb { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsVersion(int Id, string Title, string Format, string Label, string Country, System.Nullable<int> Year, string CatalogNumber, string Status, string ResourceUrl, string Thumb);
+	internal DiscogsVersion(CSharpScripts.Models.DiscogsVersion original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsVersion other);
+	public virtual CSharpScripts.Models.DiscogsVersion <Clone>$();
+	public void Deconstruct(System.Int32& Id, System.String& Title, System.String& Format, System.String& Label, System.String& Country, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& CatalogNumber, System.String& Status, System.String& ResourceUrl, System.String& Thumb);
+
+}
+public record DiscogsVideo : System.IEquatable<DiscogsVideo>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Uri { get; set; }
+	public string Title { get; set; }
+	public string Description { get; set; }
+	public System.Nullable<int> Duration { get; set; }
+	public bool Embed { get; set; }
+
+	// ─── Constructors ───
+	public DiscogsVideo(string Uri, string Title, string Description, System.Nullable<int> Duration, bool Embed);
+	internal DiscogsVideo(CSharpScripts.Models.DiscogsVideo original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.DiscogsVideo other);
+	public virtual CSharpScripts.Models.DiscogsVideo <Clone>$();
+	public void Deconstruct(System.String& Uri, System.String& Title, System.String& Description, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Duration, System.Boolean& Embed);
+
+}
+public record MusicBrainzArtist : System.IEquatable<MusicBrainzArtist>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Name { get; set; }
+	public string SortName { get; set; }
+	public string Type { get; set; }
+	public string Gender { get; set; }
+	public string Country { get; set; }
+	public string Area { get; set; }
+	public string Disambiguation { get; set; }
+	public System.Nullable<DateOnly> BeginDate { get; set; }
+	public System.Nullable<DateOnly> EndDate { get; set; }
+	public System.Nullable<bool> Ended { get; set; }
+	public System.Collections.Generic.List<string> Aliases { get; set; }
+	public System.Collections.Generic.List<string> Tags { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public string Annotation { get; set; }
+	public System.Nullable<double> Rating { get; set; }
+	public System.Nullable<int> RatingVotes { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzArtist(System.Guid Id, string Name, string SortName, string Type, string Gender, string Country, string Area, string Disambiguation, System.Nullable<DateOnly> BeginDate, System.Nullable<DateOnly> EndDate, System.Nullable<bool> Ended, System.Collections.Generic.List<string> Aliases, System.Collections.Generic.List<string> Tags, System.Collections.Generic.List<string> Genres, string Annotation, System.Nullable<double> Rating, System.Nullable<int> RatingVotes);
+	internal MusicBrainzArtist(CSharpScripts.Models.MusicBrainzArtist original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzArtist other);
+	public virtual CSharpScripts.Models.MusicBrainzArtist <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Name, System.String& SortName, System.String& Type, System.String& Gender, System.String& Country, System.String& Area, System.String& Disambiguation, System.Nullable`1[[System.DateOnly, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& BeginDate, System.Nullable`1[[System.DateOnly, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& EndDate, System.Nullable`1[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Ended, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Aliases, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Tags, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.String& Annotation, System.Nullable`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Rating, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RatingVotes);
+
+}
+public record MusicBrainzCredit : System.IEquatable<MusicBrainzCredit>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Name { get; set; }
+	public string Role { get; set; }
+	public System.Nullable<Guid> ArtistId { get; set; }
+	public string Attributes { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzCredit(string Name, string Role, System.Nullable<Guid> ArtistId, string Attributes);
+	internal MusicBrainzCredit(CSharpScripts.Models.MusicBrainzCredit original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzCredit other);
+	public virtual CSharpScripts.Models.MusicBrainzCredit <Clone>$();
+	public void Deconstruct(System.String& Name, System.String& Role, System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& ArtistId, System.String& Attributes);
+
+}
+public record MusicBrainzLabel : System.IEquatable<MusicBrainzLabel>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Nullable<Guid> Id { get; set; }
+	public string Name { get; set; }
+	public string CatalogNumber { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzLabel(System.Nullable<Guid> Id, string Name, string CatalogNumber);
+	internal MusicBrainzLabel(CSharpScripts.Models.MusicBrainzLabel original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzLabel other);
+	public virtual CSharpScripts.Models.MusicBrainzLabel <Clone>$();
+	public void Deconstruct(System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Id, System.String& Name, System.String& CatalogNumber);
+
+}
+public record MusicBrainzMedium : System.IEquatable<MusicBrainzMedium>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int Position { get; set; }
+	public string Format { get; set; }
+	public string Title { get; set; }
+	public int TrackCount { get; set; }
+	public System.Collections.Generic.List<MusicBrainzTrack> Tracks { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzMedium(int Position, string Format, string Title, int TrackCount, System.Collections.Generic.List<MusicBrainzTrack> Tracks);
+	internal MusicBrainzMedium(CSharpScripts.Models.MusicBrainzMedium original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzMedium other);
+	public virtual CSharpScripts.Models.MusicBrainzMedium <Clone>$();
+	public void Deconstruct(System.Int32& Position, System.String& Format, System.String& Title, System.Int32& TrackCount, System.Collections.Generic.List`1[[CSharpScripts.Models.MusicBrainzTrack, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Tracks);
+
+}
+public record MusicBrainzRecording : System.IEquatable<MusicBrainzRecording>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public string ArtistCredit { get; set; }
+	public System.Nullable<TimeSpan> Length { get; set; }
+	public System.Nullable<DateOnly> FirstReleaseDate { get; set; }
+	public bool IsVideo { get; set; }
+	public string Disambiguation { get; set; }
+	public System.Collections.Generic.List<string> Isrcs { get; set; }
+	public System.Collections.Generic.List<string> Tags { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Nullable<double> Rating { get; set; }
+	public System.Nullable<int> RatingVotes { get; set; }
+	public string Annotation { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzRecording(System.Guid Id, string Title, string Artist, string ArtistCredit, System.Nullable<TimeSpan> Length, System.Nullable<DateOnly> FirstReleaseDate, bool IsVideo, string Disambiguation, System.Collections.Generic.List<string> Isrcs, System.Collections.Generic.List<string> Tags, System.Collections.Generic.List<string> Genres, System.Nullable<double> Rating, System.Nullable<int> RatingVotes, string Annotation);
+	internal MusicBrainzRecording(CSharpScripts.Models.MusicBrainzRecording original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzRecording other);
+	public virtual CSharpScripts.Models.MusicBrainzRecording <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Title, System.String& Artist, System.String& ArtistCredit, System.Nullable`1[[System.TimeSpan, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Length, System.Nullable`1[[System.DateOnly, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& FirstReleaseDate, System.Boolean& IsVideo, System.String& Disambiguation, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Isrcs, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Tags, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Nullable`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Rating, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RatingVotes, System.String& Annotation);
+
+}
+public record MusicBrainzRelease : System.IEquatable<MusicBrainzRelease>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public string ArtistCredit { get; set; }
+	public System.Nullable<DateOnly> Date { get; set; }
+	public string Country { get; set; }
+	public string Status { get; set; }
+	public string Barcode { get; set; }
+	public string Asin { get; set; }
+	public string Quality { get; set; }
+	public string Packaging { get; set; }
+	public string Disambiguation { get; set; }
+	public System.Nullable<Guid> ReleaseGroupId { get; set; }
+	public string ReleaseGroupTitle { get; set; }
+	public string ReleaseGroupType { get; set; }
+	public System.Collections.Generic.List<MusicBrainzMedium> Media { get; set; }
+	public System.Collections.Generic.List<MusicBrainzCredit> Credits { get; set; }
+	public System.Collections.Generic.List<MusicBrainzLabel> Labels { get; set; }
+	public System.Collections.Generic.List<string> Tags { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public string Annotation { get; set; }
+	public System.Collections.Generic.List<MusicBrainzTrack> Tracks { get; }
+
+	// ─── Constructors ───
+	public MusicBrainzRelease(System.Guid Id, string Title, string Artist, string ArtistCredit, System.Nullable<DateOnly> Date, string Country, string Status, string Barcode, string Asin, string Quality, string Packaging, string Disambiguation, System.Nullable<Guid> ReleaseGroupId, string ReleaseGroupTitle, string ReleaseGroupType, System.Collections.Generic.List<MusicBrainzMedium> Media, System.Collections.Generic.List<MusicBrainzCredit> Credits, System.Collections.Generic.List<MusicBrainzLabel> Labels, System.Collections.Generic.List<string> Tags, System.Collections.Generic.List<string> Genres, string Annotation);
+	internal MusicBrainzRelease(CSharpScripts.Models.MusicBrainzRelease original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzRelease other);
+	public virtual CSharpScripts.Models.MusicBrainzRelease <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Title, System.String& Artist, System.String& ArtistCredit, System.Nullable`1[[System.DateOnly, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Date, System.String& Country, System.String& Status, System.String& Barcode, System.String& Asin, System.String& Quality, System.String& Packaging, System.String& Disambiguation, System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& ReleaseGroupId, System.String& ReleaseGroupTitle, System.String& ReleaseGroupType, System.Collections.Generic.List`1[[CSharpScripts.Models.MusicBrainzMedium, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Media, System.Collections.Generic.List`1[[CSharpScripts.Models.MusicBrainzCredit, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Credits, System.Collections.Generic.List`1[[CSharpScripts.Models.MusicBrainzLabel, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Labels, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Tags, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.String& Annotation);
+
+}
+public record MusicBrainzReleaseGroup : System.IEquatable<MusicBrainzReleaseGroup>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public string ArtistCredit { get; set; }
+	public string PrimaryType { get; set; }
+	public System.Collections.Generic.List<string> SecondaryTypes { get; set; }
+	public System.Nullable<DateOnly> FirstReleaseDate { get; set; }
+	public int ReleaseCount { get; set; }
+	public string Disambiguation { get; set; }
+	public System.Collections.Generic.List<string> Tags { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Nullable<double> Rating { get; set; }
+	public System.Nullable<int> RatingVotes { get; set; }
+	public string Annotation { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzReleaseGroup(System.Guid Id, string Title, string Artist, string ArtistCredit, string PrimaryType, System.Collections.Generic.List<string> SecondaryTypes, System.Nullable<DateOnly> FirstReleaseDate, int ReleaseCount, string Disambiguation, System.Collections.Generic.List<string> Tags, System.Collections.Generic.List<string> Genres, System.Nullable<double> Rating, System.Nullable<int> RatingVotes, string Annotation);
+	internal MusicBrainzReleaseGroup(CSharpScripts.Models.MusicBrainzReleaseGroup original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzReleaseGroup other);
+	public virtual CSharpScripts.Models.MusicBrainzReleaseGroup <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Title, System.String& Artist, System.String& ArtistCredit, System.String& PrimaryType, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& SecondaryTypes, System.Nullable`1[[System.DateOnly, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& FirstReleaseDate, System.Int32& ReleaseCount, System.String& Disambiguation, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Tags, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Nullable`1[[System.Double, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Rating, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RatingVotes, System.String& Annotation);
+
+}
+public record MusicBrainzSearchResult : System.IEquatable<MusicBrainzSearchResult>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Country { get; set; }
+	public string Status { get; set; }
+	public string Disambiguation { get; set; }
+	public System.Nullable<int> Score { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzSearchResult(System.Guid Id, string Title, string Artist, System.Nullable<int> Year, string Country, string Status, string Disambiguation, System.Nullable<int> Score);
+	internal MusicBrainzSearchResult(CSharpScripts.Models.MusicBrainzSearchResult original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzSearchResult other);
+	public virtual CSharpScripts.Models.MusicBrainzSearchResult <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Title, System.String& Artist, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& Country, System.String& Status, System.String& Disambiguation, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Score);
+
+}
+public record MusicBrainzTrack : System.IEquatable<MusicBrainzTrack>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Guid Id { get; set; }
+	public string Title { get; set; }
+	public int Position { get; set; }
+	public string Number { get; set; }
+	public System.Nullable<TimeSpan> Length { get; set; }
+	public System.Nullable<Guid> RecordingId { get; set; }
+	public string ArtistCredit { get; set; }
+
+	// ─── Constructors ───
+	public MusicBrainzTrack(System.Guid Id, string Title, int Position, string Number, System.Nullable<TimeSpan> Length, System.Nullable<Guid> RecordingId, string ArtistCredit);
+	internal MusicBrainzTrack(CSharpScripts.Models.MusicBrainzTrack original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.MusicBrainzTrack other);
+	public virtual CSharpScripts.Models.MusicBrainzTrack <Clone>$();
+	public void Deconstruct(System.Guid& Id, System.String& Title, System.Int32& Position, System.String& Number, System.Nullable`1[[System.TimeSpan, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Length, System.Nullable`1[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RecordingId, System.String& ArtistCredit);
+
+}
+public record OptimizedChanges : System.IEquatable<OptimizedChanges>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Collections.Generic.List<string> NewIds { get; set; }
+	public System.Collections.Generic.List<string> DeletedIds { get; set; }
+	public System.Collections.Generic.List<string> ModifiedIds { get; set; }
+	public System.Collections.Generic.List<PlaylistRename> Renamed { get; set; }
+	internal bool HasAnyChanges { get; }
+
+	// ─── Constructors ───
+	public OptimizedChanges(System.Collections.Generic.List<string> NewIds, System.Collections.Generic.List<string> DeletedIds, System.Collections.Generic.List<string> ModifiedIds, System.Collections.Generic.List<PlaylistRename> Renamed);
+	internal OptimizedChanges(CSharpScripts.Models.OptimizedChanges original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.OptimizedChanges other);
+	public virtual CSharpScripts.Models.OptimizedChanges <Clone>$();
+	public void Deconstruct(System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& NewIds, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& DeletedIds, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& ModifiedIds, System.Collections.Generic.List`1[[CSharpScripts.Models.PlaylistRename, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Renamed);
+
+}
+public record PlaylistChanges : System.IEquatable<PlaylistChanges>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Collections.Generic.List<string> NewPlaylistIds { get; set; }
+	public System.Collections.Generic.List<string> DeletedPlaylistIds { get; set; }
+	public System.Collections.Generic.List<string> ModifiedPlaylistIds { get; set; }
+	internal bool HasChanges { get; }
+
+	// ─── Constructors ───
+	public PlaylistChanges(System.Collections.Generic.List<string> NewPlaylistIds, System.Collections.Generic.List<string> DeletedPlaylistIds, System.Collections.Generic.List<string> ModifiedPlaylistIds);
+	internal PlaylistChanges(CSharpScripts.Models.PlaylistChanges original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.PlaylistChanges other);
+	public virtual CSharpScripts.Models.PlaylistChanges <Clone>$();
+	public void Deconstruct(System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& NewPlaylistIds, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& DeletedPlaylistIds, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& ModifiedPlaylistIds);
+
+}
+public record PlaylistRename : System.IEquatable<PlaylistRename>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string PlaylistId { get; set; }
+	public string OldTitle { get; set; }
+	public string NewTitle { get; set; }
+
+	// ─── Constructors ───
+	public PlaylistRename(string PlaylistId, string OldTitle, string NewTitle);
+	internal PlaylistRename(CSharpScripts.Models.PlaylistRename original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.PlaylistRename other);
+	public virtual CSharpScripts.Models.PlaylistRename <Clone>$();
+	public void Deconstruct(System.String& PlaylistId, System.String& OldTitle, System.String& NewTitle);
+
+}
+public record PlaylistSnapshot : System.IEquatable<PlaylistSnapshot>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string PlaylistId { get; set; }
+	public string Title { get; set; }
+	public System.Collections.Generic.List<string> VideoIds { get; set; }
+	public System.DateTime LastUpdated { get; set; }
+	public int ReportedVideoCount { get; set; }
+	public string ETag { get; set; }
+
+	// ─── Constructors ───
+	public PlaylistSnapshot(string PlaylistId, string Title, System.Collections.Generic.List<string> VideoIds, System.DateTime LastUpdated, int ReportedVideoCount, string ETag);
+	internal PlaylistSnapshot(CSharpScripts.Models.PlaylistSnapshot original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.PlaylistSnapshot other);
+	public virtual CSharpScripts.Models.PlaylistSnapshot <Clone>$();
+	public void Deconstruct(System.String& PlaylistId, System.String& Title, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& VideoIds, System.DateTime& LastUpdated, System.Int32& ReportedVideoCount, System.String& ETag);
+
+}
+public struct PlaylistSummary : System.IEquatable<PlaylistSummary>
+{
+	// ─── Properties ───
+	public string Id { get; set; }
+	public string Title { get; set; }
+	public int VideoCount { get; set; }
+	public string ETag { get; set; }
+
+	// ─── Constructors ───
+	public PlaylistSummary(string Id, string Title, int VideoCount, string ETag);
+
+	// ─── Methods ───
+	private bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.PlaylistSummary other);
+	public void Deconstruct(System.String& Id, System.String& Title, System.Int32& VideoCount, System.String& ETag);
+
+}
+public record YouTubeFetchState : System.IEquatable<YouTubeFetchState>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string SpreadsheetId { get; set; }
+	public System.Collections.Generic.Dictionary<string, PlaylistSnapshot> PlaylistSnapshots { get; set; }
+	public System.Collections.Generic.List<YouTubePlaylist> CachedPlaylists { get; set; }
+	public int VideoIdFetchIndex { get; set; }
+	public string CurrentPlaylistId { get; set; }
+	public int CurrentPlaylistVideosFetched { get; set; }
+	public System.DateTime LastUpdated { get; set; }
+	public System.DateTime LastChecked { get; set; }
+	public bool FetchComplete { get; set; }
+
+	// ─── Constructors ───
+	internal YouTubeFetchState(CSharpScripts.Models.YouTubeFetchState original);
+	public YouTubeFetchState();
+
+	// ─── Methods ───
+	internal void UpdatePlaylistProgress(string playlistId, int videosFetched);
+	internal void ClearCurrentProgress();
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.YouTubeFetchState other);
+	public virtual CSharpScripts.Models.YouTubeFetchState <Clone>$();
+
+}
+public record YouTubePlaylist : System.IEquatable<YouTubePlaylist>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Id { get; set; }
+	public string Title { get; set; }
+	public int VideoCount { get; set; }
+	public System.Collections.Generic.List<string> VideoIds { get; set; }
+	public string ETag { get; set; }
+
+	// ─── Constructors ───
+	public YouTubePlaylist(string Id, string Title, int VideoCount, System.Collections.Generic.List<string> VideoIds, string ETag);
+	internal YouTubePlaylist(CSharpScripts.Models.YouTubePlaylist original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.YouTubePlaylist other);
+	public virtual CSharpScripts.Models.YouTubePlaylist <Clone>$();
+	public void Deconstruct(System.String& Id, System.String& Title, System.Int32& VideoCount, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& VideoIds, System.String& ETag);
+
+}
+public record YouTubeVideo : System.IEquatable<YouTubeVideo>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Title { get; set; }
+	public string Description { get; set; }
+	public System.TimeSpan Duration { get; set; }
+	public string ChannelName { get; set; }
+	public string VideoId { get; set; }
+	public string ChannelId { get; set; }
+	internal string VideoUrl { get; }
+	internal string ChannelUrl { get; }
+	internal string FormattedDuration { get; }
+
+	// ─── Constructors ───
+	public YouTubeVideo(string Title, string Description, System.TimeSpan Duration, string ChannelName, string VideoId, string ChannelId);
+	internal YouTubeVideo(CSharpScripts.Models.YouTubeVideo original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Models.YouTubeVideo other);
+	public virtual CSharpScripts.Models.YouTubeVideo <Clone>$();
+	public void Deconstruct(System.String& Title, System.String& Description, System.TimeSpan& Duration, System.String& ChannelName, System.String& VideoId, System.String& ChannelId);
+
+}
+
+## CSharpScripts.Orchestrators
+----------------------------------------
+public class ScrobbleSyncOrchestrator
+{
+	// ─── Fields ───
+	private System.Threading.CancellationToken <ct>P;
+	private System.Nullable<DateTime> <forceFromDate>P;
+	private readonly CSharpScripts.Services.Sync.LastFm.LastFmService lastFmService;
+	private readonly CSharpScripts.Services.Sync.Google.GoogleSheetsService sheetsService;
+	private CSharpScripts.Services.Sync.LastFm.FetchState state;
+
+	// ─── Constructors ───
+	public ScrobbleSyncOrchestrator(System.Threading.CancellationToken ct, System.Nullable<DateTime> forceFromDate);
+
+	// ─── Methods ───
+	private void LogResumeInfo();
+	internal void Execute();
+	private void FetchScrobbles(System.Nullable<DateTime> fetchAfter);
+	private void WriteToSheets(System.Collections.Generic.List<Scrobble> scrobbles, string spreadsheetId);
+	private string GetOrCreateSpreadsheet();
+	internal void SaveState();
+	private void <FetchScrobbles>b__8_0(int page, int total, System.TimeSpan elapsed, System.Nullable<DateTime> oldest, System.Nullable<DateTime> newest);
+	private void <GetOrCreateSpreadsheet>b__10_0(string id);
+
+}
+public class YouTubePlaylistOrchestrator
+{
+	// ─── Fields ───
+	private System.Threading.CancellationToken <ct>P;
+	private static readonly System.Collections.Generic.IReadOnlyList<object> VideoHeaders;
+	private readonly CSharpScripts.Services.Sync.YouTube.YouTubeService youtubeService;
+	private readonly CSharpScripts.Services.Sync.Google.GoogleSheetsService sheetsService;
+	private readonly CSharpScripts.Models.YouTubeFetchState state;
+
+	// ─── Constructors ───
+	public YouTubePlaylistOrchestrator(System.Threading.CancellationToken ct);
+	static YouTubePlaylistOrchestrator();
+
+	// ─── Methods ───
+	internal void Execute();
+	internal void ExecuteForPlaylists(string[] playlistIdentifiers);
+	private System.Collections.Generic.List<YouTubePlaylist> ResolvePlaylistIdentifiers(string[] identifiers);
+	private CSharpScripts.Models.YouTubePlaylist ResolvePlaylistIdentifier(string identifier);
+	private void ExecuteOptimized(string spreadsheetId);
+	private void ExecuteFullSync(string spreadsheetId);
+	private int ProcessPlaylistsWithProgress(System.Collections.Generic.List<YouTubePlaylist> playlistsToProcess, string spreadsheetId, bool isFirstPlaylist);
+	private void ProcessPlaylistWithContext(CSharpScripts.Models.YouTubePlaylist playlist, string spreadsheetId, bool isFirstPlaylist, System.Action<int> onVideoProgress);
+	private string GetOrCreateSpreadsheet();
+	internal void SaveState();
+	private static void ArchiveDeletedPlaylist(CSharpScripts.Models.PlaylistSnapshot snapshot);
+	private void WritePlaylist(CSharpScripts.Models.YouTubePlaylist playlist, System.Collections.Generic.List<YouTubeVideo> videos, System.Collections.Generic.List<YouTubeVideo> previousVideos, string spreadsheetId, bool isFirstPlaylist);
+	private void WriteFullPlaylist(string sheetName, System.Collections.Generic.List<YouTubeVideo> videos, string spreadsheetId);
+	private static System.Collections.Generic.IList<object> MapVideoToRow(CSharpScripts.Models.YouTubeVideo v);
+	private static string SanitizeSheetName(string name);
+	private static string EscapeFormulaString(string value);
+	public static void ExportSheetsAsCSVs(System.Threading.CancellationToken ct, string outputDirectory);
+	public static void CountPlaylists(System.Threading.CancellationToken ct);
+	private void <GetOrCreateSpreadsheet>b__14_0(string id);
+
+}
+
+## CSharpScripts.Services.Mail
+----------------------------------------
+public record MailTmAccount : System.IEquatable<MailTmAccount>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Id { get; set; }
+	public string Address { get; set; }
+	public int Quota { get; set; }
+	public int Used { get; set; }
+	public bool IsDisabled { get; set; }
+	public bool IsDeleted { get; set; }
+	public System.DateTime CreatedAt { get; set; }
+	public System.DateTime UpdatedAt { get; set; }
+
+	// ─── Constructors ───
+	internal MailTmAccount(CSharpScripts.Services.Mail.MailTmAccount original);
+	public MailTmAccount();
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Mail.MailTmAccount other);
+	public virtual CSharpScripts.Services.Mail.MailTmAccount <Clone>$();
+
+}
+public record MailTmAddress : System.IEquatable<MailTmAddress>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Address { get; set; }
+	public string Name { get; set; }
+
+	// ─── Constructors ───
+	internal MailTmAddress(CSharpScripts.Services.Mail.MailTmAddress original);
+	public MailTmAddress();
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Mail.MailTmAddress other);
+	public virtual CSharpScripts.Services.Mail.MailTmAddress <Clone>$();
+
+}
+public sealed class MailTmException : System.Exception, System.Runtime.Serialization.ISerializable
+{
+	// ─── Constructors ───
+	public MailTmException(string message, System.Exception inner);
+
+}
+public record MailTmMessage : System.IEquatable<MailTmMessage>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Id { get; set; }
+	public string AccountId { get; set; }
+	public string MsgId { get; set; }
+	public CSharpScripts.Services.Mail.MailTmAddress From { get; set; }
+	public CSharpScripts.Services.Mail.MailTmAddress[] To { get; set; }
+	public CSharpScripts.Services.Mail.MailTmAddress[] Cc { get; set; }
+	public string Subject { get; set; }
+	public string Text { get; set; }
+	public string Html { get; set; }
+	public System.DateTime CreatedAt { get; set; }
+	public System.DateTime UpdatedAt { get; set; }
+	public bool IsRead { get; set; }
+	public bool IsDeleted { get; set; }
+
+	// ─── Constructors ───
+	internal MailTmMessage(CSharpScripts.Services.Mail.MailTmMessage original);
+	public MailTmMessage();
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Mail.MailTmMessage other);
+	public virtual CSharpScripts.Services.Mail.MailTmMessage <Clone>$();
+
+}
+public sealed class MailTmService
+{
+	// ─── Fields ───
+	private const string BASE_URL;
+	private const string PASSWORD_CHARS;
+	private static readonly System.TimeSpan Throttle;
+	private string AuthToken;
+	private string CurrentAccountId;
+	private string CurrentPassword;
+
+	// ─── Properties ───
+	internal RestSharp.RestClient Client { get; }
+
+	// ─── Constructors ───
+	public MailTmService();
+	static MailTmService();
+
+	// ─── Methods ───
+	public System.Threading.Tasks.Task<MailTmAccount> CreateAccountAsync();
+	private System.Threading.Tasks.Task<string> GetAvailableDomainAsync();
+	private System.Threading.Tasks.Task AuthenticateAsync(string address, string password);
+	public System.Threading.Tasks.Task<List<MailTmMessage>> GetInboxAsync();
+	public System.Threading.Tasks.Task<MailTmMessage> ReadMessageAsync(string messageId);
+	public System.Threading.Tasks.Task<bool> DeleteAccountAsync();
+	private static CSharpScripts.Services.Mail.MailTmMessage ParseMessage(System.Text.Json.JsonElement elem);
+	private static string GenerateSecurePassword(int length);
+	private System.Threading.Tasks.Task<List<MailTmMessage>> <GetInboxAsync>b__13_0();
+	private System.Threading.Tasks.Task<bool> <DeleteAccountAsync>b__15_0();
+
+}
+public record TokenResponse : System.IEquatable<TokenResponse>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Token { get; set; }
+	public string Id { get; set; }
+
+	// ─── Constructors ───
+	internal TokenResponse(CSharpScripts.Services.Mail.TokenResponse original);
+	public TokenResponse();
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Mail.TokenResponse other);
+	public virtual CSharpScripts.Services.Mail.TokenResponse <Clone>$();
+
+}
+
+## CSharpScripts.Services.Music
+----------------------------------------
+public record BoxSetCache : System.IEquatable<BoxSetCache>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Name { get; set; }
+	public System.Guid MusicBrainzId { get; set; }
+	public System.DateTime FetchedAt { get; set; }
+	public int TotalDiscs { get; set; }
+	public int TotalTracks { get; set; }
+	public System.Collections.Generic.List<OrmandyTrack> Tracks { get; set; }
+
+	// ─── Constructors ───
+	public BoxSetCache(string Name, System.Guid MusicBrainzId, System.DateTime FetchedAt, int TotalDiscs, int TotalTracks, System.Collections.Generic.List<OrmandyTrack> Tracks);
+	internal BoxSetCache(CSharpScripts.Services.Music.BoxSetCache original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.BoxSetCache other);
+	public virtual CSharpScripts.Services.Music.BoxSetCache <Clone>$();
+	public void Deconstruct(System.String& Name, System.Guid& MusicBrainzId, System.DateTime& FetchedAt, System.Int32& TotalDiscs, System.Int32& TotalTracks, System.Collections.Generic.List`1[[CSharpScripts.Services.Music.OrmandyTrack, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Tracks);
+
+}
+internal sealed class DiscogsClientConfig : ParkSquare.Discogs.IClientConfig
+{
+	// ─── Fields ───
+	private string <token>P;
+
+	// ─── Properties ───
+	public virtual string AuthToken { get; }
+	public virtual string BaseUrl { get; }
+
+	// ─── Constructors ───
+	public DiscogsClientConfig(string token);
+
+}
+public sealed class DiscogsService
+{
+	// ─── Properties ───
+	internal ParkSquare.Discogs.DiscogsClient Client { get; }
+
+	// ─── Constructors ───
+	public DiscogsService(string token);
+
+	// ─── Methods ───
+	public System.Threading.Tasks.Task<List<DiscogsSearchResult>> SearchAsync(string artist, string release, string track, System.Nullable<int> year, string label, string genre, int maxResults);
+	public System.Threading.Tasks.Task<DiscogsSearchResult> SearchFirstAsync(string artist, string release, string track, System.Nullable<int> year, string label, string genre);
+	private static CSharpScripts.Models.DiscogsSearchResult MapSearchResult(ParkSquare.Discogs.Dto.SearchResult r);
+	public System.Threading.Tasks.Task<DiscogsRelease> GetReleaseAsync(int releaseId);
+	private static CSharpScripts.Models.DiscogsRelease MapRelease(ParkSquare.Discogs.Dto.Release r);
+	public System.Threading.Tasks.Task<Dictionary<string, List<DiscogsTrack>>> GetTracksByMediaAsync(int releaseId);
+	public System.Threading.Tasks.Task<DiscogsMaster> GetMasterAsync(int masterId);
+	private static CSharpScripts.Models.DiscogsMaster MapMaster(ParkSquare.Discogs.Dto.MasterRelease m);
+	public System.Threading.Tasks.Task<List<DiscogsVersion>> GetVersionsAsync(int masterId, int maxResults);
+	private static CSharpScripts.Models.DiscogsVersion MapVersion(ParkSquare.Discogs.Dto.Version v);
+	private static CSharpScripts.Models.DiscogsTrack MapTrack(ParkSquare.Discogs.Dto.Tracklist t);
+	private static CSharpScripts.Models.DiscogsFormat MapFormat(ParkSquare.Discogs.Dto.Format f);
+	private static CSharpScripts.Models.DiscogsLabel MapLabel(ParkSquare.Discogs.Dto.Label l);
+	private static CSharpScripts.Models.DiscogsCompany MapCompany(ParkSquare.Discogs.Dto.Company c);
+	private static CSharpScripts.Models.DiscogsArtistRef MapArtistRef(ParkSquare.Discogs.Dto.Artist a);
+	private static CSharpScripts.Models.DiscogsImage MapImage(ParkSquare.Discogs.Dto.Image i);
+	private static CSharpScripts.Models.DiscogsVideo MapVideo(ParkSquare.Discogs.Dto.Video v);
+	private static CSharpScripts.Models.DiscogsIdentifier MapIdentifier(ParkSquare.Discogs.Dto.Identifier i);
+	private static CSharpScripts.Models.DiscogsCommunity MapCommunity(ParkSquare.Discogs.Dto.Community c);
+	private static Task<T> ExecuteAsync<T>(Func<Task<T>> action);
+	private static Task<T> ExecuteSafeAsync<T>(Func<Task<T>> action);
+	private static Task<List<T>> ExecuteSafeListAsync<T>(Func<Task<List<T>>> action);
+	private static Task<Dictionary<TKey, TValue>> ExecuteSafeDictAsync<TKey, TValue>(Func<Task<Dictionary<TKey, TValue>>> action);
+	private static string ExtractArtist(string title);
+	private static System.Nullable<int> ParseYear(string year);
+
+}
+public sealed class MusicBrainzService
+{
+	// ─── Fields ───
+	private static readonly System.Collections.Frozen.FrozenSet<string> ExcludedRoles;
+	private static readonly System.Collections.Frozen.FrozenSet<string> ConductorRoles;
+	private static readonly System.Collections.Frozen.FrozenSet<string> OrchestraRoles;
+	private static readonly System.Collections.Frozen.FrozenSet<string> SoloistRoles;
+
+	// ─── Properties ───
+	internal MetaBrainz.MusicBrainz.Query Query { get; }
+
+	// ─── Constructors ───
+	public MusicBrainzService(string appName, string appVersion, string contact);
+	static MusicBrainzService();
+
+	// ─── Methods ───
+	public System.Threading.Tasks.Task<List<MusicBrainzSearchResult>> SearchArtistsAsync(string artist, int maxResults);
+	public System.Threading.Tasks.Task<MusicBrainzArtist> GetArtistAsync(System.Guid artistId);
+	private static CSharpScripts.Models.MusicBrainzArtist MapArtist(MetaBrainz.MusicBrainz.Interfaces.Entities.IArtist a);
+	public System.Threading.Tasks.Task<List<MusicBrainzRecording>> SearchRecordingsAsync(string artist, string recording, int maxResults);
+	public System.Threading.Tasks.Task<MusicBrainzRecording> GetRecordingAsync(System.Guid recordingId);
+	public System.Threading.Tasks.Task<List<MusicBrainzRecording>> BrowseArtistRecordingsAsync(System.Guid artistId, int maxResults);
+	private static CSharpScripts.Models.MusicBrainzRecording MapRecording(MetaBrainz.MusicBrainz.Interfaces.Entities.IRecording r);
+	private static CSharpScripts.Models.MusicBrainzRecording MapRecordingFromSearch(MetaBrainz.MusicBrainz.Interfaces.Entities.IRecording r);
+	public System.Threading.Tasks.Task<List<MusicBrainzSearchResult>> SearchReleasesAsync(string artist, string release, System.Nullable<int> year, string label, string genre, int maxResults);
+	public System.Threading.Tasks.Task<MusicBrainzSearchResult> SearchFirstReleaseAsync(string artist, string release, System.Nullable<int> year, string label, string genre);
+	public System.Threading.Tasks.Task<MusicBrainzRelease> GetReleaseAsync(System.Guid releaseId);
+	private static CSharpScripts.Models.MusicBrainzRelease MapRelease(MetaBrainz.MusicBrainz.Interfaces.Entities.IRelease r);
+	public System.Threading.Tasks.Task<List<MusicBrainzSearchResult>> SearchReleaseGroupsAsync(string artist, string releaseGroup, int maxResults);
+	public System.Threading.Tasks.Task<MusicBrainzReleaseGroup> GetReleaseGroupAsync(System.Guid releaseGroupId);
+	public System.Threading.Tasks.Task<List<BoxSetTrackMetadata>> ParseBoxSetAsync(System.Guid releaseId, CSharpScripts.Models.BoxSetParseOptions options);
+	public System.Threading.Tasks.Task<List<BoxSetTrackMetadata>> ParseBoxSetWithWorkCreditsAsync(System.Guid releaseId, CSharpScripts.Models.BoxSetParseOptions options);
+	private static string FormatArtistCredit(System.Collections.Generic.IReadOnlyList<INameCredit> credits);
+	private static Task<T> ExecuteAsync<T>(Func<Task<T>> action);
+	private static Task<T> ExecuteSafeAsync<T>(Func<Task<T>> action);
+	private static Task<List<T>> ExecuteSafeListAsync<T>(Func<Task<List<T>>> action);
+	private static string BuildQuery(string artist, string release, System.Nullable<int> year, string label, string genre);
+
+}
+public sealed class MusicMetadataService
+{
+	// ─── Properties ───
+	public CSharpScripts.Services.Music.DiscogsService Discogs { get; }
+	public CSharpScripts.Services.Music.MusicBrainzService MusicBrainz { get; }
+
+	// ─── Constructors ───
+	public MusicMetadataService(string discogsToken);
+
+	// ─── Methods ───
+	public System.Threading.Tasks.Task<MusicSearchResult> SearchAsync(CSharpScripts.Services.Music.MusicSearchQuery query);
+	public System.Threading.Tasks.Task<UnifiedRelease> GetReleaseAsync(CSharpScripts.Services.Music.MusicSearchQuery query, bool includeCredits);
+	public System.Threading.Tasks.Task<ValueTuple<List<DiscogsSearchResult>, List<MusicBrainzSearchResult>>> SearchBothAsync(CSharpScripts.Services.Music.MusicSearchQuery query, string source);
+	private static System.Collections.Generic.List<DiscogsSearchResult> SortDiscogs(System.Collections.Generic.List<DiscogsSearchResult> input, string sortBy);
+	private static System.Collections.Generic.List<MusicBrainzSearchResult> SortMusicBrainz(System.Collections.Generic.List<MusicBrainzSearchResult> input, string sortBy);
+	public System.Threading.Tasks.Task<List<UnifiedCredit>> GetCreditsAsync(CSharpScripts.Services.Music.MusicSearchQuery query);
+	private static CSharpScripts.Services.Music.UnifiedRelease ToUnified(CSharpScripts.Models.MusicBrainzRelease mb);
+	private static CSharpScripts.Services.Music.UnifiedRelease ToUnified(CSharpScripts.Models.DiscogsRelease discogs);
+	private static CSharpScripts.Services.Music.UnifiedRelease ApplyTrackSorting(CSharpScripts.Services.Music.UnifiedRelease release, string sortBy);
+	private static System.Nullable<TimeSpan> ParseDuration(string duration);
+
+}
+public record MusicSearchQuery : System.IEquatable<MusicSearchQuery>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Artist { get; set; }
+	public string Album { get; set; }
+	public string Track { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Label { get; set; }
+	public string Genre { get; set; }
+	public string SortBy { get; set; }
+	public int MaxResults { get; set; }
+
+	// ─── Constructors ───
+	public MusicSearchQuery(string Artist, string Album, string Track, System.Nullable<int> Year, string Label, string Genre, string SortBy, int MaxResults);
+	internal MusicSearchQuery(CSharpScripts.Services.Music.MusicSearchQuery original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.MusicSearchQuery other);
+	public virtual CSharpScripts.Services.Music.MusicSearchQuery <Clone>$();
+	public void Deconstruct(System.String& Artist, System.String& Album, System.String& Track, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& Label, System.String& Genre, System.String& SortBy, System.Int32& MaxResults);
+
+}
+public record MusicSearchResult : System.IEquatable<MusicSearchResult>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Source { get; set; }
+	public string ExternalId { get; set; }
+
+	// ─── Constructors ───
+	public MusicSearchResult(string Title, string Artist, System.Nullable<int> Year, string Source, string ExternalId);
+	internal MusicSearchResult(CSharpScripts.Services.Music.MusicSearchResult original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.MusicSearchResult other);
+	public virtual CSharpScripts.Services.Music.MusicSearchResult <Clone>$();
+	public void Deconstruct(System.String& Title, System.String& Artist, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& Source, System.String& ExternalId);
+
+}
+public sealed class OrmandyBoxParser
+{
+	// ─── Fields ───
+	private static readonly System.Guid MusicBrainzReleaseId;
+	private const string BOX_SET_NAME;
+	private const int MIN_YEAR;
+	private const int MAX_YEAR;
+	private readonly MetaBrainz.MusicBrainz.Query Query;
+	private readonly System.Collections.Generic.List<string> LogEntries;
+
+	// ─── Constructors ───
+	public OrmandyBoxParser();
+	static OrmandyBoxParser();
+
+	// ─── Methods ───
+	private void Log(string message);
+	private void LogRelationship(string indent, MetaBrainz.MusicBrainz.Interfaces.Entities.IRelationship rel, string mappedTo);
+	private void WriteLogFile();
+	public System.Threading.Tasks.Task<List<OrmandyTrack>> ParseAsync(bool forceRefresh);
+	private static bool IsSoloistRole(string role);
+	public void Display(System.Collections.Generic.List<OrmandyTrack> tracks);
+	public string CreateAndWriteToSheet(System.Collections.Generic.List<OrmandyTrack> tracks);
+
+}
+public record OrmandyTrack : System.IEquatable<OrmandyTrack>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int DiscNumber { get; set; }
+	public int TrackNumber { get; set; }
+	public string Composer { get; set; }
+	public string Title { get; set; }
+	public int RecordingYear { get; set; }
+	public string Orchestra { get; set; }
+	public string Conductor { get; set; }
+	public System.Collections.Generic.List<string> Soloists { get; set; }
+	public string Venue { get; set; }
+	public System.Collections.Generic.List<string> RecordingDates { get; set; }
+	public System.Nullable<TimeSpan> Length { get; set; }
+
+	// ─── Constructors ───
+	public OrmandyTrack(int DiscNumber, int TrackNumber, string Composer, string Title, int RecordingYear, string Orchestra, string Conductor, System.Collections.Generic.List<string> Soloists, string Venue, System.Collections.Generic.List<string> RecordingDates, System.Nullable<TimeSpan> Length);
+	internal OrmandyTrack(CSharpScripts.Services.Music.OrmandyTrack original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.OrmandyTrack other);
+	public virtual CSharpScripts.Services.Music.OrmandyTrack <Clone>$();
+	public void Deconstruct(System.Int32& DiscNumber, System.Int32& TrackNumber, System.String& Composer, System.String& Title, System.Int32& RecordingYear, System.String& Orchestra, System.String& Conductor, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Soloists, System.String& Venue, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RecordingDates, System.Nullable`1[[System.TimeSpan, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Length);
+
+}
+public record UnifiedCredit : System.IEquatable<UnifiedCredit>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Name { get; set; }
+	public string Role { get; set; }
+
+	// ─── Constructors ───
+	public UnifiedCredit(string Name, string Role);
+	internal UnifiedCredit(CSharpScripts.Services.Music.UnifiedCredit original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.UnifiedCredit other);
+	public virtual CSharpScripts.Services.Music.UnifiedCredit <Clone>$();
+	public void Deconstruct(System.String& Name, System.String& Role);
+
+}
+public record UnifiedRelease : System.IEquatable<UnifiedRelease>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Title { get; set; }
+	public string Artist { get; set; }
+	public System.Nullable<int> Year { get; set; }
+	public string Country { get; set; }
+	public System.Collections.Generic.List<string> Genres { get; set; }
+	public System.Collections.Generic.List<string> Styles { get; set; }
+	public System.Collections.Generic.List<UnifiedTrack> Tracks { get; set; }
+	public System.Collections.Generic.List<UnifiedCredit> Credits { get; set; }
+	public string Source { get; set; }
+	public string ExternalId { get; set; }
+
+	// ─── Constructors ───
+	public UnifiedRelease(string Title, string Artist, System.Nullable<int> Year, string Country, System.Collections.Generic.List<string> Genres, System.Collections.Generic.List<string> Styles, System.Collections.Generic.List<UnifiedTrack> Tracks, System.Collections.Generic.List<UnifiedCredit> Credits, string Source, string ExternalId);
+	internal UnifiedRelease(CSharpScripts.Services.Music.UnifiedRelease original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.UnifiedRelease other);
+	public virtual CSharpScripts.Services.Music.UnifiedRelease <Clone>$();
+	public void Deconstruct(System.String& Title, System.String& Artist, System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Year, System.String& Country, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Genres, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Styles, System.Collections.Generic.List`1[[CSharpScripts.Services.Music.UnifiedTrack, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Tracks, System.Collections.Generic.List`1[[CSharpScripts.Services.Music.UnifiedCredit, CSharpScripts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]& Credits, System.String& Source, System.String& ExternalId);
+
+}
+public record UnifiedTrack : System.IEquatable<UnifiedTrack>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string Position { get; set; }
+	public string Title { get; set; }
+	public System.Nullable<TimeSpan> Duration { get; set; }
+	public string RecordingId { get; set; }
+
+	// ─── Constructors ───
+	public UnifiedTrack(string Position, string Title, System.Nullable<TimeSpan> Duration, string RecordingId);
+	internal UnifiedTrack(CSharpScripts.Services.Music.UnifiedTrack original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Music.UnifiedTrack other);
+	public virtual CSharpScripts.Services.Music.UnifiedTrack <Clone>$();
+	public void Deconstruct(System.String& Position, System.String& Title, System.Nullable`1[[System.TimeSpan, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& Duration, System.String& RecordingId);
+
+}
+
+## CSharpScripts.Services.Sync.Google
+----------------------------------------
+public static class GoogleCredentialService
+{
+	// ─── Fields ───
+	private static Google.Apis.Auth.OAuth2.UserCredential cachedCredential;
+	private static readonly string[] AllScopes;
+
+	// ─── Constructors ───
+	static GoogleCredentialService();
+
+	// ─── Methods ───
+	internal static Google.Apis.Auth.OAuth2.UserCredential GetCredential(string clientId, string clientSecret);
+	public static string GetAccessToken(Google.Apis.Auth.OAuth2.UserCredential credential);
+
+}
+public class GoogleSheetsService
+{
+	// ─── Fields ───
+	private const string SheetName;
+	private const string SpreadsheetTitle;
+	private static readonly System.Collections.Frozen.FrozenSet<object> Headers;
+	private readonly System.Collections.Generic.Dictionary<string, Spreadsheet> spreadsheetCache;
+	private readonly Google.Apis.Sheets.v4.SheetsService service;
+	private readonly Google.Apis.Drive.v3.DriveService driveService;
+
+	// ─── Constructors ───
+	public GoogleSheetsService(string clientId, string clientSecret);
+	static GoogleSheetsService();
+
+	// ─── Methods ───
+	public static string GetSpreadsheetUrl(string spreadsheetId);
+	private Google.Apis.Sheets.v4.Data.Spreadsheet GetSpreadsheetMetadata(string spreadsheetId, bool forceRefresh);
+	private void InvalidateCache(string spreadsheetId);
+	private Google.Apis.Sheets.v4.Data.Sheet FindSheet(string spreadsheetId, string sheetName, bool forceRefresh);
+	internal string CreateSpreadsheet(string title);
+	internal void DeleteSpreadsheet(string spreadsheetId);
+	internal bool SpreadsheetExists(string spreadsheetId);
+	internal void EnsureSubsheetExists(string spreadsheetId, string sheetName, System.Collections.Generic.IEnumerable<object> headers);
+	private int GetAlphabeticalInsertIndex(string spreadsheetId, string newSheetName);
+	internal void ReorderSheetsAlphabetically(string spreadsheetId);
+	internal void DeleteSubsheet(string spreadsheetId, string sheetName);
+	internal System.Collections.Generic.List<string> GetSubsheetNames(string spreadsheetId);
+	internal void ClearSubsheet(string spreadsheetId, string sheetName);
+	internal void WriteRows(string spreadsheetId, string sheetName, System.Collections.Generic.IList<IList<object>> rows);
+	internal void WriteRecords<T>(string spreadsheetId, string sheetName, System.Collections.Generic.IReadOnlyList<object> headers, IEnumerable<T> records, Func<T, IList<object>> rowMapper);
+	internal void AppendRecords<T>(string spreadsheetId, string sheetName, IEnumerable<T> records, Func<T, IList<object>> rowMapper);
+	internal void RenameSubsheet(string spreadsheetId, string oldName, string newName);
+	internal void CleanupDefaultSheet(string spreadsheetId);
+	private void EnsureHeadersForSheet(string spreadsheetId, string sheetName, System.Collections.Generic.IEnumerable<object> headers);
+	private static string EscapeSheetName(string name);
+	private static string SanitizeForFileName(string name);
+	internal void EnsureSheetExists(string spreadsheetId);
+	private void RenameDefaultSheet(string spreadsheetId, Google.Apis.Sheets.v4.Data.Spreadsheet spreadsheet);
+	private void EnsureHeaders(string spreadsheetId);
+	internal System.Nullable<DateTime> GetLatestScrobbleTime(string spreadsheetId);
+	internal bool SheetExists(string spreadsheetId);
+	internal int GetScrobbleCount(string spreadsheetId);
+	internal int DeleteScrobblesOnOrAfter(string spreadsheetId, System.DateTime fromDate);
+	internal System.Collections.Generic.List<Scrobble> GetNewScrobbles(string spreadsheetId, System.Collections.Generic.List<Scrobble> allScrobbles);
+	internal void WriteScrobbles(string spreadsheetId, System.Collections.Generic.List<Scrobble> scrobbles);
+	private void InsertRows(string spreadsheetId, System.Collections.Generic.IList<IList<object>> records);
+	private int GetSheetId(string spreadsheetId);
+	internal void SortSubsheetByColumn(string spreadsheetId, string sheetName, int columnIndex, bool ascending);
+	internal void DeleteRowsFromSubsheet(string spreadsheetId, string sheetName, System.Collections.Generic.List<int> rowIndices);
+	internal void AppendRows(string spreadsheetId, string sheetName, System.Collections.Generic.IList<IList<object>> rows);
+	internal string GetOrCreateSpreadsheet(string currentSpreadsheetId, string defaultSpreadsheetId, string spreadsheetTitle, System.Action<string> onSpreadsheetResolved);
+	internal int ExportEachSheetAsCSV(string spreadsheetId, string outputDirectory, System.Threading.CancellationToken ct);
+	internal System.Collections.Generic.List<ValueTuple<string, string>> FindDuplicateSpreadsheets(string title);
+
+}
+
+## CSharpScripts.Services.Sync.LastFm
+----------------------------------------
+public record FetchState : System.IEquatable<FetchState>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public int LastPage { get; set; }
+	public int TotalFetched { get; set; }
+	public System.DateTime LastUpdated { get; set; }
+	public string SpreadsheetId { get; set; }
+	public bool FetchComplete { get; set; }
+	public System.Nullable<DateTime> OldestScrobble { get; set; }
+	public System.Nullable<DateTime> NewestScrobble { get; set; }
+
+	// ─── Constructors ───
+	internal FetchState(CSharpScripts.Services.Sync.LastFm.FetchState original);
+	public FetchState();
+
+	// ─── Methods ───
+	internal void Update(int page, int total, System.Nullable<DateTime> oldest, System.Nullable<DateTime> newest);
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Sync.LastFm.FetchState other);
+	public virtual CSharpScripts.Services.Sync.LastFm.FetchState <Clone>$();
+
+}
+public class LastFmService
+{
+	// ─── Fields ───
+	private string <username>P;
+	private const int PerPage;
+	private readonly Hqub.Lastfm.LastfmClient client;
+
+	// ─── Constructors ───
+	public LastFmService(string apiKey, string username);
+
+	// ─── Methods ───
+	internal void FetchScrobblesSince(System.Nullable<DateTime> fetchAfter, CSharpScripts.Services.Sync.LastFm.FetchState state, System.Action<int, int, TimeSpan, Nullable<DateTime>, Nullable<DateTime>> onProgress, System.Threading.CancellationToken ct);
+	private static void SaveMergedScrobbles(System.Collections.Generic.List<Scrobble> existing, System.Collections.Generic.List<Scrobble> newOnes);
+	private System.Collections.Generic.List<Scrobble> FetchPage(int page, System.Threading.CancellationToken ct);
+	internal static System.Collections.Generic.List<Scrobble> LoadScrobbles();
+	public static void DeleteScrobblesCache();
+
+}
+public record Scrobble : System.IEquatable<Scrobble>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public string TrackName { get; set; }
+	public string ArtistName { get; set; }
+	public string AlbumName { get; set; }
+	public System.Nullable<DateTime> PlayedAt { get; set; }
+	internal string FormattedDate { get; }
+
+	// ─── Constructors ───
+	public Scrobble(string TrackName, string ArtistName, string AlbumName, System.Nullable<DateTime> PlayedAt);
+	internal Scrobble(CSharpScripts.Services.Sync.LastFm.Scrobble original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Sync.LastFm.Scrobble other);
+	public virtual CSharpScripts.Services.Sync.LastFm.Scrobble <Clone>$();
+	public void Deconstruct(System.String& TrackName, System.String& ArtistName, System.String& AlbumName, System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& PlayedAt);
+
+}
+
+## CSharpScripts.Services.Sync.YouTube
+----------------------------------------
+public record VideoChanges : System.IEquatable<VideoChanges>
+{
+	// ─── Properties ───
+	protected virtual System.Type EqualityContract { get; }
+	public System.Collections.Generic.List<string> AddedVideoIds { get; set; }
+	public System.Collections.Generic.List<string> RemovedVideoIds { get; set; }
+	public System.Collections.Generic.List<int> RemovedRowIndices { get; set; }
+	public bool RequiresFullRewrite { get; set; }
+	internal bool HasChanges { get; }
+
+	// ─── Constructors ───
+	public VideoChanges(System.Collections.Generic.List<string> AddedVideoIds, System.Collections.Generic.List<string> RemovedVideoIds, System.Collections.Generic.List<int> RemovedRowIndices, bool RequiresFullRewrite);
+	internal VideoChanges(CSharpScripts.Services.Sync.YouTube.VideoChanges original);
+
+	// ─── Methods ───
+	protected virtual bool PrintMembers(System.Text.StringBuilder builder);
+	public virtual bool Equals(CSharpScripts.Services.Sync.YouTube.VideoChanges other);
+	public virtual CSharpScripts.Services.Sync.YouTube.VideoChanges <Clone>$();
+	public void Deconstruct(System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& AddedVideoIds, System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RemovedVideoIds, System.Collections.Generic.List`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]& RemovedRowIndices, System.Boolean& RequiresFullRewrite);
+
+}
+public static class YouTubeChangeDetector
+{
+	// ─── Methods ───
+	internal static CSharpScripts.Services.Sync.YouTube.VideoChanges DetectVideoChanges(System.Collections.Generic.List<string> currentVideoIds, System.Collections.Generic.List<string> storedVideoIds);
+	internal static CSharpScripts.Models.PlaylistChanges DetectPlaylistChanges(System.Collections.Generic.List<YouTubePlaylist> currentPlaylists, System.Collections.Generic.Dictionary<string, PlaylistSnapshot> snapshots);
+	public static void LogDetectedChanges(CSharpScripts.Models.PlaylistChanges changes);
+	internal static CSharpScripts.Models.OptimizedChanges DetectOptimizedChanges(System.Collections.Generic.List<PlaylistSummary> currentSummaries, System.Collections.Generic.Dictionary<string, PlaylistSnapshot> snapshots);
+	public static void LogOptimizedChanges(CSharpScripts.Models.OptimizedChanges changes);
+
+}
+public class YouTubeService
+{
+	// ─── Fields ───
+	private const int MaxResultsPerPage;
+	private readonly Google.Apis.YouTube.v3.YouTubeService service;
+
+	// ─── Constructors ───
+	public YouTubeService(string clientId, string clientSecret);
+
+	// ─── Methods ───
+	internal System.Collections.Generic.List<PlaylistSummary> GetPlaylistSummaries(System.Threading.CancellationToken ct);
+	internal System.Nullable<PlaylistSummary> GetPlaylistSummary(string playlistId, System.Threading.CancellationToken ct);
+	internal System.Collections.Generic.List<string> GetPlaylistVideoIds(string playlistId, System.Threading.CancellationToken ct);
+	internal System.Collections.Generic.List<YouTubePlaylist> GetPlaylistMetadata(System.Threading.CancellationToken ct);
+	internal System.Collections.Generic.List<YouTubePlaylist> GetAllPlaylists(System.Threading.CancellationToken ct);
+	internal System.Collections.Generic.List<YouTubeVideo> GetVideoDetailsForIds(System.Collections.Generic.List<string> videoIds, System.Action<List<YouTubeVideo>> onBatchComplete, System.Threading.CancellationToken ct);
+	private System.Collections.Generic.List<YouTubeVideo> GetVideoDetails(System.Collections.Generic.List<string> videoIds, System.Threading.CancellationToken ct);
+	private static System.TimeSpan ParseDuration(string isoDuration);
+
+}
+

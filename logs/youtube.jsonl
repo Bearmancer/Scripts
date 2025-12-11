@@ -1,0 +1,147 @@
+{"Timestamp":"2025/12/11 03:11:15","Level":"Info","Event":"SessionStart","SessionId":"e7766fa7","Data":{"Service":"YouTube"}}
+{"Timestamp":"2025/12/11 03:13:02","Level":"Warning","Event":"SessionInterrupted","SessionId":"e7766fa7","Data":{"Status":"Interrupted","EndedAt":"2025/12/11 03:13:02","Progress":"Video ID fetch interrupted at 16/137 playlists"}}
+{"Timestamp":"2025/12/11 03:16:25","Level":"Info","Event":"SessionStart","SessionId":"298f8e3a","Data":{"Service":"YouTube"}}
+{"Timestamp":"2025/12/11 03:39:33","Level":"Error","Event":"SessionCrashed","SessionId":"298f8e3a","Data":{"OriginalStart":"2025/12/11 03:16:25","DetectedAt":"2025/12/11 03:39:33"}}
+{"Timestamp":"2025/12/11 03:39:33","Level":"Info","Event":"SessionStart","SessionId":"b92f353a","Data":{"Service":"YouTube"}}
+{"Timestamp":"2025/12/11 03:40:07","Level":"Warning","Event":"SessionInterrupted","SessionId":"b92f353a","Data":{"Status":"Interrupted","EndedAt":"2025/12/11 03:40:07","Progress":"Video ID fetch interrupted at 23/137 playlists"}}
+{"Timestamp":"2025/12/11 03:41:48","Level":"Info","Event":"SessionStart","SessionId":"6b40a71c","Data":{"Service":"YouTube"}}
+{"Timestamp":"2025/12/11 03:45:51","Level":"Warning","Event":"SessionInterrupted","SessionId":"6b40a71c","Data":{"Status":"Interrupted","EndedAt":"2025/12/11 03:45:51","Progress":"Video ID fetch interrupted at 64/137 playlists"}}
+{"Timestamp":"2025/12/11 03:55:46","Level":"Info","Event":"SessionStart","SessionId":"2fd1b74d","Data":{"Service":"YouTube"}}
+{"Timestamp":"2025/12/11 04:02:51","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Alain Altinoglu","Videos":68}}
+{"Timestamp":"2025/12/11 04:03:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Alan Gilbert","Videos":87}}
+{"Timestamp":"2025/12/11 04:03:42","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Alexander Sladkovsky","Videos":22}}
+{"Timestamp":"2025/12/11 04:04:06","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"American Piano Concertos","Videos":31}}
+{"Timestamp":"2025/12/11 04:04:39","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Andrés Orozco-Estrada","Videos":157}}
+{"Timestamp":"2025/12/11 04:05:06","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Andris Nelsons","Videos":65}}
+{"Timestamp":"2025/12/11 04:05:30","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Antal Dorati","Videos":1}}
+{"Timestamp":"2025/12/11 04:05:57","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Antonio Pappano","Videos":52}}
+{"Timestamp":"2025/12/11 04:06:20","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Bad","Videos":13}}
+{"Timestamp":"2025/12/11 04:06:44","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Beethoven Symphonies Live","Videos":18}}
+{"Timestamp":"2025/12/11 04:07:08","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Beethoven Symphony No. 5","Videos":21}}
+{"Timestamp":"2025/12/11 04:07:34","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Bernard Haitink","Videos":54}}
+{"Timestamp":"2025/12/11 04:08:05","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Bowie","Videos":106}}
+{"Timestamp":"2025/12/11 04:08:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"BRSO","Videos":18}}
+{"Timestamp":"2025/12/11 04:08:52","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Bruno Walter","Videos":20}}
+{"Timestamp":"2025/12/11 04:09:19","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Carlo Maria Giulini","Videos":90}}
+{"Timestamp":"2025/12/11 04:09:42","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Chamber","Videos":6}}
+{"Timestamp":"2025/12/11 04:10:06","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Charles Mackerras","Videos":4}}
+{"Timestamp":"2025/12/11 04:10:30","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Charles Munch","Videos":7}}
+{"Timestamp":"2025/12/11 04:10:54","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Christian Thielemann","Videos":36}}
+{"Timestamp":"2025/12/11 04:11:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Christoph von Dohnanyi","Videos":27}}
+{"Timestamp":"2025/12/11 04:11:42","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Classical for Newbies","Videos":9}}
+{"Timestamp":"2025/12/11 04:12:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Claudio Abbado","Videos":182}}
+{"Timestamp":"2025/12/11 04:12:41","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Colin Davis","Videos":35}}
+{"Timestamp":"2025/12/11 04:13:05","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Comedy","Videos":11}}
+{"Timestamp":"2025/12/11 04:13:29","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Concertos for Two Pianos","Videos":4}}
+{"Timestamp":"2025/12/11 04:13:56","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Cristian Măcelaru","Videos":60}}
+{"Timestamp":"2025/12/11 04:14:27","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Daniel Barenboim","Videos":127}}
+{"Timestamp":"2025/12/11 04:14:54","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Daniel Harding","Videos":73}}
+{"Timestamp":"2025/12/11 04:15:21","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Dima Slobodeniouk","Videos":63}}
+{"Timestamp":"2025/12/11 04:15:45","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Dvořák Symphony No. 9","Videos":18}}
+{"Timestamp":"2025/12/11 04:16:08","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Edward Gardner","Videos":11}}
+{"Timestamp":"2025/12/11 04:16:32","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Eliahu Inbal","Videos":43}}
+{"Timestamp":"2025/12/11 04:16:56","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Elim Chan","Videos":20}}
+{"Timestamp":"2025/12/11 04:17:19","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Erich Leinsdorf","Videos":5}}
+{"Timestamp":"2025/12/11 04:17:46","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Esa-Pekka Salonen","Videos":63}}
+{"Timestamp":"2025/12/11 04:18:10","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Eugen Jochum","Videos":2}}
+{"Timestamp":"2025/12/11 04:18:44","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Eugene Ormandy","Videos":172}}
+{"Timestamp":"2025/12/11 04:19:07","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Evgeny Svetlanov","Videos":5}}
+{"Timestamp":"2025/12/11 04:19:34","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Fabio Luisi","Videos":59}}
+{"Timestamp":"2025/12/11 04:19:58","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"François-Xavier Roth","Videos":40}}
+{"Timestamp":"2025/12/11 04:20:22","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Frankfurt Radio Symphony Orchestra","Videos":38}}
+{"Timestamp":"2025/12/11 04:20:46","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Franz Welser-Möst","Videos":22}}
+{"Timestamp":"2025/12/11 04:21:13","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Gennady Rozhdestvensky","Videos":90}}
+{"Timestamp":"2025/12/11 04:21:37","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Geopolitics","Videos":30}}
+{"Timestamp":"2025/12/11 04:22:08","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Georg Solti","Videos":112}}
+{"Timestamp":"2025/12/11 04:22:31","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"George Szell","Videos":22}}
+{"Timestamp":"2025/12/11 04:22:59","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Gianandrea Noseda","Videos":59}}
+{"Timestamp":"2025/12/11 04:23:23","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Giovanni Antonini","Videos":13}}
+{"Timestamp":"2025/12/11 04:23:50","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Giuseppe Sinopoli","Videos":62}}
+{"Timestamp":"2025/12/11 04:24:14","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Good","Videos":16}}
+{"Timestamp":"2025/12/11 04:24:38","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Great","Videos":4}}
+{"Timestamp":"2025/12/11 04:25:02","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Günter Wand","Videos":33}}
+{"Timestamp":"2025/12/11 04:25:26","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Gustavo Dudamel","Videos":34}}
+{"Timestamp":"2025/12/11 04:25:49","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Hannu Lintu","Videos":1}}
+{"Timestamp":"2025/12/11 04:26:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Herbert Blomstedt","Videos":89}}
+{"Timestamp":"2025/12/11 04:26:54","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Herbert von Karajan","Videos":213}}
+{"Timestamp":"2025/12/11 04:27:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Hermann Scherchen","Videos":12}}
+{"Timestamp":"2025/12/11 04:28:03","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Hindi","Videos":301}}
+{"Timestamp":"2025/12/11 04:28:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"HIP","Videos":10}}
+{"Timestamp":"2025/12/11 04:29:05","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"HK, Naushad, SD, SJ and MM","Videos":234}}
+{"Timestamp":"2025/12/11 04:29:29","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Horrid","Videos":2}}
+{"Timestamp":"2025/12/11 04:29:53","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Jakub Hrůša","Videos":25}}
+{"Timestamp":"2025/12/11 04:30:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"James Levine","Videos":15}}
+{"Timestamp":"2025/12/11 04:30:41","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Joanna Mallwitz","Videos":1}}
+{"Timestamp":"2025/12/11 04:31:05","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"John Eliot Gardiner","Videos":1}}
+{"Timestamp":"2025/12/11 04:31:33","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Jukka-Pekka Saraste","Videos":79}}
+{"Timestamp":"2025/12/11 04:32:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"K-Man's Greatest Hindi Hits","Videos":314}}
+{"Timestamp":"2025/12/11 04:32:51","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Kalevi Aho","Videos":195}}
+{"Timestamp":"2025/12/11 04:33:15","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Karina Canellakis","Videos":49}}
+{"Timestamp":"2025/12/11 04:33:40","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Kent Nagano","Videos":33}}
+{"Timestamp":"2025/12/11 04:34:04","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Kirill Petrenko","Videos":8}}
+{"Timestamp":"2025/12/11 04:34:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Klaus Makela","Videos":44}}
+{"Timestamp":"2025/12/11 04:35:09","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Klaus Tennstedt","Videos":285}}
+{"Timestamp":"2025/12/11 04:35:33","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Krzysztof Penderecki","Videos":47}}
+{"Timestamp":"2025/12/11 04:35:58","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Leonard Bernstein","Videos":11}}
+{"Timestamp":"2025/12/11 04:36:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Leopold Stokowski","Videos":147}}
+{"Timestamp":"2025/12/11 04:36:53","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Liszt Orchestral Works","Videos":29}}
+{"Timestamp":"2025/12/11 04:37:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Liszt Two-Piano","Videos":23}}
+{"Timestamp":"2025/12/11 04:37:51","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Lorin Maazel","Videos":185}}
+{"Timestamp":"2025/12/11 04:38:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Manfred Honeck","Videos":49}}
+{"Timestamp":"2025/12/11 04:38:42","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Marin Alsop","Videos":2}}
+{"Timestamp":"2025/12/11 04:39:13","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Mariss Jansons","Videos":122}}
+{"Timestamp":"2025/12/11 04:39:37","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Michael Tilson Thomas","Videos":46}}
+{"Timestamp":"2025/12/11 04:40:01","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Mikhail Pletnev","Videos":44}}
+{"Timestamp":"2025/12/11 04:40:25","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Miscellaneous","Videos":14}}
+{"Timestamp":"2025/12/11 04:40:49","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Modern","Videos":14}}
+{"Timestamp":"2025/12/11 04:41:13","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Mozart Symphony No. 39","Videos":11}}
+{"Timestamp":"2025/12/11 04:41:44","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Myung-whun Chung","Videos":134}}
+{"Timestamp":"2025/12/11 04:42:08","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Nathalie Stutzmann","Videos":32}}
+{"Timestamp":"2025/12/11 04:42:32","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"NDR Klassik","Videos":6}}
+{"Timestamp":"2025/12/11 04:42:56","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Neeme Jarvi","Videos":21}}
+{"Timestamp":"2025/12/11 04:43:20","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Nonet","Videos":13}}
+{"Timestamp":"2025/12/11 04:43:44","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Octet","Videos":9}}
+{"Timestamp":"2025/12/11 04:44:08","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"OK","Videos":9}}
+{"Timestamp":"2025/12/11 04:44:32","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Okko Kamu","Videos":9}}
+{"Timestamp":"2025/12/11 04:44:56","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Otto Klemperer","Videos":5}}
+{"Timestamp":"2025/12/11 04:45:24","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Paavo Järvi","Videos":87}}
+{"Timestamp":"2025/12/11 04:45:48","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Pablo Heras-Casado","Videos":2}}
+{"Timestamp":"2025/12/11 04:46:12","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Percussion and Orchestra","Videos":7}}
+{"Timestamp":"2025/12/11 04:46:40","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Pierre Boulez","Videos":98}}
+{"Timestamp":"2025/12/11 04:47:04","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Pierre Monteux","Videos":38}}
+{"Timestamp":"2025/12/11 04:47:31","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Rafael Kubelik","Videos":81}}
+{"Timestamp":"2025/12/11 04:47:55","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Rafael Payare","Videos":4}}
+{"Timestamp":"2025/12/11 04:48:23","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Random","Videos":62}}
+{"Timestamp":"2025/12/11 04:48:50","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Ricardo Chailly","Videos":48}}
+{"Timestamp":"2025/12/11 04:49:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Riccardo Muti","Videos":85}}
+{"Timestamp":"2025/12/11 04:49:45","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Sakari Oramo","Videos":51}}
+{"Timestamp":"2025/12/11 04:50:10","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Schubert Symphony No. 3","Videos":17}}
+{"Timestamp":"2025/12/11 04:50:34","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Schumann Symphony No. 2","Videos":36}}
+{"Timestamp":"2025/12/11 04:51:01","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Seiji Ozawa","Videos":57}}
+{"Timestamp":"2025/12/11 04:51:29","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Semyon Bychkov","Videos":88}}
+{"Timestamp":"2025/12/11 04:51:53","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Septet","Videos":5}}
+{"Timestamp":"2025/12/11 04:52:18","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Sextets","Videos":10}}
+{"Timestamp":"2025/12/11 04:52:49","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Simon Rattle","Videos":105}}
+{"Timestamp":"2025/12/11 04:53:13","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Soviet Symphonists","Videos":14}}
+{"Timestamp":"2025/12/11 04:53:38","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Stanislaw Skrowaczewski","Videos":21}}
+{"Timestamp":"2025/12/11 04:54:02","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Susanna Mälkki","Videos":36}}
+{"Timestamp":"2025/12/11 04:54:26","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Tchaikovsky Piano Concerto No. 1","Videos":34}}
+{"Timestamp":"2025/12/11 04:54:51","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Tchaikovsky Piano Concerto No. 2","Videos":26}}
+{"Timestamp":"2025/12/11 04:55:15","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Tchaikovsky Symphony No. 6","Videos":43}}
+{"Timestamp":"2025/12/11 04:55:39","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Thomas Beecham","Videos":22}}
+{"Timestamp":"2025/12/11 04:56:04","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Thomas Dausgaard","Videos":9}}
+{"Timestamp":"2025/12/11 04:56:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Thomas Sondergard","Videos":5}}
+{"Timestamp":"2025/12/11 04:56:52","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"To Do","Videos":8}}
+{"Timestamp":"2025/12/11 04:57:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Valery Gergiev","Videos":166}}
+{"Timestamp":"2025/12/11 04:57:59","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Vasily Petrenko","Videos":129}}
+{"Timestamp":"2025/12/11 04:58:26","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Vladimir Jurowski","Videos":57}}
+{"Timestamp":"2025/12/11 04:58:51","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Wagner Rienzi Overture","Videos":33}}
+{"Timestamp":"2025/12/11 04:59:15","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"William Steinberg","Videos":18}}
+{"Timestamp":"2025/12/11 04:59:40","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Wolfgang Sawallisch","Videos":43}}
+{"Timestamp":"2025/12/11 05:00:04","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Yannick Nézet-Séguin","Videos":33}}
+{"Timestamp":"2025/12/11 05:00:28","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Yefim Bronfman","Videos":8}}
+{"Timestamp":"2025/12/11 05:00:53","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Yevgeny Svetlanov","Videos":1}}
+{"Timestamp":"2025/12/11 05:01:17","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Yuri Simonov","Videos":2}}
+{"Timestamp":"2025/12/11 05:01:45","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Yuri Temirkanov","Videos":87}}
+{"Timestamp":"2025/12/11 05:02:19","Level":"Info","Event":"PlaylistCreated","SessionId":"2fd1b74d","Data":{"Title":"Zubin Mehta","Videos":161}}
+{"Timestamp":"2025/12/11 05:02:26","Level":"Info","Event":"SessionEnd","SessionId":"2fd1b74d","Data":{"Status":"Completed","EndedAt":"2025/12/11 05:02:26","Summary":"Synced 137 playlists (137 updated, 0 unchanged)"}}
