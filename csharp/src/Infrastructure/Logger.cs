@@ -23,13 +23,33 @@ public static class Logger
         CreateDirectory(Paths.LogDirectory);
         DetectCrashedSessions(service);
 
-        Event("SessionStart", new Dictionary<string, object> { ["Service"] = service.ToString() });
+        Event(
+            "SessionStart",
+            new Dictionary<string, object> { ["ProcessId"] = Environment.ProcessId }
+        );
     }
 
-    public static void End(bool success, string? summary = null)
+    public static void End(bool success, string? summary = null, Exception? exception = null)
     {
         if (ActiveService == null || SessionId == null)
             return;
+
+        if (exception is not null)
+        {
+            Dictionary<string, object> exData = new()
+            {
+                ["Type"] = exception.GetType().Name,
+                ["Message"] = exception.Message,
+            };
+            if (exception.InnerException is { } inner)
+            {
+                exData["InnerType"] = inner.GetType().Name;
+                exData["InnerMessage"] = inner.Message;
+            }
+            if (exception is AggregateException aex)
+                exData["ErrorCount"] = aex.InnerExceptions.Count;
+            Event("Exception", exData, LogLevel.Error);
+        }
 
         string status = success ? "Completed" : "Failed";
 
@@ -42,9 +62,6 @@ public static class Logger
             data["Summary"] = summary;
 
         Event("SessionEnd", data);
-
-        // Print log location to console
-        Console.FileLink(GetLogPath(ActiveService.Value));
 
         ActiveService = null;
         SessionId = null;
@@ -65,9 +82,6 @@ public static class Logger
             data["Progress"] = progress;
 
         Event("SessionInterrupted", data, LogLevel.Warning);
-
-        // Print log location to console
-        Console.FileLink(GetLogPath(ActiveService.Value));
 
         ActiveService = null;
         SessionId = null;
@@ -103,12 +117,6 @@ public static class Logger
             SessionId
         );
     }
-
-    public static void PlaylistCreated(string title, int videoCount) =>
-        Event(
-            "PlaylistCreated",
-            new Dictionary<string, object> { ["Title"] = title, ["Videos"] = videoCount }
-        );
 
     public static void PlaylistUpdated(
         string title,
@@ -189,23 +197,31 @@ public static class Logger
             if (IsNullOrWhiteSpace(line))
                 continue;
 
-            LogEntry? entry;
+            LogEntry? entry = null;
             try
             {
                 entry = JsonSerializer.Deserialize<LogEntry>(line, StateManager.JsonCompact);
             }
             catch
             {
+                // Intentionally skip malformed JSON lines - crash detection must be robust
+                // to corrupted log files and should not fail the entire session startup
                 continue;
             }
 
-            if (entry?.SessionId == null)
+            if (entry?.SessionId is not { } sessionId)
                 continue;
 
-            if (entry.Event == "SessionStart")
-                openSessions[entry.SessionId] = entry.Timestamp;
-            else if (entry.Event is "SessionEnd" or "SessionInterrupted" or "SessionCrashed")
-                openSessions.Remove(entry.SessionId);
+            _ = entry.Event switch
+            {
+                "SessionStart" => openSessions[sessionId] = entry.Timestamp,
+                "SessionEnd" or "SessionInterrupted" or "SessionCrashed" => openSessions.Remove(
+                    sessionId
+                )
+                    ? null
+                    : null,
+                _ => null,
+            };
         }
 
         foreach ((string crashedId, string startTime) in openSessions)

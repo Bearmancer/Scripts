@@ -6,20 +6,20 @@ namespace CSharpScripts.Services.Music;
 public record OrmandyTrack(
     int DiscNumber,
     int TrackNumber,
-    string Composer,
+    string? Composer,
     string Title,
     string? WorkTitle,
     Guid? WorkId,
-    int RecordingYear,
-    string Orchestra,
-    string Conductor,
+    int? RecordingYear,
+    string? Orchestra,
+    string? Conductor,
     List<string> Soloists,
     string? Venue,
     List<string> RecordingDates,
     TimeSpan? Length = null,
-    bool ComposerFromFallback = false,
     string? ParentWorkTitle = null,
-    Guid? ParentWorkId = null
+    Guid? ParentWorkId = null,
+    List<string>? MetadataIssues = null
 );
 
 public record BoxSetCache(
@@ -66,24 +66,27 @@ public sealed class OrmandyBoxParser
 
     void WriteLogFile()
     {
-        string logDir = Combine(Paths.LogDirectory, "ormandy");
-        CreateDirectory(logDir);
-        string logPath = Combine(logDir, $"parse-{DateTime.Now:yyyy-MM-dd-HHmmss}.log");
-        WriteAllLines(logPath, LogEntries);
+        CreateDirectory(Paths.LogDirectory);
+        string logPath = Combine(Paths.LogDirectory, "ormandy.log");
+        AppendAllLines(logPath, LogEntries);
         Print($"[dim]Log: {logPath}[/]");
     }
 
     void WriteDumpFile(List<OrmandyTrack> tracks)
     {
-        string dumpDir = Combine(Paths.LogDirectory, "dumps");
+        string dumpDir = Combine(Paths.LogDirectory, "dumps", "ormandy");
         CreateDirectory(dumpDir);
-        string dumpPath = Combine(dumpDir, $"ormandy-{DateTime.Now:yyyy-MM-dd-HHmmss}.json");
-        string json = JsonSerializer.Serialize(
-            tracks,
-            new JsonSerializerOptions { WriteIndented = true }
-        );
-        WriteAllText(dumpPath, json);
-        Print($"[dim]Dump: {dumpPath}[/]");
+        foreach (OrmandyTrack track in tracks)
+        {
+            string fileName = $"{track.DiscNumber:D2}-{track.TrackNumber:D2}.json";
+            string dumpPath = Combine(dumpDir, fileName);
+            string json = JsonSerializer.Serialize(
+                track,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
+            WriteAllText(dumpPath, json);
+        }
+        Print($"[dim]Dumps: {dumpDir} ({tracks.Count} tracks)[/]");
     }
 
     static void Print(string markup) => AnsiConsole.MarkupLine(markup);
@@ -204,17 +207,24 @@ public sealed class OrmandyBoxParser
         string recordingUrl = $"https://musicbrainz.org/recording/{recording.Id}";
         Log($"  Recording: {recordingUrl}");
 
-        IRecording fullRecording =
-            await Query.LookupRecordingAsync(
-                recording.Id,
-                Include.ArtistCredits
-                    | Include.ArtistRelationships
-                    | Include.WorkRelationships
-                    | Include.Annotation,
-                null,
-                null,
-                ct
-            ) ?? throw new InvalidOperationException($"Recording not found: {recording.Id}");
+        IRecording? fullRecording = await Query.LookupRecordingAsync(
+            recording.Id,
+            Include.ArtistCredits
+                | Include.ArtistRelationships
+                | Include.WorkRelationships
+                | Include.Annotation,
+            null,
+            null,
+            ct
+        );
+
+        if (fullRecording is null)
+        {
+            Print($"[yellow]Recording not found: {recording.Id}[/]");
+            if (!Confirm("Skip this track and continue?"))
+                return new(false, null, "Recording not found - user aborted");
+            return new(false, null, "Recording not found");
+        }
 
         string? composer = null;
         string? orchestra = null;
@@ -223,8 +233,6 @@ public sealed class OrmandyBoxParser
         List<string> soloists = [];
         List<string> recordingDates = [];
         int? recordingYear = null;
-        bool composerFromFallback = false;
-        string? fallbackArtist = null;
         Guid? workId = null;
         string? workTitle = null;
         Guid? parentWorkId = null;
@@ -235,14 +243,12 @@ public sealed class OrmandyBoxParser
             foreach (INameCredit credit in credits)
             {
                 string name = credit.Artist?.Name ?? "";
-                if (!IsNullOrWhiteSpace(name))
-                {
-                    fallbackArtist ??= name;
-                    if (name.Contains("Orchestra") || name.Contains("Philharmonic"))
-                        orchestra ??= name;
-                }
+                if (
+                    !IsNullOrWhiteSpace(name)
+                    && (name.Contains("Orchestra") || name.Contains("Philharmonic"))
+                )
+                    orchestra ??= name;
             }
-            Log($"  ArtistCredit: {fallbackArtist ?? "[none]"}");
         }
 
         Log($"  RELATIONSHIPS ({fullRecording.Relationships?.Count() ?? 0}):");
@@ -290,121 +296,81 @@ public sealed class OrmandyBoxParser
                 {
                     string role = rel.Type?.ToLowerInvariant() ?? "";
 
-                    if (role is "conductor" or "director")
+                    Action? action = role switch
                     {
-                        conductor = artist.Name;
-                        Log($"      → conductor: {conductor}");
-                    }
-                    else if (role is "orchestra" or "performing orchestra" or "performer")
-                    {
-                        orchestra = artist.Name;
-                        Log($"      → orchestra: {orchestra}");
-                    }
-                    else if (IsSoloistRole(role))
-                    {
-                        string instrument = rel.Attributes?.FirstOrDefault() ?? role;
-                        string soloistEntry = $"{artist.Name} ({instrument})";
-                        if (!soloists.Contains(soloistEntry))
+                        "conductor" or "director" => () =>
                         {
-                            soloists.Add(soloistEntry);
-                            Log($"      → soloist: {soloistEntry}");
-                        }
-                    }
+                            conductor = artist.Name;
+                            Log($"      → conductor: {conductor}");
+                        },
+                        "orchestra" or "performing orchestra" or "performer" => () =>
+                        {
+                            orchestra = artist.Name;
+                            Log($"      → orchestra: {orchestra}");
+                        },
+                        var r when IsSoloistRole(r) => () =>
+                        {
+                            string instrument = rel.Attributes?.FirstOrDefault() ?? role;
+                            string soloistEntry = $"{artist.Name} ({instrument})";
+                            if (!soloists.Contains(soloistEntry))
+                            {
+                                soloists.Add(soloistEntry);
+                                Log($"      → soloist: {soloistEntry}");
+                            }
+                        },
+                        _ => null,
+                    };
+                    action?.Invoke();
                 }
             }
         }
 
-        if (composer is null && fallbackArtist is not null)
-        {
-            composer = fallbackArtist;
-            composerFromFallback = true;
-            Log($"  FALLBACK: composer from artist credit: {composer}");
-        }
+        // Collect all metadata issues - no fallbacks, no prompts
+        List<string> issues = [];
+
+        // Critical issues (composer, work, year)
+        if (composer is null)
+            issues.Add("[CRITICAL] Missing composer");
+        if (workTitle is null)
+            issues.Add("[CRITICAL] Missing work title");
+        if (parentWorkId is null && workId is not null)
+            issues.Add("[CRITICAL] Missing parent work");
+        if (recordingYear is null)
+            issues.Add("[CRITICAL] Missing recording year");
+        else if (recordingYear < EXPECTED_START_YEAR || recordingYear > EXPECTED_END_YEAR)
+            issues.Add(
+                $"[CRITICAL] Year {recordingYear} outside range {EXPECTED_START_YEAR}-{EXPECTED_END_YEAR}"
+            );
+
+        // Performer issues (separate section)
+        if (orchestra is null)
+            issues.Add("[PERFORMER] Missing orchestra");
+        if (conductor is null)
+            issues.Add("[PERFORMER] Missing conductor");
 
         Log($"  FINAL:");
-        Log(
-            $"    Composer:    {composer ?? "[MISSING]"}{(composerFromFallback ? " (fallback)" : "")}"
-        );
+        Log($"    Composer:    {composer ?? "[MISSING]"}");
         Log($"    Work:        {workTitle ?? "[none]"}");
         Log($"    Parent:      {parentWorkTitle ?? "[none]"}");
         Log($"    Year:        {recordingYear?.ToString() ?? "[MISSING]"}");
         Log($"    Orchestra:   {orchestra ?? "[MISSING]"}");
         Log($"    Conductor:   {conductor ?? "[MISSING]"}");
+        if (issues.Count > 0)
+            Log($"    Issues:      {issues.Count} found");
 
         AnsiConsole.WriteLine();
         Print($"[cyan]Track {discNumber}.{trackNumber}[/] {Markup.Escape(trackTitle)}");
-        PrintStatus("Composer", composer, composerFromFallback ? "yellow" : "green");
+        PrintStatus("Composer", composer, composer is not null ? "green" : "red");
         PrintStatus("Work", workTitle, "blue");
         if (parentWorkTitle is not null)
             PrintStatus("Parent Work", parentWorkTitle, "blue");
-        PrintStatus("Year", recordingYear?.ToString(), "green");
-        PrintStatus("Orchestra", orchestra, "green");
-        PrintStatus("Conductor", conductor, "green");
+        PrintStatus("Year", recordingYear?.ToString(), recordingYear.HasValue ? "green" : "red");
+        PrintStatus("Orchestra", orchestra, orchestra is not null ? "green" : "yellow");
+        PrintStatus("Conductor", conductor, conductor is not null ? "green" : "yellow");
         if (soloists.Count > 0)
             PrintStatus("Soloists", Join(", ", soloists), "cyan");
 
-        if (composer is null)
-        {
-            string? input = Prompt($"[yellow]Enter composer[/] (or press Enter to skip): ");
-            if (input is null)
-            {
-                Log($"  SKIPPED: user skipped missing composer");
-                return new(false, null, "Missing composer");
-            }
-            composer = input;
-            composerFromFallback = true;
-            Log($"  USER: composer={composer}");
-        }
-
-        if (recordingYear is null)
-        {
-            string? input = Prompt($"[yellow]Enter year[/] (or press Enter to skip): ");
-            if (input is null || !int.TryParse(input, out int year))
-            {
-                Log($"  SKIPPED: user skipped missing year");
-                return new(false, null, "Missing year");
-            }
-            recordingYear = year;
-            Log($"  USER: year={recordingYear}");
-        }
-
-        if (recordingYear < EXPECTED_START_YEAR || recordingYear > EXPECTED_END_YEAR)
-        {
-            Print(
-                $"[yellow]⚠ Year {recordingYear} outside expected range ({EXPECTED_START_YEAR}-{EXPECTED_END_YEAR})[/]"
-            );
-            if (!Confirm($"Include this track anyway?"))
-            {
-                Log($"  SKIPPED: year {recordingYear} outside range, user declined");
-                return new(false, null, $"Year {recordingYear} outside range");
-            }
-            Log($"  USER: confirmed year {recordingYear} outside range");
-        }
-
-        if (orchestra is null)
-        {
-            string? input = Prompt($"[yellow]Enter orchestra[/] (or press Enter to skip): ");
-            if (input is null)
-            {
-                Log($"  SKIPPED: user skipped missing orchestra");
-                return new(false, null, "Missing orchestra");
-            }
-            orchestra = input;
-            Log($"  USER: orchestra={orchestra}");
-        }
-
-        if (conductor is null)
-        {
-            string? input = Prompt($"[yellow]Enter conductor[/] (or press Enter to skip): ");
-            if (input is null)
-            {
-                Log($"  SKIPPED: user skipped missing conductor");
-                return new(false, null, "Missing conductor");
-            }
-            conductor = input;
-            Log($"  USER: conductor={conductor}");
-        }
-
+        // Always create track - issues are logged separately
         OrmandyTrack newTrack = new(
             DiscNumber: discNumber,
             TrackNumber: trackNumber,
@@ -412,20 +378,25 @@ public sealed class OrmandyBoxParser
             Title: trackTitle,
             WorkTitle: workTitle,
             WorkId: workId,
-            RecordingYear: recordingYear.Value,
+            RecordingYear: recordingYear,
             Orchestra: orchestra,
             Conductor: conductor,
             Soloists: soloists,
             Venue: venue,
             RecordingDates: recordingDates,
             Length: trackLength,
-            ComposerFromFallback: composerFromFallback,
             ParentWorkTitle: parentWorkTitle,
-            ParentWorkId: parentWorkId
+            ParentWorkId: parentWorkId,
+            MetadataIssues: issues.Count > 0 ? issues : null
         );
 
-        Log($"  ✓ PARSED");
-        Print($"[green]  ✓ Added[/]");
+        string status = issues.Count switch
+        {
+            0 => "[green]  ✓ Added[/]",
+            _ => $"[yellow]  ⚠ Added with {issues.Count} issue(s)[/]",
+        };
+        Log($"  ✓ PARSED (issues: {issues.Count})");
+        Print(status);
 
         return new(true, newTrack, null);
     }
@@ -461,19 +432,26 @@ public sealed class OrmandyBoxParser
 
         Print("[blue]Fetching release from MusicBrainz...[/]");
 
-        IRelease release =
-            await Query.LookupReleaseAsync(
-                MusicBrainzReleaseId,
-                Include.ArtistCredits
-                    | Include.Recordings
-                    | Include.Media
-                    | Include.Labels
-                    | Include.ArtistRelationships
-                    | Include.RecordingRelationships
-                    | Include.WorkRelationships
-                    | Include.Annotation,
-                cancellationToken
-            ) ?? throw new InvalidOperationException($"Release not found: {MusicBrainzReleaseId}");
+        IRelease? release = await Query.LookupReleaseAsync(
+            MusicBrainzReleaseId,
+            Include.ArtistCredits
+                | Include.Recordings
+                | Include.Media
+                | Include.Labels
+                | Include.ArtistRelationships
+                | Include.RecordingRelationships
+                | Include.WorkRelationships
+                | Include.Annotation,
+            cancellationToken
+        );
+
+        if (release is null)
+        {
+            Print($"[red]Release not found: {MusicBrainzReleaseId}[/]");
+            if (!Confirm("Abort parsing?"))
+                return [];
+            return [];
+        }
 
         string releaseTitle = release.Title ?? "Unknown";
         string releaseArtist = release.ArtistCredit?.FirstOrDefault()?.Artist?.Name ?? "Unknown";
@@ -492,13 +470,15 @@ public sealed class OrmandyBoxParser
         AnsiConsole.WriteLine();
 
         if (release.Media is null)
-            throw new InvalidOperationException("Release has no media");
+        {
+            Print("[red]Release has no media[/]");
+            return [];
+        }
 
         int totalTracks = release.Media.Sum(m => m.TrackCount);
         List<OrmandyTrack> tracks = [];
         int parsedCount = 0;
-        int skippedCount = 0;
-        Dictionary<string, int> skipReasons = [];
+        List<string> failureLogs = [];
 
         try
         {
@@ -556,18 +536,23 @@ public sealed class OrmandyBoxParser
                                 cancellationToken
                             );
 
-                            if (result.Success && result.Track is not null)
+                            if (result.Track is not null)
                             {
                                 tracks.Add(result.Track);
                                 parsedCount++;
+
+                                // Track issues for logging
+                                if (result.Track.MetadataIssues is { Count: > 0 } issues)
+                                {
+                                    foreach (string issue in issues)
+                                        failureLogs.Add(
+                                            $"Disc {discNumber} Track {track.Position}: {issue}"
+                                        );
+                                }
+
+                                string composerDisplay = result.Track.Composer ?? "?";
                                 progressTask.Description =
-                                    $"[cyan]{result.Track.DiscNumber}.{result.Track.TrackNumber}[/] [dim]{Markup.Escape(TruncateTitle(result.Track.Composer, 20))}[/]";
-                            }
-                            else
-                            {
-                                skippedCount++;
-                                string reason = result.SkipReason ?? "Unknown";
-                                skipReasons[reason] = skipReasons.GetValueOrDefault(reason) + 1;
+                                    $"[cyan]{result.Track.DiscNumber}.{result.Track.TrackNumber}[/] [dim]{Markup.Escape(TruncateTitle(composerDisplay, 20))}[/]";
                             }
 
                             progressTask.Increment(1);
@@ -581,17 +566,48 @@ public sealed class OrmandyBoxParser
             WriteLogFile();
             if (tracks.Count > 0)
                 WriteDumpFile(tracks);
+
+            if (failureLogs.Count > 0)
+            {
+                // Write issues file with sections
+                List<string> criticalIssues = failureLogs
+                    .Where(l => l.Contains("[CRITICAL]"))
+                    .ToList();
+                List<string> performerIssues = failureLogs
+                    .Where(l => l.Contains("[PERFORMER]"))
+                    .ToList();
+
+                List<string> issueReport = ["═══ METADATA ISSUES REPORT ═══", ""];
+
+                if (criticalIssues.Count > 0)
+                {
+                    issueReport.Add("─── CRITICAL ISSUES ───");
+                    issueReport.AddRange(criticalIssues);
+                    issueReport.Add("");
+                }
+
+                if (performerIssues.Count > 0)
+                {
+                    issueReport.Add("─── PERFORMER ISSUES ───");
+                    issueReport.AddRange(performerIssues);
+                    issueReport.Add("");
+                }
+
+                issueReport.Add($"═══ TOTAL: {failureLogs.Count} issues ═══");
+
+                string issuePath = Combine(Paths.LogDirectory, "ormandy_issues.log");
+                WriteAllLines(issuePath, issueReport);
+                Print($"[yellow]Wrote {failureLogs.Count} issues to {issuePath}[/]");
+            }
         }
 
         AnsiConsole.WriteLine();
         AnsiConsole.Write(new Rule("[green]Summary[/]").LeftJustified());
         Print($"[green]✓ Parsed:[/] {parsedCount}/{totalTracks}");
-        if (skippedCount > 0)
-        {
-            Print($"[yellow]⚠ Skipped:[/] {skippedCount}");
-            foreach ((string reason, int count) in skipReasons.OrderByDescending(x => x.Value))
-                Print($"  [dim]{reason}:[/] {count}");
-        }
+
+        int issueCount = tracks.Count(t => t.MetadataIssues is { Count: > 0 });
+        if (issueCount > 0)
+            Print($"[yellow]⚠ Tracks with issues:[/] {issueCount}");
 
         int workCount = tracks
             .Where(t => t.WorkId.HasValue)
@@ -607,7 +623,7 @@ public sealed class OrmandyBoxParser
 
         Log("");
         Log("═══════════════════════════════════════════════════════════════════════════════");
-        Log($"SUMMARY: {parsedCount}/{totalTracks} parsed, {skippedCount} skipped");
+        Log($"SUMMARY: {parsedCount}/{totalTracks} parsed, {issueCount} with issues");
         Log($"Works: {workCount} unique, {parentWorkCount} parent");
         Log("═══════════════════════════════════════════════════════════════════════════════");
 
@@ -671,12 +687,11 @@ public sealed class OrmandyBoxParser
         foreach (var workGroup in byParentWork)
         {
             OrmandyTrack first = workGroup.First();
-            string workHeader = first.ParentWorkTitle ?? first.WorkTitle ?? first.Composer;
+            string workHeader =
+                first.ParentWorkTitle ?? first.WorkTitle ?? first.Composer ?? "Unknown";
 
             AnsiConsole.Write(new Rule($"[blue]{Markup.Escape(workHeader)}[/]").LeftJustified());
-            Print(
-                $"  [dim]Composer:[/] {Markup.Escape(first.Composer)}{(first.ComposerFromFallback ? " [yellow]*[/]" : "")}"
-            );
+            Print($"  [dim]Composer:[/] {Markup.Escape(first.Composer ?? "Unknown")}");
 
             foreach (
                 OrmandyTrack track in workGroup.OrderBy(t => t.DiscNumber * 1000 + t.TrackNumber)
@@ -692,9 +707,9 @@ public sealed class OrmandyBoxParser
             AnsiConsole.WriteLine();
         }
 
-        int fallbackCount = tracks.Count(t => t.ComposerFromFallback);
-        if (fallbackCount > 0)
-            Print($"[yellow]* {fallbackCount} tracks used fallback for composer[/]");
+        int tracksWithIssues = tracks.Count(t => t.MetadataIssues is { Count: > 0 });
+        if (tracksWithIssues > 0)
+            Print($"[yellow]* {tracksWithIssues} tracks have metadata issues[/]");
 
         var yearStats = tracks.GroupBy(t => t.RecordingYear).OrderBy(g => g.Key);
         Print($"[dim]Years: {Join(", ", yearStats.Select(g => $"{g.Key} ({g.Count()})"))}[/]");
@@ -717,7 +732,7 @@ public sealed class OrmandyBoxParser
             "Disc",
             "Track",
             "Composer",
-            "Fallback",
+            "Has Issues",
             "Title",
             "Work",
             "Parent Work",
@@ -735,14 +750,14 @@ public sealed class OrmandyBoxParser
                 [
                     t.DiscNumber,
                     t.TrackNumber,
-                    t.Composer,
-                    t.ComposerFromFallback ? "Yes" : "",
+                    t.Composer ?? "",
+                    t.MetadataIssues?.Count > 0 ? "Yes" : "",
                     t.Title,
                     t.WorkTitle ?? "",
                     t.ParentWorkTitle ?? "",
-                    t.RecordingYear,
-                    t.Orchestra,
-                    t.Conductor,
+                    t.RecordingYear?.ToString() ?? "",
+                    t.Orchestra ?? "",
+                    t.Conductor ?? "",
                     Join(", ", t.Soloists),
                     t.Venue ?? "",
                     Join(", ", t.RecordingDates),

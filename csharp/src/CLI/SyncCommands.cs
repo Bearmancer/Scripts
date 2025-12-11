@@ -70,7 +70,6 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         Logger.Start(ServiceType.LastFm);
         return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
         {
-            Console.Info("Starting Last.fm sync...");
             new ScrobbleSyncOrchestrator(Program.Cts.Token, forceFromDate: null).Execute();
         });
     }
@@ -141,7 +140,11 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
             );
             if (ex.InnerException != null)
                 Console.Error("Inner: {0}", ex.InnerException.Message);
-            Logger.End(success: false, summary: $"DailyQuotaExceededException: {ex.Message}");
+            Logger.End(
+                success: false,
+                summary: $"DailyQuotaExceededException: {ex.Message}",
+                exception: ex
+            );
             return 1;
         }
         catch (RetryExhaustedException ex)
@@ -154,7 +157,11 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
                     ex.InnerException.GetType().Name,
                     ex.InnerException.Message
                 );
-            Logger.End(success: false, summary: $"RetryExhaustedException: {ex.Message}");
+            Logger.End(
+                success: false,
+                summary: $"RetryExhaustedException: {ex.Message}",
+                exception: ex
+            );
             return 1;
         }
         catch (AggregateException aex)
@@ -172,7 +179,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
             Exception firstError = aex.InnerExceptions[0];
             string summary =
                 $"AggregateException ({aex.InnerExceptions.Count} errors): {firstError.GetType().Name}: {firstError.Message}";
-            Logger.End(success: false, summary: summary);
+            Logger.End(success: false, summary: summary, exception: aex);
             return 1;
         }
         catch (OperationCanceledException)
@@ -201,7 +208,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
                     ? $"{ex.GetType().Name}: {ex.Message} (Inner: {ex.InnerException.Message})"
                     : $"{ex.GetType().Name}: {ex.Message}";
 
-            Logger.End(success: false, summary: summary);
+            Logger.End(success: false, summary: summary, exception: ex);
             return 1;
         }
     }
@@ -271,7 +278,6 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
 
         return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
         {
-            Console.Info("Starting Last.fm sync...");
             new ScrobbleSyncOrchestrator(Program.Cts.Token, sinceDate).Execute();
         });
     }

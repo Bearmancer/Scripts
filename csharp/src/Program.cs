@@ -19,7 +19,7 @@ public static class Program
         // Special case: direct Ormandy invocation (internal use)
         if (args.Length > 0 && args[0].Equals("--ormandy", StringComparison.OrdinalIgnoreCase))
         {
-            return RunOrmandy().GetAwaiter().GetResult();
+            return RunOrmandy(args).GetAwaiter().GetResult();
         }
 
         var app = new CommandApp();
@@ -93,27 +93,46 @@ public static class Program
         return app.Run(args);
     }
 
-    static async Task<int> RunOrmandy()
+    static async Task<int> RunOrmandy(string[] args)
     {
         try
         {
-            // Enable debug logging for detailed output
+            // Enable debug logging
             Console.Level = LogLevel.Debug;
 
-            OrmandyBoxParser parser = new();
-            List<OrmandyTrack> tracks = await parser.ParseAsync();
+            if (
+                System.Linq.Enumerable.Any(
+                    args,
+                    a => a.Equals("--purge", StringComparison.OrdinalIgnoreCase)
+                )
+            )
+            {
+                AnsiConsole.MarkupLine("[yellow]Purging Ormandy cache...[/]");
+                CSharpScripts.Infrastructure.StateManager.DeleteBoxSetCache(
+                    "Ormandy Columbia Legacy"
+                );
+            }
+
+            CSharpScripts.Services.Music.OrmandyBoxParser parser = new();
+            bool refresh = System.Linq.Enumerable.Any(
+                args,
+                a => a.Equals("--refresh", StringComparison.OrdinalIgnoreCase)
+            );
+
+            var tracks = await parser.ParseAsync(
+                forceRefresh: refresh,
+                cancellationToken: Program.Cts.Token
+            );
             parser.Display(tracks);
 
-            Console.NewLine();
+            System.Console.WriteLine();
             parser.CreateAndWriteToSheet(tracks);
 
             return 0;
         }
         catch (Exception ex)
         {
-            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
-            if (ex.InnerException != null)
-                Console.Error("Inner: {0}", ex.InnerException.Message);
+            AnsiConsole.WriteException(ex);
             return 1;
         }
     }

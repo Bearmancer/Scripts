@@ -32,18 +32,6 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         [Description("Max results")]
         [DefaultValue(10)]
         public int Limit { get; init; } = 10;
-
-        [CommandOption("--ormandy")]
-        [Description("Parse Ormandy Columbia Legacy box set from MusicBrainz")]
-        public bool Ormandy { get; init; }
-
-        [CommandOption("--refresh")]
-        [Description("Force refresh from MusicBrainz (ignore cache)")]
-        public bool Refresh { get; init; }
-
-        [CommandOption("--display")]
-        [Description("Display parsed tracks grouped by work")]
-        public bool Display { get; init; }
     }
 
     public override async Task<int> ExecuteAsync(
@@ -52,18 +40,6 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         CancellationToken cancellationToken
     )
     {
-        if (settings.Ormandy)
-        {
-            OrmandyBoxParser parser = new();
-            List<OrmandyTrack> tracks = await parser.ParseAsync(
-                settings.Refresh,
-                cancellationToken
-            );
-            if (settings.Display)
-                parser.Display(tracks);
-            return 0;
-        }
-
         if (
             IsNullOrWhiteSpace(settings.Artist)
             && IsNullOrWhiteSpace(settings.Album)

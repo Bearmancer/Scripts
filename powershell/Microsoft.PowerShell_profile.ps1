@@ -1,6 +1,6 @@
 $profileDir = $PSScriptRoot
 if (-not $profileDir -or -not (Test-Path -Path $profileDir)) {
-    $profileDir = Join-Path -Path $env:USERPROFILE -ChildPath 'Dev\main\powershell'
+    $profileDir = Join-Path -Path $env:USERPROFILE -ChildPath 'Dev\Scripts\powershell'
 }
 $global:ScriptRoot = $profileDir
 Set-StrictMode -Version Latest
@@ -15,14 +15,12 @@ else {
     Write-Warning "ScriptsToolkit module not found at $moduleManifest"
 }
 
-function Enter-ScriptsDirectory
-{
+function Enter-ScriptsDirectory {
     param()
     Set-Location -Path $ScriptRoot
 }
 
-function Enter-DesktopDirectory
-{
+function Enter-DesktopDirectory {
     param()
     Set-Location -Path "$env:USERPROFILE\Desktop"
 }

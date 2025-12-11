@@ -1578,75 +1578,47 @@ function Invoke-AllSyncs {
     Create a Windows scheduled task for sync automation.
 
 .DESCRIPTION
-    Registers a Windows scheduled task that runs a sync command daily at a
-    specified time. The task opens a visible Windows Terminal window so you
-    can monitor progress.
-
-    Task configuration:
-    - Runs daily at the specified time
-    - Starts even if on battery power
-    - Wakes computer from sleep to run
-    - Requires network connectivity
-    - Opens in a visible terminal window
+    Registers a Windows scheduled task that runs a dotnet CLI command daily.
+    Window closes on success, stays open on failure for inspection.
 
 .PARAMETER TaskName
-    The name for the scheduled task. Must be unique. If a task with this name
-    already exists, it will be replaced.
+    Unique name for the task. Replaces existing task with same name.
 
 .PARAMETER Command
-    The CLI command to run (e.g., 'sync yt', 'sync lastfm').
-    This is passed to the dotnet CLI.
+    CLI command to run (e.g., 'sync yt', 'sync lastfm').
 
 .PARAMETER DailyTime
-    The time to run the task daily. Defaults to 09:00:00 (9 AM).
-    Format: HH:mm:ss or a TimeSpan value.
+    Time to run daily. Defaults to 09:00:00.
 
 .PARAMETER Description
-    A description for the task shown in Task Scheduler.
+    Description shown in Task Scheduler.
 
 .EXAMPLE
-    Register-ScheduledSyncTask -TaskName 'MyYouTubeSync' -Command 'sync yt' -DailyTime '08:30:00'
-
-    Creates a task named 'MyYouTubeSync' that syncs YouTube playlists daily at 8:30 AM.
-    The task appears in Windows Task Scheduler and can be managed there.
-
-.EXAMPLE
-    regtask -TaskName 'LastFmDaily' -Command 'sync lastfm' -DailyTime '21:00:00' -Description 'Evening scrobble sync'
-
-    Creates a task that syncs Last.fm scrobbles at 9 PM with a custom description.
+    Register-ScheduledSyncTask -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime '09:00:00'
 
 .NOTES
-    Requires: Administrator privileges to create scheduled tasks.
-    Run PowerShell as Administrator before using this command.
-
-.LINK
-    Register-AllSyncTasks
-    Unregister-ScheduledTask
+    Requires Administrator privileges.
 #>
 function Register-ScheduledSyncTask {
     [CmdletBinding()]
     [Alias('regtask')]
     param(
         [Parameter(Mandatory)]
-        [Alias('n')]
         [string]$TaskName,
 
         [Parameter(Mandatory)]
-        [Alias('c')]
         [string]$Command,
 
         [Parameter()]
-        [Alias('t')]
         [TimeSpan]$DailyTime = '09:00:00',
 
         [Parameter()]
-        [Alias('d')]
         [string]$Description = 'Scheduled sync task'
     )
 
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
     if (-not $isAdmin) {
-        throw "This function requires administrator privileges. Run PowerShell as Administrator."
+        throw "Run PowerShell as Administrator."
     }
 
     if (-not (Test-Path -Path $Script:CSharpRoot)) {
@@ -1659,28 +1631,21 @@ function Register-ScheduledSyncTask {
         Write-Host "Removed existing task '$TaskName'" -ForegroundColor Yellow
     }
 
-    $dllPath = Join-Path -Path $Script:CSharpRoot -ChildPath 'bin\Debug\net10.0\CSharpScripts.dll'
-    $noBuildFlag = if (Test-Path -Path $dllPath) {
-        '--no-build '
-    }
-    else {
-        ''
-    }
+    # Inline command: run dotnet, close on success, pause on failure
+    $script = "Set-Location '$Script:CSharpRoot'; dotnet run -- $Command; if (`$LASTEXITCODE -ne 0) { Read-Host 'Press Enter to close' }"
 
-    # Use wt.exe (Windows Terminal) for visible window, fall back to pwsh
     $terminal = Get-Command -Name 'wt.exe' -ErrorAction Ignore
     if ($terminal) {
         $executable = $terminal.Source
-        $argument = "pwsh -Command `". `$PROFILE; Set-Location '$Script:CSharpRoot'; dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+        $argument = "pwsh -Command `"$script`""
     }
     else {
-        $pwsh = (Get-Command -Name pwsh).Source
-        $executable = $pwsh
-        $argument = "-Command `". `$PROFILE; Set-Location '$Script:CSharpRoot'; dotnet run $( $noBuildFlag )-- $Command; Read-Host 'Press Enter to close'`""
+        $executable = (Get-Command -Name pwsh).Source
+        $argument = "-Command `"$script`""
     }
 
     $action = New-ScheduledTaskAction -Execute $executable -Argument $argument
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew
 
     $start = [datetime]::Today.Add($DailyTime)
     if ($start -le (Get-Date)) {
@@ -1688,56 +1653,20 @@ function Register-ScheduledSyncTask {
     }
 
     $trigger = New-ScheduledTaskTrigger -Daily -At $start
+    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description | Out-Null
 
-    $task = Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description
-
-    # Log task creation to event log for tracking
-    try {
-        if (-not [Diagnostics.EventLog]::SourceExists('CSharpScripts')) {
-            New-EventLog -LogName Application -Source 'CSharpScripts' -ErrorAction Ignore
-        }
-        Write-EventLog -LogName Application -Source 'CSharpScripts' -EntryType Information -EventId 1001 -Message "Scheduled task '$TaskName' registered for $Command at $($start.ToString('HH:mm')) daily"
-    }
-    catch {
-        # Non-critical if event log write fails
-    }
-
-    Write-Host "Registered '$TaskName' for $( $start.ToString('HH:mm') ) daily" -ForegroundColor Green
+    Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm')) daily" -ForegroundColor Green
 }
 
 <#
 .SYNOPSIS
-    Register all sync tasks with recommended schedules.
-
-.DESCRIPTION
-    Convenience command that registers both YouTube and Last.fm sync tasks
-    with sensible default schedules. Stagger times prevent API rate limiting.
-
-    Default schedule:
-    - LastFmSync:   09:00 AM daily
-    - YouTubeSync:  10:00 AM daily
-
-    Tasks open in visible Windows Terminal windows so you can monitor progress.
+    Register LastFmSync and YouTubeSync tasks with default schedules.
 
 .EXAMPLE
     Register-AllSyncTasks
 
-    Registers both sync tasks with default schedules (9 AM and 10 AM).
-    Requires administrator privileges.
-
-.EXAMPLE
-    regall
-
-    Same as above, using the short alias.
-
 .NOTES
-    Requires: Administrator privileges.
-    To customize times, use Register-ScheduledSyncTask for each task individually.
-    To remove tasks: Unregister-ScheduledTask -TaskName 'LastFmSync'
-
-.LINK
-    Register-ScheduledSyncTask
-    Get-ScheduledTask
+    Requires Administrator privileges.
 #>
 function Register-AllSyncTasks {
     [CmdletBinding()]

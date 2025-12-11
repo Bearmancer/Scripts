@@ -26,9 +26,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
     internal void Execute()
     {
-        Console.Debug("Sync initiated");
-
+        Console.Info("Starting Last.fm sync...");
         var spreadsheetId = GetOrCreateSpreadsheet();
+        Console.Info("Authenticated");
 
         if (forceFromDate.HasValue)
         {
@@ -190,11 +190,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         );
 
         sheetsService.EnsureSheetExists(spreadsheetId);
-
-        Console.Info("Writing {0} scrobbles...", scrobbles.Count);
         sheetsService.WriteScrobbles(spreadsheetId, scrobbles);
 
-        Console.Success("Done! Wrote {0} scrobbles.", scrobbles.Count);
+        Console.Success("Wrote {0} scrobbles.", scrobbles.Count);
         Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
         Logger.End(true, $"Wrote {scrobbles.Count} scrobbles to sheet");
     }
