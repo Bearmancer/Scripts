@@ -204,8 +204,6 @@ public static class Logger
             }
             catch
             {
-                // Intentionally skip malformed JSON lines - crash detection must be robust
-                // to corrupted log files and should not fail the entire session startup
                 continue;
             }
 
@@ -246,7 +244,6 @@ public static class Logger
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // File I/O
     // ═══════════════════════════════════════════════════════════════════════════
 
     private static void WriteJsonEntry(

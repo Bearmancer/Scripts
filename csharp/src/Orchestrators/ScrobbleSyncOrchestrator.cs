@@ -41,7 +41,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         }
         else if (!state.FetchComplete && state.LastPage > 0)
         {
-            // Resume interrupted full fetch - continue from last page (don't pass fetchAfter to maintain full sync mode)
             Console.Warning(
                 "Resuming full sync from page {0} ({1} scrobbles fetched)",
                 state.LastPage + 1,
@@ -89,7 +88,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             }
             else
             {
-                // No cache - check sheet for existing data
                 var latestInSheet = sheetsService.GetLatestScrobbleTime(spreadsheetId);
 
                 if (latestInSheet != null)
@@ -128,7 +126,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             return;
         }
 
-        // Filter to only scrobbles newer than what's in the sheet
         var newScrobbles = sheetsService.GetNewScrobbles(spreadsheetId, scrobbles);
 
         if (newScrobbles.Count == 0)

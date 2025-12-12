@@ -16,7 +16,6 @@ public static class Program
             AnsiConsole.MarkupLine("[red]Shutdown requested...[/]");
         };
 
-        // Special case: direct Ormandy invocation (internal use)
         if (args.Length > 0 && args[0].Equals("--ormandy", StringComparison.OrdinalIgnoreCase))
         {
             return RunOrmandy(args).GetAwaiter().GetResult();

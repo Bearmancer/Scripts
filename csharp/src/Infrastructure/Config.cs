@@ -15,7 +15,6 @@ public static class Config
         ?? throw new InvalidOperationException("Missing: GOOGLE_CLIENT_SECRET");
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Last.fm
     // ═══════════════════════════════════════════════════════════════════════════
 
     public static readonly string LastFmApiKey =

@@ -46,8 +46,6 @@ public class LastFmService(string apiKey, string username)
         List<Scrobble> existingScrobbles = LoadScrobbles();
         List<Scrobble> newScrobbles = [];
 
-        // For incremental syncs (fetchAfter set), always start from page 1 (newest first)
-        // For resume of interrupted full syncs (no fetchAfter, LastPage > 0), continue from last page
         var isIncremental = fetchAfter is not null;
         var page = isIncremental ? 1 : (state.LastPage > 0 ? state.LastPage + 1 : 1);
         var totalFetched = isIncremental ? 0 : state.TotalFetched;
@@ -148,7 +146,6 @@ public class LastFmService(string apiKey, string username)
 
     private static void SaveMergedScrobbles(List<Scrobble> existing, List<Scrobble> newOnes)
     {
-        // Merge: new scrobbles + existing, dedupe by PlayedAt
         HashSet<DateTime?> existingTimes = [.. existing.Select(s => s.PlayedAt)];
         List<Scrobble> merged =
         [

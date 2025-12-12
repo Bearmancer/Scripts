@@ -1,15 +1,12 @@
 Set-StrictMode -Version Latest
 
-#region Configuration
 
 $Script:RepositoryRoot = Split-Path -Path $PSScriptRoot -Parent
 $Script:PythonToolkit = Join-Path -Path $RepositoryRoot -ChildPath 'python\toolkit\cli.py'
 $Script:CSharpRoot = Join-Path -Path $RepositoryRoot -ChildPath 'csharp'
 $Script:LogDirectory = Join-Path -Path $RepositoryRoot -ChildPath 'logs'
 
-#endregion
 
-#region Core
 
 function Invoke-ToolkitPython {
     [CmdletBinding()]
@@ -26,53 +23,8 @@ function Invoke-ToolkitPython {
     }
 }
 
-#endregion
 
-#region Utilities
 
-<#
-.SYNOPSIS
-    List all toolkit functions with aliases and descriptions.
-
-.DESCRIPTION
-    Displays a formatted table of all available ScriptsToolkit functions, organized
-    by category. Each entry shows the short alias, full function name, and a brief
-    description.
-
-    Categories include:
-    - Utilities: Module management and helper functions
-    - Logs: Sync log viewing and analysis
-    - Sync: YouTube and Last.fm data synchronization
-    - Filesystem: Directory listing and torrent creation
-    - Video: Remuxing, compression, and metadata extraction
-    - Audio: Format conversion, renaming, and analysis
-    - Transcription: Whisper-based audio transcription
-    - YouTube: Video downloading
-    - Tasks: Windows Task Scheduler automation
-
-.EXAMPLE
-    Get-ToolkitFunctions
-
-    Displays the complete function list with all categories and aliases.
-    Use this to discover available commands and their shortcuts.
-
-.EXAMPLE
-    tkfn
-
-    Same as above, using the short alias. Quick reference during interactive sessions.
-
-.EXAMPLE
-    Get-ToolkitFunctions | Out-String | Set-Clipboard
-
-    Copies the function list to clipboard for documentation or sharing.
-
-.NOTES
-    All functions can be invoked using either the full name or the short alias.
-    For detailed help on any function: Get-Help <FunctionName> -Full
-
-.LINK
-    Get-Command -Module ScriptsToolkit
-#>
 function Get-ToolkitFunctions {
     [CmdletBinding()]
     [Alias('tkfn')]
@@ -124,35 +76,6 @@ function Get-ToolkitFunctions {
     }
 }
 
-<#
-.SYNOPSIS
-    Open PowerShell command history in VS Code.
-
-.DESCRIPTION
-    Opens the PSReadLine console history file in Visual Studio Code for review,
-    search, or copying previous commands. The history file contains all commands
-    typed in PowerShell sessions.
-
-    File location: %APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
-
-.EXAMPLE
-    Open-CommandHistory
-
-    Opens the history file in VS Code. Use Ctrl+F to search for previous commands.
-
-.EXAMPLE
-    hist
-
-    Same as above, using the short alias.
-
-.NOTES
-    Requires VS Code to be installed and available in PATH.
-    History is shared across all PowerShell sessions.
-
-.LINK
-    Get-History
-    Clear-History
-#>
 function Open-CommandHistory {
     [CmdletBinding()]
     [Alias('hist')]
@@ -161,30 +84,6 @@ function Open-CommandHistory {
     & code "$env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt"
 }
 
-<#
-.SYNOPSIS
-    Open toolkit documentation in VS Code.
-
-.DESCRIPTION
-    Opens the ScriptsToolkit.Help.md documentation file for comprehensive help
-    on all module features, examples, and configuration options.
-
-.EXAMPLE
-    Show-ToolkitHelp
-
-    Opens the documentation file in VS Code for browsing.
-
-.EXAMPLE
-    tkhelp
-
-    Same as above, using the short alias.
-
-.NOTES
-    Requires VS Code to be installed and available in PATH.
-
-.LINK
-    Get-ToolkitFunctions
-#>
 function Show-ToolkitHelp {
     [CmdletBinding()]
     [Alias('tkhelp')]
@@ -194,44 +93,6 @@ function Show-ToolkitHelp {
     & code $helpFile
 }
 
-<#
-.SYNOPSIS
-    Run PSScriptAnalyzer on PowerShell scripts.
-
-.DESCRIPTION
-    Invokes PSScriptAnalyzer using the module's predefined settings file to check
-    for common issues, best practices violations, and potential bugs in PowerShell
-    scripts.
-
-    Uses settings from: PSScriptAnalyzerSettings.psd1
-    Reports: Error and Warning severity issues only
-
-.PARAMETER Path
-    Directory or file to analyze. Defaults to the current directory.
-    Subdirectories are scanned recursively.
-
-.EXAMPLE
-    Invoke-ToolkitAnalyzer
-
-    Analyzes all PowerShell files in the current directory and subdirectories.
-
-.EXAMPLE
-    tklint -Path C:\MyProject\src
-
-    Analyzes scripts in a specific directory for issues.
-
-.EXAMPLE
-    Invoke-ToolkitAnalyzer | Where-Object Severity -eq 'Error'
-
-    Filters results to show only errors, ignoring warnings.
-
-.NOTES
-    Requires: PSScriptAnalyzer module (Install-Module PSScriptAnalyzer)
-
-.LINK
-    Invoke-ScriptAnalyzer
-    Get-ScriptAnalyzerRule
-#>
 function Invoke-ToolkitAnalyzer {
     [CmdletBinding()]
     [Alias('tklint')]
@@ -245,68 +106,8 @@ function Invoke-ToolkitAnalyzer {
     Invoke-ScriptAnalyzer -Path $Path -Settings $settings -Recurse -Severity Error, Warning
 }
 
-#endregion
 
-#region Logs
 
-<#
-.SYNOPSIS
-    View JSONL sync logs.
-
-.DESCRIPTION
-    Reads and displays JSONL log entries as table or list.
-
-.PARAMETER Service
-    Filter: youtube, lastfm, or all.
-
-.PARAMETER Level
-    Filter: Debug, Info, Success, Warning, Error, Fatal.
-
-.PARAMETER EventType
-    Filter by event type.
-
-.PARAMETER SessionId
-    Filter by session ID.
-
-.PARAMETER Search
-    Search text in log data.
-
-.PARAMETER Tail
-    Number of entries from end (newest). Default: 10. Alias: -Last
-
-.PARAMETER Head
-    Number of entries from start (oldest). Alias: -First
-
-.PARAMETER Sort
-    Sort by: Date, Level, Event, Session. Default: Date
-
-.PARAMETER Descending
-    Sort in descending order (newest/highest first).
-
-.PARAMETER List
-    Display as vertical list.
-
-.PARAMETER Full
-    Show full details without truncation, wraps at column boundary. Alias: -f
-
-.PARAMETER ShowSession
-    Display Session ID column. Hidden by default. Alias: -s
-
-.EXAMPLE
-    Show-SyncLog
-
-.EXAMPLE
-    Show-SyncLog -Service youtube -Level Error
-
-.EXAMPLE
-    Show-SyncLog -Search Comedy
-
-.EXAMPLE
-    Show-SyncLog -Head 10
-
-.EXAMPLE
-    Show-SyncLog -Sort Level -Descending
-#>
 function Show-SyncLog {
     [CmdletBinding(DefaultParameterSetName = 'Tail')]
     [Alias('viewlog', 'synclog')]
@@ -351,8 +152,8 @@ function Show-SyncLog {
         [switch]$Full,
 
         [Parameter()]
-        [Alias('s')]
-        [switch]$ShowSession
+        [Alias('a')]
+        [switch]$All
     )
 
     $logFiles = @()
@@ -395,6 +196,11 @@ function Show-SyncLog {
         }
     }
 
+    if (-not $All) {
+        $verboseEvents = @('PlaylistUpdated', 'PlaylistDeleted', 'PlaylistRenamed', 'PlaylistCreated')
+        $entries = $entries | Where-Object { $_.Event -notin $verboseEvents }
+    }
+
     if ($Level) {
         $entries = $entries | Where-Object { $_.Level -eq $Level }
     }
@@ -411,7 +217,6 @@ function Show-SyncLog {
         }
     }
 
-    # Determine sort property
     $sortProperty = switch ($Sort) {
         'Date' { 'ParsedTimestamp' }
         'Level' { 'Level' }
@@ -420,7 +225,6 @@ function Show-SyncLog {
         default { 'ParsedTimestamp' }
     }
 
-    # Sort entries (ascending by default)
     $useDescending = if ($PSBoundParameters.ContainsKey('Descending')) {
         $Descending
     }
@@ -435,7 +239,6 @@ function Show-SyncLog {
         $entries | Sort-Object -Property $sortProperty
     }
 
-    # Apply Head or Tail limit
     $result = if ($Head) {
         $sorted | Select-Object -First $Head
     }
@@ -443,7 +246,6 @@ function Show-SyncLog {
         $sorted | Select-Object -First $Tail
     }
 
-    # Level-based color mapping
     $levelColors = @{
         'Debug'   = 'DarkGray'
         'Info'    = 'Cyan'
@@ -460,7 +262,6 @@ function Show-SyncLog {
             }
             else {
                 $separator = $List ? "`n" : " | "
-                # Exclude 'Service' since it's already shown in the Source column
                 ($_.Data.PSObject.Properties | Where-Object { $_.Name -ne 'Service' } | ForEach-Object {
                     $val = ($_.Value -is [array]) ? ($_.Value -join ", "): $_.Value
                     "$($_.Name): $val"
@@ -490,9 +291,7 @@ function Show-SyncLog {
             Write-Host "Level:     $($_.Level)" -ForegroundColor $_.Color
             Write-Host "Event:     $($_.Event)" -ForegroundColor $_.Color
             Write-Host "Service:   $($_.Source)" -ForegroundColor $_.Color
-            if ($ShowSession) {
-                Write-Host "SessionId: $($_.SessionId)" -ForegroundColor $_.Color
-            }
+            Write-Host "SessionId: $($_.SessionId)" -ForegroundColor $_.Color
             Write-Host "Details:   $($_.Details)" -ForegroundColor $_.Color
         }
         Write-Host ("─" * 80) -ForegroundColor DarkGray
@@ -503,16 +302,12 @@ function Show-SyncLog {
         $levelWidth = 10
         $eventWidth = 20
         $sourceWidth = 8
-        $sessionWidth = if ($ShowSession) { 10 } else { 0 }
+        $sessionWidth = 10
         $fixedWidth = $timestampWidth + $levelWidth + $eventWidth + $sourceWidth + $sessionWidth
         $detailsWidth = if ($Full) { $terminalWidth - $fixedWidth - 4 } else { [Math]::Min(60, $terminalWidth - $fixedWidth - 4) }
 
         Write-Host ""
-        $header = "Timestamp".PadRight($timestampWidth) + "Service".PadRight($sourceWidth) + "Level".PadRight($levelWidth) + "Event".PadRight($eventWidth)
-        if ($ShowSession) {
-            $header += "Session".PadRight($sessionWidth)
-        }
-        $header += "Details"
+        $header = "Timestamp".PadRight($timestampWidth) + "Service".PadRight($sourceWidth) + "Level".PadRight($levelWidth) + "Event".PadRight($eventWidth) + "Session".PadRight($sessionWidth) + "Details"
         Write-Host $header -ForegroundColor White
         Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
 
@@ -520,7 +315,6 @@ function Show-SyncLog {
             $color = $_.Color
             $details = $_.Details
 
-            # Wrap details at column boundary
             $detailLines = @()
             if ($Full -and $details.Length -gt $detailsWidth) {
                 $remaining = $details
@@ -544,17 +338,13 @@ function Show-SyncLog {
                 }
             }
 
-            # First line with all columns
             Write-Host ($_.Timestamp.PadRight($timestampWidth)) -ForegroundColor $color -NoNewline
             Write-Host ($_.Source.PadRight($sourceWidth)) -ForegroundColor $color -NoNewline
             Write-Host ($_.Level.PadRight($levelWidth)) -ForegroundColor $color -NoNewline
             Write-Host ($_.Event.PadRight($eventWidth)) -ForegroundColor $color -NoNewline
-            if ($ShowSession) {
-                Write-Host ($_.SessionId.Substring(0, [Math]::Min(8, $_.SessionId.Length)).PadRight($sessionWidth)) -ForegroundColor $color -NoNewline
-            }
+            Write-Host ($_.SessionId.Substring(0, [Math]::Min(8, $_.SessionId.Length)).PadRight($sessionWidth)) -ForegroundColor $color -NoNewline
             Write-Host $detailLines[0] -ForegroundColor $color
 
-            # Continuation lines (indented to Details column)
             for ($i = 1; $i -lt $detailLines.Count; $i++) {
                 Write-Host (' ' * $fixedWidth) -NoNewline
                 Write-Host $detailLines[$i] -ForegroundColor $color
@@ -565,22 +355,6 @@ function Show-SyncLog {
     }
 }
 
-<#
-.SYNOPSIS
-    List directories with sizes.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER Sort
-    Sort by size or name.
-
-.EXAMPLE
-    Get-Directories
-
-.EXAMPLE
-    Get-Directories -Directory C:\Music -Sort name
-#>
 function Get-Directories {
     [CmdletBinding()]
     [Alias('dirs')]
@@ -598,19 +372,6 @@ function Get-Directories {
     Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $Sort)
 }
 
-<#
-.SYNOPSIS
-    List all items with sizes.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER Sort
-    Sort by size or name.
-
-.EXAMPLE
-    Get-FilesAndDirectories -Sort name
-#>
 function Get-FilesAndDirectories {
     [CmdletBinding()]
     [Alias('tree')]
@@ -628,19 +389,6 @@ function Get-FilesAndDirectories {
     Invoke-ToolkitPython -ArgumentList @('filesystem', 'tree', '--directory', $Directory.FullName, '--sort', $Sort, '--include-files')
 }
 
-<#
-.SYNOPSIS
-    Create .torrent files.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER IncludeSubdirectories
-    Include subdirectories.
-
-.EXAMPLE
-    New-Torrents -Directory C:\Music\Album -IncludeSubdirectories
-#>
 function New-Torrents {
     [CmdletBinding()]
     [Alias('torrent')]
@@ -661,23 +409,8 @@ function New-Torrents {
     Invoke-ToolkitPython -ArgumentList $arguments
 }
 
-#endregion
 
-#region Video
 
-<#
-.SYNOPSIS
-    Remux video discs to MKV.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER SkipMediaInfo
-    Skip MediaInfo analysis.
-
-.EXAMPLE
-    Start-DiscRemux -Directory D:\BluRay\Movie -SkipMediaInfo
-#>
 function Start-DiscRemux {
     [CmdletBinding()]
     [Alias('remux')]
@@ -697,16 +430,6 @@ function Start-DiscRemux {
     Invoke-ToolkitPython -ArgumentList $arguments
 }
 
-<#
-.SYNOPSIS
-    Compress videos in batch.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Start-BatchCompression -Directory D:\Videos\Raw
-#>
 function Start-BatchCompression {
     [CmdletBinding()]
     [Alias('compress')]
@@ -719,16 +442,6 @@ function Start-BatchCompression {
     Invoke-ToolkitPython -ArgumentList @('video', 'compress', '--directory', $Directory.FullName)
 }
 
-<#
-.SYNOPSIS
-    Extract chapter timestamps.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Get-VideoChapters -Directory D:\Movies\Film
-#>
 function Get-VideoChapters {
     [CmdletBinding()]
     [Alias('chapters')]
@@ -741,16 +454,6 @@ function Get-VideoChapters {
     Invoke-ToolkitPython -ArgumentList @('video', 'chapters', '--path', $Directory.FullName)
 }
 
-<#
-.SYNOPSIS
-    Report video resolutions.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Get-VideoResolution -Directory D:\Videos
-#>
 function Get-VideoResolution {
     [CmdletBinding()]
     [Alias('res')]
@@ -763,26 +466,8 @@ function Get-VideoResolution {
     Invoke-ToolkitPython -ArgumentList @('video', 'resolutions', '--path', $Directory.FullName)
 }
 
-#endregion
 
-#region Audio
 
-<#
-.SYNOPSIS
-    Convert audio files.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER Format
-    Target: 24-bit, flac, mp3, or all.
-
-.EXAMPLE
-    Convert-Audio -Directory C:\Music\Album
-
-.EXAMPLE
-    Convert-Audio -Directory C:\Music -Format mp3
-#>
 function Convert-Audio {
     [CmdletBinding()]
     [Alias('audio')]
@@ -800,16 +485,6 @@ function Convert-Audio {
     Invoke-ToolkitPython -ArgumentList @('audio', 'convert', '--directory', $Directory.FullName, '--mode', 'convert', '--format', $Format)
 }
 
-<#
-.SYNOPSIS
-    Convert to MP3.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Convert-ToMP3 -Directory C:\Music\Album
-#>
 function Convert-ToMP3 {
     [CmdletBinding()]
     [Alias('tomp3')]
@@ -822,16 +497,6 @@ function Convert-ToMP3 {
     Convert-Audio -Directory $Directory -Format 'mp3'
 }
 
-<#
-.SYNOPSIS
-    Convert to FLAC.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Convert-ToFLAC -Directory C:\Music\Album
-#>
 function Convert-ToFLAC {
     [CmdletBinding()]
     [Alias('toflac')]
@@ -844,19 +509,6 @@ function Convert-ToFLAC {
     Convert-Audio -Directory $Directory -Format 'flac'
 }
 
-<#
-.SYNOPSIS
-    Extract SACD ISO files.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER Format
-    Target: 24-bit, flac, mp3, or all.
-
-.EXAMPLE
-    Convert-SACD -Directory D:\SACD
-#>
 function Convert-SACD {
     [CmdletBinding()]
     [Alias('sacd')]
@@ -874,16 +526,6 @@ function Convert-SACD {
     Invoke-ToolkitPython -ArgumentList @('audio', 'convert', '--directory', $Directory.FullName, '--mode', 'extract', '--format', $Format)
 }
 
-<#
-.SYNOPSIS
-    Rename files using RED naming.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Rename-MusicFiles -Directory C:\Music\Album
-#>
 function Rename-MusicFiles {
     [CmdletBinding()]
     [Alias('rename')]
@@ -896,16 +538,6 @@ function Rename-MusicFiles {
     Invoke-ToolkitPython -ArgumentList @('audio', 'rename', '--directory', $Directory.FullName)
 }
 
-<#
-.SYNOPSIS
-    Report embedded art sizes.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Get-EmbeddedImageSize -Directory C:\Music
-#>
 function Get-EmbeddedImageSize {
     [CmdletBinding()]
     [Alias('artsize')]
@@ -918,16 +550,6 @@ function Get-EmbeddedImageSize {
     Invoke-ToolkitPython -ArgumentList @('audio', 'art-report', '--directory', $Directory.FullName)
 }
 
-<#
-.SYNOPSIS
-    Run Propolis analyzer.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.EXAMPLE
-    Invoke-Propolis -Directory C:\Music\Album
-#>
 function Invoke-Propolis {
     [CmdletBinding()]
     [Alias('propolis')]
@@ -940,66 +562,8 @@ function Invoke-Propolis {
     & "$env:LOCALAPPDATA\Personal\Propolis\propolis_windows.exe" --no-specs $Directory.FullName
 }
 
-#endregion
 
-#region Transcription
 
-<#
-.SYNOPSIS
-    Transcribe audio/video using whisper-ctranslate2.
-
-.DESCRIPTION
-    Transcribes to SRT subtitles. Accepts file or folder path.
-    Pass extra whisper-ctranslate2 arguments via -ExtraArgs.
-
-.PARAMETER Path
-    Audio/video file or folder path.
-
-.PARAMETER Language
-    Language code (en, ja, es, fr, de, zh, ko). Auto-detects if omitted.
-
-.PARAMETER Model
-    Whisper model. Auto-selects distil-large-v3.5 for English, large-v3 otherwise.
-
-.PARAMETER Translate
-    Translate non-English to English.
-
-.PARAMETER Force
-    Overwrite existing SRT files.
-
-.PARAMETER OutputDir
-    Output directory.
-
-.PARAMETER Batched
-    Enable batched transcription (faster, may reduce accuracy).
-
-.PARAMETER BatchSize
-    Batch size for batched mode.
-
-.PARAMETER NoVadFilter
-    Disable Voice Activity Detection.
-
-.PARAMETER RepetitionPenalty
-    Penalty for repeated tokens (>1.0 penalizes).
-
-.PARAMETER ExtraArgs
-    Additional whisper-ctranslate2 arguments.
-
-.EXAMPLE
-    Invoke-Whisper video.mp4
-
-.EXAMPLE
-    Invoke-Whisper video.mp4 -Language en
-
-.EXAMPLE
-    Invoke-Whisper video.mp4 -Batched -BatchSize 8
-
-.EXAMPLE
-    Invoke-Whisper lecture.mp3 -Language ja -Translate
-
-.EXAMPLE
-    Invoke-Whisper video.mp4 --word_timestamps True --no_repeat_ngram_size 3
-#>
 function Invoke-Whisper {
     [CmdletBinding()]
     [Alias('whisp')]
@@ -1104,26 +668,6 @@ function Invoke-Whisper {
     Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Completed: $( $item.Name )" -ForegroundColor Green
 }
 
-<#
-.SYNOPSIS
-    Transcribe all media files in a folder.
-
-.DESCRIPTION
-    Batch transcribes all media in a directory. Skips files with existing SRT.
-    See Invoke-Whisper for parameter details.
-
-.PARAMETER Directory
-    Directory to scan.
-
-.PARAMETER Language
-    Language code.
-
-.EXAMPLE
-    Invoke-WhisperFolder
-
-.EXAMPLE
-    Invoke-WhisperFolder -Directory C:\Videos -Force
-#>
 function Invoke-WhisperFolder {
     [CmdletBinding()]
     [Alias('wpf')]
@@ -1213,20 +757,6 @@ function Invoke-WhisperFolder {
     }
 }
 
-<#
-.SYNOPSIS
-    Transcribe Japanese audio/video.
-
-.DESCRIPTION
-    Invoke-Whisper with Language=ja preset.
-    See Invoke-Whisper for parameter details.
-
-.EXAMPLE
-    Invoke-WhisperJapanese anime.mkv
-
-.EXAMPLE
-    Invoke-WhisperJapanese anime.mkv -Translate
-#>
 function Invoke-WhisperJapanese {
     [CmdletBinding()]
     [Alias('wpj')]
@@ -1258,20 +788,6 @@ function Invoke-WhisperJapanese {
     Invoke-Whisper -Path $Path -Language ja -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -ExtraArgs $ExtraArgs
 }
 
-<#
-.SYNOPSIS
-    Transcribe all Japanese media in a folder.
-
-.DESCRIPTION
-    Invoke-WhisperFolder with Language=ja preset.
-    See Invoke-Whisper for parameter details.
-
-.EXAMPLE
-    Invoke-WhisperJapaneseFolder -Directory C:\Anime
-
-.EXAMPLE
-    Invoke-WhisperJapaneseFolder -Translate
-#>
 function Invoke-WhisperJapaneseFolder {
     [CmdletBinding()]
     [Alias('wpjf')]
@@ -1303,38 +819,8 @@ function Invoke-WhisperJapaneseFolder {
     Invoke-WhisperFolder -Directory $Directory -Language ja -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -ExtraArgs $ExtraArgs
 }
 
-#endregion
 
-#region YouTube
 
-<#
-.SYNOPSIS
-    Download YouTube videos.
-
-.PARAMETER Urls
-    URLs to download.
-
-.PARAMETER Transcribe
-    Transcribe after download.
-
-.PARAMETER Language
-    Transcription language.
-
-.PARAMETER Model
-    Whisper model.
-
-.PARAMETER Translate
-    Translate to English.
-
-.PARAMETER OutputDir
-    Output directory.
-
-.EXAMPLE
-    Save-YouTubeVideo https://youtube.com/watch?v=xxx
-
-.EXAMPLE
-    Save-YouTubeVideo https://youtube.com/watch?v=xxx -Transcribe
-#>
 function Save-YouTubeVideo {
     [CmdletBinding()]
     [Alias('ytdl')]
@@ -1385,49 +871,8 @@ function Save-YouTubeVideo {
     Pop-Location
 }
 
-#endregion
 
-#region Sync Shortcuts
 
-<#
-.SYNOPSIS
-    Sync YouTube playlists to Google Sheets.
-
-.DESCRIPTION
-    Fetches all videos from your YouTube playlists and exports them to a Google Sheets
-    spreadsheet. Tracks changes between syncs and supports incremental updates.
-
-    The sync process:
-    1. Authenticates with YouTube Data API using stored credentials
-    2. Fetches all playlists and their videos
-    3. Compares with previous sync to detect additions/removals
-    4. Updates the Google Sheets spreadsheet with current state
-
-    State is cached locally to enable incremental syncs and change detection.
-
-.PARAMETER Force
-    Clears the local cache and re-fetches all data from YouTube. Use this when
-    you want a complete refresh or suspect the cache is out of sync.
-
-.EXAMPLE
-    Invoke-YouTubeSync
-
-    Performs an incremental sync, fetching only changes since the last sync.
-    This is the fastest option for daily use.
-
-.EXAMPLE
-    syncyt -Force
-
-    Clears all cached data and performs a complete re-sync from YouTube.
-    Use when the spreadsheet appears out of sync or after clearing remote data.
-
-.NOTES
-    Requires: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET environment variables.
-    First run will prompt for OAuth authorization in your browser.
-
-.LINK
-    https://developers.google.com/youtube/v3/docs
-#>
 function Invoke-YouTubeSync {
     [CmdletBinding()]
     [Alias('syncyt')]
@@ -1449,46 +894,6 @@ function Invoke-YouTubeSync {
     }
 }
 
-<#
-.SYNOPSIS
-    Sync Last.fm scrobbles to Google Sheets.
-
-.DESCRIPTION
-    Fetches your scrobble history from Last.fm and exports it to a Google Sheets
-    spreadsheet. Supports incremental syncs and historical re-syncs.
-
-    The sync process:
-    1. Authenticates with Last.fm API using stored credentials
-    2. Fetches scrobbles since the last sync (or all history on first run)
-    3. Appends new scrobbles to the Google Sheets spreadsheet
-    4. Updates local state for future incremental syncs
-
-    Scrobble data includes: Artist, Track, Album, Timestamp, and play count.
-
-.PARAMETER Since
-    Re-sync from a specific date (format: yyyy/MM/dd). This deletes all existing
-    scrobbles on or after the specified date and re-fetches them from Last.fm.
-    Useful when you've edited scrobbles on Last.fm and want to refresh the data.
-
-.EXAMPLE
-    Invoke-LastFmSync
-
-    Performs an incremental sync, fetching only new scrobbles since the last sync.
-    This is the recommended daily usage.
-
-.EXAMPLE
-    synclf -Since '2024/06/01'
-
-    Deletes all scrobbles from June 1, 2024 onward and re-fetches them.
-    Use this after making corrections on Last.fm or to fix sync issues.
-
-.NOTES
-    Requires: LASTFM_USERNAME, LASTFM_API_KEY environment variables.
-    Rate limited to respect Last.fm API guidelines.
-
-.LINK
-    https://www.last.fm/api
-#>
 function Invoke-LastFmSync {
     [CmdletBinding()]
     [Alias('synclf')]
@@ -1510,41 +915,6 @@ function Invoke-LastFmSync {
     }
 }
 
-<#
-.SYNOPSIS
-    Run all daily syncs (YouTube + Last.fm).
-
-.DESCRIPTION
-    Convenience command that runs both YouTube and Last.fm syncs sequentially.
-    Ideal for daily automation or manual one-command sync of all services.
-
-    Execution order:
-    1. YouTube playlist sync (typically faster, less data)
-    2. Last.fm scrobble sync (may take longer for large libraries)
-
-    Each sync runs independently - if one fails, the other still executes.
-    Use this for routine daily syncs; use individual commands for troubleshooting.
-
-.EXAMPLE
-    Invoke-AllSyncs
-
-    Runs both YouTube and Last.fm syncs with default settings.
-    Progress is displayed for each service as it runs.
-
-.EXAMPLE
-    syncall
-
-    Same as above, using the short alias. Recommended for interactive use.
-
-.NOTES
-    This is equivalent to running: Invoke-YouTubeSync; Invoke-LastFmSync
-    Consider using Register-AllSyncTasks to automate daily execution.
-
-.LINK
-    Invoke-YouTubeSync
-    Invoke-LastFmSync
-    Register-AllSyncTasks
-#>
 function Invoke-AllSyncs {
     [CmdletBinding()]
     [Alias('syncall')]
@@ -1569,36 +939,8 @@ function Invoke-AllSyncs {
     Write-Host "`nAll syncs complete!" -ForegroundColor Green
 }
 
-#endregion
 
-#region Scheduled Tasks
 
-<#
-.SYNOPSIS
-    Create a Windows scheduled task for sync automation.
-
-.DESCRIPTION
-    Registers a Windows scheduled task that runs a dotnet CLI command daily.
-    Window closes on success, stays open on failure for inspection.
-
-.PARAMETER TaskName
-    Unique name for the task. Replaces existing task with same name.
-
-.PARAMETER Command
-    CLI command to run (e.g., 'sync yt', 'sync lastfm').
-
-.PARAMETER DailyTime
-    Time to run daily. Defaults to 09:00:00.
-
-.PARAMETER Description
-    Description shown in Task Scheduler.
-
-.EXAMPLE
-    Register-ScheduledSyncTask -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime '09:00:00'
-
-.NOTES
-    Requires Administrator privileges.
-#>
 function Register-ScheduledSyncTask {
     [CmdletBinding()]
     [Alias('regtask')]
@@ -1631,7 +973,6 @@ function Register-ScheduledSyncTask {
         Write-Host "Removed existing task '$TaskName'" -ForegroundColor Yellow
     }
 
-    # Inline command: run dotnet, close on success, pause on failure
     $script = "Set-Location '$Script:CSharpRoot'; dotnet run -- $Command; if (`$LASTEXITCODE -ne 0) { Read-Host 'Press Enter to close' }"
 
     $terminal = Get-Command -Name 'wt.exe' -ErrorAction Ignore
@@ -1658,16 +999,6 @@ function Register-ScheduledSyncTask {
     Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm')) daily" -ForegroundColor Green
 }
 
-<#
-.SYNOPSIS
-    Register LastFmSync and YouTubeSync tasks with default schedules.
-
-.EXAMPLE
-    Register-AllSyncTasks
-
-.NOTES
-    Requires Administrator privileges.
-#>
 function Register-AllSyncTasks {
     [CmdletBinding()]
     [Alias('regall')]
@@ -1677,8 +1008,6 @@ function Register-AllSyncTasks {
     Register-ScheduledSyncTask -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '10:00:00' -Description 'Syncs YouTube playlists to Google Sheets'
 }
 
-#endregion
 
-#endregion
 
 Export-ModuleMember -Function * -Alias *
