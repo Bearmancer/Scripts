@@ -26,9 +26,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
     internal void Execute()
     {
-        Console.Debug("Sync initiated");
-
+        Console.Info("Starting Last.fm sync...");
         var spreadsheetId = GetOrCreateSpreadsheet();
+        Console.Info("Authenticated");
 
         if (forceFromDate.HasValue)
         {
@@ -41,7 +41,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         }
         else if (!state.FetchComplete && state.LastPage > 0)
         {
-            // Resume interrupted full fetch - continue from last page (don't pass fetchAfter to maintain full sync mode)
             Console.Warning(
                 "Resuming full sync from page {0} ({1} scrobbles fetched)",
                 state.LastPage + 1,
@@ -89,7 +88,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             }
             else
             {
-                // No cache - check sheet for existing data
                 var latestInSheet = sheetsService.GetLatestScrobbleTime(spreadsheetId);
 
                 if (latestInSheet != null)
@@ -128,7 +126,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             return;
         }
 
-        // Filter to only scrobbles newer than what's in the sheet
         var newScrobbles = sheetsService.GetNewScrobbles(spreadsheetId, scrobbles);
 
         if (newScrobbles.Count == 0)
@@ -190,11 +187,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         );
 
         sheetsService.EnsureSheetExists(spreadsheetId);
-
-        Console.Info("Writing {0} scrobbles...", scrobbles.Count);
         sheetsService.WriteScrobbles(spreadsheetId, scrobbles);
 
-        Console.Success("Done! Wrote {0} scrobbles.", scrobbles.Count);
+        Console.Success("Wrote {0} scrobbles.", scrobbles.Count);
         Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
         Logger.End(true, $"Wrote {scrobbles.Count} scrobbles to sheet");
     }

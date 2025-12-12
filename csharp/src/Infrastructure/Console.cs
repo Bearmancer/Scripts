@@ -14,7 +14,6 @@ public static class Console
     public static bool Suppress { get; set; }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Core Logging Methods (level-filtered, timestamped)
     // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Debug(string message, params object?[] args) =>
@@ -48,7 +47,6 @@ public static class Console
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Status Indicators (icons, no level filtering)
     // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Starting(string operation) =>
@@ -196,7 +194,6 @@ public static class Console
     internal static SpectreProgress CreateProgress() => AnsiConsole.Progress();
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // Help Formatting (CliFx / .NET CLI style)
     // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Section(string title) =>

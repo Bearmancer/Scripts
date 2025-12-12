@@ -449,7 +449,6 @@ public sealed class MusicBrainzService(
 
     #region Helpers
 
-    // Roles to exclude from credits (choir, vocalists, etc.)
     static readonly FrozenSet<string> ExcludedRoles = FrozenSet.ToFrozenSet(
         [
             "choir",
@@ -480,7 +479,6 @@ public sealed class MusicBrainzService(
         StringComparer.OrdinalIgnoreCase
     );
 
-    // Roles that identify orchestras/ensembles
     static readonly FrozenSet<string> OrchestraRoles = FrozenSet.ToFrozenSet(
         ["orchestra", "performing orchestra", "ensemble", "performer"],
         StringComparer.OrdinalIgnoreCase
@@ -530,7 +528,6 @@ public sealed class MusicBrainzService(
 
         List<BoxSetTrackMetadata> tracks = [];
 
-        // Build credit lookup by role type from release-level credits
         var releaseCredits = release.Credits.Where(c => !ExcludedRoles.Contains(c.Role)).ToList();
 
         string? releaseConductor = releaseCredits
@@ -549,14 +546,12 @@ public sealed class MusicBrainzService(
             .Distinct()
             .ToList();
 
-        // Extract composer from release artist (common for classical box sets)
         string? releaseComposer = release.Artist;
 
         foreach (MusicBrainzMedium medium in release.Media)
         {
             foreach (MusicBrainzTrack track in medium.Tracks)
             {
-                // Try to get recording-level details if available
                 int? recordingYear = null;
                 string? trackComposer = null;
                 string? trackConductor = null;
@@ -576,7 +571,6 @@ public sealed class MusicBrainzService(
                     }
                 }
 
-                // Fallback hierarchy: track -> recording -> release
                 string composer =
                     trackComposer
                     ?? releaseComposer
@@ -644,7 +638,6 @@ public sealed class MusicBrainzService(
             await GetReleaseAsync(releaseId)
             ?? throw new BoxSetParseException($"Release not found: {releaseId}");
 
-        // Extract release-level defaults
         var releaseCredits = release.Credits.Where(c => !ExcludedRoles.Contains(c.Role)).ToList();
 
         string? releaseConductor = releaseCredits
@@ -669,13 +662,11 @@ public sealed class MusicBrainzService(
 
         foreach (MusicBrainzMedium medium in release.Media)
         {
-            // Medium-level title might contain conductor/orchestra info
             string? mediumConductor = null;
             string? mediumOrchestra = null;
 
             if (!IsNullOrWhiteSpace(medium.Title))
             {
-                // Parse patterns like "Herbert von Karajan / Berlin Philharmonic"
                 var parts = medium.Title.Split([" / ", " - "], StringSplitOptions.TrimEntries);
                 if (parts.Length >= 2)
                 {
@@ -701,7 +692,6 @@ public sealed class MusicBrainzService(
                     }
                 }
 
-                // Resolution order: track -> medium -> release
                 string composer =
                     trackComposer
                     ?? releaseComposer

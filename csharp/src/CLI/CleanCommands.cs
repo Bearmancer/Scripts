@@ -171,12 +171,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
                 Console.Success("  obj/ deleted");
             }
         }
-        catch (IOException)
-        {
-            ScheduleDeferredCleanup(binDir, objDir);
-            return;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             ScheduleDeferredCleanup(binDir, objDir);
             return;

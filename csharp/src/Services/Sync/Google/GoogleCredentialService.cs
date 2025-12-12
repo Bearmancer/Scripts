@@ -44,16 +44,16 @@ public static class GoogleCredentialService
         catch (AggregateException aex) when (aex.InnerException is not null)
         {
             var inner = aex.InnerException;
-            var detail = inner.Message;
-
-            if (detail.Contains("invalid_client", StringComparison.OrdinalIgnoreCase))
-                detail =
-                    "Invalid OAuth credentials. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are correct.";
-            else if (detail.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase))
-                detail =
-                    "OAuth token expired. Delete the token file in your home directory and re-authenticate.";
-            else if (detail.Contains("access_denied", StringComparison.OrdinalIgnoreCase))
-                detail = "Access denied. You may have declined the authorization prompt.";
+            string detail = inner.Message switch
+            {
+                var m when m.Contains("invalid_client", StringComparison.OrdinalIgnoreCase) =>
+                    "Invalid OAuth credentials. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are correct.",
+                var m when m.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase) =>
+                    "OAuth token expired. Delete the token file in your home directory and re-authenticate.",
+                var m when m.Contains("access_denied", StringComparison.OrdinalIgnoreCase) =>
+                    "Access denied. You may have declined the authorization prompt.",
+                _ => inner.Message,
+            };
 
             throw new InvalidOperationException($"Google authentication failed: {detail}", inner);
         }
