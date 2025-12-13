@@ -1,5 +1,6 @@
 namespace CSharpScripts.Services.Music;
 
+// Flexible search query - set only the fields you want to filter on
 public record MusicSearchQuery(
     string? Artist = null,
     string? Album = null,
@@ -47,6 +48,7 @@ public sealed class MusicMetadataService
         MusicBrainz = new MusicBrainzService();
     }
 
+    // Flexible search with query record - set only the fields you need
     public async Task<MusicSearchResult?> SearchAsync(MusicSearchQuery query)
     {
         MusicBrainzSearchResult? mbResult = await MusicBrainz.SearchFirstReleaseAsync(

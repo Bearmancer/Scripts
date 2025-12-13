@@ -25,7 +25,11 @@ public static class Logger
 
         Event(
             "SessionStart",
-            new Dictionary<string, object> { ["ProcessId"] = Environment.ProcessId }
+            new Dictionary<string, object>
+            {
+                ["Service"] = service.ToString(),
+                ["ProcessId"] = Environment.ProcessId,
+            }
         );
     }
 
@@ -127,6 +131,9 @@ public static class Logger
         List<string>? removedVideoIds = null
     )
     {
+        if (added == 0 && removed == 0)
+            return;
+
         Dictionary<string, object> data = new()
         {
             ["Title"] = title,
@@ -204,6 +211,8 @@ public static class Logger
             }
             catch
             {
+                // Intentionally skip malformed JSON lines - crash detection must be robust
+                // to corrupted log files and should not fail the entire session startup
                 continue;
             }
 
@@ -244,6 +253,7 @@ public static class Logger
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // File I/O
     // ═══════════════════════════════════════════════════════════════════════════
 
     private static void WriteJsonEntry(

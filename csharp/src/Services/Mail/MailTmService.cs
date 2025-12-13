@@ -1,6 +1,3 @@
-using System.Text.Json.Serialization;
-using RestSharp;
-
 namespace CSharpScripts.Services.Mail;
 
 public sealed class MailTmException(string message, Exception? inner = null)

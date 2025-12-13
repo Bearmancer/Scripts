@@ -115,6 +115,13 @@ public static class YouTubeChangeDetector
         Dictionary<string, PlaylistSnapshot> snapshots
     )
     {
+        Console.Debug("=== OPTIMIZED CHANGE DETECTION ===");
+        Console.Debug(
+            "Current summaries: {0}, Stored snapshots: {1}",
+            currentSummaries.Count,
+            snapshots.Count
+        );
+
         var currentIds = currentSummaries.Select(s => s.Id).ToHashSet();
         var previousIds = snapshots.Keys.ToHashSet();
 
@@ -122,6 +129,9 @@ public static class YouTubeChangeDetector
         var deletedIds = previousIds.Except(currentIds).ToList();
         List<string> modifiedIds = [];
         List<PlaylistRename> renamed = [];
+
+        Console.Debug("New playlist IDs: {0}", newIds.Count);
+        Console.Debug("Deleted playlist IDs: {0}", deletedIds.Count);
 
         foreach (var summary in currentSummaries)
         {
@@ -142,18 +152,38 @@ public static class YouTubeChangeDetector
                 && !IsNullOrEmpty(summary.ETag)
                 && snapshot.ETag != summary.ETag;
 
-            if (etagChanged)
+            var countChanged = snapshot.ReportedVideoCount != summary.VideoCount;
+
+            // Log warning if ETag is missing (can't detect reorder without it)
+            if (IsNullOrEmpty(snapshot.ETag) && !etagChanged && !countChanged)
+                Console.Debug(
+                    "  WARNING: {0} has no stored ETag - reorder detection disabled (will sync on next change)",
+                    summary.Title
+                );
+
+            if (etagChanged || countChanged)
             {
                 modifiedIds.Add(summary.Id);
+                var reason = (etagChanged, countChanged) switch
+                {
+                    (true, true) => "etag+count",
+                    (true, false) => "etag only (likely reorder)",
+                    (false, true) => "count only (fallback - stored ETag was null)",
+                    _ => "unknown",
+                };
                 Console.Debug(
-                    "  MODIFIED (etag changed): {0} (count: {1} → {2})",
+                    "  MODIFIED ({0}): {1} (count: {2} → {3}, etag: {4} → {5})",
+                    reason,
                     summary.Title,
                     snapshot.ReportedVideoCount,
-                    summary.VideoCount
+                    summary.VideoCount,
+                    snapshot.ETag?[..8] ?? "null",
+                    summary.ETag?[..8] ?? "null"
                 );
             }
         }
 
+        Console.Debug("Total modified: {0}", modifiedIds.Count);
         return new OptimizedChanges(
             NewIds: newIds,
             DeletedIds: deletedIds,

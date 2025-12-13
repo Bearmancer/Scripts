@@ -14,21 +14,14 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
     private FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
 
-    private void LogResumeInfo()
-    {
-        if (state.LastPage > 0 && !state.FetchComplete)
-            Console.Warning(
-                "Resuming from page {0} ({1} scrobbles fetched)",
-                state.LastPage,
-                state.TotalFetched
-            );
-    }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Main Entry Point
+    // ═══════════════════════════════════════════════════════════════════════════
 
     internal void Execute()
     {
         Console.Info("Starting Last.fm sync...");
         var spreadsheetId = GetOrCreateSpreadsheet();
-        Console.Info("Authenticated");
 
         if (forceFromDate.HasValue)
         {
@@ -190,7 +183,6 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         sheetsService.WriteScrobbles(spreadsheetId, scrobbles);
 
         Console.Success("Wrote {0} scrobbles.", scrobbles.Count);
-        Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
         Logger.End(true, $"Wrote {scrobbles.Count} scrobbles to sheet");
     }
 
