@@ -42,3 +42,13 @@
 {"Timestamp":"2025/12/11 03:32:19","Level":"Info","Event":"SessionEnd","SessionId":"4be2bd5a","Data":{"Status":"Completed","EndedAt":"2025/12/11 03:32:19","Summary":"No new scrobbles"}}
 {"Timestamp":"2025/12/12 03:42:46","Level":"Info","Event":"SessionStart","SessionId":"ecd68e38","Data":{"ProcessId":15980}}
 {"Timestamp":"2025/12/12 03:43:13","Level":"Info","Event":"SessionEnd","SessionId":"ecd68e38","Data":{"Status":"Completed","EndedAt":"2025/12/12 03:43:13","Summary":"Wrote 4 scrobbles to sheet"}}
+{"Timestamp":"2025/12/13 06:02:08","Level":"Info","Event":"SessionStart","SessionId":"ea29560b","Data":{"ProcessId":5208,"LocalTime":"2025/12/13 06:02:08","UtcTime":"2025/12/13 00:32:08","Timezone":"India Standard Time"}}
+{"Timestamp":"2025/12/13 06:02:38","Level":"Info","Event":"SessionEnd","SessionId":"ea29560b","Data":{"Status":"Completed","EndedAt":"2025/12/13 06:02:38","Summary":"Wrote 3 scrobbles to sheet"}}
+{"Timestamp":"2025/12/13 13:47:59","Level":"Info","Event":"SessionStart","SessionId":"0ab55937","Data":{"Service":"LastFm","ProcessId":19504}}
+{"Timestamp":"2025/12/13 13:47:59","Level":"Error","Event":"Exception","SessionId":"0ab55937","Data":{"Type":"InvalidOperationException","Message":"LASTFM_USERNAME not set"}}
+{"Timestamp":"2025/12/13 13:47:59","Level":"Info","Event":"SessionEnd","SessionId":"0ab55937","Data":{"Status":"Failed","EndedAt":"2025/12/13 13:47:59","Summary":"InvalidOperationException: LASTFM_USERNAME not set"}}
+{"Timestamp":"2025/12/13 13:54:55","Level":"Info","Event":"SessionStart","SessionId":"0a1778f3","Data":{"Service":"LastFm","ProcessId":8792}}
+{"Timestamp":"2025/12/13 13:54:55","Level":"Error","Event":"Exception","SessionId":"0a1778f3","Data":{"Type":"InvalidOperationException","Message":"LASTFM_USERNAME not set"}}
+{"Timestamp":"2025/12/13 13:54:55","Level":"Info","Event":"SessionEnd","SessionId":"0a1778f3","Data":{"Status":"Failed","EndedAt":"2025/12/13 13:54:55","Summary":"InvalidOperationException: LASTFM_USERNAME not set"}}
+{"Timestamp":"2025/12/13 14:10:28","Level":"Info","Event":"SessionStart","SessionId":"846182a6","Data":{"Service":"LastFm","ProcessId":11440}}
+{"Timestamp":"2025/12/13 14:10:55","Level":"Info","Event":"SessionEnd","SessionId":"846182a6","Data":{"Status":"Completed","EndedAt":"2025/12/13 14:10:55","Summary":"Wrote 6 scrobbles to sheet"}}

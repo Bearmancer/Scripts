@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using Spectre.Console.Cli;
-
 namespace CSharpScripts.CLI.Commands;
 
 public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>

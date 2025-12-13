@@ -30,7 +30,6 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         StateManager.MigratePlaylistFiles(state.PlaylistSnapshots);
 
         var spreadsheetId = GetOrCreateSpreadsheet();
-        Console.Info("Authenticated");
 
         if (state.FetchComplete && state.PlaylistSnapshots.Count > 0)
         {
@@ -69,7 +68,6 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         if (!ct.IsCancellationRequested)
         {
             Console.Success("Done! Synced {0} playlist(s).", processedCount);
-            Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
             Logger.End(success: true, $"Synced {processedCount} playlists (selective)");
         }
         else
@@ -156,7 +154,17 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         state.LastUpdated = DateTime.Now;
         SaveState();
 
-        var summaries = youtubeService.GetPlaylistSummaries(ct);
+        List<PlaylistSummary> summaries = [];
+        AnsiConsole
+            .Status()
+            .Spinner(Spinner.Known.Dots)
+            .Start(
+                "Fetching playlist metadata...",
+                _ =>
+                {
+                    summaries = youtubeService.GetPlaylistSummaries(ct);
+                }
+            );
 
         if (ct.IsCancellationRequested)
         {
@@ -171,7 +179,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         if (!changes.HasAnyChanges)
         {
-            Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Console.Success("No changes detected.");
             Logger.End(success: true, "No changes detected");
             return;
         }
@@ -186,9 +194,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             spreadsheetId
         );
 
-        if (!ct.IsCancellationRequested)
-            Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
-        else
+        if (ct.IsCancellationRequested)
             Logger.Interrupted("Interrupted during sync");
     }
 
@@ -321,7 +327,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                             Id: playlistId,
                             Title: summary.Title,
                             VideoCount: summary.VideoCount,
-                            VideoIds: videoIds
+                            VideoIds: videoIds,
+                            ETag: summary.ETag
                         )
                     );
 
@@ -382,7 +389,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
 
         if (!playlistChanges.HasChanges && state.FetchComplete)
         {
-            Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
+            Console.Success("No changes detected.");
             Logger.End(success: true, "No changes detected");
             return;
         }
@@ -453,6 +460,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         var interruptedAt = 0;
         var alreadyFetched = state.VideoIdFetchIndex;
 
+        Console.Suppress = true;
+
         AnsiConsole
             .Progress()
             .AutoClear(true)
@@ -497,18 +506,14 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                     state.CachedPlaylists = playlists;
                     state.VideoIdFetchIndex = i + 1;
                     SaveState();
-                    Console.Debug(
-                        "Cached: {0} video IDs for '{1}' (resume index: {2})",
-                        videoIds.Count,
-                        playlist.Title,
-                        i + 1
-                    );
 
                     task.Increment(1);
                 }
 
                 task.Value = task.MaxValue;
             });
+
+        Console.Suppress = false;
 
         if (interrupted)
         {
@@ -571,7 +576,6 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             processedCount,
             playlists.Count - processedCount
         );
-        Console.Link(GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId), "Open spreadsheet");
         Logger.End(
             success: true,
             $"Synced {playlists.Count} playlists ({processedCount} updated, {playlists.Count - processedCount} unchanged)"
@@ -600,8 +604,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
     )
     {
         var processedCount = 0;
-        var totalVideos = playlistsToProcess.Sum(p => p.VideoIds.Count);
-        var videosProcessed = 0;
+
+        Console.Suppress = true;
 
         AnsiConsole
             .Progress()
@@ -616,19 +620,18 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             ])
             .Start(ctx =>
             {
-                var overallTask = ctx.AddTask(
-                    description: $"[cyan]Syncing {playlistsToProcess.Count} playlists[/]",
-                    maxValue: totalVideos
-                );
-
                 foreach (var playlist in playlistsToProcess)
                 {
                     if (ct.IsCancellationRequested)
                         break;
 
                     var playlistCount = $"({processedCount + 1}/{playlistsToProcess.Count})";
-                    overallTask.Description =
-                        $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/]";
+                    var playlistVideoCount = playlist.VideoIds.Count;
+
+                    var task = ctx.AddTask(
+                        description: $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/] [dim](0/{playlistVideoCount} videos)[/]",
+                        maxValue: playlistVideoCount
+                    );
 
                     ProcessPlaylistWithContext(
                         playlist,
@@ -636,21 +639,18 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                         isFirstPlaylist && processedCount == 0,
                         (count) =>
                         {
-                            var currentVideos = videosProcessed + count;
-                            overallTask.Value = currentVideos;
-                            var videoCount = $"({currentVideos}/{totalVideos})";
-                            overallTask.Description =
-                                $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/] [dim]{videoCount}[/]";
+                            task.Value = count;
+                            task.Description =
+                                $"[dim]{playlistCount}[/] [cyan]{Markup.Escape(playlist.Title)}[/] [dim]({count}/{playlistVideoCount} videos)[/]";
                         }
                     );
 
-                    videosProcessed += playlist.VideoIds.Count;
-                    overallTask.Value = videosProcessed;
+                    task.Value = task.MaxValue;
                     processedCount++;
                 }
-
-                overallTask.Value = overallTask.MaxValue;
             });
+
+        Console.Suppress = false;
 
         return processedCount;
     }

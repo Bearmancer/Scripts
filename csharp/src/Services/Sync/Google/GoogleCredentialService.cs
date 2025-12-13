@@ -1,5 +1,3 @@
-using YouTubeServiceApi = Google.Apis.YouTube.v3.YouTubeService;
-
 namespace CSharpScripts.Services.Sync.Google;
 
 public static class GoogleCredentialService

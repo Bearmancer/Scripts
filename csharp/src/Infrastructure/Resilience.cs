@@ -209,6 +209,7 @@ public static class Resilience
         );
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // Async Rate-Limited Execution
     // ═══════════════════════════════════════════════════════════════════════════
 
     public static async Task<T> ExecuteAsync<T>(

@@ -1,6 +1,3 @@
-using MetaBrainz.MusicBrainz;
-using MetaBrainz.MusicBrainz.Interfaces.Entities;
-
 namespace CSharpScripts.Services.Music;
 
 public record OrmandyTrack(
@@ -325,8 +322,10 @@ public sealed class OrmandyBoxParser
             }
         }
 
+        // Collect all metadata issues - no fallbacks, no prompts
         List<string> issues = [];
 
+        // Critical issues (composer, work, year)
         if (composer is null)
             issues.Add("[CRITICAL] Missing composer");
         if (workTitle is null)
@@ -340,6 +339,7 @@ public sealed class OrmandyBoxParser
                 $"[CRITICAL] Year {recordingYear} outside range {EXPECTED_START_YEAR}-{EXPECTED_END_YEAR}"
             );
 
+        // Performer issues (separate section)
         if (orchestra is null)
             issues.Add("[PERFORMER] Missing orchestra");
         if (conductor is null)
@@ -367,6 +367,7 @@ public sealed class OrmandyBoxParser
         if (soloists.Count > 0)
             PrintStatus("Soloists", Join(", ", soloists), "cyan");
 
+        // Always create track - issues are logged separately
         OrmandyTrack newTrack = new(
             DiscNumber: discNumber,
             TrackNumber: trackNumber,

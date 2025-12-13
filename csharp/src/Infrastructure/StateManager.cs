@@ -7,6 +7,8 @@ public static class StateManager
     public const string YouTubeSyncFile = "youtube/sync.json";
     public const string BoxSetCacheDirectory = "boxsets";
 
+    internal static string RootDirectory = Paths.StateDirectory;
+
     public static readonly JsonSerializerOptions JsonIndented = new()
     {
         WriteIndented = true,
@@ -21,7 +23,7 @@ public static class StateManager
     public static T Load<T>(string fileName)
         where T : class, new()
     {
-        CreateDirectory(Paths.StateDirectory);
+        CreateDirectory(RootDirectory);
         var path = GetPath(fileName);
         if (!File.Exists(path))
             return new T();
@@ -32,7 +34,7 @@ public static class StateManager
 
     public static void Save<T>(string fileName, T state)
     {
-        CreateDirectory(Paths.StateDirectory);
+        CreateDirectory(RootDirectory);
         WriteAllText(GetPath(fileName), JsonSerializer.Serialize(state, JsonCompact));
     }
 
@@ -56,10 +58,10 @@ public static class StateManager
     private const string YouTubeDeletedSubdirectory = "youtube/deleted";
 
     private static string YouTubePlaylistsDirectory =>
-        Combine(Paths.StateDirectory, YouTubePlaylistsSubdirectory);
+        Combine(RootDirectory, YouTubePlaylistsSubdirectory);
 
     private static string YouTubeDeletedDirectory =>
-        Combine(Paths.StateDirectory, YouTubeDeletedSubdirectory);
+        Combine(RootDirectory, YouTubeDeletedSubdirectory);
 
     internal static List<YouTubeVideo> LoadPlaylistCache(string playlistTitle)
     {
@@ -169,17 +171,18 @@ public static class StateManager
     private static string GetPlaylistPath(string playlistTitle) =>
         Combine(YouTubePlaylistsDirectory, $"{SanitizeFileName(playlistTitle)}.json");
 
-    private static string SanitizeFileName(string name) =>
-        name.Normalize(System.Text.NormalizationForm.FormC)
-            .Replace(":", " -")
-            .Replace("/", "-")
-            .Replace("\\", "-")
-            .Replace("?", "")
-            .Replace("*", "")
-            .Replace("<", "")
-            .Replace(">", "")
-            .Replace("|", "-")
-            .Replace("\"", "'");
+    static readonly char[] InvalidFileNameChars = GetInvalidFileNameChars();
+
+    static string SanitizeFileName(string name)
+    {
+        if (IsNullOrWhiteSpace(name))
+            return "unnamed";
+
+        foreach (char c in InvalidFileNameChars)
+            name = name.Replace(c, '_');
+
+        return name.Trim().TrimEnd('.');
+    }
 
     #endregion
 
@@ -251,7 +254,7 @@ public static class StateManager
     private static string GetPath(string fileName)
     {
         var fullPath = Combine(
-            Paths.StateDirectory,
+            RootDirectory,
             fileName.EndsWith(".json") ? fileName : $"{fileName}.json"
         );
         var directory = GetDirectoryName(fullPath);

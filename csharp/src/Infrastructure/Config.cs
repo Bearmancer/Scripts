@@ -2,50 +2,30 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Config
 {
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Google APIs
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static readonly string GoogleClientId =
+    public static string GoogleClientId =>
         GetEnvironmentVariable("GOOGLE_CLIENT_ID")
-        ?? throw new InvalidOperationException("Missing: GOOGLE_CLIENT_ID");
+        ?? throw new InvalidOperationException("GOOGLE_CLIENT_ID not set");
 
-    public static readonly string GoogleClientSecret =
+    public static string GoogleClientSecret =>
         GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
-        ?? throw new InvalidOperationException("Missing: GOOGLE_CLIENT_SECRET");
+        ?? throw new InvalidOperationException("GOOGLE_CLIENT_SECRET not set");
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static readonly string LastFmApiKey =
+    public static string LastFmApiKey =>
         GetEnvironmentVariable("LASTFM_API_KEY")
-        ?? throw new InvalidOperationException("Missing: LASTFM_API_KEY");
+        ?? throw new InvalidOperationException("LASTFM_API_KEY not set");
 
-    public static readonly string? LastFmApiSecret = GetEnvironmentVariable("LASTFM_API_SECRET");
+    public static string LastFmUsername =>
+        GetEnvironmentVariable("LASTFM_USERNAME") ?? "kanishknishar";
 
-    public const string LastFmUsername = "kanishknishar";
+    public static string LastFmSpreadsheetId =>
+        GetEnvironmentVariable("LASTFM_SPREADSHEET_ID") ?? "";
 
-    public const string LastFmSpreadsheetId = "1rJzYVDnVRr2pbRp3vd4ZAb1_N42g8gTogoYPCwaJ_Yg";
-    public const string LastFmSpreadsheetTitle = "last.fm scrobbles";
+    public static string LastFmSpreadsheetTitle =>
+        GetEnvironmentVariable("LASTFM_SPREADSHEET_TITLE") ?? "Last.fm Scrobbles";
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // YouTube
-    // ═══════════════════════════════════════════════════════════════════════════
+    public static string YouTubeSpreadsheetId =>
+        GetEnvironmentVariable("YOUTUBE_SPREADSHEET_ID") ?? "";
 
-    public const string? YouTubeSpreadsheetId = null;
-    public const string YouTubeSpreadsheetTitle = "YouTube Playlists";
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Discogs
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static readonly string? DiscogsUserToken = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // MusicBrainz
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static readonly string? MusicBrainzApiKey = GetEnvironmentVariable(
-        "MUSICBRAINZ_API_KEY"
-    );
+    public static string YouTubeSpreadsheetTitle =>
+        GetEnvironmentVariable("YOUTUBE_SPREADSHEET_TITLE") ?? "YouTube Playlists";
 }
