@@ -423,29 +423,30 @@ function Show-SyncLogSessions {
     $terminalWidth = $Host.UI.RawUI.WindowSize.Width
     $now = Get-Date
 
+    $serviceNames = @{
+        'youtube' = 'YouTube'
+        'lastfm'  = 'Last.fm'
+    }
+
     Write-Host ""
     Write-Host "Session History" -ForegroundColor Cyan
     Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
 
-    $headerFormat = "{0,-12} {1,-8} {2,-20} {3,-10} {4,-12} {5,-6} {6}"
-    Write-Host ($headerFormat -f "Date", "Service", "Time Range", "Duration", "Status", "Events", "Summary") -ForegroundColor White
+    $headerFormat = "{0,-19} {1,-8} {2,-8} {3,-12} {4,-6} {5}"
+    Write-Host ($headerFormat -f "DateTime", "Service", "Duration", "Status", "Events", "Summary") -ForegroundColor White
     Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
 
     foreach ($s in $sessionList) {
-        $date = $s.StartTime.ToString('yyyy/MM/dd')
-        $startStr = $s.StartTime.ToString('HH:mm:ss')
-        $endStr = if ($s.EndTime) { $s.EndTime.ToString('HH:mm:ss') } else { 'running' }
-        $timeRange = "$startStr → $endStr"
+        $dateTime = $s.StartTime.ToString('yyyy/MM/dd HH:mm:ss')
+        $serviceName = $serviceNames[$s.Source] ?? $s.Source
 
         $duration = if ($s.EndTime) {
             $span = $s.EndTime - $s.StartTime
-            if ($span.TotalHours -ge 1) { "{0:0}h {1:0}m" -f $span.Hours, $span.Minutes }
-            elseif ($span.TotalMinutes -ge 1) { "{0:0}m {1:0}s" -f $span.Minutes, $span.Seconds }
-            else { "{0:0}s" -f $span.TotalSeconds }
+            "{0}s" -f [int]$span.TotalSeconds
         }
         else {
             $span = $now - $s.StartTime
-            "~{0:0}m" -f $span.TotalMinutes
+            "~{0}s" -f [int]$span.TotalSeconds
         }
 
         $status = if (-not $s.EndTime -and ($now - $s.StartTime).TotalHours -lt 2) { 'Running' } 
@@ -458,7 +459,7 @@ function Show-SyncLogSessions {
             if ($s.Summary.Length -gt 40) { $s.Summary.Substring(0, 37) + "..." } else { $s.Summary }
         }
 
-        Write-Host ($headerFormat -f $date, $s.Source, $timeRange, $duration, $status, $s.EventCount, $summary) -ForegroundColor $color
+        Write-Host ($headerFormat -f $dateTime, $serviceName, $duration, $status, $s.EventCount, $summary) -ForegroundColor $color
     }
 
     Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
@@ -569,6 +570,28 @@ function Show-SyncLogEntries {
 }
 
 function Get-Directories {
+    <#
+    .SYNOPSIS
+        Displays directory tree with sizes.
+
+    .DESCRIPTION
+        Shows a tree view of subdirectories with their sizes.
+        Useful for finding large folders.
+
+    .PARAMETER Directory
+        Root directory to analyze. Defaults to current directory.
+
+    .PARAMETER Sort
+        Sort order: 'size' (largest first) or 'name' (alphabetical).
+
+    .EXAMPLE
+        dirs
+        Shows directory tree for current folder sorted by size.
+
+    .EXAMPLE
+        Get-Directories -Directory D:\Media -Sort name
+        Shows directory tree for D:\Media sorted alphabetically.
+    #>
     [CmdletBinding()]
     [Alias('dirs')]
     param(
@@ -586,6 +609,28 @@ function Get-Directories {
 }
 
 function Get-FilesAndDirectories {
+    <#
+    .SYNOPSIS
+        Displays full file and directory tree with sizes.
+
+    .DESCRIPTION
+        Shows a tree view of all files and subdirectories with their sizes.
+        More detailed than Get-Directories.
+
+    .PARAMETER Directory
+        Root directory to analyze. Defaults to current directory.
+
+    .PARAMETER Sort
+        Sort order: 'size' (largest first) or 'name' (alphabetical).
+
+    .EXAMPLE
+        tree
+        Shows full tree for current folder sorted by size.
+
+    .EXAMPLE
+        Get-FilesAndDirectories -Directory D:\Projects -Sort name
+        Shows full tree for D:\Projects sorted alphabetically.
+    #>
     [CmdletBinding()]
     [Alias('tree')]
     param(
@@ -603,6 +648,28 @@ function Get-FilesAndDirectories {
 }
 
 function New-Torrents {
+    <#
+    .SYNOPSIS
+        Creates .torrent files for directories.
+
+    .DESCRIPTION
+        Generates .torrent files for each subdirectory in the specified path.
+        Useful for batch torrent creation.
+
+    .PARAMETER Directory
+        Directory containing folders to create torrents for. Defaults to current directory.
+
+    .PARAMETER IncludeSubdirectories
+        If specified, recursively processes subdirectories.
+
+    .EXAMPLE
+        torrent
+        Creates torrents for each folder in current directory.
+
+    .EXAMPLE
+        New-Torrents -Directory D:\Uploads -IncludeSubdirectories
+        Creates torrents recursively for all folders in D:\Uploads.
+    #>
     [CmdletBinding()]
     [Alias('torrent')]
     param(
@@ -625,6 +692,28 @@ function New-Torrents {
 
 
 function Start-DiscRemux {
+    <#
+    .SYNOPSIS
+        Remuxes video disc folders to MKV files.
+
+    .DESCRIPTION
+        Converts Blu-ray/DVD disc folder structures to single MKV files.
+        Preserves all streams and metadata.
+
+    .PARAMETER Directory
+        Directory containing disc folders to remux. Defaults to current directory.
+
+    .PARAMETER SkipMediaInfo
+        If specified, skips generating MediaInfo reports.
+
+    .EXAMPLE
+        remux
+        Remuxes all disc folders in current directory.
+
+    .EXAMPLE
+        Start-DiscRemux -Directory D:\Rips -SkipMediaInfo
+        Remuxes disc folders in D:\Rips without MediaInfo.
+    #>
     [CmdletBinding()]
     [Alias('remux')]
     param(
@@ -644,6 +733,25 @@ function Start-DiscRemux {
 }
 
 function Start-BatchCompression {
+    <#
+    .SYNOPSIS
+        Compresses video files in batch.
+
+    .DESCRIPTION
+        Re-encodes video files to reduce file size while maintaining quality.
+        Uses optimized encoding settings.
+
+    .PARAMETER Directory
+        Directory containing videos to compress. Defaults to current directory.
+
+    .EXAMPLE
+        compress
+        Compresses all videos in current directory.
+
+    .EXAMPLE
+        Start-BatchCompression -Directory D:\Videos
+        Compresses all videos in D:\Videos.
+    #>
     [CmdletBinding()]
     [Alias('compress')]
     param(
@@ -656,6 +764,25 @@ function Start-BatchCompression {
 }
 
 function Get-VideoChapters {
+    <#
+    .SYNOPSIS
+        Extracts chapter timestamps from video files.
+
+    .DESCRIPTION
+        Reads chapter markers from MKV/MP4 files and displays them.
+        Useful for verifying chapter accuracy.
+
+    .PARAMETER Directory
+        Directory containing video files. Defaults to current directory.
+
+    .EXAMPLE
+        chapters
+        Shows chapters for videos in current directory.
+
+    .EXAMPLE
+        Get-VideoChapters -Directory D:\Movies
+        Shows chapters for videos in D:\Movies.
+    #>
     [CmdletBinding()]
     [Alias('chapters')]
     param(
@@ -668,6 +795,25 @@ function Get-VideoChapters {
 }
 
 function Get-VideoResolution {
+    <#
+    .SYNOPSIS
+        Reports resolution of video files.
+
+    .DESCRIPTION
+        Scans video files and displays their resolution (width x height).
+        Helps identify SD/HD/4K content.
+
+    .PARAMETER Directory
+        Directory containing video files. Defaults to current directory.
+
+    .EXAMPLE
+        res
+        Shows resolution for videos in current directory.
+
+    .EXAMPLE
+        Get-VideoResolution -Directory D:\Movies
+        Shows resolution for videos in D:\Movies.
+    #>
     [CmdletBinding()]
     [Alias('res')]
     param(
@@ -682,6 +828,28 @@ function Get-VideoResolution {
 
 
 function Convert-Audio {
+    <#
+    .SYNOPSIS
+        Converts audio files to various formats.
+
+    .DESCRIPTION
+        Converts audio files between formats (FLAC, MP3, 24-bit).
+        Processes all audio files in the specified directory.
+
+    .PARAMETER Directory
+        Directory containing audio files. Defaults to current directory.
+
+    .PARAMETER Format
+        Target format: '24-bit', 'flac', 'mp3', or 'all'.
+
+    .EXAMPLE
+        audio
+        Converts audio in current directory to all formats.
+
+    .EXAMPLE
+        Convert-Audio -Directory D:\Music -Format mp3
+        Converts all audio in D:\Music to MP3.
+    #>
     [CmdletBinding()]
     [Alias('audio')]
     param(
@@ -699,6 +867,20 @@ function Convert-Audio {
 }
 
 function Convert-ToMP3 {
+    <#
+    .SYNOPSIS
+        Converts audio files to MP3 format.
+
+    .DESCRIPTION
+        Shortcut for Convert-Audio -Format mp3.
+
+    .PARAMETER Directory
+        Directory containing audio files. Defaults to current directory.
+
+    .EXAMPLE
+        tomp3
+        Converts all audio in current directory to MP3.
+    #>
     [CmdletBinding()]
     [Alias('tomp3')]
     param(
@@ -711,6 +893,20 @@ function Convert-ToMP3 {
 }
 
 function Convert-ToFLAC {
+    <#
+    .SYNOPSIS
+        Converts audio files to FLAC format.
+
+    .DESCRIPTION
+        Shortcut for Convert-Audio -Format flac.
+
+    .PARAMETER Directory
+        Directory containing audio files. Defaults to current directory.
+
+    .EXAMPLE
+        toflac
+        Converts all audio in current directory to FLAC.
+    #>
     [CmdletBinding()]
     [Alias('toflac')]
     param(
@@ -723,6 +919,27 @@ function Convert-ToFLAC {
 }
 
 function Convert-SACD {
+    <#
+    .SYNOPSIS
+        Extracts audio from SACD ISO files.
+
+    .DESCRIPTION
+        Extracts DSD audio from SACD ISO images and converts to specified format.
+
+    .PARAMETER Directory
+        Directory containing SACD ISO files. Defaults to current directory.
+
+    .PARAMETER Format
+        Output format: '24-bit', 'flac', 'mp3', or 'all'.
+
+    .EXAMPLE
+        sacd
+        Extracts SACD content in current directory to all formats.
+
+    .EXAMPLE
+        Convert-SACD -Directory D:\SACDs -Format flac
+        Extracts SACD ISOs in D:\SACDs to FLAC.
+    #>
     [CmdletBinding()]
     [Alias('sacd')]
     param(
@@ -740,6 +957,25 @@ function Convert-SACD {
 }
 
 function Rename-MusicFiles {
+    <#
+    .SYNOPSIS
+        Renames music files based on metadata tags.
+
+    .DESCRIPTION
+        Renames audio files using embedded metadata (artist, title, track number).
+        Standardizes file naming across a music collection.
+
+    .PARAMETER Directory
+        Directory containing music files. Defaults to current directory.
+
+    .EXAMPLE
+        rename
+        Renames music files in current directory.
+
+    .EXAMPLE
+        Rename-MusicFiles -Directory D:\Music\Unsorted
+        Renames music files in D:\Music\Unsorted.
+    #>
     [CmdletBinding()]
     [Alias('rename')]
     param(
@@ -752,6 +988,25 @@ function Rename-MusicFiles {
 }
 
 function Get-EmbeddedImageSize {
+    <#
+    .SYNOPSIS
+        Reports embedded album art sizes in audio files.
+
+    .DESCRIPTION
+        Scans audio files and reports the resolution of embedded cover art.
+        Helps identify files with missing or low-quality artwork.
+
+    .PARAMETER Directory
+        Directory containing audio files. Defaults to current directory.
+
+    .EXAMPLE
+        artsize
+        Shows album art sizes for audio in current directory.
+
+    .EXAMPLE
+        Get-EmbeddedImageSize -Directory D:\Music\FLAC
+        Shows album art sizes for audio in D:\Music\FLAC.
+    #>
     [CmdletBinding()]
     [Alias('artsize')]
     param(
@@ -764,6 +1019,25 @@ function Get-EmbeddedImageSize {
 }
 
 function Invoke-Propolis {
+    <#
+    .SYNOPSIS
+        Runs Propolis audio file analyzer.
+
+    .DESCRIPTION
+        Executes Propolis to analyze audio files for quality issues.
+        Uses the --no-specs flag for streamlined output.
+
+    .PARAMETER Directory
+        Directory to analyze. Defaults to current directory.
+
+    .EXAMPLE
+        propolis
+        Analyzes audio in current directory.
+
+    .EXAMPLE
+        Invoke-Propolis -Directory D:\Music\NewRips
+        Analyzes audio in D:\Music\NewRips.
+    #>
     [CmdletBinding()]
     [Alias('propolis')]
     param(
@@ -778,6 +1052,59 @@ function Invoke-Propolis {
 
 
 function Invoke-Whisper {
+    <#
+    .SYNOPSIS
+        Transcribes audio/video files using Whisper AI.
+
+    .DESCRIPTION
+        Uses whisper-ctranslate2 to generate SRT subtitles from media files.
+        Supports multiple models, languages, and translation.
+
+    .PARAMETER Path
+        Path to audio/video file or directory to transcribe.
+
+    .PARAMETER Language
+        Source language code (e.g., 'en', 'ja'). Auto-detected if not specified.
+
+    .PARAMETER Model
+        Whisper model to use. Options include tiny, base, small, medium, large-v3, turbo, distil variants.
+
+    .PARAMETER Translate
+        If specified, translates non-English audio to English.
+
+    .PARAMETER Force
+        If specified, overwrites existing SRT files.
+
+    .PARAMETER OutputDir
+        Directory for output files. Defaults to current directory.
+
+    .PARAMETER Batched
+        If specified, uses batched inference for faster processing.
+
+    .PARAMETER BatchSize
+        Batch size for batched inference. Default: 4.
+
+    .PARAMETER NoVadFilter
+        If specified, disables Voice Activity Detection filter.
+
+    .PARAMETER RepetitionPenalty
+        Penalty for repeated tokens. Default: 1.1.
+
+    .PARAMETER ExtraArgs
+        Additional arguments to pass to whisper-ctranslate2.
+
+    .EXAMPLE
+        whisp video.mp4
+        Transcribes video.mp4 with auto-detected language.
+
+    .EXAMPLE
+        Invoke-Whisper -Path lecture.mp3 -Language en -Model turbo
+        Transcribes lecture.mp3 in English using turbo model.
+
+    .EXAMPLE
+        whisp interview.mp4 -Translate
+        Transcribes and translates non-English audio to English.
+    #>
     [CmdletBinding()]
     [Alias('whisp')]
     param(
@@ -882,6 +1209,40 @@ function Invoke-Whisper {
 }
 
 function Invoke-WhisperFolder {
+    <#
+    .SYNOPSIS
+        Transcribes all audio/video files in a folder.
+
+    .DESCRIPTION
+        Batch transcribes media files using Whisper AI.
+        Skips files that already have SRT subtitles unless -Force is used.
+
+    .PARAMETER Directory
+        Directory containing media files. Defaults to current directory.
+
+    .PARAMETER Language
+        Source language code. Default: 'en'.
+
+    .PARAMETER Model
+        Whisper model to use.
+
+    .PARAMETER Translate
+        If specified, translates to English.
+
+    .PARAMETER Force
+        If specified, overwrites existing SRT files.
+
+    .PARAMETER OutputDir
+        Directory for output files.
+
+    .EXAMPLE
+        wpf
+        Transcribes all media in current directory.
+
+    .EXAMPLE
+        Invoke-WhisperFolder -Directory D:\Lectures -Language en -Force
+        Transcribes all media in D:\Lectures, overwriting existing SRTs.
+    #>
     [CmdletBinding()]
     [Alias('wpf')]
     param(
@@ -971,6 +1332,28 @@ function Invoke-WhisperFolder {
 }
 
 function Invoke-WhisperJapanese {
+    <#
+    .SYNOPSIS
+        Transcribes Japanese audio/video files.
+
+    .DESCRIPTION
+        Shortcut for Invoke-Whisper with Japanese language preset.
+        Uses large-v3 model by default for best Japanese accuracy.
+
+    .PARAMETER Path
+        Path to Japanese audio/video file.
+
+    .PARAMETER Translate
+        If specified, translates Japanese to English.
+
+    .EXAMPLE
+        wpj anime.mkv
+        Transcribes Japanese video.
+
+    .EXAMPLE
+        wpj interview.mp4 -Translate
+        Transcribes and translates Japanese to English.
+    #>
     [CmdletBinding()]
     [Alias('wpj')]
     param(
@@ -1002,6 +1385,28 @@ function Invoke-WhisperJapanese {
 }
 
 function Invoke-WhisperJapaneseFolder {
+    <#
+    .SYNOPSIS
+        Transcribes all Japanese audio/video files in a folder.
+
+    .DESCRIPTION
+        Batch transcribes Japanese media using Whisper AI.
+        Shortcut for Invoke-WhisperFolder with Japanese preset.
+
+    .PARAMETER Directory
+        Directory containing Japanese media files.
+
+    .PARAMETER Translate
+        If specified, translates to English.
+
+    .EXAMPLE
+        wpjf
+        Transcribes all Japanese media in current directory.
+
+    .EXAMPLE
+        Invoke-WhisperJapaneseFolder -Directory D:\Anime -Translate
+        Transcribes and translates all Japanese media in D:\Anime.
+    #>
     [CmdletBinding()]
     [Alias('wpjf')]
     param(
@@ -1035,6 +1440,40 @@ function Invoke-WhisperJapaneseFolder {
 
 
 function Save-YouTubeVideo {
+    <#
+    .SYNOPSIS
+        Downloads YouTube videos with optional transcription.
+
+    .DESCRIPTION
+        Uses yt-dlp to download YouTube videos in best quality.
+        Optionally transcribes the downloaded video using Whisper.
+
+    .PARAMETER Urls
+        One or more YouTube URLs to download.
+
+    .PARAMETER Transcribe
+        If specified, transcribes the video after download.
+
+    .PARAMETER Language
+        Language for transcription.
+
+    .PARAMETER Model
+        Whisper model for transcription.
+
+    .PARAMETER Translate
+        If specified, translates to English.
+
+    .PARAMETER OutputDir
+        Directory for downloaded files. Defaults to current directory.
+
+    .EXAMPLE
+        ytdl https://youtube.com/watch?v=abc123
+        Downloads the video to current directory.
+
+    .EXAMPLE
+        Save-YouTubeVideo -Urls $url -Transcribe -Language ja -Translate
+        Downloads video and transcribes Japanese to English.
+    #>
     [CmdletBinding()]
     [Alias('ytdl')]
     param(
@@ -1251,9 +1690,8 @@ function Register-ScheduledSyncTask {
 
     .DESCRIPTION
         Registers a scheduled task that runs a sync command daily at the specified time.
-        Uses a wrapper script to avoid argument quoting issues with Task Scheduler.
-        Opens in Windows Terminal if it's the default terminal, otherwise PowerShell window.
-        Window stays open after completion so you can review output.
+        Also triggers at user logon if the scheduled time was missed.
+        Window stays open on failure so user can see error message.
 
     .PARAMETER TaskName
         Name for the scheduled task. Must be unique.
@@ -1269,17 +1707,15 @@ function Register-ScheduledSyncTask {
 
     .EXAMPLE
         Register-ScheduledSyncTask -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '10:00:00'
-        Creates a task that syncs YouTube playlists daily at 10 AM.
 
     .EXAMPLE
         regtask -TaskName 'LastFmSync' -Command 'sync lastfm'
-        Creates a task that syncs Last.fm scrobbles daily at the default time (9 AM).
 
     .NOTES
         Must be run as Administrator.
-        Uses Interactive logon (runs only when user is logged in).
-        Task settings: runs if on battery, wakes computer if needed, skips if running.
-        Wrapper scripts are stored in: $env:LOCALAPPDATA\ScriptsToolkit\tasks\
+        Triggers: Daily at specified time + At logon (2 min delay).
+        StartWhenAvailable: Runs ASAP if scheduled time was missed.
+        Logs: C# handles all logging to logs/*.jsonl
     #>
     [CmdletBinding()]
     [Alias('regtask')]
@@ -1312,52 +1748,38 @@ function Register-ScheduledSyncTask {
         Write-Host "Removed existing task '$TaskName'" -ForegroundColor Yellow
     }
 
-    # Create wrapper script to avoid quoting issues with Task Scheduler
-    $taskDir = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'ScriptsToolkit\tasks'
-    if (-not (Test-Path -Path $taskDir)) {
-        New-Item -ItemType Directory -Path $taskDir -Force | Out-Null
-    }
+    $dllPath = Join-Path -Path $Script:CSharpRoot -ChildPath 'bin\Debug\net10.0\CSharpScripts.dll'
 
-    $scriptPath = Join-Path -Path $taskDir -ChildPath "$TaskName.ps1"
-    $scriptContent = @"
-`$Host.UI.RawUI.WindowTitle = '$TaskName'
-Set-Location -Path '$Script:CSharpRoot'
-Write-Host "[$TaskName] Starting at `$(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')" -ForegroundColor Cyan
-Write-Host ""
-
-dotnet run -- $Command
-`$exitCode = `$LASTEXITCODE
-
-Write-Host ""
-if (`$exitCode -eq 0) {
-    Write-Host "[$TaskName] Completed successfully" -ForegroundColor Green
-    Write-Host "Window will close in 10 seconds..." -ForegroundColor DarkGray
-    Start-Sleep -Seconds 10
-}
-else {
-    Write-Host "[$TaskName] Failed with exit code `$exitCode" -ForegroundColor Red
-    Read-Host "Press Enter to close"
-}
+    $script = @"
+Set-Location '$Script:CSharpRoot'
+`$noBuild = if (Test-Path '$dllPath') { '--no-build' } else { `$null }
+if (`$noBuild) { dotnet run `$noBuild -- $Command } else { dotnet run -- $Command }
+if (`$LASTEXITCODE -ne 0) { Read-Host 'Press Enter' }
 "@
-    Set-Content -Path $scriptPath -Value $scriptContent -Force
 
-    # Use pwsh with full path - Windows Terminal will be used if it's the default terminal
+    $bytes = [Text.Encoding]::Unicode.GetBytes($script)
+    $encoded = [Convert]::ToBase64String($bytes)
+
     $executable = (Get-Command -Name pwsh).Source
-    $argument = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+    $argument = "-NoProfile -EncodedCommand $encoded"
 
     $action = New-ScheduledTaskAction -Execute $executable -Argument $argument -WorkingDirectory $Script:CSharpRoot
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
 
     $start = [datetime]::Today.Add($DailyTime)
     if ($start -le (Get-Date)) {
         $start = $start.AddDays(1)
     }
 
-    $trigger = New-ScheduledTaskTrigger -Daily -At $start
-    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $Description | Out-Null
+    $dailyTrigger = New-ScheduledTaskTrigger -Daily -At $start
+    $logonTrigger = New-ScheduledTaskTrigger -AtLogOn
+    $logonTrigger.Delay = 'PT2M'
 
-    Write-Host "Registered '$TaskName' for $($start.ToString('HH:mm')) daily" -ForegroundColor Green
-    Write-Host "  Script: $scriptPath" -ForegroundColor DarkGray
+    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger @($dailyTrigger, $logonTrigger) -Settings $settings -Description $Description | Out-Null
+
+    Write-Host "Registered '$TaskName'" -ForegroundColor Green
+    Write-Host "  Daily:  $($start.ToString('HH:mm'))" -ForegroundColor DarkGray
+    Write-Host "  Logon:  2 min after login" -ForegroundColor DarkGray
 }
 
 function Register-AllSyncTasks {
