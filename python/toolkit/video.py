@@ -1,3 +1,4 @@
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
 import ffmpeg
 import io
 import pyperclip
@@ -6,9 +7,18 @@ import subprocess
 import textwrap
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
-from toolkit.cli import get_logger
+from typing import TypedDict
+from toolkit.logging_config import get_logger
+from toolkit.filesystem import run_command
 
 logger = get_logger("video")
+
+
+class VideoInfo(TypedDict):
+    duration: float
+    width: int
+    height: int
+
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi", ".webm"]
 HANDBRAKE_PATH = (
@@ -16,10 +26,8 @@ HANDBRAKE_PATH = (
 )
 MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 
-from toolkit.filesystem import run_command
 
-
-def extract_chapters(video_files):
+def extract_chapters(video_files: list[Path]) -> None:
     for video_file in video_files:
         probe = ffmpeg.probe(str(video_file), show_chapters=None)
         chapters = probe.get("chapters", [])
@@ -47,7 +55,7 @@ def extract_chapters(video_files):
             logger.info(f"Extracted chapter {formatted_index} from {video_file.name}")
 
 
-def batch_compression(path):
+def batch_compression(path: Path) -> None:
     mkv_files = list(path.rglob("*.mkv"))
 
     for file in mkv_files:
@@ -71,8 +79,8 @@ def batch_compression(path):
             logger.error(f"Failed: {file.name}")
 
 
-def remux_disc(path, fetch_mediainfo=True):
-    remuxable_files = [
+def remux_disc(path: Path, fetch_mediainfo: bool = True) -> None:
+    remuxable_files: list[Path] = [
         f
         for f in path.rglob("*")
         if f.name in ("VIDEO_TS.IFO", "index.bdmv") and "BACKUP" not in f.parts
@@ -92,7 +100,7 @@ def remux_disc(path, fetch_mediainfo=True):
                 extract_images(mkv_file)
 
 
-def convert_disc_to_mkv(file, dvd_folder):
+def convert_disc_to_mkv(file: Path, dvd_folder: Path) -> None:
     makemkv_command = [
         MAKEMKV_PATH,
         "mkv",
@@ -104,7 +112,7 @@ def convert_disc_to_mkv(file, dvd_folder):
     run_command(makemkv_command, cwd=str(dvd_folder))
 
 
-def get_mediainfo(video_path):
+def get_mediainfo(video_path: Path) -> None:
     logger.info(f"Getting MediaInfo for {video_path.name}")
     output_file = (
         Path.home() / "Desktop" / f"{video_path.parent.name} - {video_path.name}.txt"
@@ -122,9 +130,9 @@ def get_mediainfo(video_path):
     logger.info("MediaInfo generated")
 
 
-def print_video_resolution(video_files):
-    files_hd = []
-    files_below_hd = []
+def print_video_resolution(video_files: list[Path]) -> None:
+    files_hd: list[str] = []
+    files_below_hd: list[tuple[str, dict[str, int]]] = []
 
     for file in video_files:
         resolution = get_video_resolution(file)
@@ -143,7 +151,7 @@ def print_video_resolution(video_files):
         print(f"{name}: {res['Width']}x{res['Height']}")
 
 
-def get_video_resolution(filepath):
+def get_video_resolution(filepath: Path) -> dict[str, int] | None:
     probe = ffmpeg.probe(str(filepath))
     video_streams = [s for s in probe["streams"] if s["codec_type"] == "video"]
 
@@ -156,7 +164,7 @@ def get_video_resolution(filepath):
     }
 
 
-def get_video_info(video_path):
+def get_video_info(video_path: Path) -> VideoInfo:
     probe = ffmpeg.probe(
         str(video_path),
         v="error",
@@ -170,7 +178,9 @@ def get_video_info(video_path):
     }
 
 
-def create_gif_optimized(input_path, start, duration, max_size, output_dir):
+def create_gif_optimized(
+    input_path: Path, start: str, duration: int, max_size: int, output_dir: Path
+) -> None:
     if not input_path.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
@@ -204,7 +214,7 @@ def create_gif_optimized(input_path, start, duration, max_size, output_dir):
             break
 
 
-def get_video_info_for_gif(input_path):
+def get_video_info_for_gif(input_path: Path) -> tuple[float, int]:
     probe = ffmpeg.probe(str(input_path))
     video_stream = next(
         (s for s in probe["streams"] if s["codec_type"] == "video"), None
@@ -213,12 +223,20 @@ def get_video_info_for_gif(input_path):
     if not video_stream:
         return 10, 320
 
-    fps = eval(video_stream["r_frame_rate"])
+    num, den = map(int, video_stream["r_frame_rate"].split("/"))
+    fps = num / den if den != 0 else 0.0
     width = int(video_stream["width"])
     return fps, width
 
 
-def create_gif(input_path, start, duration, output_path, fps, scale):
+def create_gif(
+    input_path: Path,
+    start: str,
+    duration: int,
+    output_path: Path,
+    fps: float,
+    scale: int,
+) -> float:
     (
         ffmpeg.input(str(input_path), ss=start, t=duration)
         .filter("fps", fps=fps)
@@ -232,7 +250,7 @@ def create_gif(input_path, start, duration, output_path, fps, scale):
     return size
 
 
-def extract_images(video_path):
+def extract_images(video_path: Path) -> None:
     logger.info(f"Extracting images from {video_path.name}")
 
     if not video_path.is_file():
@@ -245,7 +263,12 @@ def extract_images(video_path):
     logger.info("Images extracted")
 
 
-def add_timestamp(image, timestamp, font_path="calibri.ttf", font_size=20):
+def add_timestamp(
+    image: Image.Image,
+    timestamp: float,
+    font_path: str = "calibri.ttf",
+    font_size: int = 20,
+) -> Image.Image:
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font_path, font_size)
     timestamp_text = f"{int(timestamp // 3600):02}:{int((timestamp % 3600) // 60):02}:{int(timestamp % 60):02}"
@@ -256,7 +279,12 @@ def add_timestamp(image, timestamp, font_path="calibri.ttf", font_size=20):
     return image
 
 
-def extract_frame(video_path, timestamp, video_info, target_width=None):
+def extract_frame(
+    video_path: Path,
+    timestamp: float,
+    video_info: VideoInfo,
+    target_width: int | None = None,
+) -> Image.Image:
     input_stream = ffmpeg.input(str(video_path), ss=timestamp)
     if target_width:
         aspect_ratio = video_info["height"] / video_info["width"]
@@ -270,7 +298,9 @@ def extract_frame(video_path, timestamp, video_info, target_width=None):
     return add_timestamp(img, timestamp)
 
 
-def add_filename_to_header(draw, filename, header_size, image_width):
+def add_filename_to_header(
+    draw: ImageDraw.ImageDraw, filename: str, header_size: int, image_width: int
+) -> None:
     font = ImageFont.truetype("calibri.ttf", 60)
     text_lines = textwrap.wrap(filename, width=40)
 
@@ -284,7 +314,13 @@ def add_filename_to_header(draw, filename, header_size, image_width):
         y_offset += text_height + 5
 
 
-def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
+def create_thumbnail_grid(
+    video_path: Path,
+    video_info: VideoInfo,
+    width: int = 800,
+    rows: int = 8,
+    columns: int = 4,
+) -> list[int]:
     output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
     duration = video_info["duration"]
     timestamps = [int(duration * i / (rows * columns)) for i in range(rows * columns)]
@@ -316,7 +352,9 @@ def create_thumbnail_grid(video_path, video_info, width=800, rows=8, columns=4):
     return timestamps
 
 
-def save_full_size_images(video_path, video_info, thumbnail_timestamps):
+def save_full_size_images(
+    video_path: Path, video_info: VideoInfo, thumbnail_timestamps: list[int]
+) -> None:
     duration = video_info["duration"]
     thumbnail_timestamps_set = set(thumbnail_timestamps)
 

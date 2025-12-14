@@ -1,14 +1,15 @@
+# pyright: reportMissingTypeStubs=false
 import json
 import subprocess
 from pathlib import Path
 from py3createtorrent import create_torrent
 from unidecode import unidecode
-from toolkit.cli import get_logger
+from toolkit.logging_config import get_logger
 
 logger = get_logger("filesystem")
 
 
-def run_command(cmd, cwd=None):
+def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -29,11 +30,11 @@ def run_command(cmd, cwd=None):
     return unidecode(result), unidecode(error)
 
 
-def get_folder_size(path):
+def get_folder_size(path: Path) -> int:
     return sum(entry.stat().st_size for entry in path.rglob("*") if entry.is_file())
 
 
-def list_directories(path, sort_order="0", indent=0):
+def list_directories(path: Path, sort_order: str = "0", indent: int = 0) -> None:
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
@@ -52,7 +53,9 @@ def list_directories(path, sort_order="0", indent=0):
         list_directories(entry, sort_order, indent + 2)
 
 
-def list_files_and_directories(path, sort_order=False, indent=0):
+def list_files_and_directories(
+    path: Path, sort_order: bool = False, indent: int = 0
+) -> None:
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
@@ -78,7 +81,7 @@ def list_files_and_directories(path, sort_order=False, indent=0):
         print(file_output)
 
 
-def rename_file_red(path):
+def rename_file_red(path: Path) -> None:
     if not path.exists() or not path.is_dir():
         logger.error(f"Path does not exist: {path}")
         return
@@ -106,7 +109,7 @@ def rename_file_red(path):
     )
 
 
-def make_torrents(folder):
+def make_torrents(folder: Path) -> None:
     logger.info(f"Creating torrents for {folder.name}")
 
     dropbox_info_path = Path.home() / "AppData" / "Local" / "Dropbox" / "info.json"
@@ -114,7 +117,11 @@ def make_torrents(folder):
     if not dropbox_info_path.exists():
         raise FileNotFoundError("Dropbox info.json not found")
 
-    dropbox = Path(json.load(open(dropbox_info_path)).get("personal", {}).get("path"))
+    data = json.loads(dropbox_info_path.read_text(encoding="utf-8"))
+    dropbox_path = data.get("personal", {}).get("path")
+    if not dropbox_path:
+        raise ValueError("Dropbox path not found in info.json")
+    dropbox = Path(dropbox_path)
 
     rename_file_red(folder)
 
