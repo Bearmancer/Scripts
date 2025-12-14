@@ -6,8 +6,10 @@ sealed class DiscogsClientConfig(string token) : IClientConfig
     public string BaseUrl => "https://api.discogs.com";
 }
 
-public sealed class DiscogsService
+public sealed class DiscogsService : IMusicService
 {
+    public MusicSource Source => MusicSource.Discogs;
+
     internal DiscogsClient Client { get; }
 
     public DiscogsService(string? token)
@@ -18,9 +20,137 @@ public sealed class DiscogsService
         Client = new DiscogsClient(http, new ApiQueryBuilder(new DiscogsClientConfig(validToken)));
     }
 
-    #region Search
+    #region IMusicService
 
-    public async Task<List<DiscogsSearchResult>> SearchAsync(
+    public async Task<List<Models.SearchResult>> SearchAsync(string query, int maxResults = 10)
+    {
+        return await ExecuteSafeListAsync(async () =>
+        {
+            SearchCriteria criteria = new() { Query = query };
+            SearchResults results = await Client.SearchAsync(
+                criteria,
+                new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
+            );
+
+            return results
+                .Results.Take(maxResults)
+                .Select(r => new Models.SearchResult(
+                    Source: MusicSource.Discogs,
+                    Id: (r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
+                    Title: r.Title ?? "",
+                    Artist: ExtractArtist(r.Title),
+                    Year: ParseYear(r.Year),
+                    Format: r.Format is { } fmt ? Join(", ", fmt) : null,
+                    Label: r.Label is { } lbl ? Join(", ", lbl) : null,
+                    ReleaseType: r.Type // release, master, artist, label
+                ))
+                .ToList();
+        });
+    }
+
+    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(string releaseId)
+    {
+        int id = int.Parse(releaseId);
+        Models.DiscogsRelease release =
+            await GetReleaseAsync(id)
+            ?? throw new InvalidOperationException($"Release not found: {releaseId}");
+
+        // Get master for original year if available
+        int? originalYear = release.MasterId.HasValue
+            ? (await GetMasterAsync(release.MasterId.Value))?.Year
+            : null;
+
+        // Extract credits from ExtraArtists
+        string? composer = release
+            .ExtraArtists.FirstOrDefault(a =>
+                a.Role?.Contains("Composed By", StringComparison.OrdinalIgnoreCase) == true
+            )
+            ?.Name;
+        string? conductor = release
+            .ExtraArtists.FirstOrDefault(a =>
+                a.Role?.Contains("Conductor", StringComparison.OrdinalIgnoreCase) == true
+            )
+            ?.Name;
+        string? orchestra = release
+            .ExtraArtists.FirstOrDefault(a =>
+                a.Role?.Contains("Orchestra", StringComparison.OrdinalIgnoreCase) == true
+            )
+            ?.Name;
+        List<string> soloists = release
+            .ExtraArtists.Where(a =>
+                a.Role?.Contains("Soloist", StringComparison.OrdinalIgnoreCase) == true
+                || a.Role?.Contains("Performer", StringComparison.OrdinalIgnoreCase) == true
+            )
+            .Select(a => a.Name)
+            .Distinct()
+            .ToList();
+
+        string? primaryArtist = release.Artists.FirstOrDefault()?.Name;
+        string? label = release.Labels.FirstOrDefault()?.Name;
+        string? catalogNumber = release.Labels.FirstOrDefault()?.CatalogNumber;
+
+        List<TrackMetadata> tracks = [];
+        int discNum = 1;
+        int trackNum = 0;
+
+        foreach (var track in release.Tracks)
+        {
+            // Detect disc changes from position (e.g., "A1", "B1", "1-1", "2-1")
+            if (
+                track.Position.StartsWith($"{discNum + 1}-")
+                || (discNum == 1 && track.Position.StartsWith("1-") && trackNum > 0)
+            )
+            {
+                discNum++;
+                trackNum = 0;
+            }
+            trackNum++;
+
+            tracks.Add(
+                new TrackMetadata(
+                    Source: MusicSource.Discogs,
+                    ReleaseId: releaseId,
+                    DiscNumber: discNum,
+                    TrackNumber: trackNum,
+                    Title: track.Title,
+                    FirstIssuedYear: originalYear ?? release.Year,
+                    Composer: composer,
+                    Conductor: conductor,
+                    Orchestra: orchestra,
+                    Soloists: soloists,
+                    Artist: primaryArtist,
+                    Album: release.Title,
+                    Label: label,
+                    CatalogNumber: catalogNumber,
+                    RecordingVenue: null,
+                    Notes: release.Notes,
+                    Duration: ParseDuration(track.Duration)
+                )
+            );
+        }
+
+        return tracks;
+    }
+
+    static TimeSpan? ParseDuration(string? duration)
+    {
+        if (IsNullOrWhiteSpace(duration))
+            return null;
+        var parts = duration.Split(':');
+        if (
+            parts.Length == 2
+            && int.TryParse(parts[0], out int mins)
+            && int.TryParse(parts[1], out int secs)
+        )
+            return TimeSpan.FromMinutes(mins) + TimeSpan.FromSeconds(secs);
+        return null;
+    }
+
+    #endregion
+
+    #region Search (Advanced)
+
+    public async Task<List<DiscogsSearchResult>> SearchAdvancedAsync(
         string? artist = null,
         string? release = null,
         string? track = null,
@@ -60,7 +190,7 @@ public sealed class DiscogsService
         string? genre = null
     )
     {
-        List<DiscogsSearchResult> results = await SearchAsync(
+        List<DiscogsSearchResult> results = await SearchAdvancedAsync(
             artist,
             release,
             track,
