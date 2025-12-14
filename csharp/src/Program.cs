@@ -73,16 +73,6 @@ public static class Program
                         .WithDescription("Create a temporary email");
                 }
             );
-
-            config.AddBranch(
-                "test",
-                test =>
-                {
-                    test.SetDescription("Test commands");
-                    test.AddCommand<TestYouTubeChangesCommand>("yt-changes")
-                        .WithDescription("Test YouTube change detection");
-                }
-            );
         });
 
         return app.Run(args);

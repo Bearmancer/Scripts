@@ -3,7 +3,7 @@ namespace CSharpScripts.Services.Mail;
 public sealed class MailTmException(string message, Exception? inner = null)
     : Exception(message, inner);
 
-public sealed class MailTmService
+public sealed class MailTmService : IDisposableMailService
 {
     const string BASE_URL = "https://api.mail.tm";
     const string PASSWORD_CHARS =
@@ -20,6 +20,49 @@ public sealed class MailTmService
         Client = new RestClient(BASE_URL);
         Console.Info("MailTmService initialized with centralized resiliency");
     }
+
+    #region IDisposableMailService
+
+    async Task<MailAccount> IDisposableMailService.CreateAccountAsync()
+    {
+        MailTmAccount account = await CreateAccountAsync();
+        return new MailAccount(account.Address, DateTime.UtcNow);
+    }
+
+    async Task<List<MailMessage>> IDisposableMailService.GetInboxAsync()
+    {
+        List<MailTmMessage> messages = await GetInboxAsync();
+        return messages
+            .Select(m => new MailMessage(
+                Id: m.Id,
+                From: m.From?.Address ?? "unknown",
+                Subject: m.Subject,
+                Body: m.Text ?? m.Html ?? "",
+                ReceivedAt: m.CreatedAt.ToUniversalTime(),
+                IsRead: m.IsRead
+            ))
+            .ToList();
+    }
+
+    async Task<MailMessage> IDisposableMailService.ReadMessageAsync(string messageId)
+    {
+        MailTmMessage m = await ReadMessageAsync(messageId);
+        return new MailMessage(
+            Id: m.Id,
+            From: m.From?.Address ?? "unknown",
+            Subject: m.Subject,
+            Body: m.Text ?? m.Html ?? "",
+            ReceivedAt: m.CreatedAt.ToUniversalTime(),
+            IsRead: m.IsRead
+        );
+    }
+
+    async Task IDisposableMailService.ForgetSessionAsync()
+    {
+        await DeleteAccountAsync();
+    }
+
+    #endregion
 
     public async Task<MailTmAccount> CreateAccountAsync()
     {

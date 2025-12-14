@@ -4,9 +4,116 @@ public sealed class MusicBrainzService(
     string appName = "LancesUtilities",
     string appVersion = "1.0",
     string contact = "user@example.com"
-)
+) : IMusicService
 {
+    public MusicSource Source => MusicSource.MusicBrainz;
+
     internal Query Query { get; } = new(appName, appVersion, contact);
+
+    #region IMusicService
+
+    public async Task<List<Models.SearchResult>> SearchAsync(string query, int maxResults = 10)
+    {
+        return await ExecuteSafeListAsync(async () =>
+        {
+            ISearchResults<ISearchResult<IRelease>> results = await Query.FindReleasesAsync(
+                query,
+                maxResults
+            );
+            return results
+                .Results.Select(r => new Models.SearchResult(
+                    Source: MusicSource.MusicBrainz,
+                    Id: r.Item.Id.ToString(),
+                    Title: r.Item.Title ?? "",
+                    Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
+                    Year: r.Item.Date?.Year,
+                    Format: r.Item.Media?.FirstOrDefault()?.Format,
+                    Label: r.Item.LabelInfo?.FirstOrDefault()?.Label?.Name,
+                    ReleaseType: r.Item.ReleaseGroup?.PrimaryType
+                ))
+                .ToList();
+        });
+    }
+
+    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(string releaseId)
+    {
+        Guid guid = Guid.Parse(releaseId);
+        MusicBrainzRelease release =
+            await GetReleaseAsync(guid)
+            ?? throw new InvalidOperationException($"Release not found: {releaseId}");
+
+        List<TrackMetadata> tracks = [];
+
+        // Extract release-level credits
+        var releaseCredits = release.Credits.Where(c => !ExcludedRoles.Contains(c.Role)).ToList();
+
+        string? releaseConductor = releaseCredits
+            .FirstOrDefault(c => ConductorRoles.Contains(c.Role))
+            ?.Name;
+
+        string? releaseOrchestra = releaseCredits
+            .FirstOrDefault(c => OrchestraRoles.Contains(c.Role))
+            ?.Name;
+
+        List<string> releaseSoloists = releaseCredits
+            .Where(c =>
+                SoloistRoles.Any(r => c.Role.Contains(r, StringComparison.OrdinalIgnoreCase))
+            )
+            .Select(c => c.Name)
+            .Distinct()
+            .ToList();
+
+        string? releaseComposer = release.Artist;
+        string? releaseLabel = release.Labels.FirstOrDefault()?.Name;
+        string? releaseCatalogNumber = release.Labels.FirstOrDefault()?.CatalogNumber;
+
+        foreach (MusicBrainzMedium medium in release.Media)
+        {
+            foreach (MusicBrainzTrack track in medium.Tracks)
+            {
+                int? recordingYear = null;
+                string? trackComposer = null;
+
+                if (track.RecordingId.HasValue)
+                {
+                    MusicBrainzRecording? recording = await GetRecordingAsync(
+                        track.RecordingId.Value
+                    );
+                    if (recording is not null)
+                    {
+                        recordingYear = recording.FirstReleaseDate?.Year;
+                        trackComposer = recording.Artist;
+                    }
+                }
+
+                tracks.Add(
+                    new TrackMetadata(
+                        Source: MusicSource.MusicBrainz,
+                        ReleaseId: releaseId,
+                        DiscNumber: medium.Position,
+                        TrackNumber: track.Position,
+                        Title: track.Title,
+                        FirstIssuedYear: recordingYear ?? release.Date?.Year,
+                        Composer: trackComposer ?? releaseComposer,
+                        Conductor: releaseConductor,
+                        Orchestra: releaseOrchestra,
+                        Soloists: releaseSoloists,
+                        Artist: release.Artist,
+                        Album: release.Title,
+                        Label: releaseLabel,
+                        CatalogNumber: releaseCatalogNumber,
+                        RecordingVenue: null,
+                        Notes: release.Annotation,
+                        Duration: track.Length
+                    )
+                );
+            }
+        }
+
+        return tracks;
+    }
+
+    #endregion
 
     #region Artist
 

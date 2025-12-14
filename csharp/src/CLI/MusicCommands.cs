@@ -4,31 +4,28 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 {
     public sealed class Settings : CommandSettings
     {
-        [CommandOption("-a|--artist")]
-        [Description("Artist name")]
-        public string? Artist { get; init; }
-
-        [CommandOption("-l|--album")]
-        [Description("Album/release title")]
-        public string? Album { get; init; }
-
-        [CommandOption("-t|--track")]
-        [Description("Track title (Discogs only)")]
-        public string? Track { get; init; }
-
-        [CommandOption("-y|--year")]
-        [Description("Release year")]
-        public int? Year { get; init; }
+        [CommandArgument(0, "<query>")]
+        [Description("Free-text search (e.g. 'Bowie Heroes 1977')")]
+        public required string Query { get; init; }
 
         [CommandOption("-s|--source")]
-        [Description("musicbrainz, discogs, both")]
-        [DefaultValue("both")]
-        public string Source { get; init; } = "both";
+        [Description("discogs (default), musicbrainz (or mb), both")]
+        [DefaultValue("discogs")]
+        public string Source { get; init; } = "discogs";
+
+        [CommandOption("-t|--type")]
+        [Description("Filter: album, ep, single, compilation (normalized across APIs)")]
+        public string? Type { get; init; }
 
         [CommandOption("-n|--limit")]
-        [Description("Max results")]
+        [Description("Max results per source (default 10)")]
         [DefaultValue(10)]
         public int Limit { get; init; } = 10;
+
+        [CommandOption("--debug")]
+        [Description("Verbose output: filter stats, extra columns")]
+        [DefaultValue(false)]
+        public bool Debug { get; init; }
     }
 
     public override async Task<int> ExecuteAsync(
@@ -37,79 +34,193 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         CancellationToken cancellationToken
     )
     {
-        if (
-            IsNullOrWhiteSpace(settings.Artist)
-            && IsNullOrWhiteSpace(settings.Album)
-            && IsNullOrWhiteSpace(settings.Track)
-        )
-        {
-            Console.Error("Specify at least one of: --artist, --album, --track");
-            return 1;
-        }
-
-        MusicSearchQuery query = new(
-            Artist: settings.Artist,
-            Album: settings.Album,
-            Track: settings.Track,
-            Year: settings.Year,
-            MaxResults: settings.Limit
-        );
-
         string? discogsToken = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
-        MusicMetadataService service = new(discogsToken);
+        string source = settings.Source.ToLowerInvariant();
 
-        Console.Info("Searching {0}...", settings.Source);
-        Console.NewLine();
+        bool searchMusicBrainz = source is "musicbrainz" or "mb" or "both";
+        bool searchDiscogs = source is "discogs" or "both";
 
-        (List<DiscogsSearchResult>? discogs, List<MusicBrainzSearchResult> musicbrainz) =
-            await service.SearchBothAsync(query, settings.Source.ToLowerInvariant());
-
-        if (musicbrainz.Count > 0)
+        if (searchDiscogs && IsNullOrEmpty(discogsToken))
         {
-            Console.Rule("MusicBrainz Results");
-            foreach (MusicBrainzSearchResult result in musicbrainz.Take(settings.Limit))
-            {
-                Console.Info(
-                    "{0} - {1} ({2})",
-                    result.Artist ?? "Unknown",
-                    result.Title,
-                    result.Year?.ToString() ?? "?"
-                );
-                Console.Dim($"  ID: {result.Id}");
-            }
-            Console.NewLine();
+            Console.Warning("DISCOGS_USER_TOKEN not set, using MusicBrainz");
+            searchDiscogs = false;
+            searchMusicBrainz = true;
         }
 
-        if (discogs?.Count > 0)
+        string sourceLabel =
+            searchMusicBrainz && searchDiscogs ? "Discogs + MusicBrainz"
+            : searchDiscogs ? "Discogs"
+            : "MusicBrainz";
+
+        Console.Info("Searching {0}...", sourceLabel);
+
+        List<Models.SearchResult> results = [];
+        int filteredCount = 0;
+
+        if (searchMusicBrainz)
         {
-            Console.Rule("Discogs Results");
-            foreach (DiscogsSearchResult result in discogs.Take(settings.Limit))
-            {
-                Console.Info(
-                    "{0} - {1} ({2})",
-                    result.Artist ?? "Unknown",
-                    result.Title ?? "Unknown",
-                    result.Year?.ToString() ?? "?"
-                );
-                Console.Dim($"  ID: {result.ReleaseId} | Label: {result.Label ?? "?"}");
-            }
-            Console.NewLine();
+            MusicBrainzService mb = new();
+            List<Models.SearchResult> mbResults = await mb.SearchAsync(
+                settings.Query,
+                settings.Limit
+            );
+            results.AddRange(mbResults);
         }
 
-        if (musicbrainz.Count == 0 && (discogs?.Count ?? 0) == 0)
+        if (searchDiscogs)
+        {
+            DiscogsService discogs = new(discogsToken);
+            List<Models.SearchResult> discogsResults = await discogs.SearchAsync(
+                settings.Query,
+                settings.Limit
+            );
+            results.AddRange(discogsResults);
+        }
+
+        // Apply normalized type filter
+        if (!IsNullOrEmpty(settings.Type))
+        {
+            int beforeCount = results.Count;
+            string normalizedFilter = NormalizeType(settings.Type);
+
+            results = results.Where(r => MatchesType(r, normalizedFilter)).ToList();
+            filteredCount = beforeCount - results.Count;
+
+            if (settings.Debug)
+            {
+                Console.Dim(
+                    $"[DEBUG] Filter '{settings.Type}' -> normalized '{normalizedFilter}', removed {filteredCount}"
+                );
+            }
+        }
+
+        if (results.Count == 0)
         {
             Console.Warning("No results found.");
-        }
-        else
-        {
-            Console.Success(
-                "Found {0} MusicBrainz + {1} Discogs results",
-                musicbrainz.Count,
-                discogs?.Count ?? 0
-            );
+            return 0;
         }
 
+        // Tabulated output
+        SpectreTable table = new();
+        table.Border(TableBorder.Rounded);
+        table.AddColumn("Artist");
+        table.AddColumn("Title");
+        table.AddColumn("Year");
+        table.AddColumn("Type");
+        table.AddColumn("ID");
+
+        if (settings.Debug)
+        {
+            table.AddColumn("Source");
+            table.AddColumn("Label");
+            table.AddColumn("Format");
+        }
+
+        foreach (Models.SearchResult r in results)
+        {
+            string year = r.Year?.ToString() ?? "[dim]?[/]";
+            string type = NormalizeTypeForDisplay(r.ReleaseType) ?? "[dim]?[/]";
+            string artist = r.Artist ?? "[dim]Unknown[/]";
+            string idLink = MakeIdLink(r);
+
+            if (settings.Debug)
+            {
+                string src =
+                    r.Source == MusicSource.Discogs ? "[yellow]Discogs[/]" : "[cyan]MusicBrainz[/]";
+                table.AddRow(
+                    Markup.Escape(artist),
+                    Markup.Escape(r.Title),
+                    year,
+                    type,
+                    idLink,
+                    src,
+                    Markup.Escape(r.Label ?? "?"),
+                    Markup.Escape(r.Format ?? "?")
+                );
+            }
+            else
+            {
+                table.AddRow(Markup.Escape(artist), Markup.Escape(r.Title), year, type, idLink);
+            }
+        }
+
+        AnsiConsole.Write(table);
+
+        Console.Success(
+            "Found {0} results{1}",
+            results.Count,
+            filteredCount > 0 ? $" ({filteredCount} filtered)" : ""
+        );
+
         return 0;
+    }
+
+    /// <summary>
+    /// Normalize user input to standard type names.
+    /// </summary>
+    static string NormalizeType(string input) =>
+        input.ToLowerInvariant() switch
+        {
+            "album" => "album",
+            "ep" => "ep",
+            "single" => "single",
+            "compilation" => "compilation",
+            "master" => "master", // Discogs-specific
+            "release" => "release", // Discogs-specific
+            _ => input.ToLowerInvariant(),
+        };
+
+    /// <summary>
+    /// Check if a result matches the normalized type filter.
+    /// Handles API differences: MusicBrainz uses "Album", Discogs uses "master"/"release".
+    /// </summary>
+    static bool MatchesType(Models.SearchResult r, string filter)
+    {
+        if (IsNullOrEmpty(r.ReleaseType))
+            return false;
+
+        string normalized = r.ReleaseType.ToLowerInvariant();
+
+        return filter switch
+        {
+            // "album" matches MusicBrainz "Album" OR Discogs "master" (canonical album)
+            "album" => normalized is "album" or "master",
+            "ep" => normalized.Contains("ep"),
+            "single" => normalized.Contains("single"),
+            "compilation" => normalized.Contains("compilation"),
+            "master" => normalized is "master",
+            "release" => normalized is "release",
+            _ => normalized.Contains(filter),
+        };
+    }
+
+    /// <summary>
+    /// Normalize type for display consistency.
+    /// </summary>
+    static string? NormalizeTypeForDisplay(string? type) =>
+        type?.ToLowerInvariant() switch
+        {
+            "album" => "Album",
+            "ep" => "EP",
+            "single" => "Single",
+            "compilation" => "Compilation",
+            "master" => "Master",
+            "release" => "Release",
+            _ => type,
+        };
+
+    /// <summary>
+    /// Create hyperlinked ID for terminal (uses ANSI escape sequences).
+    /// </summary>
+    static string MakeIdLink(Models.SearchResult r)
+    {
+        string url =
+            r.Source == MusicSource.Discogs
+                ? $"https://www.discogs.com/release/{r.Id}"
+                : $"https://musicbrainz.org/release/{r.Id}";
+
+        // Spectre.Console supports [link] markup
+        return $"[link={url}]{r.Id}[/]";
     }
 }
 
@@ -118,18 +229,13 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<id>")]
-        [Description("Release ID")]
+        [Description("Release ID (GUID for MusicBrainz, number for Discogs)")]
         public required string Id { get; init; }
 
         [CommandOption("-s|--source")]
-        [Description("musicbrainz, discogs")]
-        [DefaultValue("musicbrainz")]
-        public string Source { get; init; } = "musicbrainz";
-
-        [CommandOption("-c|--credits")]
-        [Description("Include credits")]
-        [DefaultValue(false)]
-        public bool IncludeCredits { get; init; }
+        [Description("discogs (default), musicbrainz (or mb)")]
+        [DefaultValue("discogs")]
+        public string Source { get; init; } = "discogs";
     }
 
     public override async Task<int> ExecuteAsync(
@@ -138,124 +244,85 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         CancellationToken cancellationToken
     )
     {
-        string? discogsToken = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
-        MusicMetadataService service = new(discogsToken);
-
         Console.Info("Looking up {0} from {1}...", settings.Id, settings.Source);
-        Console.NewLine();
 
-        if (settings.Source.Equals("musicbrainz", StringComparison.OrdinalIgnoreCase))
+        IMusicService service;
+
+        if (
+            settings.Source.Equals("musicbrainz", StringComparison.OrdinalIgnoreCase)
+            || settings.Source.Equals("mb", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            if (!Guid.TryParse(settings.Id, out Guid mbId))
+            if (!Guid.TryParse(settings.Id, out _))
             {
                 Console.Error("Invalid MusicBrainz ID (must be GUID)");
                 return 1;
             }
-
-            MusicBrainzRelease? release = await service.MusicBrainz.GetReleaseAsync(mbId);
-
-            if (release is null)
-            {
-                Console.Warning("Release not found");
-                return 1;
-            }
-
-            Console.Rule(release.Title);
-            Console.KeyValue("Artist", release.Artist ?? release.ArtistCredit ?? "Unknown");
-            Console.KeyValue("Date", release.Date?.ToString() ?? "Unknown");
-            Console.KeyValue("Country", release.Country ?? "Unknown");
-            Console.KeyValue("Status", release.Status ?? "Unknown");
-            if (!IsNullOrEmpty(release.Barcode))
-                Console.KeyValue("Barcode", release.Barcode);
-
-            if (release.Tracks.Count > 0)
-            {
-                Console.NewLine();
-                Console.Info("Tracks ({0}):", release.Tracks.Count);
-                foreach (MusicBrainzTrack track in release.Tracks)
-                {
-                    string duration = track.Length?.ToString(@"m\:ss") ?? "?:??";
-                    Console.Dim($"  {track.Position}. {track.Title} ({duration})");
-                }
-            }
-
-            if (settings.IncludeCredits && release.Credits.Count > 0)
-            {
-                Console.NewLine();
-                Console.Info("Credits ({0}):", release.Credits.Count);
-                foreach (MusicBrainzCredit credit in release.Credits)
-                {
-                    Console.Dim($"  {credit.Name} - {credit.Role}");
-                }
-            }
+            service = new MusicBrainzService();
         }
         else if (settings.Source.Equals("discogs", StringComparison.OrdinalIgnoreCase))
         {
-            if (!int.TryParse(settings.Id, out int discogsId))
+            if (!int.TryParse(settings.Id, out _))
             {
                 Console.Error("Invalid Discogs ID (must be number)");
                 return 1;
             }
-
-            if (service.Discogs is null)
+            string? token = GetEnvironmentVariable("DISCOGS_USER_TOKEN");
+            if (IsNullOrEmpty(token))
             {
-                Console.CriticalFailure(
-                    "Discogs",
-                    "DISCOGS_USER_TOKEN environment variable not set"
-                );
+                Console.CriticalFailure("Discogs", "DISCOGS_USER_TOKEN not set");
                 return 1;
             }
-
-            DiscogsRelease? release;
-            try
-            {
-                release = await service.Discogs.GetReleaseAsync(discogsId);
-            }
-            catch (Exception ex)
-            {
-                Console.CriticalFailure("Discogs", ex.Message);
-                return 1;
-            }
-
-            if (release is null)
-            {
-                Console.Warning("Release not found");
-                return 1;
-            }
-
-            Console.Rule(release.Title);
-            Console.KeyValue("Artist", Join(", ", release.Artists.Select(a => a.Name)));
-            Console.KeyValue("Year", release.Year.ToString());
-            Console.KeyValue("Country", release.Country ?? "Unknown");
-            Console.KeyValue("Labels", Join(", ", release.Labels.Select(l => l.Name)));
-            Console.KeyValue("Genres", Join(", ", release.Genres));
-            Console.KeyValue("Styles", Join(", ", release.Styles));
-
-            if (release.Tracks.Count > 0)
-            {
-                Console.NewLine();
-                Console.Info("Tracks ({0}):", release.Tracks.Count);
-                foreach (DiscogsTrack track in release.Tracks)
-                {
-                    Console.Dim($"  {track.Position}. {track.Title} ({track.Duration ?? "?:??"})");
-                }
-            }
-
-            if (settings.IncludeCredits && release.Credits.Count > 0)
-            {
-                Console.NewLine();
-                Console.Info("Credits ({0}):", release.Credits.Count);
-                foreach (DiscogsCredit credit in release.Credits)
-                {
-                    Console.Dim($"  {credit.Name} - {credit.Role}");
-                }
-            }
+            service = new DiscogsService(token);
         }
         else
         {
-            Console.Error("Invalid source: {0}. Use: musicbrainz, discogs", settings.Source);
+            Console.Error(
+                "Invalid source: {0}. Use: discogs, musicbrainz (or mb)",
+                settings.Source
+            );
             return 1;
         }
+
+        List<TrackMetadata> tracks = await service.GetReleaseTracksAsync(settings.Id);
+
+        if (tracks.Count == 0)
+        {
+            Console.Warning("No tracks found.");
+            return 0;
+        }
+
+        // Header
+        Console.Rule(tracks[0].Album);
+        Console.KeyValue("Artist", tracks[0].Artist ?? "Unknown");
+        Console.KeyValue("Label", tracks[0].Label ?? "Unknown");
+        Console.KeyValue("Year", tracks[0].FirstIssuedYear?.ToString() ?? "Unknown");
+
+        if (!IsNullOrEmpty(tracks[0].Composer))
+            Console.KeyValue("Composer", tracks[0].Composer!);
+        if (!IsNullOrEmpty(tracks[0].Conductor))
+            Console.KeyValue("Conductor", tracks[0].Conductor!);
+        if (!IsNullOrEmpty(tracks[0].Orchestra))
+            Console.KeyValue("Orchestra", tracks[0].Orchestra!);
+
+        // Track table
+        SpectreTable table = new();
+        table.Border(TableBorder.Simple);
+        table.AddColumn("#");
+        table.AddColumn("Title");
+        table.AddColumn("Duration");
+
+        foreach (TrackMetadata track in tracks)
+        {
+            string duration = track.Duration?.ToString(@"m\:ss") ?? "?:??";
+            table.AddRow(
+                $"{track.DiscNumber}.{track.TrackNumber}",
+                Markup.Escape(track.Title),
+                duration
+            );
+        }
+
+        AnsiConsole.Write(table);
 
         return 0;
     }
