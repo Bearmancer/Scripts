@@ -1,14 +1,13 @@
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
 import chardet
 import ffmpeg
-import os
-from dataclasses import dataclass, field
 from deflacue.deflacue import CueParser
-from pathlib import Path
 from pathvalidate import sanitize_filename
 from tqdm import tqdm
-from toolkit.cli import get_logger
-
-logger = get_logger("cuesheet")
 
 
 @dataclass
@@ -18,34 +17,35 @@ class TrackInfo:
     title: str
     track_num: int
     start_sec: float
-    duration: float = None
-    metadata: dict = field(default_factory=dict)
+    duration: float | None = None
+    metadata: dict[str, str] = field(default_factory=dict)
 
 
-def parse_cue_file(cuefile_path):
-    with open(cuefile_path, "rb") as file:
-        cue_content = file.read()
-        cue_encoding = chardet.detect(cue_content)["encoding"]
+def parse_cue_file(cuefile_path: Path) -> Any:
+    cue_content = cuefile_path.read_bytes()
+    cue_encoding: str = chardet.detect(cue_content)["encoding"] or "utf-8"
 
     parser = CueParser.from_file(cuefile_path, encoding=cue_encoding)
     return parser.run()
 
 
-def extract_track_data(cue_data):
-    album_info = cue_data.meta.data
-    tracks = cue_data.tracks
-    source_file = str(tracks[0].file.path)
-    track_list = []
+def extract_track_data(
+    cue_data: Any,
+) -> list[TrackInfo]:
+    album_info: dict[str, str] = cue_data.meta.data
+    tracks: list[Any] = cue_data.tracks
+    source_file: str = str(tracks[0].file.path)
+    track_list: list[TrackInfo] = []
 
     for track in tracks:
-        start_time_sec = track.start / 44100
-        metadata = album_info | track.data
+        start_time_sec: float = track.start / 44100
+        metadata: dict[str, str] = album_info | track.data
 
         track_info = TrackInfo(
             file=source_file,
             parent=str(Path(source_file).parent),
-            title=track.title,
-            track_num=track.num,
+            title=str(track.title),
+            track_num=int(track.num),
             start_sec=start_time_sec,
             metadata=metadata,
         )
@@ -55,24 +55,27 @@ def extract_track_data(cue_data):
     return track_list
 
 
-def calculate_track_durations(tracks):
-    file = Path(tracks[0].file).resolve()
+def calculate_track_durations(
+    tracks: list[TrackInfo], cue_file: Path
+) -> list[TrackInfo]:
+    p = Path(tracks[0].file)
+    file = (cue_file.parent / p if not p.is_absolute() else p).resolve()
 
-    probe_result = ffmpeg.probe(str(file))
+    probe_result: dict[str, Any] = ffmpeg.probe(
+        str(file)
+    )
     total_duration = float(probe_result["format"]["duration"])
 
-    for i in range(len(tracks) - 1):
-        current_start = tracks[i].start_sec
-        next_start = tracks[i + 1].start_sec
-        tracks[i].duration = next_start - current_start
+    for i, track in enumerate(tracks[:-1]):
+        track.duration = tracks[i + 1].start_sec - track.start_sec
 
-    last_start = tracks[-1].start_sec
-    tracks[-1].duration = total_duration - last_start
-
+    tracks[-1].duration = total_duration - tracks[-1].start_sec
     return tracks
 
 
-def process_tracks(tracks, cue_file, volume_adjustment=0.0):
+def process_tracks(
+    tracks: list[TrackInfo], cue_file: Path, volume_adjustment: float = 0.0
+) -> None:
     track_count = len(tracks)
     cue_directory = cue_file.parent
 
@@ -83,7 +86,7 @@ def process_tracks(tracks, cue_file, volume_adjustment=0.0):
         output_filename = f"{track_number}. {sanitize_filename(track.title)}.flac"
         output_path = cue_directory / output_filename
 
-        metadata_mappings = {
+        metadata_mappings: dict[str, str | int | None] = {
             "title": track.title,
             "track": track.track_num,
             "album": track.metadata.get("ALBUM"),
@@ -94,12 +97,16 @@ def process_tracks(tracks, cue_file, volume_adjustment=0.0):
 
         metadata = [f"{k}={v}" for k, v in metadata_mappings.items() if v]
 
+        p = Path(track.file)
+        stream: Any = ffmpeg.input(
+            str((cue_file.parent / p if not p.is_absolute() else p).resolve()),
+            ss=f"{track.start_sec:.6f}",
+        )
         (
-            ffmpeg.input(track.file, ss=f"{track.start_sec:.6f}")
-            .audio.filter("volume", volume=f"{volume_adjustment}dB")
+            stream.audio.filter("volume", volume=f"{volume_adjustment}dB")
             .output(
                 str(output_path),
-                t=f"{track.duration:.6f}",
+                t=f"{track.duration:.6f}" if track.duration else "0",
                 acodec="flac",
                 sample_fmt="s32",
                 ar="88200",
@@ -110,19 +117,13 @@ def process_tracks(tracks, cue_file, volume_adjustment=0.0):
         )
 
 
-def process_cue_file(cue_file, volume_adjustment=0.0):
+def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0) -> None:
+    cue_file = Path(cue_file).absolute()
+
     if not cue_file.exists():
         raise FileNotFoundError(f"CUE file not found: {cue_file}")
 
-    cue_file = Path(cue_file).absolute()
-    cue_directory = cue_file.parent
-
-    original_dir = Path.cwd()
-    os.chdir(cue_directory)
-
     cue_data = parse_cue_file(cue_file)
     tracks = extract_track_data(cue_data)
-    tracks = calculate_track_durations(tracks)
+    tracks = calculate_track_durations(tracks, cue_file)
     process_tracks(tracks, cue_file, volume_adjustment)
-
-    os.chdir(original_dir)

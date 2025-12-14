@@ -1,3 +1,4 @@
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
 import os
 import re
 import subprocess
@@ -10,7 +11,7 @@ from unidecode import unidecode
 
 from toolkit.filesystem import run_command
 from toolkit.cuesheet import process_cue_file
-from toolkit.cli import get_logger
+from toolkit.logging_config import get_logger
 
 logger = get_logger("audio")
 
@@ -18,8 +19,8 @@ FLAC_44 = [(176400, 24), (88200, 24), (44100, 16)]
 FLAC_48 = [(192000, 24), (96000, 24), (48000, 16)]
 
 
-def prepare_directory(directory):
-    def sanitize_name(p):
+def prepare_directory(directory: Path) -> Path:
+    def sanitize_name(p: Path) -> Path:
         return p.rename(p.with_name(sanitize_filename(unidecode(p.name)))) or p
 
     folder_pattern = re.compile(r"^(Disc|CD|Disk)\s?(\d+)$", re.IGNORECASE)
@@ -29,7 +30,7 @@ def prepare_directory(directory):
 
     for folder in (f for f in directory.glob("**/*") if f.is_dir()):
         if match := folder_pattern.match(folder.name):
-            prefix, number = match.groups()
+            _, number = match.groups()
             new_name = f"Disc {int(number):02d}"
             new_path = folder.parent / new_name
 
@@ -39,21 +40,17 @@ def prepare_directory(directory):
     return directory
 
 
-def progress_indicator(step, message):
+def progress_indicator(step: int, message: str) -> None:
     terminal_width = os.get_terminal_size().columns
     border = "=" * terminal_width
     core = f"STEP {step}: {message}"
 
     print(
-        f"""
-{border}
-{core.center(terminal_width)}
-{border}
-"""
+        f"{border}\n{core.center(terminal_width)}\n{border}\n"
     )
 
 
-def create_output_directory(directory, suffix):
+def create_output_directory(directory: Path, suffix: str) -> Path:
     destination = directory.parent / f"{directory.name} [{suffix}]"
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
 
@@ -68,13 +65,14 @@ def create_output_directory(directory, suffix):
     return destination
 
 
-def rename_file_red(path):
+def rename_file_red(path: Path) -> None:
     if not path.exists() or not path.is_dir():
         logger.error(f"Path does not exist: {path}")
         return
 
     root_path = path.parent
-    old_files_list, new_files_list = [], []
+    old_files_list: list[Path] = []
+    new_files_list: list[Path] = []
 
     for file in path.rglob("*"):
         relative_path_length = len(str(file.relative_to(root_path)))
@@ -99,9 +97,9 @@ def rename_file_red(path):
         logger.info("No files needed renaming")
 
 
-def calculate_image_size(path):
+def calculate_image_size(path: Path) -> None:
     exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
-    problematic_files = []
+    problematic_files: list[Path] = []
 
     for flac_file in path.glob("*.flac"):
         result = subprocess.run(
@@ -125,9 +123,9 @@ def calculate_image_size(path):
         logger.info("No files with embedded artwork larger than 1MB")
 
 
-def process_sacd_directory(directory, fmt="all"):
+def process_sacd_directory(directory: Path, fmt: str = "all") -> None:
     iso_files = list(directory.rglob("*.iso"))
-    output_dirs = []
+    output_dirs: list[tuple[Path, int]] = []
 
     progress_indicator(1, "Converting all ISOs -> DFF + CUE sheets")
 
@@ -146,7 +144,9 @@ def process_sacd_directory(directory, fmt="all"):
         convert_audio(3, parent_folder, fmt)
 
 
-def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
+def convert_iso_to_dff_and_cue(
+    iso_path: Path, base_dir: Path, disc_number: int
+) -> list[Path]:
     probe_result = run_command(
         ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
     )[0]
@@ -160,7 +160,7 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
         ),
     ]
 
-    out_dirs = []
+    out_dirs: list[Path] = []
 
     for pattern, suffix, cmd in channel_configs:
         if re.search(pattern, probe_result):
@@ -185,7 +185,7 @@ def convert_iso_to_dff_and_cue(iso_path, base_dir, disc_number):
     return out_dirs
 
 
-def convert_dff_to_flac(dff_dir):
+def convert_dff_to_flac(dff_dir: Path) -> None:
     cue_file = next(dff_dir.rglob("*.cue"))
     dff_file = next(dff_dir.rglob("*.dff"))
 
@@ -199,11 +199,11 @@ def convert_dff_to_flac(dff_dir):
         dff_file.unlink()
 
 
-def calculate_gain(dff_file, target_headroom_db=-0.5):
+def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
     if not dff_file.exists():
         raise FileNotFoundError(f"DFF file not found: {dff_file}")
 
-    peaks = []
+    peaks: list[float] = []
 
     _, error = (
         ffmpeg.input(str(dff_file))
@@ -224,7 +224,7 @@ def calculate_gain(dff_file, target_headroom_db=-0.5):
     return target_headroom_db - max(peaks)
 
 
-def convert_audio(current_step, directory, fmt="all"):
+def convert_audio(current_step: int, directory: Path, fmt: str = "all") -> None:
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
@@ -234,7 +234,7 @@ def convert_audio(current_step, directory, fmt="all"):
     bd, sr = next(
         (int(m["bits_per_raw_sample"]), int(m["sample_rate"]))
         for f in flac_files
-        if (m := get_metadata(f))
+        if (m := get_metadata(f)) and m["bits_per_raw_sample"] and m["sample_rate"]
     )
 
     flac_tiers = get_flac_tiers(sr, bd, fmt)
@@ -248,7 +248,7 @@ def convert_audio(current_step, directory, fmt="all"):
         convert_to_mp3(directory)
 
 
-def flac_directory_conversion(directory, tier):
+def flac_directory_conversion(directory: Path, tier: tuple[int, int]) -> None:
     sample_rate, bit_depth = tier
     suffix = f"{bit_depth} - {sample_rate / 1000:.1f}"
 
@@ -260,7 +260,7 @@ def flac_directory_conversion(directory, tier):
         downsample_flac(f, tier)
 
 
-def downsample_flac(file, tier):
+def downsample_flac(file: Path, tier: tuple[int, int]) -> None:
     sample_rate, bit_depth = tier
     temp_a = file.with_name("a.flac")
     temp_b = file.with_name("b.flac")
@@ -287,7 +287,7 @@ def downsample_flac(file, tier):
     temp_b.rename(file)
 
 
-def convert_to_mp3(directory):
+def convert_to_mp3(directory: Path) -> None:
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
@@ -307,7 +307,7 @@ def convert_to_mp3(directory):
         )
 
 
-def get_metadata(file):
+def get_metadata(file: Path) -> dict[str, str | None]:
     probe_result = ffmpeg.probe(str(file))
     audio_stream = next(
         stream
@@ -321,7 +321,9 @@ def get_metadata(file):
     }
 
 
-def get_flac_tiers(sample_rate, bit_depth, fmt="all"):
+def get_flac_tiers(
+    sample_rate: int, bit_depth: int, fmt: str = "all"
+) -> list[tuple[int, int]]:
     tiers = FLAC_44 if sample_rate in {44100, 88200, 176400} else FLAC_48
 
     for i, (tier_sr, tier_bd) in enumerate(tiers):
