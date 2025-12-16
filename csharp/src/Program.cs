@@ -64,7 +64,7 @@ public static class Program
                     music.SetDescription("Music metadata commands");
                     music
                         .AddCommand<MusicSearchCommand>("search")
-                        .WithDescription("Search for music");
+                        .WithDescription("Search for a music release");
                     music
                         .AddCommand<MusicLookupCommand>("lookup")
                         .WithDescription("Look up a release");

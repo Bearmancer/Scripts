@@ -12,42 +12,53 @@ public sealed class MusicBrainzService(
 
     #region IMusicService
 
-    public async Task<List<Models.SearchResult>> SearchAsync(string query, int maxResults = 10)
+    public async Task<List<Models.SearchResult>> SearchAsync(
+        string query,
+        int maxResults = 10,
+        CancellationToken ct = default
+    )
     {
-        return await ExecuteSafeListAsync(async () =>
-        {
-            ISearchResults<ISearchResult<IRelease>> results = await Query.FindReleasesAsync(
-                query,
-                maxResults
-            );
-            return results
-                .Results.Select(r => new Models.SearchResult(
-                    Source: MusicSource.MusicBrainz,
-                    Id: r.Item.Id.ToString(),
-                    Title: r.Item.Title ?? "",
-                    Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
-                    Year: r.Item.Date?.Year,
-                    Format: r.Item.Media?.FirstOrDefault()?.Format,
-                    Label: r.Item.LabelInfo?.FirstOrDefault()?.Label?.Name,
-                    ReleaseType: r.Item.ReleaseGroup?.PrimaryType,
-                    Score: r.Score,
-                    Country: r.Item.Country,
-                    CatalogNumber: r.Item.LabelInfo?.FirstOrDefault()?.CatalogNumber,
-                    Barcode: r.Item.Barcode,
-                    Genres: r.Item.Genres?.Select(g => g.Name)
-                        .Where(n => n is not null)
-                        .Cast<string>()
-                        .ToList()
-                ))
-                .ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                ISearchResults<ISearchResult<IRelease>> results = await Query.FindReleasesAsync(
+                    query,
+                    maxResults
+                );
+                return results
+                    .Results.Select(r => new Models.SearchResult(
+                        Source: MusicSource.MusicBrainz,
+                        Id: r.Item.Id.ToString(),
+                        Title: r.Item.Title ?? "",
+                        Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
+                        Year: r.Item.Date?.Year,
+                        Format: r.Item.Media?.FirstOrDefault()?.Format,
+                        Label: r.Item.LabelInfo?.FirstOrDefault()?.Label?.Name,
+                        ReleaseType: r.Item.ReleaseGroup?.PrimaryType,
+                        Score: r.Score,
+                        Country: r.Item.Country,
+                        CatalogNumber: r.Item.LabelInfo?.FirstOrDefault()?.CatalogNumber,
+                        Barcode: r.Item.Barcode,
+                        Genres: r.Item.Genres?.Select(g => g.Name)
+                            .Where(n => n is not null)
+                            .Cast<string>()
+                            .ToList()
+                    ))
+                    .ToList();
+            },
+            ct
+        );
     }
 
-    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(string releaseId)
+    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(
+        string releaseId,
+        bool deepSearch = true,
+        CancellationToken ct = default
+    )
     {
         Guid guid = Guid.Parse(releaseId);
         MusicBrainzRelease release =
-            await GetReleaseAsync(guid)
+            await GetReleaseAsync(guid, ct)
             ?? throw new InvalidOperationException($"Release not found: {releaseId}");
 
         List<TrackMetadata> tracks = [];
@@ -82,10 +93,11 @@ public sealed class MusicBrainzService(
                 int? recordingYear = null;
                 string? trackComposer = null;
 
-                if (track.RecordingId.HasValue)
+                if (deepSearch && track.RecordingId.HasValue)
                 {
                     MusicBrainzRecording? recording = await GetRecordingAsync(
-                        track.RecordingId.Value
+                        track.RecordingId.Value,
+                        ct
                     );
                     if (recording is not null)
                     {
@@ -112,7 +124,8 @@ public sealed class MusicBrainzService(
                         CatalogNumber: releaseCatalogNumber,
                         RecordingVenue: null,
                         Notes: release.Annotation,
-                        Duration: track.Length
+                        Duration: track.Length,
+                        RecordingId: track.RecordingId?.ToString()
                     )
                 );
             }
@@ -121,53 +134,85 @@ public sealed class MusicBrainzService(
         return tracks;
     }
 
+    public async Task<TrackMetadata> EnrichTrackAsync(
+        TrackMetadata track,
+        CancellationToken ct = default
+    )
+    {
+        if (track.Source != MusicSource.MusicBrainz || IsNullOrEmpty(track.RecordingId))
+            return track;
+
+        if (!Guid.TryParse(track.RecordingId, out Guid recordingId))
+            return track;
+
+        MusicBrainzRecording? recording = await GetRecordingAsync(recordingId, ct);
+        if (recording is null)
+            return track;
+
+        return track with
+        {
+            FirstIssuedYear = recording.FirstReleaseDate?.Year ?? track.FirstIssuedYear,
+            Composer = recording.Artist ?? track.Composer,
+        };
+    }
+
     #endregion
 
     #region Artist
 
     public async Task<List<MusicBrainzSearchResult>> SearchArtistsAsync(
         string artist,
-        int maxResults = 25
+        int maxResults = 25,
+        CancellationToken ct = default
     )
     {
-        return await ExecuteSafeListAsync(async () =>
-        {
-            ISearchResults<ISearchResult<IArtist>> results = await Query.FindArtistsAsync(
-                $"artist:\"{artist}\"",
-                maxResults
-            );
-            return results
-                .Results.Select(r => new MusicBrainzSearchResult(
-                    Id: r.Item.Id,
-                    Title: r.Item.Name ?? "",
-                    Artist: r.Item.Name,
-                    Year: r.Item.LifeSpan?.Begin?.Year,
-                    Country: r.Item.Country,
-                    Status: r.Item.Type,
-                    Disambiguation: r.Item.Disambiguation,
-                    Score: r.Score
-                ))
-                .ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                ISearchResults<ISearchResult<IArtist>> results = await Query.FindArtistsAsync(
+                    $"artist:\"{artist}\"",
+                    maxResults
+                );
+                return results
+                    .Results.Select(r => new MusicBrainzSearchResult(
+                        Id: r.Item.Id,
+                        Title: r.Item.Name ?? "",
+                        Artist: r.Item.Name,
+                        Year: r.Item.LifeSpan?.Begin?.Year,
+                        Country: r.Item.Country,
+                        Status: r.Item.Type,
+                        Disambiguation: r.Item.Disambiguation,
+                        Score: r.Score
+                    ))
+                    .ToList();
+            },
+            ct
+        );
     }
 
-    public async Task<MusicBrainzArtist?> GetArtistAsync(Guid artistId)
+    public async Task<MusicBrainzArtist?> GetArtistAsync(
+        Guid artistId,
+        CancellationToken ct = default
+    )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            IArtist? artist = await Query.LookupArtistAsync(
-                artistId,
-                Include.Aliases
-                    | Include.Annotation
-                    | Include.Ratings
-                    | Include.Tags
-                    | Include.Genres
-            );
-            if (artist is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                IArtist? artist = await Query.LookupArtistAsync(
+                    artistId,
+                    Include.Aliases
+                        | Include.Annotation
+                        | Include.Ratings
+                        | Include.Tags
+                        | Include.Genres
+                );
+                if (artist is null)
+                    return null;
 
-            return MapArtist(artist);
-        });
+                return MapArtist(artist);
+            },
+            ct
+        );
     }
 
     static MusicBrainzArtist MapArtist(IArtist a) =>
@@ -200,7 +245,8 @@ public sealed class MusicBrainzService(
     public async Task<List<MusicBrainzRecording>> SearchRecordingsAsync(
         string? artist = null,
         string? recording = null,
-        int maxResults = 25
+        int maxResults = 25,
+        CancellationToken ct = default
     )
     {
         List<string> parts = [];
@@ -214,17 +260,23 @@ public sealed class MusicBrainzService(
 
         string query = Join(" AND ", parts);
 
-        return await ExecuteSafeListAsync(async () =>
-        {
-            ISearchResults<ISearchResult<IRecording>> results = await Query.FindRecordingsAsync(
-                query,
-                maxResults
-            );
-            return results.Results.Select(r => MapRecordingFromSearch(r.Item)).ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                ISearchResults<ISearchResult<IRecording>> results = await Query.FindRecordingsAsync(
+                    query,
+                    maxResults
+                );
+                return results.Results.Select(r => MapRecordingFromSearch(r.Item)).ToList();
+            },
+            ct
+        );
     }
 
-    public async Task<MusicBrainzRecording?> GetRecordingAsync(Guid recordingId)
+    public async Task<MusicBrainzRecording?> GetRecordingAsync(
+        Guid recordingId,
+        CancellationToken ct = default
+    )
     {
         return await ExecuteSafeAsync(async () =>
         {
@@ -246,18 +298,22 @@ public sealed class MusicBrainzService(
 
     public async Task<List<MusicBrainzRecording>> BrowseArtistRecordingsAsync(
         Guid artistId,
-        int maxResults = 100
+        int maxResults = 100,
+        CancellationToken ct = default
     )
     {
-        return await ExecuteSafeListAsync(async () =>
-        {
-            IBrowseResults<IRecording> results = await Query.BrowseArtistRecordingsAsync(
-                artistId,
-                maxResults,
-                inc: Include.ArtistCredits | Include.Isrcs
-            );
-            return results.Results.Select(MapRecordingFromSearch).ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                IBrowseResults<IRecording> results = await Query.BrowseArtistRecordingsAsync(
+                    artistId,
+                    maxResults,
+                    inc: Include.ArtistCredits | Include.Isrcs
+                );
+                return results.Results.Select(MapRecordingFromSearch).ToList();
+            },
+            ct
+        );
     }
 
     static MusicBrainzRecording MapRecording(IRecording r) =>
@@ -310,32 +366,36 @@ public sealed class MusicBrainzService(
         int? year = null,
         string? label = null,
         string? genre = null,
-        int maxResults = 25
+        int maxResults = 25,
+        CancellationToken ct = default
     )
     {
         string query = BuildQuery(artist, release, year, label, genre);
         if (IsNullOrEmpty(query))
             return [];
 
-        return await ExecuteSafeListAsync(async () =>
-        {
-            ISearchResults<ISearchResult<IRelease>> results = await Query.FindReleasesAsync(
-                query,
-                maxResults
-            );
-            return results
-                .Results.Select(r => new MusicBrainzSearchResult(
-                    Id: r.Item.Id,
-                    Title: r.Item.Title ?? "",
-                    Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
-                    Year: r.Item.Date?.Year,
-                    Country: r.Item.Country,
-                    Status: r.Item.Status,
-                    Disambiguation: r.Item.Disambiguation,
-                    Score: r.Score
-                ))
-                .ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                ISearchResults<ISearchResult<IRelease>> results = await Query.FindReleasesAsync(
+                    query,
+                    maxResults
+                );
+                return results
+                    .Results.Select(r => new MusicBrainzSearchResult(
+                        Id: r.Item.Id,
+                        Title: r.Item.Title ?? "",
+                        Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
+                        Year: r.Item.Date?.Year,
+                        Country: r.Item.Country,
+                        Status: r.Item.Status,
+                        Disambiguation: r.Item.Disambiguation,
+                        Score: r.Score
+                    ))
+                    .ToList();
+            },
+            ct
+        );
     }
 
     public async Task<MusicBrainzSearchResult?> SearchFirstReleaseAsync(
@@ -343,7 +403,8 @@ public sealed class MusicBrainzService(
         string? release = null,
         int? year = null,
         string? label = null,
-        string? genre = null
+        string? genre = null,
+        CancellationToken ct = default
     )
     {
         List<MusicBrainzSearchResult> results = await SearchReleasesAsync(
@@ -352,12 +413,16 @@ public sealed class MusicBrainzService(
             year,
             label,
             genre,
-            1
+            1,
+            ct
         );
         return results.Count > 0 ? results[0] : null;
     }
 
-    public async Task<MusicBrainzRelease?> GetReleaseAsync(Guid releaseId)
+    public async Task<MusicBrainzRelease?> GetReleaseAsync(
+        Guid releaseId,
+        CancellationToken ct = default
+    )
     {
         return await ExecuteSafeAsync(async () =>
         {
@@ -484,7 +549,8 @@ public sealed class MusicBrainzService(
     public async Task<List<MusicBrainzSearchResult>> SearchReleaseGroupsAsync(
         string? artist = null,
         string? releaseGroup = null,
-        int maxResults = 25
+        int maxResults = 25,
+        CancellationToken ct = default
     )
     {
         List<string> parts = [];
@@ -498,26 +564,32 @@ public sealed class MusicBrainzService(
 
         string query = Join(" AND ", parts);
 
-        return await ExecuteSafeListAsync(async () =>
-        {
-            ISearchResults<ISearchResult<IReleaseGroup>> results =
-                await Query.FindReleaseGroupsAsync(query, maxResults);
-            return results
-                .Results.Select(r => new MusicBrainzSearchResult(
-                    Id: r.Item.Id,
-                    Title: r.Item.Title ?? "",
-                    Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
-                    Year: r.Item.FirstReleaseDate?.Year,
-                    Country: null,
-                    Status: r.Item.PrimaryType,
-                    Disambiguation: r.Item.Disambiguation,
-                    Score: r.Score
-                ))
-                .ToList();
-        });
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                ISearchResults<ISearchResult<IReleaseGroup>> results =
+                    await Query.FindReleaseGroupsAsync(query, maxResults);
+                return results
+                    .Results.Select(r => new MusicBrainzSearchResult(
+                        Id: r.Item.Id,
+                        Title: r.Item.Title ?? "",
+                        Artist: r.Item.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
+                        Year: r.Item.FirstReleaseDate?.Year,
+                        Country: null,
+                        Status: r.Item.PrimaryType,
+                        Disambiguation: r.Item.Disambiguation,
+                        Score: r.Score
+                    ))
+                    .ToList();
+            },
+            ct
+        );
     }
 
-    public async Task<MusicBrainzReleaseGroup?> GetReleaseGroupAsync(Guid releaseGroupId)
+    public async Task<MusicBrainzReleaseGroup?> GetReleaseGroupAsync(
+        Guid releaseGroupId,
+        CancellationToken ct = default
+    )
     {
         return await ExecuteSafeAsync(async () =>
         {
@@ -625,17 +697,18 @@ public sealed class MusicBrainzService(
     );
 
     /// <summary>
-    /// Parses a MusicBrainz release (box set) into structured track metadata for spreadsheet export.
+    /// Parses a MusicBrainz release (classical) into structured track metadata for spreadsheet export.
     /// Throws BoxSetParseException for missing required fields (composer, title, year, orchestra, conductor).
     /// Soloists are optional.
     /// </summary>
-    public async Task<List<BoxSetTrackMetadata>> ParseBoxSetAsync(
+    public async Task<List<BoxSetTrackMetadata>> ParseClassicalReleaseAsync(
         Guid releaseId,
-        BoxSetParseOptions options
+        BoxSetParseOptions options,
+        CancellationToken ct = default
     )
     {
         MusicBrainzRelease release =
-            await GetReleaseAsync(releaseId)
+            await GetReleaseAsync(releaseId, ct)
             ?? throw new BoxSetParseException($"Release not found: {releaseId}");
 
         List<BoxSetTrackMetadata> tracks = [];
@@ -676,7 +749,8 @@ public sealed class MusicBrainzService(
                 if (track.RecordingId.HasValue)
                 {
                     MusicBrainzRecording? recording = await GetRecordingAsync(
-                        track.RecordingId.Value
+                        track.RecordingId.Value,
+                        ct
                     );
                     if (recording is not null)
                     {
@@ -741,17 +815,18 @@ public sealed class MusicBrainzService(
     }
 
     /// <summary>
-    /// Parses box set with enhanced credit resolution by fetching work-level relationships.
+    /// Parses classical release with enhanced credit resolution by fetching work-level relationships.
     /// MusicBrainz hierarchy: Release -> Medium -> Track -> Recording -> Work
     /// Credits can exist at any level; this method searches all levels.
     /// </summary>
-    public async Task<List<BoxSetTrackMetadata>> ParseBoxSetWithWorkCreditsAsync(
+    public async Task<List<BoxSetTrackMetadata>> ParseClassicalReleaseWithWorkCreditsAsync(
         Guid releaseId,
-        BoxSetParseOptions options
+        BoxSetParseOptions options,
+        CancellationToken ct = default
     )
     {
         MusicBrainzRelease release =
-            await GetReleaseAsync(releaseId)
+            await GetReleaseAsync(releaseId, ct)
             ?? throw new BoxSetParseException($"Release not found: {releaseId}");
 
         // Extract release-level defaults
@@ -802,7 +877,8 @@ public sealed class MusicBrainzService(
                 if (track.RecordingId.HasValue)
                 {
                     MusicBrainzRecording? recording = await GetRecordingAsync(
-                        track.RecordingId.Value
+                        track.RecordingId.Value,
+                        ct
                     );
                     if (recording is not null)
                     {
@@ -873,14 +949,16 @@ public sealed class MusicBrainzService(
         );
     }
 
-    static Task<T> ExecuteAsync<T>(Func<Task<T>> action) =>
-        Resilience.ExecuteAsync(operation: "MusicBrainz", action: action);
+    static Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken ct) =>
+        Resilience.ExecuteAsync(operation: "MusicBrainz", action: action, ct: ct);
 
-    static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action)
-        where T : class => ExecuteAsync(action);
+    static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action, CancellationToken ct = default)
+        where T : class => ExecuteAsync(action, ct);
 
-    static Task<List<T>> ExecuteSafeListAsync<T>(Func<Task<List<T>>> action) =>
-        ExecuteAsync(action);
+    static Task<List<T>> ExecuteSafeListAsync<T>(
+        Func<Task<List<T>>> action,
+        CancellationToken ct = default
+    ) => ExecuteAsync(action, ct);
 
     static string BuildQuery(
         string? artist,

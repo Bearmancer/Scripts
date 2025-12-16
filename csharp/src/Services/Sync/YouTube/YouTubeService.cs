@@ -4,7 +4,6 @@ public class YouTubeService(string clientId, string clientSecret)
 {
     private const int MaxResultsPerPage = 50;
 
-    // Field filters to reduce API response size
     private const string PLAYLIST_FIELDS =
         "nextPageToken,items(id,snippet/title,contentDetails/itemCount,etag)";
     private const string PLAYLIST_ITEM_FIELDS = "nextPageToken,items/contentDetails/videoId";
@@ -19,9 +18,14 @@ public class YouTubeService(string clientId, string clientSecret)
         }
     );
 
-    internal List<PlaylistSummary> GetPlaylistSummaries(CancellationToken ct) =>
+    internal async Task<List<PlaylistSummary>> GetPlaylistSummariesAsync(CancellationToken ct)
+    {
+        List<global::Google.Apis.YouTube.v3.Data.Playlist> items = await FetchAllPlaylistItemsAsync(
+            ct
+        );
+        return
         [
-            .. FetchAllPlaylistItems(ct)
+            .. items
                 .Select(item => new PlaylistSummary(
                     Id: item.Id,
                     Title: item.Snippet?.Title ?? "Untitled",
@@ -30,85 +34,89 @@ public class YouTubeService(string clientId, string clientSecret)
                 ))
                 .OrderBy(s => s.Title),
         ];
+    }
 
-    internal PlaylistSummary? GetPlaylistSummary(string playlistId, CancellationToken ct)
+    internal async Task<PlaylistSummary?> GetPlaylistSummaryAsync(
+        string playlistId,
+        CancellationToken ct
+    )
     {
-        if (ct.IsCancellationRequested)
-            return null;
+        ct.ThrowIfCancellationRequested();
 
-        var response = Resilience.Execute(
+        var response = await Resilience.ExecuteAsync(
             operation: "YouTube.Playlists.List",
-            action: () =>
+            action: async () =>
             {
                 var request = service.Playlists.List("snippet,contentDetails");
                 request.Id = playlistId;
                 request.Fields = PLAYLIST_FIELDS;
-                return request.Execute();
+                return await request.ExecuteAsync(ct);
             },
             ct: ct
         );
 
         var item = response.Items?.FirstOrDefault();
-        if (item == null)
-            return null;
-
-        return new PlaylistSummary(
-            Id: item.Id,
-            Title: item.Snippet?.Title ?? "Untitled",
-            VideoCount: (int)(item.ContentDetails?.ItemCount ?? 0),
-            ETag: item.ETag
-        );
+        return item is null
+            ? null
+            : new PlaylistSummary(
+                Id: item.Id,
+                Title: item.Snippet?.Title ?? "Untitled",
+                VideoCount: (int)(item.ContentDetails?.ItemCount ?? 0),
+                ETag: item.ETag
+            );
     }
 
-    internal List<string> GetPlaylistVideoIds(string playlistId, CancellationToken ct)
+    internal async Task<List<string>> GetPlaylistVideoIdsAsync(
+        string playlistId,
+        CancellationToken ct
+    )
     {
         List<string> videoIds = [];
         string? pageToken = null;
 
         do
         {
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
-            var response = Resilience.Execute(
+            var response = await Resilience.ExecuteAsync(
                 operation: "YouTube.PlaylistItems.List",
-                action: () =>
+                action: async () =>
                 {
                     var request = service.PlaylistItems.List("contentDetails");
                     request.PlaylistId = playlistId;
                     request.MaxResults = MaxResultsPerPage;
                     request.PageToken = pageToken;
                     request.Fields = PLAYLIST_ITEM_FIELDS;
-                    return request.Execute();
+                    return await request.ExecuteAsync(ct);
                 },
                 ct: ct
             );
 
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
-            List<string> ids =
-            [
-                .. response
+            videoIds.AddRange(
+                response
                     .Items?.Select(i => i.ContentDetails?.VideoId)
                     .Where(id => !IsNullOrEmpty(id))
                     .Cast<string>()
-                    ?? [],
-            ];
+                    ?? []
+            );
 
-            videoIds.AddRange(ids);
             pageToken = response.NextPageToken;
-        } while (!IsNullOrEmpty(pageToken) && !ct.IsCancellationRequested);
+        } while (!IsNullOrEmpty(pageToken));
 
         return videoIds;
     }
 
-    internal List<YouTubePlaylist> GetPlaylistMetadata(CancellationToken ct)
+    internal async Task<List<YouTubePlaylist>> GetPlaylistMetadataAsync(CancellationToken ct)
     {
         Console.Info("Fetching playlist metadata...");
+        List<global::Google.Apis.YouTube.v3.Data.Playlist> items = await FetchAllPlaylistItemsAsync(
+            ct
+        );
         return
         [
-            .. FetchAllPlaylistItems(ct)
+            .. items
                 .Select(item => new YouTubePlaylist(
                     Id: item.Id,
                     Title: item.Snippet?.Title ?? "Untitled",
@@ -120,50 +128,48 @@ public class YouTubeService(string clientId, string clientSecret)
         ];
     }
 
-    /// <summary>
-    /// Fetches all playlist items with pagination - shared by GetPlaylistSummaries, GetPlaylistMetadata, GetAllPlaylists.
-    /// </summary>
-    private List<global::Google.Apis.YouTube.v3.Data.Playlist> FetchAllPlaylistItems(
-        CancellationToken ct
-    )
+    private async Task<
+        List<global::Google.Apis.YouTube.v3.Data.Playlist>
+    > FetchAllPlaylistItemsAsync(CancellationToken ct)
     {
         List<global::Google.Apis.YouTube.v3.Data.Playlist> items = [];
         string? pageToken = null;
 
         do
         {
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
-            var response = Resilience.Execute(
+            var response = await Resilience.ExecuteAsync(
                 operation: "YouTube.Playlists.List",
-                action: () =>
+                action: async () =>
                 {
                     var request = service.Playlists.List("snippet,contentDetails");
                     request.Mine = true;
                     request.MaxResults = MaxResultsPerPage;
                     request.PageToken = pageToken;
                     request.Fields = PLAYLIST_FIELDS;
-                    return request.Execute();
+                    return await request.ExecuteAsync(ct);
                 },
                 ct: ct
             );
 
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
             items.AddRange(response.Items ?? []);
             pageToken = response.NextPageToken;
-        } while (!IsNullOrEmpty(pageToken) && !ct.IsCancellationRequested);
+        } while (!IsNullOrEmpty(pageToken));
 
         return items;
     }
 
-    internal List<YouTubePlaylist> GetAllPlaylists(CancellationToken ct)
+    internal async Task<List<YouTubePlaylist>> GetAllPlaylistsAsync(CancellationToken ct)
     {
         Console.Info("Fetching playlists...");
 
-        var playlists = FetchAllPlaylistItems(ct)
+        List<global::Google.Apis.YouTube.v3.Data.Playlist> items = await FetchAllPlaylistItemsAsync(
+            ct
+        );
+        List<YouTubePlaylist> playlists = items
             .Select(item => new YouTubePlaylist(
                 Id: item.Id,
                 Title: item.Snippet?.Title ?? "Untitled",
@@ -178,11 +184,10 @@ public class YouTubeService(string clientId, string clientSecret)
 
         for (var i = 0; i < playlists.Count; i++)
         {
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
             var playlist = playlists[i];
-            var videoIds = GetPlaylistVideoIds(playlist.Id, ct);
+            var videoIds = await GetPlaylistVideoIdsAsync(playlist.Id, ct);
             playlists[i] = playlist with { VideoIds = videoIds };
 
             Console.Progress("Playlist IDs: {0}/{1}", i + 1, playlists.Count);
@@ -192,9 +197,9 @@ public class YouTubeService(string clientId, string clientSecret)
         return playlists;
     }
 
-    internal List<YouTubeVideo> GetVideoDetailsForIds(
+    internal async Task<List<YouTubeVideo>> GetVideoDetailsForIdsAsync(
         List<string> videoIds,
-        Action<List<YouTubeVideo>> onBatchComplete,
+        Func<List<YouTubeVideo>, Task> onBatchComplete,
         CancellationToken ct
     )
     {
@@ -203,53 +208,47 @@ public class YouTubeService(string clientId, string clientSecret)
 
         foreach (var batch in batches)
         {
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
-            var batchVideos = GetVideoDetails([.. batch], ct);
+            var batchVideos = await GetVideoDetailsAsync([.. batch], ct);
 
-            if (ct.IsCancellationRequested)
-                break;
+            ct.ThrowIfCancellationRequested();
 
             videos.AddRange(batchVideos);
-            onBatchComplete(batchVideos);
+            await onBatchComplete(batchVideos);
         }
 
         return videos;
     }
 
-    private List<YouTubeVideo> GetVideoDetails(List<string> videoIds, CancellationToken ct)
+    private async Task<List<YouTubeVideo>> GetVideoDetailsAsync(
+        List<string> videoIds,
+        CancellationToken ct
+    )
     {
-        var response = Resilience.Execute(
+        var response = await Resilience.ExecuteAsync(
             operation: "YouTube.Videos.List",
-            action: () =>
+            action: async () =>
             {
                 var request = service.Videos.List("snippet,contentDetails");
                 request.Id = Join(",", videoIds);
                 request.Fields = VIDEO_FIELDS;
-                return request.Execute();
+                return await request.ExecuteAsync(ct);
             },
             ct: ct
         );
 
-        List<YouTubeVideo> videos = [];
-
-        foreach (var item in response.Items ?? [])
-        {
-            var duration = ParseDuration(item.ContentDetails?.Duration);
-
-            YouTubeVideo video = new(
+        return
+        [
+            .. (response.Items ?? []).Select(item => new YouTubeVideo(
                 Title: item.Snippet?.Title ?? "Untitled",
                 Description: item.Snippet?.Description ?? "",
-                Duration: duration,
+                Duration: ParseDuration(item.ContentDetails?.Duration),
                 ChannelName: item.Snippet?.ChannelTitle ?? "",
                 VideoId: item.Id,
                 ChannelId: item.Snippet?.ChannelId ?? ""
-            );
-            videos.Add(video);
-        }
-
-        return videos;
+            )),
+        ];
     }
 
     private static TimeSpan ParseDuration(string? isoDuration) =>

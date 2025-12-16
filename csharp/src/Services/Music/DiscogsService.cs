@@ -22,48 +22,59 @@ public sealed class DiscogsService : IMusicService
 
     #region IMusicService
 
-    public async Task<List<Models.SearchResult>> SearchAsync(string query, int maxResults = 10)
+    public async Task<List<Models.SearchResult>> SearchAsync(
+        string query,
+        int maxResults = 10,
+        CancellationToken ct = default
+    )
     {
-        return await ExecuteSafeListAsync(async () =>
-        {
-            SearchCriteria criteria = new() { Query = query };
-            SearchResults results = await Client.SearchAsync(
-                criteria,
-                new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
-            );
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                SearchCriteria criteria = new() { Query = query };
+                SearchResults results = await Client.SearchAsync(
+                    criteria,
+                    new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
+                );
 
-            return results
-                .Results.Take(maxResults)
-                .Select(r => new Models.SearchResult(
-                    Source: MusicSource.Discogs,
-                    Id: (r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
-                    Title: r.Title ?? "",
-                    Artist: ExtractArtist(r.Title),
-                    Year: ParseYear(r.Year),
-                    Format: r.Format is { } fmt ? Join(", ", fmt) : null,
-                    Label: r.Label is { } lbl ? Join(", ", lbl) : null,
-                    ReleaseType: r.Type, // release, master, artist, label
-                    Score: null, // Discogs doesn't provide relevance score
-                    Country: r.Country,
-                    CatalogNumber: r.CatalogNumber,
-                    Barcode: r.Barcode?.FirstOrDefault(),
-                    Genres: r.Genre?.ToList(),
-                    Styles: r.Style?.ToList()
-                ))
-                .ToList();
-        });
+                return results
+                    .Results.Take(maxResults)
+                    .Select(r => new Models.SearchResult(
+                        Source: MusicSource.Discogs,
+                        Id: (r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
+                        Title: r.Title ?? "",
+                        Artist: ExtractArtist(r.Title),
+                        Year: ParseYear(r.Year),
+                        Format: r.Format is { } fmt ? Join(", ", fmt) : null,
+                        Label: r.Label is { } lbl ? Join(", ", lbl) : null,
+                        ReleaseType: r.Type, // release, master, artist, label
+                        Score: null, // Discogs doesn't provide relevance score
+                        Country: r.Country,
+                        CatalogNumber: r.CatalogNumber,
+                        Barcode: r.Barcode?.FirstOrDefault(),
+                        Genres: r.Genre?.ToList(),
+                        Styles: r.Style?.ToList()
+                    ))
+                    .ToList();
+            },
+            ct
+        );
     }
 
-    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(string releaseId)
+    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(
+        string releaseId,
+        bool deepSearch = true,
+        CancellationToken ct = default
+    )
     {
         int id = int.Parse(releaseId);
         Models.DiscogsRelease release =
-            await GetReleaseAsync(id)
+            await GetReleaseAsync(id, ct)
             ?? throw new InvalidOperationException($"Release not found: {releaseId}");
 
         // Get master for original year if available
         int? originalYear = release.MasterId.HasValue
-            ? (await GetMasterAsync(release.MasterId.Value))?.Year
+            ? (await GetMasterAsync(release.MasterId.Value, ct))?.Year
             : null;
 
         // Extract credits from ExtraArtists
@@ -138,6 +149,12 @@ public sealed class DiscogsService : IMusicService
         return tracks;
     }
 
+    public Task<TrackMetadata> EnrichTrackAsync(TrackMetadata track, CancellationToken ct = default)
+    {
+        // Discogs fetches all data at once, so no enrichment needed.
+        return Task.FromResult(track);
+    }
+
     static TimeSpan? ParseDuration(string? duration)
     {
         if (IsNullOrWhiteSpace(duration))
@@ -163,7 +180,8 @@ public sealed class DiscogsService : IMusicService
         int? year = null,
         string? label = null,
         string? genre = null,
-        int maxResults = 50
+        int maxResults = 50,
+        CancellationToken ct = default
     )
     {
         SearchCriteria criteria = new()
@@ -176,15 +194,18 @@ public sealed class DiscogsService : IMusicService
             Genre = genre,
         };
 
-        return await ExecuteSafeListAsync(async () =>
-        {
-            SearchResults results = await Client.SearchAsync(
-                criteria,
-                new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
-            );
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                SearchResults results = await Client.SearchAsync(
+                    criteria,
+                    new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
+                );
 
-            return results.Results.Take(maxResults).Select(MapSearchResult).ToList();
-        });
+                return results.Results.Take(maxResults).Select(MapSearchResult).ToList();
+            },
+            ct
+        );
     }
 
     public async Task<DiscogsSearchResult?> SearchFirstAsync(
@@ -193,7 +214,8 @@ public sealed class DiscogsService : IMusicService
         string? track = null,
         int? year = null,
         string? label = null,
-        string? genre = null
+        string? genre = null,
+        CancellationToken ct = default
     )
     {
         List<DiscogsSearchResult> results = await SearchAdvancedAsync(
@@ -203,7 +225,8 @@ public sealed class DiscogsService : IMusicService
             year,
             label,
             genre,
-            1
+            1,
+            ct
         );
         return results.Count > 0 ? results[0] : null;
     }
@@ -231,16 +254,22 @@ public sealed class DiscogsService : IMusicService
 
     #region Release
 
-    public async Task<Models.DiscogsRelease?> GetReleaseAsync(int releaseId)
+    public async Task<Models.DiscogsRelease?> GetReleaseAsync(
+        int releaseId,
+        CancellationToken ct = default
+    )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            Release? release = await Client.GetReleaseAsync(releaseId);
-            if (release is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                Release? release = await Client.GetReleaseAsync(releaseId);
+                if (release is null)
+                    return null;
 
-            return MapRelease(release);
-        });
+                return MapRelease(release);
+            },
+            ct
+        );
     }
 
     static Models.DiscogsRelease MapRelease(Release r) =>
@@ -274,38 +303,48 @@ public sealed class DiscogsService : IMusicService
         );
 
     public async Task<Dictionary<string, List<Models.DiscogsTrack>>> GetTracksByMediaAsync(
-        int releaseId
+        int releaseId,
+        CancellationToken ct = default
     )
     {
-        return await ExecuteSafeDictAsync(async () =>
-        {
-            Release? release = await Client.GetReleaseAsync(releaseId);
-            if (release?.Tracklist is null)
-                return [];
+        return await ExecuteSafeDictAsync(
+            async () =>
+            {
+                Release? release = await Client.GetReleaseAsync(releaseId);
+                if (release?.Tracklist is null)
+                    return [];
 
-            Dictionary<string, List<Tracklist>> mediaDict = release.Tracklist.SplitMedia();
+                Dictionary<string, List<Tracklist>> mediaDict = release.Tracklist.SplitMedia();
 
-            return mediaDict.ToDictionary(
-                kvp => kvp.Key,
-                kvp => kvp.Value.Select(MapTrack).ToList()
-            );
-        });
+                return mediaDict.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Select(MapTrack).ToList()
+                );
+            },
+            ct
+        );
     }
 
     #endregion
 
     #region Master
 
-    public async Task<Models.DiscogsMaster?> GetMasterAsync(int masterId)
+    public async Task<Models.DiscogsMaster?> GetMasterAsync(
+        int masterId,
+        CancellationToken ct = default
+    )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            MasterRelease? master = await Client.GetMasterReleaseAsync(masterId);
-            if (master is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                MasterRelease? master = await Client.GetMasterReleaseAsync(masterId);
+                if (master is null)
+                    return null;
 
-            return MapMaster(master);
-        });
+                return MapMaster(master);
+            },
+            ct
+        );
     }
 
     static Models.DiscogsMaster MapMaster(MasterRelease m) =>
@@ -333,18 +372,22 @@ public sealed class DiscogsService : IMusicService
 
     public async Task<List<Models.DiscogsVersion>> GetVersionsAsync(
         int masterId,
-        int maxResults = 50
+        int maxResults = 50,
+        CancellationToken ct = default
     )
     {
-        return await ExecuteSafeListAsync(async () =>
-        {
-            VersionResults results = await Client.GetVersionsAsync(
-                new VersionsCriteria(masterId),
-                new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
-            );
+        return await ExecuteSafeListAsync(
+            async () =>
+            {
+                VersionResults results = await Client.GetVersionsAsync(
+                    new VersionsCriteria(masterId),
+                    new PageOptions { PageNumber = 1, PageSize = Math.Min(maxResults, 100) }
+                );
 
-            return results.Versions.Take(maxResults).Select(MapVersion).ToList();
-        });
+                return results.Versions.Take(maxResults).Select(MapVersion).ToList();
+            },
+            ct
+        );
     }
 
     static Models.DiscogsVersion MapVersion(ParkSquare.Discogs.Dto.Version v) =>
@@ -453,11 +496,11 @@ public sealed class DiscogsService : IMusicService
 
     #region Helpers
 
-    static async Task<T> ExecuteAsync<T>(Func<Task<T>> action)
+    static async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken ct)
     {
         try
         {
-            return await Resilience.ExecuteAsync(operation: "Discogs", action: action);
+            return await Resilience.ExecuteAsync(operation: "Discogs", action: action, ct: ct);
         }
         catch (Exception ex)
         {
@@ -466,16 +509,19 @@ public sealed class DiscogsService : IMusicService
         }
     }
 
-    static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action)
-        where T : class => ExecuteAsync(action);
+    static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action, CancellationToken ct)
+        where T : class => ExecuteAsync(action, ct);
 
-    static Task<List<T>> ExecuteSafeListAsync<T>(Func<Task<List<T>>> action) =>
-        ExecuteAsync(action);
+    static Task<List<T>> ExecuteSafeListAsync<T>(
+        Func<Task<List<T>>> action,
+        CancellationToken ct
+    ) => ExecuteAsync(action, ct);
 
     static Task<Dictionary<TKey, TValue>> ExecuteSafeDictAsync<TKey, TValue>(
-        Func<Task<Dictionary<TKey, TValue>>> action
+        Func<Task<Dictionary<TKey, TValue>>> action,
+        CancellationToken ct
     )
-        where TKey : notnull => ExecuteAsync(action);
+        where TKey : notnull => ExecuteAsync(action, ct);
 
     static string? ExtractArtist(string? title) =>
         title?.Contains(" - ") == true ? title.Split(" - ")[0].Trim() : null;

@@ -78,7 +78,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             MusicBrainzService mb = new();
             List<Models.SearchResult> mbResults = await mb.SearchAsync(
                 settings.Query,
-                settings.Limit
+                settings.Limit,
+                cancellationToken
             );
             results.AddRange(mbResults);
         }
@@ -88,7 +89,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             DiscogsService discogs = new(discogsToken);
             List<Models.SearchResult> discogsResults = await discogs.SearchAsync(
                 settings.Query,
-                settings.Limit
+                settings.Limit,
+                cancellationToken
             );
 
             // Apply client-side relevance scoring for Discogs
@@ -535,9 +537,9 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         public required string Id { get; init; }
 
         [CommandOption("-s|--source")]
-        [Description("discogs (default), musicbrainz (or mb)")]
-        [DefaultValue("discogs")]
-        public string Source { get; init; } = "discogs";
+        [Description("musicbrainz (default), discogs")]
+        [DefaultValue("musicbrainz")]
+        public string Source { get; init; } = "musicbrainz";
     }
 
     public override async Task<int> ExecuteAsync(
@@ -546,23 +548,12 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         CancellationToken cancellationToken
     )
     {
-        Console.Info("Looking up {0} from {1}...", settings.Id, settings.Source);
-
         IMusicService service;
 
-        if (
-            settings.Source.Equals("musicbrainz", StringComparison.OrdinalIgnoreCase)
-            || settings.Source.Equals("mb", StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            if (!Guid.TryParse(settings.Id, out _))
-            {
-                Console.Error("Invalid MusicBrainz ID (must be GUID)");
-                return 1;
-            }
-            service = new MusicBrainzService();
-        }
-        else if (settings.Source.Equals("discogs", StringComparison.OrdinalIgnoreCase))
+        // Default to MusicBrainz if not specified or explicit
+        bool isDiscogs = settings.Source.Equals("discogs", StringComparison.OrdinalIgnoreCase);
+
+        if (isDiscogs)
         {
             if (!int.TryParse(settings.Id, out _))
             {
@@ -579,14 +570,23 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
         }
         else
         {
-            Console.Error(
-                "Invalid source: {0}. Use: discogs, musicbrainz (or mb)",
-                settings.Source
-            );
-            return 1;
+            // MusicBrainz (default)
+            if (!Guid.TryParse(settings.Id, out _))
+            {
+                Console.Error("Invalid MusicBrainz ID (must be GUID)");
+                return 1;
+            }
+            service = new MusicBrainzService();
         }
 
-        List<TrackMetadata> tracks = await service.GetReleaseTracksAsync(settings.Id);
+        Console.Info("Fetching release info from {0}...", isDiscogs ? "Discogs" : "MusicBrainz");
+
+        // 1. Shallow Fetch
+        List<TrackMetadata> tracks = await service.GetReleaseTracksAsync(
+            settings.Id,
+            deepSearch: false,
+            ct: cancellationToken
+        );
 
         if (tracks.Count == 0)
         {
@@ -594,39 +594,214 @@ public sealed class MusicLookupCommand : AsyncCommand<MusicLookupCommand.Setting
             return 0;
         }
 
-        // Header
-        Console.Rule(tracks[0].Album);
-        Console.KeyValue("Artist", tracks[0].Artist ?? "");
-        Console.KeyValue("Label", tracks[0].Label ?? "");
-        Console.KeyValue("Year", tracks[0].FirstIssuedYear?.ToString() ?? "");
+        TrackMetadata header = tracks[0];
 
-        if (!IsNullOrEmpty(tracks[0].Composer))
-            Console.KeyValue("Composer", tracks[0].Composer!);
-        if (!IsNullOrEmpty(tracks[0].Conductor))
-            Console.KeyValue("Conductor", tracks[0].Conductor!);
-        if (!IsNullOrEmpty(tracks[0].Orchestra))
-            Console.KeyValue("Orchestra", tracks[0].Orchestra!);
+        // 2. Display Summary
+        AnsiConsole.MarkupLine($"[bold]Release:[/] {Markup.Escape(header.Album)}");
+        AnsiConsole.MarkupLine($"[bold]Artist:[/]  {Markup.Escape(header.Artist ?? "Unknown")}");
+        AnsiConsole.MarkupLine($"[bold]Year:[/]    {header.FirstIssuedYear?.ToString() ?? "?"}");
+        AnsiConsole.MarkupLine($"[bold]Tracks:[/]  {tracks.Count}");
+        System.Console.WriteLine();
 
-        // Track table
+        // 3. Prompt for Deep Search (MusicBrainz only)
+        if (!isDiscogs)
+        {
+            bool deepSearch = AnsiConsole.Confirm(
+                "Fetch full track metadata (recordings, composers, etc)?",
+                defaultValue: true
+            );
+
+            if (deepSearch)
+            {
+                tracks = await EnrichTracksWithProgressAsync(service, tracks, cancellationToken);
+            }
+        }
+
+        // 4. Display Final Table
         SpectreTable table = new();
         table.Border(TableBorder.Simple);
         table.AddColumn("#");
         table.AddColumn("Title");
         table.AddColumn("Duration");
+        if (!isDiscogs)
+            table.AddColumn("Composer");
+        if (!isDiscogs)
+            table.AddColumn("Year");
 
         foreach (TrackMetadata track in tracks)
         {
             string duration = track.Duration?.ToString(@"m\:ss") ?? "?:??";
-            table.AddRow(
+            var row = new List<string>
+            {
                 $"{track.DiscNumber}.{track.TrackNumber}",
                 Markup.Escape(track.Title),
-                duration
-            );
+                duration,
+            };
+
+            if (!isDiscogs)
+            {
+                row.Add(Markup.Escape(track.Composer ?? ""));
+                row.Add(track.FirstIssuedYear?.ToString() ?? "");
+            }
+
+            table.AddRow([.. row]);
         }
 
         AnsiConsole.Write(table);
 
+        // 5. Interactive export prompt
+        var exportChoice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Export to CSV?")
+                .AddChoices("All fields", "Default fields (Artist, Title, Year, Label)", "Skip")
+        );
+
+        if (exportChoice != "Skip")
+        {
+            bool allFields = exportChoice.StartsWith("All");
+            string filename = SanitizeForFileName(header.Album) + ".csv";
+
+            ExportTracksToCsv(tracks, filename, allFields);
+            Console.Success("Exported: {0} ({1} fields)", filename, allFields ? "all" : "default");
+        }
+
         return 0;
+    }
+
+    private static async Task<List<TrackMetadata>> EnrichTracksWithProgressAsync(
+        IMusicService service,
+        List<TrackMetadata> tracks,
+        CancellationToken ct
+    )
+    {
+        List<TrackMetadata> enrichedTracks = new(tracks.Count);
+        Queue<string> recentTracks = new();
+        int completed = 0;
+        int total = tracks.Count;
+        DateTime startTime = DateTime.Now;
+
+        // Create live display with progress info and rolling list
+        Rows CreateDisplay()
+        {
+            List<IRenderable> rows = [];
+
+            // Progress bar line
+            double percent = total > 0 ? (double)completed / total * 100 : 0;
+            string eta =
+                completed > 0
+                    ? TimeSpan
+                        .FromSeconds(
+                            (DateTime.Now - startTime).TotalSeconds
+                                / completed
+                                * (total - completed)
+                        )
+                        .ToString(@"m\:ss")
+                    : "?:??";
+
+            string progressBar =
+                new string('█', (int)(percent / 5)) + new string('░', 20 - (int)(percent / 5));
+            rows.Add(
+                new Markup(
+                    $"[blue][{completed}/{total}][/] {progressBar} [yellow]{percent:F0}%[/] │ ETA: [cyan]{eta}[/]"
+                )
+            );
+            rows.Add(new Text("")); // Spacer
+
+            // Rolling list of recent tracks
+            foreach (string track in recentTracks)
+            {
+                rows.Add(new Markup($"  [green]✓[/] {Markup.Escape(track)}"));
+            }
+
+            return new Rows(rows);
+        }
+
+        await AnsiConsole
+            .Live(CreateDisplay())
+            .AutoClear(false)
+            .StartAsync(async ctx =>
+            {
+                foreach (TrackMetadata track in tracks)
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    TrackMetadata enriched = await service.EnrichTrackAsync(track, ct);
+                    enrichedTracks.Add(enriched);
+                    completed++;
+
+                    // Add to rolling queue
+                    string info = $"{enriched.Title} ({enriched.Composer ?? "Unknown"})";
+                    recentTracks.Enqueue(info);
+                    if (recentTracks.Count > 5)
+                        recentTracks.Dequeue();
+
+                    ctx.UpdateTarget(CreateDisplay());
+                }
+            });
+
+        AnsiConsole.MarkupLine("[green]✓ Enrichment complete![/]");
+        return enrichedTracks;
+    }
+
+    /// <summary>
+    /// Sanitize album name for use as filename.
+    /// </summary>
+    private static string SanitizeForFileName(string name)
+    {
+        char[] invalid = Path.GetInvalidFileNameChars();
+        string sanitized = new(name.Where(c => !invalid.Contains(c)).ToArray());
+        return IsNullOrWhiteSpace(sanitized) ? "export" : sanitized.Trim();
+    }
+
+    /// <summary>
+    /// Export tracks to CSV file.
+    /// </summary>
+    private static void ExportTracksToCsv(
+        List<TrackMetadata> tracks,
+        string filename,
+        bool allFields
+    )
+    {
+        using StreamWriter writer = new(filename, false, System.Text.Encoding.UTF8);
+
+        if (allFields)
+        {
+            // All fields header
+            writer.WriteLine(
+                "DiscNumber,TrackNumber,Title,Artist,Album,Year,Label,CatalogNumber,Composer,Conductor,Orchestra,Soloists,Venue,Duration,Notes"
+            );
+
+            foreach (var t in tracks)
+            {
+                string soloists = t.Soloists.Count > 0 ? Join("; ", t.Soloists) : "";
+                string duration = t.Duration?.ToString(@"m\:ss") ?? "";
+                writer.WriteLine(
+                    $"{t.DiscNumber},{t.TrackNumber},{CsvEscape(t.Title)},{CsvEscape(t.Artist ?? "")},{CsvEscape(t.Album)},{t.FirstIssuedYear?.ToString() ?? ""},{CsvEscape(t.Label ?? "")},{CsvEscape(t.CatalogNumber ?? "")},{CsvEscape(t.Composer ?? "")},{CsvEscape(t.Conductor ?? "")},{CsvEscape(t.Orchestra ?? "")},{CsvEscape(soloists)},{CsvEscape(t.RecordingVenue ?? "")},{duration},{CsvEscape(t.Notes ?? "")}"
+                );
+            }
+        }
+        else
+        {
+            // Default fields header
+            writer.WriteLine("TrackNumber,Title,Artist,Album,Year,Label");
+
+            foreach (var t in tracks)
+            {
+                writer.WriteLine(
+                    $"{t.TrackNumber},{CsvEscape(t.Title)},{CsvEscape(t.Artist ?? "")},{CsvEscape(t.Album)},{t.FirstIssuedYear?.ToString() ?? ""},{CsvEscape(t.Label ?? "")}"
+                );
+            }
+        }
+    }
+
+    /// <summary>
+    /// Escape value for CSV (quote if contains comma, quote, or newline).
+    /// </summary>
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        return value;
     }
 }
 

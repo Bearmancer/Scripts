@@ -19,7 +19,7 @@ public static class Resilience
         await Semaphore.WaitAsync(ct);
         try
         {
-            await ApplyThrottleAsync();
+            await ApplyThrottleAsync(ct);
 
             ResiliencePipeline<T> pipeline = CreateAsyncPipeline<T>(operation);
             return await pipeline.ExecuteAsync(async _ => await action(), ct);
@@ -47,6 +47,12 @@ public static class Resilience
             ct
         );
     }
+
+    private static ResiliencePipeline<T> CreateAsyncPipeline<T>(string operation) =>
+        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
+
+    private static ResiliencePipeline<T> CreateSyncPipeline<T>(string operation) =>
+        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
 
     public static T Execute<T>(string operation, Func<T> action, CancellationToken ct = default)
     {
@@ -76,11 +82,12 @@ public static class Resilience
             ct
         );
 
-    private static ResiliencePipeline<T> CreateAsyncPipeline<T>(string operation) =>
-        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
-
-    private static ResiliencePipeline<T> CreateSyncPipeline<T>(string operation) =>
-        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
+    private static void ApplyThrottle()
+    {
+        TimeSpan elapsed = DateTime.Now - lastCallTime;
+        if (elapsed < THROTTLE_DELAY)
+            Thread.Sleep(THROTTLE_DELAY - elapsed);
+    }
 
     private static RetryStrategyOptions<T> CreateRetryOptions<T>(string operation) =>
         new()
@@ -126,18 +133,11 @@ public static class Resilience
             },
         };
 
-    private static async Task ApplyThrottleAsync()
+    private static async Task ApplyThrottleAsync(CancellationToken ct)
     {
         TimeSpan elapsed = DateTime.Now - lastCallTime;
         if (elapsed < THROTTLE_DELAY)
-            await Task.Delay(THROTTLE_DELAY - elapsed);
-    }
-
-    private static void ApplyThrottle()
-    {
-        TimeSpan elapsed = DateTime.Now - lastCallTime;
-        if (elapsed < THROTTLE_DELAY)
-            Thread.Sleep(THROTTLE_DELAY - elapsed);
+            await Task.Delay(THROTTLE_DELAY - elapsed, ct);
     }
 
     public static bool IsFatalQuotaError(string message) =>

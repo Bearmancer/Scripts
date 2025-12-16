@@ -58,8 +58,7 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
         Logger.Start(ServiceType.YouTube);
         return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
         {
-            // YouTube orchestrator is still synchronous, wrap in Task.Run for now
-            await Task.Run(() => new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute());
+            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync();
         });
     }
 
@@ -76,7 +75,7 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
     }
 }
 
-public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
+public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -96,7 +95,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
         public bool ShowSessionId { get; init; }
     }
 
-    public override int Execute(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
@@ -110,7 +109,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
 
         Logger.Start(ServiceType.YouTube);
 
-        return ExecuteWithErrorHandling(() =>
+        return await ExecuteWithErrorHandlingAsync(async () =>
         {
             if (settings.Reset)
             {
@@ -122,7 +121,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
             if (settings.ShowSessionId)
                 Console.Info("Session ID: {0}", Logger.CurrentSessionId);
 
-            new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
+            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync();
         });
     }
 

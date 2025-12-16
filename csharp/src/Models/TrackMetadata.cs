@@ -20,7 +20,8 @@ public record TrackMetadata(
     string? CatalogNumber,
     string? RecordingVenue,
     string? Notes,
-    TimeSpan? Duration
+    TimeSpan? Duration,
+    string? RecordingId = null
 );
 
 /// <summary>
