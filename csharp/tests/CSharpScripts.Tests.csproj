@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Disable parallel execution -->
+    <Parallelism>1</Parallelism>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="*" />
+    <PackageReference Include="Shouldly" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CSharpScripts.csproj" />
+  </ItemGroup>
+</Project>

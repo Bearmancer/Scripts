@@ -1,6 +1,6 @@
 namespace CSharpScripts.CLI.Commands;
 
-public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
+public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -13,7 +13,7 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         public bool Reset { get; init; }
     }
 
-    public override int Execute(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
@@ -34,11 +34,11 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         }
 
         Console.Rule("YouTube Sync");
-        int ytResult = RunYouTubeSync(settings.Verbose);
+        int ytResult = await RunYouTubeSyncAsync();
 
         Console.NewLine();
         Console.Rule("Last.fm Sync");
-        int lfResult = RunLastFmSync(settings.Verbose);
+        int lfResult = await RunLastFmSyncAsync();
 
         Console.NewLine();
         if (ytResult == 0 && lfResult == 0)
@@ -53,26 +53,29 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         return ytResult != 0 ? ytResult : lfResult;
     }
 
-    private static int RunYouTubeSync(bool verbose)
+    private static async Task<int> RunYouTubeSyncAsync()
     {
         Logger.Start(ServiceType.YouTube);
-        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
         {
-            new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
+            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync();
         });
     }
 
-    private static int RunLastFmSync(bool verbose)
+    private static async Task<int> RunLastFmSyncAsync()
     {
         Logger.Start(ServiceType.LastFm);
-        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
         {
-            new ScrobbleSyncOrchestrator(Program.Cts.Token, forceFromDate: null).Execute();
+            await new ScrobbleSyncOrchestrator(
+                forceFromDate: null,
+                Program.Cts.Token
+            ).ExecuteAsync();
         });
     }
 }
 
-public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
+public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -92,7 +95,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
         public bool ShowSessionId { get; init; }
     }
 
-    public override int Execute(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
@@ -106,7 +109,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
 
         Logger.Start(ServiceType.YouTube);
 
-        return ExecuteWithErrorHandling(() =>
+        return await ExecuteWithErrorHandlingAsync(async () =>
         {
             if (settings.Reset)
             {
@@ -118,7 +121,7 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
             if (settings.ShowSessionId)
                 Console.Info("Session ID: {0}", Logger.CurrentSessionId);
 
-            new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
+            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync();
         });
     }
 
@@ -177,6 +180,76 @@ public sealed class SyncYouTubeCommand : Command<SyncYouTubeCommand.Settings>
             string summary =
                 $"AggregateException ({aex.InnerExceptions.Count} errors): {firstError.GetType().Name}: {firstError.Message}";
             Logger.End(success: false, summary: summary, exception: aex);
+            return 1;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.Warning("Operation cancelled by user");
+            Logger.Interrupted("Cancelled by Ctrl+C");
+            return 130;
+        }
+        catch (Exception ex)
+        {
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+            if (ex.InnerException != null)
+                Console.Error(
+                    "Inner: {0}: {1}",
+                    ex.InnerException.GetType().Name,
+                    ex.InnerException.Message
+                );
+            if (ex.StackTrace != null)
+            {
+                string firstStackLine = ex.StackTrace.Split('\n')[0].Trim();
+                Console.Dim($"Stack: {firstStackLine}");
+            }
+
+            string summary =
+                ex.InnerException != null
+                    ? $"{ex.GetType().Name}: {ex.Message} (Inner: {ex.InnerException.Message})"
+                    : $"{ex.GetType().Name}: {ex.Message}";
+
+            Logger.End(success: false, summary: summary, exception: ex);
+            return 1;
+        }
+    }
+
+    internal static async Task<int> ExecuteWithErrorHandlingAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+            return 0;
+        }
+        catch (DailyQuotaExceededException ex)
+        {
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+            Console.Error(
+                "Try again tomorrow or request quota increase from Google Cloud Console."
+            );
+            if (ex.InnerException != null)
+                Console.Error("Inner: {0}", ex.InnerException.Message);
+            Logger.End(
+                success: false,
+                summary: $"DailyQuotaExceededException: {ex.Message}",
+                exception: ex
+            );
+            return 1;
+        }
+        catch (RetryExhaustedException ex)
+        {
+            Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+            Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
+            if (ex.InnerException != null)
+                Console.Error(
+                    "Inner: {0}: {1}",
+                    ex.InnerException.GetType().Name,
+                    ex.InnerException.Message
+                );
+            Logger.End(
+                success: false,
+                summary: $"RetryExhaustedException: {ex.Message}",
+                exception: ex
+            );
             return 1;
         }
         catch (OperationCanceledException)
@@ -275,7 +348,10 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
 
         return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
         {
-            new ScrobbleSyncOrchestrator(Program.Cts.Token, sinceDate).Execute();
+            new ScrobbleSyncOrchestrator(sinceDate, Program.Cts.Token)
+                .ExecuteAsync()
+                .GetAwaiter()
+                .GetResult();
         });
     }
 }

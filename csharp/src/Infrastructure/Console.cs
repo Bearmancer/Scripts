@@ -2,16 +2,8 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Console
 {
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Configuration
-    // ═══════════════════════════════════════════════════════════════════════════
-
     public static LogLevel Level { get; set; } = LogLevel.Info;
     public static bool Suppress { get; set; }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Core Logging Methods (level-filtered, timestamped)
-    // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Debug(string message, params object?[] args) =>
         Write(LogLevel.Debug, "grey", message, args);
@@ -43,10 +35,6 @@ public static class Console
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Status Indicators (icons, no level filtering)
-    // ═══════════════════════════════════════════════════════════════════════════
-
     public static void Starting(string operation) =>
         AnsiConsole.MarkupLine($"[blue]→[/] {Markup.Escape(operation)}");
 
@@ -55,10 +43,6 @@ public static class Console
 
     public static void Failed(string operation) =>
         AnsiConsole.MarkupLine($"[red]✗[/] {Markup.Escape(operation)}");
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Rich Text Output
-    // ═══════════════════════════════════════════════════════════════════════════
 
     public static void KeyValue(string key, string value) =>
         AnsiConsole.MarkupLine($"[cyan]{Markup.Escape(key)}:[/] {Markup.Escape(value)}");
@@ -97,10 +81,6 @@ public static class Console
 
     public static void MarkupLine(string markup) => AnsiConsole.MarkupLine(markup);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Links
-    // ═══════════════════════════════════════════════════════════════════════════
-
     public static void Link(string url, string text)
     {
         if (Suppress || Level > LogLevel.Info)
@@ -127,10 +107,6 @@ public static class Console
 
         AnsiConsole.MarkupLine($"[dim]Log:[/] [link=file:///{path}]{path}[/]");
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Tables
-    // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Table(string title, Dictionary<string, string> data)
     {
@@ -185,15 +161,7 @@ public static class Console
     internal static Panel CreatePanel(string content, string header) =>
         new Panel(Markup.Escape(content)).Header(Markup.Escape(header)).Expand();
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Progress Indicators
-    // ═══════════════════════════════════════════════════════════════════════════
-
     internal static SpectreProgress CreateProgress() => AnsiConsole.Progress();
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Help Formatting (CliFx / .NET CLI style)
-    // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Section(string title) =>
         AnsiConsole.MarkupLine($"[bold white]{Markup.Escape(title)}[/]");
@@ -264,10 +232,6 @@ public static class Console
 
         AnsiConsole.MarkupLine($"[yellow]{sig}[/]{new string(' ', padding)}{desc}");
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Private Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
 
     private static readonly Dictionary<LogLevel, string> LevelCodes = new()
     {

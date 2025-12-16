@@ -5,6 +5,7 @@ global using static System.Environment;
 global using static System.IO.Directory;
 global using static System.IO.File;
 global using static System.IO.Path;
+global using System.Net.Sockets;
 global using static System.String;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;

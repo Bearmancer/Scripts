@@ -209,3 +209,11 @@
 {"Timestamp":"2025/12/13 15:41:56","Level":"Info","Event":"SessionEnd","SessionId":"71ba7638","Data":{"Status":"Completed","EndedAt":"2025/12/13 15:41:56","Summary":"No changes detected"}}
 {"Timestamp":"2025/12/13 17:16:04","Level":"Info","Event":"SessionStart","SessionId":"76a1ec97","Data":{"Service":"YouTube","ProcessId":3956}}
 {"Timestamp":"2025/12/13 17:16:25","Level":"Info","Event":"SessionEnd","SessionId":"76a1ec97","Data":{"Status":"Completed","EndedAt":"2025/12/13 17:16:25","Summary":"No changes detected"}}
+{"Timestamp":"2025/12/15 09:39:37","Level":"Info","Event":"SessionStart","SessionId":"dcf4b3a6","Data":{"Service":"YouTube","ProcessId":99160}}
+{"Timestamp":"2025/12/15 09:40:07","Level":"Info","Event":"PlaylistDeleted","SessionId":"dcf4b3a6","Data":{"Title":"Geopolitics","Videos":31}}
+{"Timestamp":"2025/12/15 09:40:34","Level":"Info","Event":"SessionEnd","SessionId":"dcf4b3a6","Data":{"Status":"Completed","EndedAt":"2025/12/15 09:40:34","Summary":"Updated 1 playlists"}}
+{"Timestamp":"2025/12/15 10:00:03","Level":"Info","Event":"SessionStart","SessionId":"40702763","Data":{"Service":"YouTube","ProcessId":92516}}
+{"Timestamp":"2025/12/15 10:00:24","Level":"Info","Event":"SessionEnd","SessionId":"40702763","Data":{"Status":"Completed","EndedAt":"2025/12/15 10:00:24","Summary":"No changes detected"}}
+{"Timestamp":"2025/12/16 10:00:02","Level":"Info","Event":"SessionStart","SessionId":"f624931b","Data":{"Service":"YouTube","ProcessId":6060}}
+{"Timestamp":"2025/12/16 10:00:40","Level":"Info","Event":"PlaylistUpdated","SessionId":"f624931b","Data":{"Title":"Simon Rattle","Added":1,"Removed":0,"AddedVideos":["Beethoven Symphony No. 1, Symphony No. 3 - CBSO - Simon Rattle (Alte Oper Frankfurt, 1995)"]}}
+{"Timestamp":"2025/12/16 10:00:44","Level":"Info","Event":"SessionEnd","SessionId":"f624931b","Data":{"Status":"Completed","EndedAt":"2025/12/16 10:00:44","Summary":"Updated 1 playlists"}}
