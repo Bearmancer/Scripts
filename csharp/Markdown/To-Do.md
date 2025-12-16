@@ -115,8 +115,10 @@ All documentation tasks must be completed before proceeding with code refactorin
 - [x] Extract common pagination logic into `FetchAllPlaylistItems`
 - [x] Deduplicate playlist fetching methods
 
-### 3.3 Remaining Optimizations
-- [ ] Async migration for `GoogleCredentialService` (deferred - low priority)
+### 3.3 Async Migration ✅
+- [x] `GoogleCredentialService.GetCredentialAsync` / `GetAccessTokenAsync`
+- [x] `GoogleSheetsService.ExportEachSheetAsCSVAsync` (new async version)
+- [x] `SyncAllCommand` → `AsyncCommand` with proper `await`
 - [x] Centralize verbose handling (done via `--debug` flag)
 - [x] Batch `SaveState()` - already batched in `onBatchComplete` callback
 
@@ -124,16 +126,20 @@ All documentation tasks must be completed before proceeding with code refactorin
 
 ## Phase 4: Testing
 
-### 4.1 Existing Tests (20 passing)
-- [x] `LastFmServiceTests`
-- [x] `MusicSearchTests`
-- [x] `ResilienceTests`
-- [x] `YouTubeChangeDetectorTests`
+### 4.1 Tests (29 passing) ✅
+- [x] `LastFmServiceTests` (4 tests)
+- [x] `MusicSearchTests` (5 tests)
+- [x] `ResilienceTests` (4 tests)
+- [x] `ResilienceAsyncTests` (5 tests - NEW)
+- [x] `YouTubeChangeDetectorTests` (7 tests)
+- [x] `MusicSearchCommandTests` (4 tests)
 
 ### 4.2 Pending Tests
-- [ ] Integration tests for sync commands
-- [ ] Manual verification of search commands
-- [ ] Verify Last.fm scrobble count
+- [x] Unit tests for SearchResult model with new fields
+- [x] Async method tests (`ExecuteAsync`, throttle, cancellation)
+- [ ] Integration tests for sync commands (requires API credentials - USER)
+- [ ] Manual verification of search commands (USER)
+- [ ] Verify Last.fm scrobble count (USER)
 
 ---
 
@@ -143,16 +149,17 @@ All documentation tasks must be completed before proceeding with code refactorin
 - [x] `--mode pop|classical` (default: pop) - changes display columns
 - [x] `--source discogs|musicbrainz|both` (default: discogs)
 - [x] `--limit <N>` (default: 10)
-- [ ] `--fields <list>` (comma-separated) - future enhancement
+- [x] `--fields <list>` (comma-separated) - dynamic field selection
 - [x] `--output table|json` (default: table)
 
-### 5.2 Search Behavior (Partially Implemented)
+### 5.2 Search Behavior ✅
 - [x] Pop mode: Artist, Title, Year, Type, ID columns
-- [x] Classical mode: Composer, Work, Performers, Year, ID columns
+- [x] Classical mode: Composer, Work, Performers, Year, ID columns  
 - [x] Basic composer/work extraction from title patterns
-- [x] Display MusicBrainz score in debug mode (added to SearchResult model)
-- [ ] Disallow track searches; focus on collections (future enhancement)
-- [ ] Implement client-side relevance scoring for Discogs (future enhancement)
+- [x] Display MusicBrainz score in debug mode
+- [x] Client-side relevance scoring for Discogs (fuzzy matching)
+- [x] Results sorted by score descending
+- [x] Track filtering - excludes Recording/track types, focuses on collections
 
 ---
 
@@ -162,10 +169,22 @@ All documentation tasks must be completed before proceeding with code refactorin
 - Named arguments for all Resilience calls
 - No `[Obsolete]` flags -- remove methods directly
 - Fail-fast on non-transient errors
-- Sequential external API calls only
+- Sequential external API calls only (enforced by `SemaphoreSlim`)
 - Color-coded, verbose logging
 - **No default values ever** (empty string if missing, not placeholder)
+- **Async suffix** only when both sync/async versions exist
+- **Verbose flag**: `-v|--verbose` boolean (not a level value)
 
 ### Deferred (Low Priority)
-- ETag caching for YouTube
-- Parallel API operations
+- ETag conditional requests for YouTube (ETag is cached but not sent)
+- Parallel API operations (currently prevented by design)
+
+---
+
+## Documentation Created
+
+- `AsyncSyncDesign.md` - Async/sync coexistence patterns
+- `TerminalCompatibility.md` - Terminal support matrix
+- `LookupVsSearch.md` - API command distinctions
+- `JSONScriptingIntegration.md` - JSON output for scripting
+- `DotNetTabCompletion.md` - Tab completion research

@@ -1,6 +1,6 @@
 namespace CSharpScripts.CLI.Commands;
 
-public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
+public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -13,7 +13,7 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         public bool Reset { get; init; }
     }
 
-    public override int Execute(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
@@ -34,11 +34,11 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         }
 
         Console.Rule("YouTube Sync");
-        int ytResult = RunYouTubeSync();
+        int ytResult = await RunYouTubeSyncAsync();
 
         Console.NewLine();
         Console.Rule("Last.fm Sync");
-        int lfResult = RunLastFmSyncAsync().GetAwaiter().GetResult();
+        int lfResult = await RunLastFmSyncAsync();
 
         Console.NewLine();
         if (ytResult == 0 && lfResult == 0)
@@ -53,12 +53,13 @@ public sealed class SyncAllCommand : Command<SyncAllCommand.Settings>
         return ytResult != 0 ? ytResult : lfResult;
     }
 
-    private static int RunYouTubeSync()
+    private static async Task<int> RunYouTubeSyncAsync()
     {
         Logger.Start(ServiceType.YouTube);
-        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
         {
-            new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute();
+            // YouTube orchestrator is still synchronous, wrap in Task.Run for now
+            await Task.Run(() => new YouTubePlaylistOrchestrator(Program.Cts.Token).Execute());
         });
     }
 

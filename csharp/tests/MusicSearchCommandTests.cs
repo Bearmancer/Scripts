@@ -24,8 +24,8 @@ public class MusicSearchCommandTests
         var fieldsProperty = settingsType.GetProperty("Fields");
         fieldsProperty.ShouldNotBeNull();
 
-        var debugProperty = settingsType.GetProperty("Debug");
-        debugProperty.ShouldNotBeNull();
+        var verboseProperty = settingsType.GetProperty("Verbose");
+        verboseProperty.ShouldNotBeNull();
     }
 
     [TestMethod]

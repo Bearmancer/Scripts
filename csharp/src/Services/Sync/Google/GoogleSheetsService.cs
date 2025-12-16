@@ -1083,6 +1083,88 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         return sheets.Count;
     }
 
+    /// <summary>
+    /// Async version of ExportEachSheetAsCSV with proper async HTTP calls.
+    /// </summary>
+    internal async Task<int> ExportEachSheetAsCSVAsync(
+        string spreadsheetId,
+        string outputDirectory,
+        CancellationToken ct = default
+    )
+    {
+        CreateDirectory(outputDirectory);
+
+        Console.Info("Fetching spreadsheet metadata...");
+
+        var spreadsheet = await Resilience.ExecuteAsync(
+            operation: "Sheets.Get",
+            action: async () => await service.Spreadsheets.Get(spreadsheetId).ExecuteAsync(ct),
+            ct: ct
+        );
+
+        var sheets = spreadsheet.Sheets?.ToList() ?? [];
+        if (sheets.Count == 0)
+        {
+            Console.Warning("No sheets found");
+            return 0;
+        }
+
+        var existingFiles = GetFiles(outputDirectory, "*.csv")
+            .Select(f => GetFileNameWithoutExtension(f))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var toExport = sheets
+            .Where(s => !existingFiles.Contains(SanitizeForFileName(s.Properties?.Title ?? "")))
+            .ToList();
+
+        if (toExport.Count == 0)
+        {
+            Console.Info("All {0} sheets already exported", sheets.Count);
+            return sheets.Count;
+        }
+
+        var totalSheets = sheets.Count;
+        var alreadyExported = totalSheets - toExport.Count;
+        Console.Info("Exporting {0} sheets ({1} already done)...", toExport.Count, alreadyExported);
+
+        using var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                await GoogleCredentialService.GetAccessTokenAsync(
+                    driveService.HttpClientInitializer as UserCredential,
+                    ct
+                )
+            );
+
+        foreach (var sheet in toExport)
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            var sheetTitle = sheet.Properties!.Title!;
+            var sheetId = sheet.Properties.SheetId;
+            var safeFileName = SanitizeForFileName(sheetTitle);
+            var outputPath = Combine(outputDirectory, $"{safeFileName}.csv");
+
+            Console.Dim($"Exporting: {sheetTitle}");
+
+            var exportUrl =
+                $"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetId}";
+
+            var response = await Resilience.ExecuteAsync(
+                operation: "Sheets.ExportCSV",
+                action: async () => await httpClient.GetByteArrayAsync(exportUrl, ct),
+                ct: ct
+            );
+
+            await WriteAllBytesAsync(outputPath, response, ct);
+        }
+
+        Console.Success("Exported {0} sheets", toExport.Count);
+        return sheets.Count;
+    }
+
     internal List<(string Id, string Url)> FindDuplicateSpreadsheets(string title)
     {
         var query =

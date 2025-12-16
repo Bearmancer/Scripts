@@ -11,7 +11,14 @@ public static class GoogleCredentialService
         YouTubeServiceApi.Scope.YoutubeReadonly,
     ];
 
-    internal static UserCredential GetCredential(string clientId, string clientSecret)
+    /// <summary>
+    /// Gets or creates a Google API credential asynchronously.
+    /// </summary>
+    internal static async Task<UserCredential> GetCredentialAsync(
+        string clientId,
+        string clientSecret,
+        CancellationToken ct = default
+    )
     {
         if (cachedCredential != null)
             return cachedCredential;
@@ -30,14 +37,12 @@ public static class GoogleCredentialService
 
         try
         {
-            cachedCredential = GoogleWebAuthorizationBroker
-                .AuthorizeAsync(
-                    clientSecrets: new() { ClientId = clientId, ClientSecret = clientSecret },
-                    scopes: AllScopes,
-                    user: "simplercs_user",
-                    taskCancellationToken: CancellationToken.None
-                )
-                .Result;
+            cachedCredential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                clientSecrets: new() { ClientId = clientId, ClientSecret = clientSecret },
+                scopes: AllScopes,
+                user: "simplercs_user",
+                taskCancellationToken: ct
+            );
         }
         catch (AggregateException aex) when (aex.InnerException is not null)
         {
@@ -60,14 +65,33 @@ public static class GoogleCredentialService
         return cachedCredential;
     }
 
-    public static string GetAccessToken(UserCredential? credential)
+    /// <summary>
+    /// Synchronous wrapper for backward compatibility.
+    /// Prefer GetCredentialAsync for new code.
+    /// </summary>
+    internal static UserCredential GetCredential(string clientId, string clientSecret) =>
+        GetCredentialAsync(clientId, clientSecret, CancellationToken.None).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Gets access token, refreshing if stale.
+    /// </summary>
+    public static async Task<string> GetAccessTokenAsync(
+        UserCredential? credential,
+        CancellationToken ct = default
+    )
     {
         if (credential == null)
             throw new InvalidOperationException("No credential available for access token");
 
         if (credential.Token.IsStale)
-            credential.RefreshTokenAsync(CancellationToken.None).Wait();
+            await credential.RefreshTokenAsync(ct);
 
         return credential.Token.AccessToken;
     }
+
+    /// <summary>
+    /// Synchronous wrapper for backward compatibility.
+    /// </summary>
+    public static string GetAccessToken(UserCredential? credential) =>
+        GetAccessTokenAsync(credential, CancellationToken.None).GetAwaiter().GetResult();
 }

@@ -38,10 +38,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         )]
         public string? Fields { get; init; }
 
-        [CommandOption("--debug")]
+        [CommandOption("-v|--verbose")]
         [Description("Verbose output: filter stats, extra columns, save JSON dumps")]
         [DefaultValue(false)]
-        public bool Debug { get; init; }
+        public bool Verbose { get; init; }
     }
 
     public override async Task<int> ExecuteAsync(
@@ -111,7 +111,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             results = results.Where(r => MatchesType(r, normalizedFilter)).ToList();
             filteredCount = beforeCount - results.Count;
 
-            if (settings.Debug)
+            if (settings.Verbose)
             {
                 Console.Dim(
                     $"[DEBUG] Filter '{settings.Type}' -> normalized '{normalizedFilter}', removed {filteredCount}"
@@ -119,8 +119,21 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             }
         }
 
+        // Filter out individual tracks - focus on collections (albums, EPs, etc.)
+        int trackCount = results.Count(r => IsTrackResult(r));
+        if (trackCount > 0)
+        {
+            results = results.Where(r => !IsTrackResult(r)).ToList();
+            filteredCount += trackCount;
+
+            if (settings.Verbose)
+                Console.Dim(
+                    $"[DEBUG] Excluded {trackCount} track-level results (focusing on collections)"
+                );
+        }
+
         // Save JSON dumps in debug mode
-        if (settings.Debug && results.Count > 0)
+        if (settings.Verbose && results.Count > 0)
         {
             SaveSearchDumps(settings.Query, results);
         }
@@ -198,8 +211,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             ? ["Composer", "Work", "Performers", "Year", "ID"]
             : ["Artist", "Title", "Year", "Type", "ID"];
 
-        // Add debug columns
-        if (settings.Debug)
+        // Add verbose columns
+        if (settings.Verbose)
             columns.AddRange([
                 "Source",
                 "Score",
@@ -338,6 +351,22 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Check if a result is a track-level entry (not a collection).
+    /// Filters based on MusicBrainz Recording type and Discogs track patterns.
+    /// </summary>
+    private static bool IsTrackResult(Models.SearchResult r)
+    {
+        if (IsNullOrEmpty(r.ReleaseType))
+            return false;
+
+        string type = r.ReleaseType.ToLowerInvariant();
+
+        // MusicBrainz: "Recording" represents individual tracks
+        // Discogs: Single tracks are rare in search results, but check for patterns
+        return type is "recording" or "track" or "single" && r.Format?.Contains("Single") != true;
     }
 
     /// <summary>
