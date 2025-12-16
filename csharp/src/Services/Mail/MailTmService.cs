@@ -74,7 +74,8 @@ public sealed class MailTmService : IDisposableMailService
         string password = GenerateSecurePassword();
 
         return await Resilience.ExecuteAsync(
-            async () =>
+            operation: "MailTm.CreateAccount",
+            action: async () =>
             {
                 RestRequest request = new("/accounts", Method.Post);
                 request.AddJsonBody(new { address, password });
@@ -97,9 +98,7 @@ public sealed class MailTmService : IDisposableMailService
                 Console.KeyValue("Account ID", response.Data.Id);
 
                 return response.Data;
-            },
-            "MailTm",
-            Throttle
+            }
         );
     }
 
@@ -153,7 +152,8 @@ public sealed class MailTmService : IDisposableMailService
         Console.Starting("Fetching inbox");
 
         return await Resilience.ExecuteAsync(
-            async () =>
+            operation: "MailTm.GetInbox",
+            action: async () =>
             {
                 RestRequest request = new("/messages", Method.Get);
                 request.AddHeader("Authorization", $"Bearer {AuthToken}");
@@ -179,9 +179,7 @@ public sealed class MailTmService : IDisposableMailService
 
                 Console.Complete($"Found {messages.Count} messages");
                 return messages;
-            },
-            "MailTm",
-            Throttle
+            }
         );
     }
 
@@ -193,7 +191,8 @@ public sealed class MailTmService : IDisposableMailService
         Console.Starting($"Reading message: {messageId}");
 
         return await Resilience.ExecuteAsync(
-            async () =>
+            operation: "MailTm.ReadMessage",
+            action: async () =>
             {
                 RestRequest request = new($"/messages/{messageId}", Method.Get);
                 request.AddHeader("Authorization", $"Bearer {AuthToken}");
@@ -243,9 +242,7 @@ public sealed class MailTmService : IDisposableMailService
 
                 Console.Complete("Message loaded");
                 return message;
-            },
-            "MailTm",
-            Throttle
+            }
         );
     }
 
@@ -257,7 +254,8 @@ public sealed class MailTmService : IDisposableMailService
         Console.Starting("Deleting account");
 
         return await Resilience.ExecuteAsync(
-            async () =>
+            operation: "MailTm.DeleteAccount",
+            action: async () =>
             {
                 RestRequest request = new($"/accounts/{CurrentAccountId}", Method.Delete);
                 request.AddHeader("Authorization", $"Bearer {AuthToken}");
@@ -273,9 +271,7 @@ public sealed class MailTmService : IDisposableMailService
 
                 Console.Complete("Account deleted");
                 return true;
-            },
-            "MailTm",
-            Throttle
+            }
         );
     }
 

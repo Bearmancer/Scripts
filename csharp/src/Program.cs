@@ -8,6 +8,13 @@ public static class Program
 
     public static int Main(string[] args)
     {
+        // Global verbose flag - affects all Console.Debug() calls project-wide
+        if (args.Contains("-v") || args.Contains("--verbose"))
+        {
+            Console.Level = LogLevel.Debug;
+            Logger.FileLevel = LogLevel.Debug;
+        }
+
         System.Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
@@ -61,6 +68,9 @@ public static class Program
                     music
                         .AddCommand<MusicLookupCommand>("lookup")
                         .WithDescription("Look up a release");
+                    music
+                        .AddCommand<MusicSchemaCommand>("schema")
+                        .WithDescription("List all metadata fields from MusicBrainz and Discogs");
                 }
             );
 
@@ -71,6 +81,21 @@ public static class Program
                     mail.SetDescription("Temporary email commands");
                     mail.AddCommand<MailCreateCommand>("create")
                         .WithDescription("Create a temporary email");
+                }
+            );
+
+            config.AddBranch(
+                "completion",
+                completion =>
+                {
+                    completion.SetDescription("Tab completion support");
+                    completion
+                        .AddCommand<CompletionInstallCommand>("install")
+                        .WithDescription("Install PowerShell tab completion to your profile");
+                    completion
+                        .AddCommand<CompletionSuggestCommand>("suggest")
+                        .WithDescription("Get completion suggestions (used internally)")
+                        .IsHidden();
                 }
             );
         });

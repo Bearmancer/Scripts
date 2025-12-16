@@ -67,7 +67,7 @@ public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
                 foreach (MailTmMessage msg in messages)
                 {
                     Console.Rule(msg.Subject);
-                    Console.KeyValue("From", msg.From?.Address ?? "Unknown");
+                    Console.KeyValue("From", msg.From?.Address ?? "");
                     Console.KeyValue("Date", msg.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss"));
                     Console.KeyValue("ID", msg.Id);
 

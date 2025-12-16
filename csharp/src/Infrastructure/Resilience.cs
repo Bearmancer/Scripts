@@ -2,25 +2,143 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Resilience
 {
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Configuration
-    // ═══════════════════════════════════════════════════════════════════════════
+    public const int MAX_RETRIES = 10;
+    public static readonly TimeSpan THROTTLE_DELAY = TimeSpan.FromMilliseconds(3000);
+    public static readonly TimeSpan BASE_RETRY_DELAY = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan MAX_RETRY_DELAY = TimeSpan.FromMinutes(5);
 
-    public const int MaxRetries = 10;
-    public static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(5);
-    public static readonly TimeSpan LongDelay = TimeSpan.FromSeconds(90);
-    public static readonly TimeSpan DefaultThrottle = TimeSpan.FromMilliseconds(3000);
-    public static readonly TimeSpan MaxBackoffDelay = TimeSpan.FromMinutes(5);
+    private static DateTime lastCallTime = DateTime.MinValue;
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
-    private static readonly Random Jitter = new();
-    private static readonly SemaphoreSlim LastFmSemaphore = new(1, 1);
-    private static readonly SemaphoreSlim SheetsSemaphore = new(1, 1);
-    private static readonly SemaphoreSlim YouTubeSemaphore = new(1, 1);
-    private static readonly SemaphoreSlim Lock = new(1, 1);
+    public static async Task<T> ExecuteAsync<T>(
+        string operation,
+        Func<Task<T>> action,
+        CancellationToken ct = default
+    )
+    {
+        await Semaphore.WaitAsync(ct);
+        try
+        {
+            await ApplyThrottleAsync();
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Error Detection
-    // ═══════════════════════════════════════════════════════════════════════════
+            ResiliencePipeline<T> pipeline = CreateAsyncPipeline<T>(operation);
+            return await pipeline.ExecuteAsync(async _ => await action(), ct);
+        }
+        finally
+        {
+            lastCallTime = DateTime.Now;
+            Semaphore.Release();
+        }
+    }
+
+    public static async Task ExecuteAsync(
+        string operation,
+        Func<Task> action,
+        CancellationToken ct = default
+    )
+    {
+        await ExecuteAsync(
+            operation,
+            async () =>
+            {
+                await action();
+                return true;
+            },
+            ct
+        );
+    }
+
+    public static T Execute<T>(string operation, Func<T> action, CancellationToken ct = default)
+    {
+        Semaphore.Wait(ct);
+        try
+        {
+            ApplyThrottle();
+
+            ResiliencePipeline<T> pipeline = CreateSyncPipeline<T>(operation);
+            return pipeline.Execute(_ => action(), ct);
+        }
+        finally
+        {
+            lastCallTime = DateTime.Now;
+            Semaphore.Release();
+        }
+    }
+
+    public static void Execute(string operation, Action action, CancellationToken ct = default) =>
+        Execute(
+            operation,
+            () =>
+            {
+                action();
+                return true;
+            },
+            ct
+        );
+
+    private static ResiliencePipeline<T> CreateAsyncPipeline<T>(string operation) =>
+        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
+
+    private static ResiliencePipeline<T> CreateSyncPipeline<T>(string operation) =>
+        new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
+
+    private static RetryStrategyOptions<T> CreateRetryOptions<T>(string operation) =>
+        new()
+        {
+            MaxRetryAttempts = MAX_RETRIES,
+            Delay = BASE_RETRY_DELAY,
+            MaxDelay = MAX_RETRY_DELAY,
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
+            ShouldHandle = new PredicateBuilder<T>()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutException>()
+                .Handle<IOException>()
+                .Handle<SocketException>()
+                .HandleInner<HttpRequestException>()
+                .HandleInner<TimeoutException>()
+                .HandleInner<IOException>()
+                .HandleInner<SocketException>(),
+            OnRetry = args =>
+            {
+                string message = args.Outcome.Exception?.Message ?? "Unknown error";
+
+                if (IsFatalQuotaError(message))
+                {
+                    string serviceName = operation.Split('.')[0];
+                    throw new DailyQuotaExceededException(serviceName, message);
+                }
+
+                Console.Warning(
+                    "{0} failed (attempt {1}/{2}): {3}",
+                    operation,
+                    args.AttemptNumber + 1,
+                    MAX_RETRIES,
+                    message
+                );
+                Console.Info(
+                    "Waiting {0:F1}s (resume at {1:HH:mm:ss})",
+                    args.RetryDelay.TotalSeconds,
+                    DateTime.Now.Add(args.RetryDelay)
+                );
+
+                return ValueTask.CompletedTask;
+            },
+        };
+
+    private static async Task ApplyThrottleAsync()
+    {
+        TimeSpan elapsed = DateTime.Now - lastCallTime;
+        if (elapsed < THROTTLE_DELAY)
+            await Task.Delay(THROTTLE_DELAY - elapsed);
+    }
+
+    private static void ApplyThrottle()
+    {
+        TimeSpan elapsed = DateTime.Now - lastCallTime;
+        if (elapsed < THROTTLE_DELAY)
+            Thread.Sleep(THROTTLE_DELAY - elapsed);
+    }
 
     public static bool IsFatalQuotaError(string message) =>
         message.Contains("daily limit", StringComparison.OrdinalIgnoreCase)
@@ -29,236 +147,6 @@ public static class Resilience
             message.Contains("quota", StringComparison.OrdinalIgnoreCase)
             && message.Contains("day", StringComparison.OrdinalIgnoreCase)
         );
-
-    public static bool IsRetryableError(string message) =>
-        !IsFatalQuotaError(message)
-        && (
-            message.Contains("quota", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("rate limit", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("too many requests", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("backend service failed", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("429", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("503", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("502", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("500", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("timeout", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("timed out", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("connection reset", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("connection closed", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("socket", StringComparison.OrdinalIgnoreCase)
-            || message.Contains("network", StringComparison.OrdinalIgnoreCase)
-        );
-
-    /// <summary>
-    /// Transient exception types that should always be retried regardless of message content.
-    /// These indicate server-side issues (API returning HTML instead of XML, network issues, etc.)
-    /// </summary>
-    private static bool IsTransientExceptionType(Exception ex)
-    {
-        string typeName = ex.GetType().Name;
-        return typeName.Contains("Xml", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("Http", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("Socket", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("Timeout", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("IOException", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("WebException", StringComparison.OrdinalIgnoreCase)
-            || typeName.Contains("TaskCanceled", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static TimeSpan CalculateBackoffWithJitter(TimeSpan baseDelay, int attempt)
-    {
-        double exponential = Math.Pow(2, attempt - 1);
-        double baseSeconds = baseDelay.TotalSeconds * exponential;
-        double jitterSeconds = Jitter.NextDouble() * baseSeconds * 0.3;
-        double totalSeconds = Math.Min(baseSeconds + jitterSeconds, MaxBackoffDelay.TotalSeconds);
-        return TimeSpan.FromSeconds(totalSeconds);
-    }
-
-    private static SemaphoreSlim GetServiceSemaphore(string operationName)
-    {
-        if (operationName.StartsWith("LastFm", StringComparison.OrdinalIgnoreCase))
-            return LastFmSemaphore;
-        if (operationName.StartsWith("Sheets", StringComparison.OrdinalIgnoreCase))
-            return SheetsSemaphore;
-        if (operationName.StartsWith("YouTube", StringComparison.OrdinalIgnoreCase))
-            return YouTubeSemaphore;
-        return Lock;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Synchronous Execution with Retry
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static T Execute<T>(
-        string operationName,
-        Func<T> action,
-        Action? postAction = null,
-        CancellationToken ct = default,
-        TimeSpan? baseDelay = null
-    )
-    {
-        TimeSpan delay = baseDelay ?? LongDelay;
-        int attemptsMade = 0;
-        TimeSpan totalWaitTime = TimeSpan.Zero;
-        string serviceName = operationName.Split('.')[0];
-        SemaphoreSlim semaphore = GetServiceSemaphore(operationName);
-
-        Exception? lastException = null;
-        T? result = default;
-        bool succeeded = false;
-
-        semaphore.Wait(ct);
-        try
-        {
-            for (int attempt = 1; attempt <= MaxRetries; attempt++)
-            {
-                if (ct.IsCancellationRequested)
-                    break;
-
-                try
-                {
-                    result = action();
-                    succeeded = true;
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                    attemptsMade = attempt;
-
-                    if (IsFatalQuotaError(ex.Message))
-                        throw new DailyQuotaExceededException(serviceName, ex.Message);
-
-                    bool isTransient = IsTransientExceptionType(ex) || IsRetryableError(ex.Message);
-                    if (!isTransient)
-                        throw;
-
-                    if (attempt >= MaxRetries)
-                        break;
-
-                    TimeSpan waitTime = CalculateBackoffWithJitter(delay, attempt);
-                    totalWaitTime += waitTime;
-
-                    Console.Warning(
-                        "{0} failed (attempt {1}/{2}): {3}",
-                        operationName,
-                        attempt,
-                        MaxRetries,
-                        ex.Message
-                    );
-                    Console.Info(
-                        "Waiting {0} (resume at {1:HH:mm:ss})",
-                        waitTime.ToString(@"hh\:mm\:ss"),
-                        DateTime.Now.Add(waitTime)
-                    );
-
-                    for (int remaining = (int)waitTime.TotalSeconds; remaining > 0; remaining--)
-                    {
-                        if (ct.IsCancellationRequested)
-                            break;
-                        Thread.Sleep(1000);
-                    }
-                }
-            }
-
-            if (!succeeded && lastException is not null)
-            {
-                if (IsFatalQuotaError(lastException.Message))
-                    throw new DailyQuotaExceededException(serviceName, lastException.Message);
-
-                if (attemptsMade >= MaxRetries)
-                    throw new RetryExhaustedException(
-                        operationName,
-                        attemptsMade,
-                        totalWaitTime,
-                        lastException
-                    );
-
-                throw new InvalidOperationException(
-                    $"{operationName} failed: {lastException.Message}",
-                    lastException
-                );
-            }
-
-            postAction?.Invoke();
-            return result!;
-        }
-        finally
-        {
-            semaphore.Release();
-        }
-    }
-
-    public static void Execute(
-        string operationName,
-        Action action,
-        Action? postAction = null,
-        CancellationToken ct = default,
-        TimeSpan? baseDelay = null
-    ) =>
-        Execute(
-            operationName,
-            () =>
-            {
-                action();
-                return true;
-            },
-            postAction,
-            ct,
-            baseDelay
-        );
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Async Rate-Limited Execution
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    public static async Task<T> ExecuteAsync<T>(
-        Func<Task<T>> action,
-        string source,
-        TimeSpan? throttle = null,
-        int maxRetries = MaxRetries
-    )
-    {
-        await Lock.WaitAsync();
-        try
-        {
-            if (throttle.HasValue && throttle.Value > TimeSpan.Zero)
-                await Task.Delay(throttle.Value);
-
-            ResiliencePipeline pipeline = new ResiliencePipelineBuilder()
-                .AddRetry(
-                    new RetryStrategyOptions
-                    {
-                        MaxRetryAttempts = maxRetries,
-                        Delay = BaseDelay,
-                        BackoffType = DelayBackoffType.Exponential,
-                        ShouldHandle = new PredicateBuilder().Handle<Exception>(),
-                        OnRetry = args =>
-                        {
-                            Console.Warning(
-                                "[{0}] Retry {1}/{2} in {3:F1}s: {4}",
-                                source,
-                                args.AttemptNumber,
-                                maxRetries,
-                                args.RetryDelay.TotalSeconds,
-                                args.Outcome.Exception?.Message
-                            );
-                            return ValueTask.CompletedTask;
-                        },
-                    }
-                )
-                .Build();
-
-            return await pipeline.ExecuteAsync(async _ => await action(), CancellationToken.None);
-        }
-        finally
-        {
-            Lock.Release();
-        }
-    }
-
-    public static void Delay(ServiceType service) =>
-        Thread.Sleep((int)DefaultThrottle.TotalMilliseconds);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

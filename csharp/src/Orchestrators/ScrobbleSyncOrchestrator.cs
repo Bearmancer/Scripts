@@ -1,6 +1,6 @@
 namespace CSharpScripts.Orchestrators;
 
-public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromDate = null)
+public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken ct)
 {
     private readonly LastFmService lastFmService = new(
         apiKey: Config.LastFmApiKey,
@@ -14,11 +14,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
     private FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Main Entry Point
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    internal void Execute()
+    internal async Task ExecuteAsync()
     {
         Console.Info("Starting Last.fm sync...");
         var spreadsheetId = GetOrCreateSpreadsheet();
@@ -30,7 +26,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
             state = new() { SpreadsheetId = spreadsheetId };
             SaveState();
             LastFmService.DeleteScrobblesCache();
-            FetchScrobbles(forceFromDate.Value.AddSeconds(-1));
+            await FetchScrobblesAsync(forceFromDate.Value.AddSeconds(-1));
         }
         else if (!state.FetchComplete && state.LastPage > 0)
         {
@@ -40,7 +36,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
                 state.TotalFetched
             );
 
-            FetchScrobbles(fetchAfter: null);
+            await FetchScrobblesAsync(fetchAfter: null);
         }
         else
         {
@@ -49,8 +45,9 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
 
             if (cachedScrobbles.Count > 0)
             {
-                DateTime? oldestCached = cachedScrobbles.Min(s => s.PlayedAt);
-                DateTime? newestCached = cachedScrobbles.Max(s => s.PlayedAt);
+                // Use first/last since scrobbles are sorted (newest first)
+                DateTime? newestCached = cachedScrobbles[0].PlayedAt;
+                DateTime? oldestCached = cachedScrobbles[^1].PlayedAt;
 
                 Console.Debug("Cache: {0} scrobbles", cachedScrobbles.Count);
 
@@ -77,7 +74,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
                 }
 
                 // Fetch only new scrobbles since latest cached
-                FetchScrobbles(newestCached);
+                await FetchScrobblesAsync(newestCached);
             }
             else
             {
@@ -89,12 +86,12 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
                         "Latest in sheet: {0}",
                         latestInSheet.Value.ToString("yyyy/MM/dd HH:mm:ss")
                     );
-                    FetchScrobbles(latestInSheet);
+                    await FetchScrobblesAsync(latestInSheet);
                 }
                 else
                 {
                     Console.Info("No existing data. Full sync...");
-                    FetchScrobbles(null);
+                    await FetchScrobblesAsync(null);
                 }
             }
         }
@@ -131,19 +128,29 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         WriteToSheets(newScrobbles, spreadsheetId);
     }
 
-    private void FetchScrobbles(DateTime? fetchAfter)
+    private async Task FetchScrobblesAsync(DateTime? fetchAfter)
     {
         Console.Info("Fetching from Last.fm...");
+        var saveStateCounter = 0;
+        const int SAVE_STATE_INTERVAL = 10;
 
         try
         {
-            lastFmService.FetchScrobblesSince(
+            await lastFmService.FetchScrobblesSinceAsync(
                 fetchAfter: fetchAfter,
                 state: state,
                 onProgress: (page, total, elapsed, oldest, newest) =>
                 {
                     state.Update(page, total, oldest, newest);
-                    SaveState();
+                    saveStateCounter++;
+
+                    // Batch state saves every N pages
+                    if (saveStateCounter >= SAVE_STATE_INTERVAL)
+                    {
+                        SaveState();
+                        saveStateCounter = 0;
+                    }
+
                     Console.Progress(
                         "Page: {0} | Tracks: {1} | Elapsed: {2}",
                         page,
@@ -156,6 +163,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         }
         finally
         {
+            // Always save final state
             SaveState();
         }
 
@@ -176,7 +184,7 @@ public class ScrobbleSyncOrchestrator(CancellationToken ct, DateTime? forceFromD
         }
 
         scrobbles.Sort(
-            (a, b) => (b.PlayedAt ?? DateTime.MinValue).CompareTo(a.PlayedAt ?? DateTime.MinValue)
+            (a, b) => b.PlayedAt.GetValueOrDefault().CompareTo(a.PlayedAt.GetValueOrDefault())
         );
 
         sheetsService.EnsureSheetExists(spreadsheetId);

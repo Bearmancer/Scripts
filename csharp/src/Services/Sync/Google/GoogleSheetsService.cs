@@ -39,9 +39,14 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             return cached;
 
         var spreadsheet = Resilience.Execute(
-            operationName: "Sheets.Get",
-            action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.Get",
+            action: () =>
+            {
+                var request = service.Spreadsheets.Get(spreadsheetId);
+                request.Fields =
+                    "spreadsheetId,properties/title,sheets(properties(sheetId,title,index,gridProperties))";
+                return request.Execute();
+            }
         );
 
         spreadsheetCache[spreadsheetId] = spreadsheet;
@@ -61,7 +66,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
     internal string CreateSpreadsheet(string title = SpreadsheetTitle)
     {
         var response = Resilience.Execute(
-            operationName: "Sheets.Create",
+            operation: "Sheets.Create",
             action: () =>
             {
                 Spreadsheet spreadsheet = new()
@@ -69,8 +74,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     Properties = new SpreadsheetProperties { Title = title },
                 };
                 return service.Spreadsheets.Create(spreadsheet).Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
         return response?.SpreadsheetId
             ?? throw new InvalidOperationException("Failed to create spreadsheet");
@@ -80,9 +84,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
     {
         Console.Info("Deleting spreadsheet: {0}", spreadsheetId);
         Resilience.Execute(
-            operationName: "Drive.Delete",
-            action: () => driveService.Files.Delete(spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Drive.Delete",
+            action: () => driveService.Files.Delete(spreadsheetId).Execute()
         );
         Console.Success("Spreadsheet deleted");
     }
@@ -92,9 +95,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         try
         {
             Resilience.Execute(
-                operationName: "Sheets.Get",
-                action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-                postAction: () => Resilience.Delay(ServiceType.Sheets)
+                operation: "Sheets.Get",
+                action: () => service.Spreadsheets.Get(spreadsheetId).Execute()
             );
             return true;
         }
@@ -134,9 +136,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                 ],
             };
             Resilience.Execute(
-                operationName: "Sheets.BatchUpdate.AddSheet",
-                action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-                postAction: () => Resilience.Delay(ServiceType.Sheets)
+                operation: "Sheets.BatchUpdate.AddSheet",
+                action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
             );
             InvalidateCache(spreadsheetId);
         }
@@ -158,7 +159,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var sheets =
             spreadsheet
                 .Sheets?.Where(s => s.Properties?.Title != null && s.Properties?.SheetId != null)
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         if (sheets.Count <= 1)
             return;
@@ -199,9 +201,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
 
         BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.ReorderSheets",
-            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.ReorderSheets",
+            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
         Console.Success("Sheets reordered alphabetically");
@@ -224,9 +225,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.DeleteSheet",
-            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.DeleteSheet",
+            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
     }
@@ -237,7 +237,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         return spreadsheet
                 .Sheets?.Select(s => s.Properties?.Title ?? "")
                 .Where(t => !IsNullOrEmpty(t))
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
     }
 
     internal void ClearSubsheet(string spreadsheetId, string sheetName)
@@ -245,12 +246,11 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var escapedName = EscapeSheetName(sheetName);
         var range = $"{escapedName}!A2:Z";
         Resilience.Execute(
-            operationName: "Sheets.Values.Clear",
+            operation: "Sheets.Values.Clear",
             action: () =>
                 service
                     .Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, range)
-                    .Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+                    .Execute()
         );
     }
 
@@ -264,7 +264,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var range = $"{escapedName}!A2";
 
         Resilience.Execute(
-            operationName: "Sheets.Values.Update",
+            operation: "Sheets.Values.Update",
             action: () =>
             {
                 var updateRequest = service.Spreadsheets.Values.Update(body, spreadsheetId, range);
@@ -274,8 +274,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     .ValueInputOptionEnum
                     .USERENTERED;
                 return updateRequest.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
     }
 
@@ -291,17 +290,16 @@ public class GoogleSheetsService(string clientId, string clientSecret)
     )
     {
         ClearSubsheet(spreadsheetId, sheetName);
-        WriteRows(
-            spreadsheetId,
-            sheetName,
-            [
-                [.. headers],
-            ]
-        );
 
-        List<IList<object>> rows = [.. records.Select(rowMapper)];
-        if (rows.Count > 0)
-            AppendRows(spreadsheetId, sheetName, rows);
+        // Combine headers and data into single write operation
+        List<IList<object>> allRows =
+        [
+            [.. headers],
+            .. records.Select(rowMapper),
+        ];
+
+        if (allRows.Count > 0)
+            WriteRows(spreadsheetId, sheetName, allRows);
     }
 
     /// <summary>
@@ -344,9 +342,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.Rename",
-            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.Rename",
+            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
         Console.Debug("Renamed sheet '{0}' to '{1}'", oldName, newName);
@@ -377,9 +374,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.DeleteSheet1",
-            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.DeleteSheet1",
+            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
     }
@@ -400,7 +396,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.Values.Update.Headers",
+            operation: "Sheets.Values.Update.Headers",
             action: () =>
             {
                 var updateRequest = service.Spreadsheets.Values.Update(body, spreadsheetId, range);
@@ -410,8 +406,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     .ValueInputOptionEnum
                     .USERENTERED;
                 return updateRequest.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
     }
 
@@ -470,9 +465,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.RenameDefault",
-            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.RenameDefault",
+            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
     }
@@ -482,9 +476,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var range = $"{SheetName}!1:1";
         var existing = Resilience
             .Execute(
-                operationName: "Sheets.Values.Get.Headers",
-                action: () => service.Spreadsheets.Values.Get(spreadsheetId, range).Execute(),
-                postAction: () => Resilience.Delay(ServiceType.Sheets)
+                operation: "Sheets.Values.Get.Headers",
+                action: () => service.Spreadsheets.Values.Get(spreadsheetId, range).Execute()
             )
             .Values;
 
@@ -505,7 +498,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             ],
         };
         Resilience.Execute(
-            operationName: "Sheets.Values.Update.Headers",
+            operation: "Sheets.Values.Update.Headers",
             action: () =>
             {
                 var updateRequest = service.Spreadsheets.Values.Update(body, spreadsheetId, range);
@@ -515,8 +508,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     .ValueInputOptionEnum
                     .USERENTERED;
                 return updateRequest.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
     }
 
@@ -526,7 +518,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         {
             var range = $"{SheetName}!A2";
             var response = Resilience.Execute(
-                operationName: "Sheets.Values.Get.LatestTime",
+                operation: "Sheets.Values.Get.LatestTime",
                 action: () =>
                 {
                     var request = service.Spreadsheets.Values.Get(spreadsheetId, range);
@@ -536,8 +528,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                         .ValueRenderOptionEnum
                         .UNFORMATTEDVALUE;
                     return request.Execute();
-                },
-                postAction: () => Resilience.Delay(ServiceType.Sheets)
+                }
             );
 
             if (response.Values == null || response.Values.Count == 0)
@@ -597,20 +588,20 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
         return spreadsheet.Sheets?.Any(s =>
                 s.Properties?.Title?.Equals(SheetName, StringComparison.OrdinalIgnoreCase) == true
-            ) ?? false;
+            )
+            ?? false;
     }
 
     internal int GetScrobbleCount(string spreadsheetId)
     {
         var range = $"{SheetName}!A:A";
         var response = Resilience.Execute(
-            operationName: "Sheets.Values.Get.RowCount",
+            operation: "Sheets.Values.Get.RowCount",
             action: () =>
             {
                 var request = service.Spreadsheets.Values.Get(spreadsheetId, range);
                 return request.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
 
         if (response.Values == null || response.Values.Count <= 1)
@@ -630,7 +621,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
 
         var range = $"{SheetName}!A2:A";
         var response = Resilience.Execute(
-            operationName: "Sheets.Values.Get.AllDates",
+            operation: "Sheets.Values.Get.AllDates",
             action: () =>
             {
                 var request = service.Spreadsheets.Values.Get(spreadsheetId, range);
@@ -640,8 +631,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     .ValueRenderOptionEnum
                     .UNFORMATTEDVALUE;
                 return request.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
 
         if (response.Values == null || response.Values.Count == 0)
@@ -710,9 +700,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         };
 
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.DeleteRows",
-            action: () => service.Spreadsheets.BatchUpdate(deleteRequest, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.DeleteRows",
+            action: () => service.Spreadsheets.BatchUpdate(deleteRequest, spreadsheetId).Execute()
         );
 
         Console.Success("Deleted {0} scrobbles", rowsToDelete);
@@ -750,7 +739,28 @@ public class GoogleSheetsService(string clientId, string clientSecret)
     {
         var sheetId = GetSheetId(spreadsheetId);
 
-        BatchUpdateSpreadsheetRequest insertRequest = new()
+        // Build cell data for UpdateCells
+        List<RowData> rowDataList = [];
+        foreach (var record in records)
+        {
+            List<CellData> cells = [];
+            foreach (var value in record)
+            {
+                cells.Add(
+                    new CellData
+                    {
+                        UserEnteredValue = new ExtendedValue
+                        {
+                            StringValue = value?.ToString() ?? "",
+                        },
+                    }
+                );
+            }
+            rowDataList.Add(new RowData { Values = cells });
+        }
+
+        // Single batchUpdate with both InsertDimension and UpdateCells
+        BatchUpdateSpreadsheetRequest batchRequest = new()
         {
             Requests =
             [
@@ -767,32 +777,26 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                         },
                     },
                 },
+                new Request
+                {
+                    UpdateCells = new UpdateCellsRequest
+                    {
+                        Rows = rowDataList,
+                        Start = new GridCoordinate
+                        {
+                            SheetId = sheetId,
+                            RowIndex = 1,
+                            ColumnIndex = 0,
+                        },
+                        Fields = "userEnteredValue",
+                    },
+                },
             ],
         };
-        Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.InsertRows",
-            action: () => service.Spreadsheets.BatchUpdate(insertRequest, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
-        );
 
-        ValueRange body = new() { Values = records };
         Resilience.Execute(
-            operationName: "Sheets.Values.Update.InsertedRows",
-            action: () =>
-            {
-                var updateRequest = service.Spreadsheets.Values.Update(
-                    body,
-                    spreadsheetId,
-                    range: $"{SheetName}!A2"
-                );
-                updateRequest.ValueInputOption = SpreadsheetsResource
-                    .ValuesResource
-                    .UpdateRequest
-                    .ValueInputOptionEnum
-                    .USERENTERED;
-                return updateRequest.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.InsertAndUpdateRows",
+            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
         );
     }
 
@@ -850,9 +854,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         };
 
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.Sort",
-            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.Sort",
+            action: () => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
         );
         Console.Debug("Sorted sheet '{0}' by column {1}", sheetName, columnIndex);
     }
@@ -873,10 +876,32 @@ public class GoogleSheetsService(string clientId, string clientSecret)
             return;
         }
 
+        // Sort descending and merge consecutive indices into ranges
         var sortedIndices = rowIndices.OrderByDescending(i => i).ToList();
+        List<(int Start, int End)> ranges = [];
+
+        var rangeStart = sortedIndices[0];
+        var rangeEnd = sortedIndices[0];
+
+        for (var i = 1; i < sortedIndices.Count; i++)
+        {
+            if (sortedIndices[i] == rangeEnd - 1)
+            {
+                // Consecutive - extend range
+                rangeEnd = sortedIndices[i];
+            }
+            else
+            {
+                // Gap - save current range and start new one
+                ranges.Add((rangeEnd, rangeStart));
+                rangeStart = sortedIndices[i];
+                rangeEnd = sortedIndices[i];
+            }
+        }
+        ranges.Add((rangeEnd, rangeStart));
 
         List<Request> requests = [];
-        foreach (var rowIndex in sortedIndices)
+        foreach (var (start, end) in ranges)
             requests.Add(
                 new Request
                 {
@@ -886,8 +911,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                         {
                             SheetId = sheet.Properties.SheetId,
                             Dimension = "ROWS",
-                            StartIndex = rowIndex - 1,
-                            EndIndex = rowIndex,
+                            StartIndex = start - 1,
+                            EndIndex = end,
                         },
                     },
                 }
@@ -895,12 +920,16 @@ public class GoogleSheetsService(string clientId, string clientSecret)
 
         BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
         Resilience.Execute(
-            operationName: "Sheets.BatchUpdate.DeleteRows",
-            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Sheets.BatchUpdate.DeleteRows",
+            action: () => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
         );
         InvalidateCache(spreadsheetId);
-        Console.Debug("Deleted {0} rows from sheet '{1}'", rowIndices.Count, sheetName);
+        Console.Debug(
+            "Deleted {0} rows ({1} ranges) from sheet '{2}'",
+            rowIndices.Count,
+            ranges.Count,
+            sheetName
+        );
     }
 
     internal void AppendRows(string spreadsheetId, string sheetName, IList<IList<object>> rows)
@@ -913,7 +942,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         var range = $"{escapedName}!A:E";
 
         Resilience.Execute(
-            operationName: "Sheets.Values.Append",
+            operation: "Sheets.Values.Append",
             action: () =>
             {
                 var appendRequest = service.Spreadsheets.Values.Append(body, spreadsheetId, range);
@@ -928,8 +957,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                     .InsertDataOptionEnum
                     .INSERTROWS;
                 return appendRequest.Execute();
-            },
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            }
         );
 
         Console.Debug("Appended {0} rows to sheet '{1}'", rows.Count, sheetName);
@@ -975,9 +1003,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         Console.Info("Fetching spreadsheet metadata...");
 
         var spreadsheet = Resilience.Execute(
-            operationName: "Sheets.Get",
+            operation: "Sheets.Get",
             action: () => service.Spreadsheets.Get(spreadsheetId).Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets),
             ct: ct
         );
 
@@ -1040,9 +1067,8 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                         );
 
                     var response = Resilience.Execute(
-                        operationName: "Sheets.ExportCSV",
+                        operation: "Sheets.ExportCSV",
                         action: () => httpClient.GetByteArrayAsync(exportUrl).Result,
-                        postAction: () => Resilience.Delay(ServiceType.Sheets),
                         ct: ct
                     );
 
@@ -1067,13 +1093,13 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         request.Fields = "files(id, name, webViewLink)";
 
         var response = Resilience.Execute(
-            operationName: "Drive.Files.List",
-            action: () => request.Execute(),
-            postAction: () => Resilience.Delay(ServiceType.Sheets)
+            operation: "Drive.Files.List",
+            action: () => request.Execute()
         );
 
         return response
                 .Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
     }
 }

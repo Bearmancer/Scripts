@@ -29,7 +29,15 @@ public sealed class MusicBrainzService(
                     Year: r.Item.Date?.Year,
                     Format: r.Item.Media?.FirstOrDefault()?.Format,
                     Label: r.Item.LabelInfo?.FirstOrDefault()?.Label?.Name,
-                    ReleaseType: r.Item.ReleaseGroup?.PrimaryType
+                    ReleaseType: r.Item.ReleaseGroup?.PrimaryType,
+                    Score: r.Score,
+                    Country: r.Item.Country,
+                    CatalogNumber: r.Item.LabelInfo?.FirstOrDefault()?.CatalogNumber,
+                    Barcode: r.Item.Barcode,
+                    Genres: r.Item.Genres?.Select(g => g.Name)
+                        .Where(n => n is not null)
+                        .Cast<string>()
+                        .ToList()
                 ))
                 .ToList();
         });
@@ -866,7 +874,7 @@ public sealed class MusicBrainzService(
     }
 
     static Task<T> ExecuteAsync<T>(Func<Task<T>> action) =>
-        Resilience.ExecuteAsync(action, "MusicBrainz", TimeSpan.FromSeconds(2));
+        Resilience.ExecuteAsync(operation: "MusicBrainz", action: action);
 
     static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action)
         where T : class => ExecuteAsync(action);

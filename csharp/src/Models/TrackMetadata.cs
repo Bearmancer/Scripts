@@ -34,5 +34,11 @@ public record SearchResult(
     int? Year,
     string? Format,
     string? Label,
-    string? ReleaseType // Album, EP, Single, Compilation, etc.
+    string? ReleaseType, // Album, EP, Single, Compilation, etc.
+    int? Score = null, // MusicBrainz relevance score (0-100), null for Discogs
+    string? Country = null,
+    string? CatalogNumber = null,
+    string? Barcode = null,
+    List<string>? Genres = null,
+    List<string>? Styles = null // Discogs only
 );

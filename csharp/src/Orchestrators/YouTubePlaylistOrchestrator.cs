@@ -80,12 +80,19 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
     {
         List<YouTubePlaylist> resolved = [];
 
+        // Build title lookup once for all identifiers (O(n) instead of O(n*m))
+        var titleLookup = state.PlaylistSnapshots.Values.ToDictionary(
+            s => s.Title,
+            s => s,
+            StringComparer.OrdinalIgnoreCase
+        );
+
         foreach (var identifier in identifiers)
         {
             if (ct.IsCancellationRequested)
                 break;
 
-            var playlist = ResolvePlaylistIdentifier(identifier);
+            var playlist = ResolvePlaylistIdentifier(identifier, titleLookup);
             if (playlist != null)
                 resolved.Add(playlist);
             else
@@ -95,7 +102,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         return resolved;
     }
 
-    private YouTubePlaylist? ResolvePlaylistIdentifier(string identifier)
+    private YouTubePlaylist? ResolvePlaylistIdentifier(
+        string identifier,
+        Dictionary<string, PlaylistSnapshot>? titleLookup = null
+    )
     {
         if (state.PlaylistSnapshots.TryGetValue(identifier, out var snapshot))
         {
@@ -109,9 +119,14 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             );
         }
 
-        var titleMatch = state.PlaylistSnapshots.Values.FirstOrDefault(s =>
-            s.Title.Equals(identifier, StringComparison.OrdinalIgnoreCase)
-        );
+        // Use provided lookup or fall back to linear search
+        PlaylistSnapshot? titleMatch = null;
+        if (titleLookup != null)
+            titleLookup.TryGetValue(identifier, out titleMatch);
+        else
+            titleMatch = state.PlaylistSnapshots.Values.FirstOrDefault(s =>
+                s.Title.Equals(identifier, StringComparison.OrdinalIgnoreCase)
+            );
 
         if (titleMatch != null)
         {
@@ -184,7 +199,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
             return;
         }
 
-        YouTubeChangeDetector.LogOptimizedChanges(changes);
+        YouTubeChangeDetector.LogDetailedChanges(changes, summaries, state.PlaylistSnapshots);
 
         ProcessDeletedPlaylists(changes.DeletedIds, spreadsheetId);
         ProcessRenamedPlaylists(changes.Renamed, spreadsheetId);
@@ -212,9 +227,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                 sheetsService.DeleteSubsheet(spreadsheetId, SanitizeSheetName(snapshot.Title));
                 Logger.PlaylistDeleted(snapshot.Title, snapshot.VideoIds.Count);
                 state.PlaylistSnapshots.Remove(deletedId);
-                SaveState();
             }
         }
+
+        // Save state once at end instead of after each deletion
+        if (deletedIds.Count > 0)
+            SaveState();
     }
 
     private void ProcessRenamedPlaylists(
@@ -244,9 +262,12 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                 {
                     Title = rename.NewTitle,
                 };
-                SaveState();
             }
         }
+
+        // Save state once at end instead of after each rename
+        if (renames.Count > 0)
+            SaveState();
     }
 
     private void ProcessModifiedPlaylists(
@@ -288,6 +309,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
     )
     {
         List<YouTubePlaylist> result = [];
+        var summaryLookup = summaries.ToDictionary(s => s.Id);
 
         Console.Suppress = true;
 
@@ -314,7 +336,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
                     if (ct.IsCancellationRequested)
                         break;
 
-                    var summary = summaries.First(s => s.Id == playlistId);
+                    var summary = summaryLookup[playlistId];
                     task.Description = $"[cyan]{Markup.Escape(summary.Title)}[/]";
 
                     var videoIds = youtubeService.GetPlaylistVideoIds(playlistId, ct);
@@ -345,9 +367,11 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct)
         List<PlaylistSummary> summaries
     )
     {
+        var summaryLookup = summaries.ToDictionary(s => s.Id);
+
         foreach (var playlist in playlists)
         {
-            var summary = summaries.First(s => s.Id == playlist.Id);
+            var summary = summaryLookup[playlist.Id];
             state.PlaylistSnapshots[playlist.Id] = new PlaylistSnapshot(
                 PlaylistId: playlist.Id,
                 Title: playlist.Title,

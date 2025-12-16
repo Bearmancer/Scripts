@@ -33,7 +33,7 @@ public class LastFmService(string apiKey, string username)
 
     private readonly LastfmClient client = new(apiKey);
 
-    internal void FetchScrobblesSince(
+    internal async Task FetchScrobblesSinceAsync(
         DateTime? fetchAfter,
         FetchState state,
         Action<int, int, TimeSpan, DateTime?, DateTime?> onProgress,
@@ -64,7 +64,7 @@ public class LastFmService(string apiKey, string username)
         while (!ct.IsCancellationRequested)
         {
             Console.Debug("Fetching page {0}", page);
-            var batch = FetchPage(page, ct);
+            var batch = await FetchPageAsync(page, ct);
 
             if (ct.IsCancellationRequested || batch is null || batch.Count == 0)
             {
@@ -75,7 +75,7 @@ public class LastFmService(string apiKey, string username)
 
             if (fetchAfter is not null)
             {
-                var freshScrobbles = batch.Where(s => s.PlayedAt > fetchAfter).ToList();
+                List<Scrobble> freshScrobbles = [.. batch.Where(s => s.PlayedAt > fetchAfter)];
 
                 foreach (var s in freshScrobbles)
                     Console.Debug(
@@ -131,7 +131,6 @@ public class LastFmService(string apiKey, string username)
             }
 
             page++;
-            Resilience.Delay(ServiceType.LastFm);
         }
 
         stopwatch.Stop();
@@ -158,13 +157,11 @@ public class LastFmService(string apiKey, string username)
         StateManager.Save(StateManager.LastFmScrobblesFile, merged);
     }
 
-    private List<Scrobble>? FetchPage(int page, CancellationToken ct)
+    private async Task<List<Scrobble>?> FetchPageAsync(int page, CancellationToken ct)
     {
-        var response = Resilience.Execute(
-            operationName: "LastFm.GetRecentTracks",
-            action: () =>
-                client.User.GetRecentTracksAsync(username, limit: PerPage, page: page).Result,
-            postAction: () => Resilience.Delay(ServiceType.LastFm),
+        var response = await Resilience.ExecuteAsync(
+            operation: "LastFm.GetRecentTracks",
+            action: () => client.User.GetRecentTracksAsync(username, limit: PerPage, page: page),
             ct: ct
         );
 

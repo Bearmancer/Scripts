@@ -42,7 +42,13 @@ public sealed class DiscogsService : IMusicService
                     Year: ParseYear(r.Year),
                     Format: r.Format is { } fmt ? Join(", ", fmt) : null,
                     Label: r.Label is { } lbl ? Join(", ", lbl) : null,
-                    ReleaseType: r.Type // release, master, artist, label
+                    ReleaseType: r.Type, // release, master, artist, label
+                    Score: null, // Discogs doesn't provide relevance score
+                    Country: r.Country,
+                    CatalogNumber: r.CatalogNumber,
+                    Barcode: r.Barcode?.FirstOrDefault(),
+                    Genres: r.Genre?.ToList(),
+                    Styles: r.Style?.ToList()
                 ))
                 .ToList();
         });
@@ -451,11 +457,7 @@ public sealed class DiscogsService : IMusicService
     {
         try
         {
-            return await Resilience.ExecuteAsync(
-                action,
-                "Discogs",
-                TimeSpan.FromMilliseconds(1500)
-            );
+            return await Resilience.ExecuteAsync(operation: "Discogs", action: action);
         }
         catch (Exception ex)
         {

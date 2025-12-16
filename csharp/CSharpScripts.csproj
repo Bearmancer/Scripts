@@ -28,5 +28,6 @@
     <PackageReference Include="RestSharp" Version="*" />
     <PackageReference Include="Spectre.Console" Version="*-*" />
     <PackageReference Include="Spectre.Console.Cli" Version="*" />
+    <!-- Native completion implemented in CompletionCommands.cs -->
   </ItemGroup>
 </Project>

@@ -10,10 +10,6 @@ public static class Logger
     private static ServiceType? ActiveService;
     private static string? SessionId;
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Session Management
-    // ═══════════════════════════════════════════════════════════════════════════
-
     public static void Start(ServiceType service)
     {
         ActiveService = service;
@@ -91,10 +87,6 @@ public static class Logger
         SessionId = null;
         CurrentSessionId = null;
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Structured Events
-    // ═══════════════════════════════════════════════════════════════════════════
 
     public static void Event(
         string eventName,
@@ -187,10 +179,6 @@ public static class Logger
             LogLevel.Error
         );
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Crash Detection
-    // ═══════════════════════════════════════════════════════════════════════════
-
     private static void DetectCrashedSessions(ServiceType service)
     {
         string logPath = GetLogPath(service);
@@ -251,10 +239,6 @@ public static class Logger
             );
         }
     }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // File I/O
-    // ═══════════════════════════════════════════════════════════════════════════
 
     private static void WriteJsonEntry(
         ServiceType service,
