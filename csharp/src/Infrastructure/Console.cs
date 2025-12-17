@@ -81,6 +81,127 @@ public static class Console
 
     public static void MarkupLine(string markup) => AnsiConsole.MarkupLine(markup);
 
+    /// <summary>
+    /// Display a labeled field with proper escaping. Example: "Release:  Album Name"
+    /// </summary>
+    public static void Field(string label, string? value, int labelWidth = 12)
+    {
+        string paddedLabel = label.PadRight(labelWidth);
+        string safeValue = Markup.Escape(value ?? "");
+        AnsiConsole.MarkupLine($"[bold]{paddedLabel}[/] {safeValue}");
+    }
+
+    /// <summary>
+    /// Display a labeled field only if value is not null/empty.
+    /// </summary>
+    public static void FieldIfPresent(string label, string? value, int labelWidth = 12)
+    {
+        if (!IsNullOrEmpty(value))
+            Field(label, value, labelWidth);
+    }
+
+    /// <summary>
+    /// Wrapper for AnsiConsole.Confirm with escaped prompt.
+    /// </summary>
+    public static bool Confirm(string prompt, bool defaultValue = true) =>
+        AnsiConsole.Confirm(Markup.Escape(prompt), defaultValue);
+
+    /// <summary>
+    /// Wrapper for AnsiConsole.Prompt.
+    /// </summary>
+    public static T Prompt<T>(IPrompt<T> prompt) => AnsiConsole.Prompt(prompt);
+
+    /// <summary>
+    /// Create a Status context for spinner display.
+    /// </summary>
+    public static Status Status() => AnsiConsole.Status();
+
+    /// <summary>
+    /// Create a Live display for real-time updates.
+    /// </summary>
+    public static LiveDisplay Live(IRenderable target) => AnsiConsole.Live(target);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Markup Helpers - Use these instead of raw [color]...[/] syntax
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Escape text for safe use in Spectre markup.
+    /// </summary>
+    public static string Escape(string? text) => Markup.Escape(text ?? "");
+
+    /// <summary>
+    /// Format text as bold with escaping.
+    /// </summary>
+    public static string Bold(string? text) => $"[bold]{Markup.Escape(text ?? "")}[/]";
+
+    /// <summary>
+    /// Format text as dim with escaping.
+    /// </summary>
+    public static string DimText(string? text) => $"[dim]{Markup.Escape(text ?? "")}[/]";
+
+    /// <summary>
+    /// Format text with specified color (escapes content).
+    /// </summary>
+    public static string Colored(string color, string? text) =>
+        $"[{color}]{Markup.Escape(text ?? "")}[/]";
+
+    /// <summary>
+    /// Format a source badge (Discogs=yellow, MusicBrainz=cyan).
+    /// </summary>
+    public static string SourceBadge(string source) =>
+        source.Equals("Discogs", StringComparison.OrdinalIgnoreCase)
+            ? "[yellow]Discogs[/]"
+            : "[cyan]MusicBrainz[/]";
+
+    /// <summary>
+    /// Build a progress bar string. Example: [5/10] ██████████░░░░░░░░░░ 50% │ ETA: 1:30
+    /// </summary>
+    public static string ProgressBar(int completed, int total, string? eta = null)
+    {
+        double percent = total > 0 ? (double)completed / total * 100 : 0;
+        int filled = (int)(percent / 5);
+        string bar = new string('█', filled) + new string('░', 20 - filled);
+        string etaPart = eta is not null ? $" │ ETA: [cyan]{eta}[/]" : "";
+        return $"[blue][[{completed}/{total}]][/] {bar} [yellow]{percent:F0}%[/]{etaPart}";
+    }
+
+    /// <summary>
+    /// Format a checkmark item. Example: ✓ Item description
+    /// </summary>
+    public static string CheckItem(string text) => $"[green]✓[/] {Markup.Escape(text)}";
+
+    /// <summary>
+    /// Create a Markup renderable for progress display.
+    /// </summary>
+    public static Markup ProgressMarkup(int completed, int total, string? eta = null) =>
+        new(ProgressBar(completed, total, eta));
+
+    /// <summary>
+    /// Create a Markup renderable for a checkmark item.
+    /// </summary>
+    public static Markup CheckItemMarkup(string text) => new($"  {CheckItem(text)}");
+
+    /// <summary>
+    /// Format a task description for Spectre Progress with cyan highlighted title.
+    /// </summary>
+    public static string TaskTitle(string title) => Colored("cyan", title);
+
+    /// <summary>
+    /// Format a progress task description with count prefix, title, and suffix.
+    /// Example: (1/5) Playlist Name (0/100 videos)
+    /// </summary>
+    public static string TaskDescription(string? prefix, string title, string? suffix = null)
+    {
+        string result = "";
+        if (!IsNullOrEmpty(prefix))
+            result += DimText(prefix) + " ";
+        result += Colored("cyan", title);
+        if (!IsNullOrEmpty(suffix))
+            result += " " + DimText(suffix);
+        return result;
+    }
+
     public static void Link(string url, string text)
     {
         if (Suppress || Level > LogLevel.Info)

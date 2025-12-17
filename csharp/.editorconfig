@@ -1,0 +1,153 @@
+# EditorConfig for C# Toolkit
+# Configures BOTH Roslyn (built-in analyzers) AND ReSharper/Rider
+# https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+
+# =============================================================================
+# VAR PREFERENCE - Prefer explicit type except when obvious
+# =============================================================================
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# =============================================================================
+# NAMESPACE RULES
+# =============================================================================
+# Allow namespace mismatch (project uses CSharpScripts.CLI.Commands, not folder path)
+dotnet_diagnostic.IDE0130.severity = none
+resharper_check_namespace_highlighting = none
+
+# Prefer file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_diagnostic.IDE0161.severity = warning
+
+# =============================================================================
+# GLOBALIZATION/LOCALE - Enable for correctness
+# =============================================================================
+# Enable StringComparison checks for correctness
+dotnet_diagnostic.CA1304.severity = suggestion  # Specify CultureInfo
+dotnet_diagnostic.CA1307.severity = suggestion  # Specify StringComparison
+dotnet_diagnostic.CA1310.severity = warning     # Specify StringComparison for correctness
+
+# Suppress IFormatProvider for console output (too noisy for UI code)
+dotnet_diagnostic.CA1305.severity = none  # Specify IFormatProvider
+dotnet_diagnostic.CA1311.severity = none  # Specify a culture
+
+# Suppress FirstOrDefault on indexable collections - idiomatic for ?.FirstOrDefault()?.Property chains
+dotnet_diagnostic.CA1826.severity = none  # Do not use Enumerable methods on indexable collections
+
+# =============================================================================
+# NAMING CONVENTIONS
+# =============================================================================
+# DISABLE underscore prefix requirement for private fields
+dotnet_naming_rule.private_members_with_underscore.symbols = private_fields
+dotnet_naming_rule.private_members_with_underscore.style = camel_case_style
+dotnet_naming_rule.private_members_with_underscore.severity = none
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+
+# ReSharper: Disable underscore suggestion
+resharper_inconsistent_naming_highlighting = none
+
+# =============================================================================
+# MODERN C# STYLE (Suggestions/Warnings)
+# =============================================================================
+# Prefer expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = when_on_single_line:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_indexers = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+csharp_style_expression_bodied_lambdas = true:suggestion
+csharp_style_expression_bodied_local_functions = when_on_single_line:suggestion
+
+# Prefer pattern matching
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+csharp_style_prefer_switch_expression = true:warning
+csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
+csharp_style_prefer_extended_property_pattern = true:suggestion
+
+# Prefer modern language features
+csharp_style_prefer_tuple_swap = true:suggestion
+csharp_style_prefer_utf8_string_literals = true:suggestion
+csharp_style_prefer_readonly_struct = true:suggestion
+csharp_style_prefer_readonly_struct_member = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
+csharp_style_prefer_top_level_statements = false:none
+csharp_style_prefer_method_group_conversion = true:warning
+
+# Collection expressions
+csharp_style_prefer_collection_expression = true:suggestion
+dotnet_diagnostic.IDE0300.severity = suggestion
+dotnet_diagnostic.IDE0301.severity = suggestion
+dotnet_diagnostic.IDE0302.severity = suggestion
+dotnet_diagnostic.IDE0303.severity = suggestion
+dotnet_diagnostic.IDE0304.severity = suggestion
+dotnet_diagnostic.IDE0305.severity = suggestion
+
+# Null checking
+csharp_style_throw_expression = true:suggestion
+csharp_style_conditional_delegate_call = true:warning
+csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_style_coalesce_expression = true:warning
+csharp_style_null_propagation = true:warning
+
+# Simplify code
+csharp_style_inlined_variable_declaration = true:warning
+csharp_style_deconstructed_variable_declaration = true:suggestion
+csharp_style_prefer_index_operator = true:suggestion
+csharp_style_prefer_range_operator = true:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+csharp_style_prefer_local_over_anonymous_function = true:suggestion
+
+# =============================================================================
+# REDUNDANT QUALIFIERS - Enable as warnings
+# =============================================================================
+dotnet_diagnostic.IDE0001.severity = warning  # Simplify name
+dotnet_diagnostic.IDE0002.severity = warning  # Simplify member access
+resharper_redundant_qualifier_highlighting = warning
+
+# =============================================================================
+# UNUSED CODE - Enable as warnings
+# =============================================================================
+dotnet_diagnostic.IDE0051.severity = warning  # Private member unused
+dotnet_diagnostic.IDE0052.severity = warning  # Unread private member
+dotnet_diagnostic.IDE0059.severity = warning  # Unnecessary value assignment
+dotnet_diagnostic.IDE0060.severity = warning  # Unused parameter
+
+# =============================================================================
+# RESHARPER-SPECIFIC
+# =============================================================================
+resharper_arrange_type_member_modifiers_highlighting = suggestion
+resharper_arrange_type_modifiers_highlighting = suggestion
+resharper_suggest_var_or_type_simple_types_highlighting = suggestion
+resharper_suggest_var_or_type_built_in_types_highlighting = suggestion
+resharper_suggest_var_or_type_elsewhere_highlighting = suggestion
+
+# =============================================================================
+# FORMATTING (handled by CSharpier, disable built-in)
+# =============================================================================
+dotnet_diagnostic.IDE0055.severity = none  # Formatting rule
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

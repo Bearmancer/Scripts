@@ -114,8 +114,12 @@ public sealed class DiscogsService : IMusicService
         {
             // Detect disc changes from position (e.g., "A1", "B1", "1-1", "2-1")
             if (
-                track.Position.StartsWith($"{discNum + 1}-")
-                || (discNum == 1 && track.Position.StartsWith("1-") && trackNum > 0)
+                track.Position.StartsWith($"{discNum + 1}-", StringComparison.Ordinal)
+                || (
+                    discNum == 1
+                    && track.Position.StartsWith("1-", StringComparison.Ordinal)
+                    && trackNum > 0
+                )
             )
             {
                 discNum++;
@@ -131,7 +135,9 @@ public sealed class DiscogsService : IMusicService
                     TrackNumber: trackNum,
                     Title: track.Title,
                     FirstIssuedYear: originalYear ?? release.Year,
+                    RecordingYear: null, // Discogs doesn't track recording year separately
                     Composer: composer,
+                    WorkName: null, // TODO: Extract from title patterns
                     Conductor: conductor,
                     Orchestra: orchestra,
                     Soloists: soloists,

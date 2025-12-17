@@ -9,8 +9,13 @@ public record TrackMetadata(
     int DiscNumber,
     int TrackNumber,
     string Title,
+    /// <summary>First release year (when the release came out)</summary>
     int? FirstIssuedYear,
+    /// <summary>When the recording was actually made (for classical - may differ from release)</summary>
+    int? RecordingYear,
     string? Composer,
+    /// <summary>Work/piece name for classical (e.g., "Symphony No. 5 in C minor, Op. 67")</summary>
+    string? WorkName,
     string? Conductor,
     string? Orchestra,
     List<string> Soloists,

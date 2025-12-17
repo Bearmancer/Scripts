@@ -8,12 +8,10 @@ public sealed class MailTmService : IDisposableMailService
     const string BASE_URL = "https://api.mail.tm";
     const string PASSWORD_CHARS =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    static readonly TimeSpan Throttle = TimeSpan.FromMilliseconds(500);
 
     internal RestClient Client { get; }
     string? AuthToken;
     string? CurrentAccountId;
-    string? CurrentPassword;
 
     public MailTmService()
     {
@@ -90,7 +88,6 @@ public sealed class MailTmService : IDisposableMailService
                     );
 
                 CurrentAccountId = response.Data.Id;
-                CurrentPassword = password;
 
                 await AuthenticateAsync(address, password);
 
@@ -267,7 +264,6 @@ public sealed class MailTmService : IDisposableMailService
 
                 AuthToken = null;
                 CurrentAccountId = null;
-                CurrentPassword = null;
 
                 Console.Complete("Account deleted");
                 return true;

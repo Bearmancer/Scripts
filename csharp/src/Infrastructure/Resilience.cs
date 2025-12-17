@@ -3,9 +3,9 @@ namespace CSharpScripts.Infrastructure;
 public static class Resilience
 {
     public const int MAX_RETRIES = 10;
-    public static readonly TimeSpan THROTTLE_DELAY = TimeSpan.FromMilliseconds(3000);
-    public static readonly TimeSpan BASE_RETRY_DELAY = TimeSpan.FromSeconds(5);
-    public static readonly TimeSpan MAX_RETRY_DELAY = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(3000);
+    public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(5);
+    public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(5);
 
     private static DateTime lastCallTime = DateTime.MinValue;
     private static readonly SemaphoreSlim Semaphore = new(1, 1);
@@ -85,18 +85,18 @@ public static class Resilience
     private static void ApplyThrottle()
     {
         TimeSpan elapsed = DateTime.Now - lastCallTime;
-        if (elapsed < THROTTLE_DELAY)
-            Thread.Sleep(THROTTLE_DELAY - elapsed);
+        if (elapsed < ThrottleDelay)
+            Thread.Sleep(ThrottleDelay - elapsed);
     }
 
     private static RetryStrategyOptions<T> CreateRetryOptions<T>(string operation) =>
         new()
         {
             MaxRetryAttempts = MAX_RETRIES,
-            Delay = BASE_RETRY_DELAY,
-            MaxDelay = MAX_RETRY_DELAY,
-            BackoffType = DelayBackoffType.Exponential,
-            UseJitter = true,
+            Delay = BaseRetryDelay, // Base = 5s
+            MaxDelay = MaxRetryDelay, // Cap at 5 minutes
+            BackoffType = DelayBackoffType.Exponential, // 5s, 10s, 20s, 40s, 80s...
+            UseJitter = true, // Add randomness to prevent thundering herd
             ShouldHandle = new PredicateBuilder<T>()
                 .Handle<HttpRequestException>()
                 .Handle<TimeoutException>()
@@ -124,7 +124,7 @@ public static class Resilience
                     message
                 );
                 Console.Info(
-                    "Waiting {0:F1}s (resume at {1:HH:mm:ss})",
+                    "Retrying in {0:F0}s (at {1:HH:mm:ss})",
                     args.RetryDelay.TotalSeconds,
                     DateTime.Now.Add(args.RetryDelay)
                 );
@@ -136,8 +136,8 @@ public static class Resilience
     private static async Task ApplyThrottleAsync(CancellationToken ct)
     {
         TimeSpan elapsed = DateTime.Now - lastCallTime;
-        if (elapsed < THROTTLE_DELAY)
-            await Task.Delay(THROTTLE_DELAY - elapsed, ct);
+        if (elapsed < ThrottleDelay)
+            await Task.Delay(ThrottleDelay - elapsed, ct);
     }
 
     public static bool IsFatalQuotaError(string message) =>

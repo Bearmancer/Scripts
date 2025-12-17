@@ -26,3 +26,9 @@ Thumbs.db
 # Project-specific
 *.csv
 .fake
+
+# Secrets/Credentials
+**/token.json
+**/tokens/
+**/credentials.json
+**/*Credentials.json

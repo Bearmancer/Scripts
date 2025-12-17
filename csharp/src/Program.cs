@@ -5,6 +5,7 @@ namespace CSharpScripts;
 public static class Program
 {
     public static CancellationTokenSource Cts { get; } = new();
+    private static bool cancelled;
 
     public static int Main(string[] args)
     {
@@ -18,8 +19,12 @@ public static class Program
         System.Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
-            Cts.Cancel();
-            Console.Warning("Cancellation requested...");
+            if (!cancelled)
+            {
+                cancelled = true;
+                Cts.Cancel();
+                Console.Warning("Cancellation requested, stopping gracefully...");
+            }
         };
 
         CommandApp app = new();
@@ -64,10 +69,7 @@ public static class Program
                     music.SetDescription("Music metadata commands");
                     music
                         .AddCommand<MusicSearchCommand>("search")
-                        .WithDescription("Search for a music release");
-                    music
-                        .AddCommand<MusicLookupCommand>("lookup")
-                        .WithDescription("Look up a release");
+                        .WithDescription("Search or lookup a music release");
                     music
                         .AddCommand<MusicSchemaCommand>("schema")
                         .WithDescription("List all metadata fields from MusicBrainz and Discogs");

@@ -57,21 +57,19 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
     {
         Logger.Start(ServiceType.YouTube);
         return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-        {
-            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync();
-        });
+            await new YouTubePlaylistOrchestrator(Program.Cts.Token).ExecuteAsync()
+        );
     }
 
     private static async Task<int> RunLastFmSyncAsync()
     {
         Logger.Start(ServiceType.LastFm);
         return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-        {
             await new ScrobbleSyncOrchestrator(
                 forceFromDate: null,
                 Program.Cts.Token
-            ).ExecuteAsync();
-        });
+            ).ExecuteAsync()
+        );
     }
 }
 
@@ -284,7 +282,7 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
     }
 }
 
-public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
+public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -301,7 +299,7 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
         public string? Since { get; init; }
     }
 
-    public override int Execute(
+    public override async Task<int> ExecuteAsync(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
@@ -328,7 +326,7 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
                     settings.Since,
                     "yyyy/MM/dd",
                     null,
-                    System.Globalization.DateTimeStyles.None,
+                    DateTimeStyles.None,
                     out DateTime parsed
                 )
             )
@@ -346,12 +344,12 @@ public sealed class SyncLastFmCommand : Command<SyncLastFmCommand.Settings>
 
         Logger.Start(ServiceType.LastFm);
 
-        return SyncYouTubeCommand.ExecuteWithErrorHandling(() =>
+        return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
         {
-            new ScrobbleSyncOrchestrator(sinceDate, Program.Cts.Token)
-                .ExecuteAsync()
-                .GetAwaiter()
-                .GetResult();
+            await new ScrobbleSyncOrchestrator(
+                forceFromDate: sinceDate,
+                ct: Program.Cts.Token
+            ).ExecuteAsync();
         });
     }
 }
@@ -362,6 +360,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
     {
         [CommandArgument(0, "[service]")]
         [Description("yt, lastfm (omit for all)")]
+        [AllowedValues("yt", "youtube", "lastfm")]
         public string? Service { get; init; }
     }
 
@@ -374,16 +373,10 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
         bool checkLastFm =
             IsNullOrEmpty(settings.Service)
             || settings.Service.Equals("lastfm", StringComparison.OrdinalIgnoreCase);
-        bool checkYouTube =
+        var checkYouTube =
             IsNullOrEmpty(settings.Service)
             || settings.Service.Equals("yt", StringComparison.OrdinalIgnoreCase)
             || settings.Service.Equals("youtube", StringComparison.OrdinalIgnoreCase);
-
-        if (!checkLastFm && !checkYouTube)
-        {
-            Console.Warning("Unknown service: {0}. Use: yt, lastfm", settings.Service);
-            return 1;
-        }
 
         if (checkLastFm)
             ShowLastFmStatus();

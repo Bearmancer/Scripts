@@ -161,7 +161,7 @@ public static class StateManager
             }
         }
 
-        if (Directory.Exists(oldPlaylistsDir) && !GetFiles(oldPlaylistsDir, "*").Any())
+        if (Directory.Exists(oldPlaylistsDir) && GetFiles(oldPlaylistsDir, "*").Length == 0)
             Directory.Delete(oldPlaylistsDir, true);
 
         if (migrated > 0)
@@ -255,7 +255,7 @@ public static class StateManager
     {
         var fullPath = Combine(
             RootDirectory,
-            fileName.EndsWith(".json") ? fileName : $"{fileName}.json"
+            fileName.EndsWith(".json", StringComparison.Ordinal) ? fileName : $"{fileName}.json"
         );
         var directory = GetDirectoryName(fullPath);
         if (!IsNullOrEmpty(directory))
