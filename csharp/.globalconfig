@@ -1,0 +1,74 @@
+is_global = true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ROSLYN ANALYZER CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Warning Categories:
+#   46 total warnings after locale suppressions
+#
+#   SUPPRESSED (Third-Party Patterns):
+#     - CA1515 (public types) - Spectre.Console requires public commands
+#     - CA1034 (nested types) - Spectre.Console Settings pattern
+#     - CA1707 (underscores) - Test method naming convention
+#     - CA1305/CA1310 (locale) - CLI uses invariant culture
+#     - CA1002/CA1056 (DTOs) - JSON serialization requirements
+#     - CA1032 (exception ctors) - Only used ctors needed
+#
+#   ACTIONABLE (To Fix):
+#     20 x CA1826 - Use indexer instead of .First()/.FirstOrDefault()
+#      6 x CA1822 - Mark as static
+#      6 x CA1859 - Use concrete type instead of interface
+#      6 x CA1001 - Implement IDisposable
+#      2 x CA1068 - CancellationToken should be last
+#      2 x CA1860 - Use Length instead of Equals("")
+#      2 x CA2016 - Forward CancellationToken
+#      2 x CA2201 - Don't raise Exception base type
+#     ─────────────
+#     46 warnings to fix
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────────────────
+# THIRD-PARTY LIBRARY PATTERNS (Spectre.Console.Cli)
+# ───────────────────────────────────────────────────────────────────────────────
+
+# CA1515: Spectre.Console uses reflection - commands must be public
+dotnet_diagnostic.CA1515.severity = none
+
+# CA1034: Nested Settings class is idiomatic Spectre.Console pattern
+dotnet_diagnostic.CA1034.severity = none
+
+# CA1707: Test methods use underscores (Should_DoX_When_Y)
+dotnet_diagnostic.CA1707.severity = none
+
+# ───────────────────────────────────────────────────────────────────────────────
+# LOCALE INDEPENDENCE
+# CLI tool uses invariant culture for all internal operations
+
+# ───────────────────────────────────────────────────────────────────────────────
+
+# CA1305: IFormatProvider - using invariant culture throughout
+dotnet_diagnostic.CA1305.severity = none
+
+# CA1310: StringComparison - ASCII-based comparisons for IDs/tags
+dotnet_diagnostic.CA1310.severity = none
+
+# ───────────────────────────────────────────────────────────────────────────────
+# EXTERNAL DTO PATTERNS
+# ───────────────────────────────────────────────────────────────────────────────
+
+# CA1002: List<T> required for System.Text.Json deserialization
+dotnet_diagnostic.CA1002.severity = none
+
+# CA1056: External APIs return URLs as strings in JSON
+dotnet_diagnostic.CA1056.severity = none
+
+# CA1032: Custom exceptions only need constructors actually used
+dotnet_diagnostic.CA1032.severity = none
+
+# CA1826: Don't use Enumerable methods on indexable collections
+# MusicBrainz SDK's IReadOnlyList<T> is a LINQ wrapper, not an array
+# Using indexer isn't more efficient than FirstOrDefault()
+dotnet_diagnostic.CA1826.severity = none
+

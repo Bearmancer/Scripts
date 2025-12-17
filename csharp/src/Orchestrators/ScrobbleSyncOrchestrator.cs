@@ -1,6 +1,6 @@
 namespace CSharpScripts.Orchestrators;
 
-public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken ct)
+public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken ct) : IDisposable
 {
     private readonly LastFmService lastFmService = new(
         apiKey: Config.LastFmApiKey,
@@ -207,4 +207,10 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
         );
 
     internal void SaveState() => StateManager.Save(StateManager.LastFmSyncFile, state);
+
+    public void Dispose()
+    {
+        sheetsService?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

@@ -10,7 +10,7 @@ public sealed class CompletionInstallCommand : Command<CompletionInstallCommand.
         CancellationToken cancellationToken
     )
     {
-        string profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string profilePath = GetFolderPath(SpecialFolder.UserProfile);
         string psProfilePath = Path.Combine(
             profilePath,
             "Documents",
@@ -20,7 +20,7 @@ public sealed class CompletionInstallCommand : Command<CompletionInstallCommand.
 
         // Get the path to this executable
         string exePath =
-            Environment.ProcessPath
+            ProcessPath
             ?? throw new InvalidOperationException("Could not determine executable path");
 
         // Build the PowerShell script
@@ -57,10 +57,7 @@ Register-ArgumentCompleter -Native -CommandName scripts -ScriptBlock {
             Directory.CreateDirectory(profileDir);
 
         // Append to profile
-        File.AppendAllText(
-            psProfilePath,
-            Environment.NewLine + completionScript + Environment.NewLine
-        );
+        File.AppendAllText(psProfilePath, NewLine + completionScript + NewLine);
 
         Console.Success("Tab completion installed!");
         Console.Info("Profile: {0}", psProfilePath);
@@ -184,7 +181,7 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         // Output suggestions (one per line for PowerShell)
         foreach (string suggestion in suggestions.Distinct())
         {
-            System.Console.WriteLine(suggestion);
+            Console.WriteLine(suggestion);
         }
 
         return 0;

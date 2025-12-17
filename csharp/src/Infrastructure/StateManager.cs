@@ -161,7 +161,7 @@ public static class StateManager
             }
         }
 
-        if (Directory.Exists(oldPlaylistsDir) && !GetFiles(oldPlaylistsDir, "*").Any())
+        if (Directory.Exists(oldPlaylistsDir) && GetFiles(oldPlaylistsDir, "*").Length == 0)
             Directory.Delete(oldPlaylistsDir, true);
 
         if (migrated > 0)

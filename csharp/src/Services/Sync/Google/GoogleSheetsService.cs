@@ -1,6 +1,6 @@
 namespace CSharpScripts.Services.Sync.Google;
 
-public class GoogleSheetsService(string clientId, string clientSecret)
+public class GoogleSheetsService(string clientId, string clientSecret) : IDisposable
 {
     private const string SheetName = "Scrobbles";
     private const string SpreadsheetTitle = "last.fm scrobbles";
@@ -735,7 +735,7 @@ public class GoogleSheetsService(string clientId, string clientSecret)
         InsertRows(spreadsheetId, records);
     }
 
-    private void InsertRows(string spreadsheetId, IList<IList<object>> records)
+    private void InsertRows(string spreadsheetId, List<IList<object>> records)
     {
         var sheetId = GetSheetId(spreadsheetId);
 
@@ -1183,5 +1183,12 @@ public class GoogleSheetsService(string clientId, string clientSecret)
                 .Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))
                 .ToList()
             ?? [];
+    }
+
+    public void Dispose()
+    {
+        service?.Dispose();
+        driveService?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

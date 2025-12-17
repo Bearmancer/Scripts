@@ -278,22 +278,25 @@ public sealed class MusicBrainzService(
         CancellationToken ct = default
     )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            IRecording? recording = await Query.LookupRecordingAsync(
-                recordingId,
-                Include.ArtistCredits
-                    | Include.Isrcs
-                    | Include.Annotation
-                    | Include.Ratings
-                    | Include.Tags
-                    | Include.Genres
-            );
-            if (recording is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                IRecording? recording = await Query.LookupRecordingAsync(
+                    recordingId,
+                    Include.ArtistCredits
+                        | Include.Isrcs
+                        | Include.Annotation
+                        | Include.Ratings
+                        | Include.Tags
+                        | Include.Genres
+                );
+                if (recording is null)
+                    return null;
 
-            return MapRecording(recording);
-        });
+                return MapRecording(recording);
+            },
+            ct
+        );
     }
 
     public async Task<List<MusicBrainzRecording>> BrowseArtistRecordingsAsync(
@@ -424,25 +427,28 @@ public sealed class MusicBrainzService(
         CancellationToken ct = default
     )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            IRelease? release = await Query.LookupReleaseAsync(
-                releaseId,
-                Include.ArtistCredits
-                    | Include.Recordings
-                    | Include.Media
-                    | Include.Labels
-                    | Include.ArtistRelationships
-                    | Include.Annotation
-                    | Include.Tags
-                    | Include.Genres
-                    | Include.ReleaseGroups
-            );
-            if (release is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                IRelease? release = await Query.LookupReleaseAsync(
+                    releaseId,
+                    Include.ArtistCredits
+                        | Include.Recordings
+                        | Include.Media
+                        | Include.Labels
+                        | Include.ArtistRelationships
+                        | Include.Annotation
+                        | Include.Tags
+                        | Include.Genres
+                        | Include.ReleaseGroups
+                );
+                if (release is null)
+                    return null;
 
-            return MapRelease(release);
-        });
+                return MapRelease(release);
+            },
+            ct
+        );
     }
 
     static MusicBrainzRelease MapRelease(IRelease r)
@@ -591,40 +597,44 @@ public sealed class MusicBrainzService(
         CancellationToken ct = default
     )
     {
-        return await ExecuteSafeAsync(async () =>
-        {
-            IReleaseGroup? rg = await Query.LookupReleaseGroupAsync(
-                releaseGroupId,
-                Include.ArtistCredits
-                    | Include.Releases
-                    | Include.Annotation
-                    | Include.Ratings
-                    | Include.Tags
-                    | Include.Genres
-            );
-            if (rg is null)
-                return null;
+        return await ExecuteSafeAsync(
+            async () =>
+            {
+                IReleaseGroup? rg = await Query.LookupReleaseGroupAsync(
+                    releaseGroupId,
+                    Include.ArtistCredits
+                        | Include.Releases
+                        | Include.Annotation
+                        | Include.Ratings
+                        | Include.Tags
+                        | Include.Genres
+                );
+                if (rg is null)
+                    return null;
 
-            return new MusicBrainzReleaseGroup(
-                Id: rg.Id,
-                Title: rg.Title ?? "",
-                Artist: rg.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
-                ArtistCredit: FormatArtistCredit(rg.ArtistCredit),
-                PrimaryType: rg.PrimaryType,
-                SecondaryTypes: rg.SecondaryTypes?.ToList() ?? [],
-                FirstReleaseDate: rg.FirstReleaseDate?.NearestDate is DateTime dt
-                    ? DateOnly.FromDateTime(dt)
-                    : null,
-                ReleaseCount: rg.Releases?.Count ?? 0,
-                Disambiguation: rg.Disambiguation,
-                Tags: rg.Tags?.Select(t => t.Name ?? "").Where(n => n.Length > 0).ToList() ?? [],
-                Genres: rg.Genres?.Select(g => g.Name ?? "").Where(n => n.Length > 0).ToList()
-                    ?? [],
-                Rating: (double?)rg.Rating?.Value,
-                RatingVotes: rg.Rating?.VoteCount,
-                Annotation: rg.Annotation
-            );
-        });
+                return new MusicBrainzReleaseGroup(
+                    Id: rg.Id,
+                    Title: rg.Title ?? "",
+                    Artist: rg.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
+                    ArtistCredit: FormatArtistCredit(rg.ArtistCredit),
+                    PrimaryType: rg.PrimaryType,
+                    SecondaryTypes: rg.SecondaryTypes?.ToList() ?? [],
+                    FirstReleaseDate: rg.FirstReleaseDate?.NearestDate is DateTime dt
+                        ? DateOnly.FromDateTime(dt)
+                        : null,
+                    ReleaseCount: rg.Releases?.Count ?? 0,
+                    Disambiguation: rg.Disambiguation,
+                    Tags: rg.Tags?.Select(t => t.Name ?? "").Where(n => n.Length > 0).ToList()
+                        ?? [],
+                    Genres: rg.Genres?.Select(g => g.Name ?? "").Where(n => n.Length > 0).ToList()
+                        ?? [],
+                    Rating: (double?)rg.Rating?.Value,
+                    RatingVotes: rg.Rating?.VoteCount,
+                    Annotation: rg.Annotation
+                );
+            },
+            ct
+        );
     }
 
     #endregion

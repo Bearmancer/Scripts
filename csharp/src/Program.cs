@@ -5,6 +5,7 @@ namespace CSharpScripts;
 public static class Program
 {
     public static CancellationTokenSource Cts { get; } = new();
+    private static bool cancelled;
 
     public static int Main(string[] args)
     {
@@ -18,8 +19,12 @@ public static class Program
         System.Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
-            Cts.Cancel();
-            Console.Warning("Cancellation requested...");
+            if (!cancelled)
+            {
+                cancelled = true;
+                Cts.Cancel();
+                Console.Warning("Cancellation requested, stopping gracefully...");
+            }
         };
 
         CommandApp app = new();

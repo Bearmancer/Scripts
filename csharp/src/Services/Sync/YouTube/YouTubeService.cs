@@ -1,6 +1,6 @@
 namespace CSharpScripts.Services.Sync.YouTube;
 
-public class YouTubeService(string clientId, string clientSecret)
+public class YouTubeService(string clientId, string clientSecret) : IDisposable
 {
     private const int MaxResultsPerPage = 50;
 
@@ -253,4 +253,10 @@ public class YouTubeService(string clientId, string clientSecret)
 
     private static TimeSpan ParseDuration(string? isoDuration) =>
         IsNullOrEmpty(isoDuration) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(isoDuration);
+
+    public void Dispose()
+    {
+        service?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

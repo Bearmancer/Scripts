@@ -7,7 +7,7 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 
     public IRenderable BuildDisplay() => BuildDisplayFromSnapshot(tracker.GetSnapshot());
 
-    public IRenderable BuildDisplayFromSnapshot(SyncProgressSnapshot snapshot)
+    public static IRenderable BuildDisplayFromSnapshot(SyncProgressSnapshot snapshot)
     {
         string playlistName = TruncateName(snapshot.CurrentPlaylistName);
         string progressBar = BuildProgressBar(snapshot.OverallVideoPercent);
@@ -21,7 +21,7 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
         string colorName = barColor.ToString().ToLowerInvariant();
 
         Markup line = new(
-            $"[{colorName}]{Markup.Escape(playlistName)}[/] {countsText} "
+            $"{Console.Colored(colorName, playlistName)} {countsText} "
                 + $"[{colorName}]{progressBar}[/] {percentText} {videosText} {timeText}"
         );
 
