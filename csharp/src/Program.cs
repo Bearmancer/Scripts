@@ -69,10 +69,7 @@ public static class Program
                     music.SetDescription("Music metadata commands");
                     music
                         .AddCommand<MusicSearchCommand>("search")
-                        .WithDescription("Search for a music release");
-                    music
-                        .AddCommand<MusicLookupCommand>("lookup")
-                        .WithDescription("Look up a release");
+                        .WithDescription("Search or lookup a music release");
                     music
                         .AddCommand<MusicSchemaCommand>("schema")
                         .WithDescription("List all metadata fields from MusicBrainz and Discogs");

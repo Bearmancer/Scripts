@@ -1,6 +1,6 @@
 $profileDir = $PSScriptRoot
 if (-not $profileDir -or -not (Test-Path -Path $profileDir)) {
-    $profileDir = Join-Path -Path $env:USERPROFILE -ChildPath 'Dev\Scripts\powershell'
+    $profileDir = Join-Path -Path $env:USERPROFILE -ChildPath 'Google Drive\Dev\powershell'
 }
 $global:ScriptRoot = $profileDir
 Set-StrictMode -Version Latest

@@ -5,18 +5,15 @@ namespace CSharpScripts.Tests;
 /// Tests: add video, remove video, reorder video, and ETag behavior.
 /// Run via: dotnet run -- test-yt-changes
 /// </summary>
-public class YouTubeChangeDetectionTest
+public class YouTubeChangeDetectionTest : IDisposable
 {
     private const string TestPlaylistId = "PL1zgNCoWt_7ZFpUZhv014SWeYUnRMypbw"; // "Bad" playlist
     private const string TestVideoIdToAdd = "dQw4w9WgXcQ"; // Rick Astley - Never Gonna Give You Up
 
     private readonly YouTubeServiceApi service;
-    private readonly CancellationToken ct;
 
-    public YouTubeChangeDetectionTest(CancellationToken ct)
+    public YouTubeChangeDetectionTest()
     {
-        this.ct = ct;
-
         Console.Info("Authenticating with YouTube (write scope)...");
 
         // Need write scope for this test - uses different user to avoid scope conflicts
@@ -44,6 +41,12 @@ public class YouTubeChangeDetectionTest
         Console.Success("Authenticated!");
     }
 
+    public void Dispose()
+    {
+        service.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
     public void RunAllTests()
     {
         Console.Info("=== YouTube Change Detection Test ===");
@@ -60,7 +63,7 @@ public class YouTubeChangeDetectionTest
         // Test 1: Add a video
         Console.Info("");
         Console.Info("=== TEST 1: ADD VIDEO ===");
-        var addResult = TestAddVideo(initialState);
+        var addResult = TestAddVideo();
 
         // Wait for API propagation
         WaitForPropagation();
@@ -74,7 +77,7 @@ public class YouTubeChangeDetectionTest
         // Test 3: Remove the video we just added
         Console.Info("");
         Console.Info("=== TEST 3: REMOVE VIDEO ===");
-        var removeResult = TestRemoveVideo(stateAfterAdd, addResult.PlaylistItemId);
+        _ = TestRemoveVideo(addResult.PlaylistItemId); // Result unused intentionally
 
         // Wait for API propagation
         WaitForPropagation();
@@ -125,9 +128,8 @@ public class YouTubeChangeDetectionTest
         request.Id = TestPlaylistId;
         var response = request.Execute();
         var playlist = response.Items?.FirstOrDefault();
-
         if (playlist == null)
-            throw new Exception($"Playlist {TestPlaylistId} not found");
+            throw new InvalidOperationException($"Playlist {TestPlaylistId} not found");
 
         // Get video IDs in order
         List<PlaylistItemInfo> items = [];
@@ -153,7 +155,7 @@ public class YouTubeChangeDetectionTest
             }
 
             pageToken = itemsResponse.NextPageToken;
-        } while (!string.IsNullOrEmpty(pageToken));
+        } while (!IsNullOrEmpty(pageToken));
 
         return new PlaylistState(
             ETag: playlist.ETag,
@@ -162,18 +164,18 @@ public class YouTubeChangeDetectionTest
         );
     }
 
-    private void LogPlaylistState(string label, PlaylistState state)
+    private static void LogPlaylistState(string label, PlaylistState state)
     {
         Console.Info("{0}:", label);
         Console.Info("  ETag: {0}", state.ETag ?? "NULL");
         Console.Info("  Video Count: {0}", state.VideoCount);
         Console.Info(
             "  First 3 videos: {0}",
-            string.Join(", ", state.Items.Take(3).Select(i => i.VideoId))
+            Join(", ", state.Items.Take(3).Select(i => i.VideoId))
         );
     }
 
-    private void CompareStates(string label, PlaylistState before, PlaylistState after)
+    private static void CompareStates(string label, PlaylistState before, PlaylistState after)
     {
         Console.Info("{0} comparison:", label);
 
@@ -217,7 +219,7 @@ public class YouTubeChangeDetectionTest
         Thread.Sleep(5000);
     }
 
-    private AddVideoResult TestAddVideo(PlaylistState currentState)
+    private AddVideoResult TestAddVideo()
     {
         Console.Info("Adding video {0} to playlist...", TestVideoIdToAdd);
 
@@ -243,7 +245,7 @@ public class YouTubeChangeDetectionTest
         return new AddVideoResult(response.Id);
     }
 
-    private RemoveVideoResult TestRemoveVideo(PlaylistState currentState, string playlistItemId)
+    private RemoveVideoResult TestRemoveVideo(string playlistItemId)
     {
         Console.Info("Removing video (PlaylistItemId: {0})...", playlistItemId);
 
@@ -251,7 +253,7 @@ public class YouTubeChangeDetectionTest
         deleteRequest.Execute();
 
         Console.Success("Video removed!");
-        return new RemoveVideoResult(true);
+        return new RemoveVideoResult();
     }
 
     private void TestReorderVideos(PlaylistState currentState)
@@ -335,5 +337,5 @@ public class YouTubeChangeDetectionTest
 
     private record AddVideoResult(string PlaylistItemId);
 
-    private record RemoveVideoResult(bool Success);
+    private record RemoveVideoResult; // Empty result - just signals completion
 }

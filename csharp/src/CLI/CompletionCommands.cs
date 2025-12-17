@@ -130,7 +130,7 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         {
             string lastWord = words[^1];
             if (
-                lastWord.StartsWith("--")
+                lastWord.StartsWith("--", StringComparison.Ordinal)
                 && OptionValues.TryGetValue(lastWord, out string[]? values)
             )
             {
@@ -138,7 +138,7 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
             }
             else if (
                 words.Length >= 2
-                && words[^2].StartsWith("--")
+                && words[^2].StartsWith("--", StringComparison.Ordinal)
                 && OptionValues.TryGetValue(words[^2], out string[]? prevValues)
             )
             {

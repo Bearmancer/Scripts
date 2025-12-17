@@ -141,9 +141,9 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         }
 
         if (
-            identifier.StartsWith("PL")
-            || identifier.StartsWith("UU")
-            || identifier.StartsWith("FL")
+            identifier.StartsWith("PL", StringComparison.Ordinal)
+            || identifier.StartsWith("UU", StringComparison.Ordinal)
+            || identifier.StartsWith("FL", StringComparison.Ordinal)
         )
         {
             Console.Debug("Fetching playlist by ID: {0}", identifier);

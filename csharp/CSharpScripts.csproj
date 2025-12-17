@@ -1,36 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <PublishAot>false</PublishAot>
-    <PublishTrimmed>false</PublishTrimmed>
-    <!-- Enable IDE analyzers in terminal builds -->
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <AnalysisLevel>latest-recommended</AnalysisLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Tests\**" />
-    <None Remove="Tests\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <InternalsVisibleTo Include="Tests" />
-    <InternalsVisibleTo Include="CSharpScripts.Tests" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Google.Apis" Version="*" />
-    <PackageReference Include="Google.Apis.Auth" Version="*" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="*" />
-    <PackageReference Include="Google.Apis.Sheets.v4" Version="*" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="*" />
-    <PackageReference Include="Hqub.Last.fm" Version="*" />
-    <PackageReference Include="MetaBrainz.MusicBrainz" Version="*" />
-    <PackageReference Include="ParkSquare.Discogs" Version="*" />
-    <PackageReference Include="Polly" Version="*" />
-    <PackageReference Include="RestSharp" Version="*" />
-    <PackageReference Include="Spectre.Console" Version="*-*" />
-    <PackageReference Include="Spectre.Console.Cli" Version="*" />
-    <!-- Native completion implemented in CompletionCommands.cs -->
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PublishAot>false</PublishAot>
+        <PublishTrimmed>false</PublishTrimmed>
+        <!-- Enable IDE analyzers in terminal builds -->
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Remove="Tests\**" />
+        <None Remove="Tests\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Tests" />
+        <InternalsVisibleTo Include="CSharpScripts.Tests" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Google.Apis" Version="*" />
+        <PackageReference Include="Google.Apis.Auth" Version="*" />
+        <PackageReference Include="Google.Apis.Drive.v3" Version="*" />
+        <PackageReference Include="Google.Apis.Sheets.v4" Version="*" />
+        <PackageReference Include="Google.Apis.YouTube.v3" Version="*" />
+        <PackageReference Include="Hqub.Last.fm" Version="*" />
+        <PackageReference Include="MetaBrainz.MusicBrainz" Version="*" />
+        <PackageReference Include="ParkSquare.Discogs" Version="*" />
+        <PackageReference Include="Polly" Version="*" />
+        <PackageReference Include="RestSharp" Version="*" />
+        <PackageReference Include="Spectre.Console" Version="*-*" />
+        <PackageReference Include="Spectre.Console.Cli" Version="*" />
+        <!-- Native completion implemented in CompletionCommands.cs -->
+    </ItemGroup>
 </Project>

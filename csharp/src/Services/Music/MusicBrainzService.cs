@@ -113,8 +113,10 @@ public sealed class MusicBrainzService(
                         DiscNumber: medium.Position,
                         TrackNumber: track.Position,
                         Title: track.Title,
-                        FirstIssuedYear: recordingYear ?? release.Date?.Year,
+                        FirstIssuedYear: release.Date?.Year,
+                        RecordingYear: recordingYear,
                         Composer: trackComposer ?? releaseComposer,
+                        WorkName: null, // TODO: Extract from Work relationships
                         Conductor: releaseConductor,
                         Orchestra: releaseOrchestra,
                         Soloists: releaseSoloists,
@@ -151,7 +153,7 @@ public sealed class MusicBrainzService(
 
         return track with
         {
-            FirstIssuedYear = recording.FirstReleaseDate?.Year ?? track.FirstIssuedYear,
+            RecordingYear = recording.FirstReleaseDate?.Year ?? track.RecordingYear,
             Composer = recording.Artist ?? track.Composer,
         };
     }
