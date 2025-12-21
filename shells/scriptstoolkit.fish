@@ -21,7 +21,7 @@
 
 # PowerShell: $Script:RepositoryRoot = Split-Path -Path $PSScriptRoot -Parent
 # Fish: Use functions and command substitution
-set -g REPOSITORY_ROOT (dirname (status -f | dirname))
+set -g REPOSITORY_ROOT (dirname (dirname (status -f)))
 set -g PYTHON_TOOLKIT "$REPOSITORY_ROOT/python/toolkit/cli.py"
 set -g CSHARP_ROOT "$REPOSITORY_ROOT/csharp"
 set -g LOG_DIRECTORY "$REPOSITORY_ROOT/logs"

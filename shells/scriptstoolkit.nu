@@ -99,9 +99,9 @@ def invoke-toolkit-python [
     # - Winner: NuShell (15+ chars shorter)
     let python_path = (
         try {
-            (which python3).path.0
+            (which python3 | get path.0)
         } catch {
-            (which python).path.0
+            (which python | get path.0)
         }
     )
     
