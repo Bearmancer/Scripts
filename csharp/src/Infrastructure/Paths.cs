@@ -5,7 +5,8 @@ public static class Paths
     public static readonly string ProjectRoot = FindAncestorContaining(".git");
     public static readonly string LogDirectory = Combine(ProjectRoot, "logs");
     public static readonly string StateDirectory = Combine(ProjectRoot, "state");
-    public static readonly string DumpsDirectory = Combine(ProjectRoot, "dumps");
+    public static readonly string DumpsDirectory = Combine(StateDirectory, "dump");
+    public static readonly string ExportsDirectory = Combine(ProjectRoot, "exports");
 
     private static string FindAncestorContaining(string marker)
     {

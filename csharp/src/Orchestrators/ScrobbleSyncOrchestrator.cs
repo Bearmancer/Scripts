@@ -7,10 +7,7 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
         username: Config.LastFmUsername
     );
 
-    private readonly GoogleSheetsService sheetsService = new(
-        clientId: Config.GoogleClientId,
-        clientSecret: Config.GoogleClientSecret
-    );
+    private readonly GoogleSheetsService sheetsService = new();
 
     private FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
 

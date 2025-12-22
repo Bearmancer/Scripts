@@ -1,6 +1,6 @@
 namespace CSharpScripts.Services.Sync.YouTube;
 
-public class YouTubeService(string clientId, string clientSecret) : IDisposable
+public class YouTubeService : IDisposable
 {
     private const int MaxResultsPerPage = 50;
 
@@ -13,7 +13,7 @@ public class YouTubeService(string clientId, string clientSecret) : IDisposable
     private readonly YouTubeServiceApi service = new(
         new BaseClientService.Initializer
         {
-            HttpClientInitializer = GoogleCredentialService.GetCredential(clientId, clientSecret),
+            HttpClientInitializer = GoogleCredentialService.GetCredential(),
             ApplicationName = "CSharpScripts",
         }
     );
@@ -169,16 +169,18 @@ public class YouTubeService(string clientId, string clientSecret) : IDisposable
         List<global::Google.Apis.YouTube.v3.Data.Playlist> items = await FetchAllPlaylistItemsAsync(
             ct
         );
-        List<YouTubePlaylist> playlists = items
-            .Select(item => new YouTubePlaylist(
-                Id: item.Id,
-                Title: item.Snippet?.Title ?? "Untitled",
-                VideoCount: (int)(item.ContentDetails?.ItemCount ?? 0),
-                VideoIds: [],
-                ETag: item.ETag
-            ))
-            .OrderBy(p => p.Title)
-            .ToList();
+        List<YouTubePlaylist> playlists =
+        [
+            .. items
+                .Select(item => new YouTubePlaylist(
+                    Id: item.Id,
+                    Title: item.Snippet?.Title ?? "Untitled",
+                    VideoCount: (int)(item.ContentDetails?.ItemCount ?? 0),
+                    VideoIds: [],
+                    ETag: item.ETag
+                ))
+                .OrderBy(p => p.Title),
+        ];
 
         Console.Info("Found {0} playlists, fetching video IDs...", playlists.Count);
 

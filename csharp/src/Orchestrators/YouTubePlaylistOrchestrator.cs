@@ -10,15 +10,9 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         "Duration",
     ];
 
-    private readonly YouTubeService youtubeService = new(
-        clientId: Config.GoogleClientId,
-        clientSecret: Config.GoogleClientSecret
-    );
+    private readonly YouTubeService youtubeService = new();
 
-    private readonly GoogleSheetsService sheetsService = new(
-        clientId: Config.GoogleClientId,
-        clientSecret: Config.GoogleClientSecret
-    );
+    private readonly GoogleSheetsService sheetsService = new();
 
     private readonly YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
         StateManager.YouTubeSyncFile
@@ -918,10 +912,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         var desktopPath = GetFolderPath(SpecialFolder.Desktop);
         var fullOutputPath = Combine(desktopPath, outputDirectory);
 
-        var sheetsService = new GoogleSheetsService(
-            clientId: Config.GoogleClientId,
-            clientSecret: Config.GoogleClientSecret
-        );
+        var sheetsService = new GoogleSheetsService();
 
         var exported = sheetsService.ExportEachSheetAsCSV(
             spreadsheetId: state.SpreadsheetId,
@@ -941,10 +932,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 
     public static async Task CountPlaylistsAsync(CancellationToken ct = default)
     {
-        var youtubeService = new YouTubeService(
-            clientId: Config.GoogleClientId,
-            clientSecret: Config.GoogleClientSecret
-        );
+        var youtubeService = new YouTubeService();
 
         var playlists = await youtubeService.GetPlaylistSummariesAsync(ct: ct);
         Console.Info("Playlists: {0}", playlists.Count);

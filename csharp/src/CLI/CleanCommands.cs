@@ -106,7 +106,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
         FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
         if (!IsNullOrEmpty(state.SpreadsheetId))
         {
-            sheets ??= new GoogleSheetsService(Config.GoogleClientId, Config.GoogleClientSecret);
+            sheets ??= new GoogleSheetsService();
             sheets.DeleteSpreadsheet(state.SpreadsheetId);
         }
 
@@ -123,7 +123,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
         );
         if (!IsNullOrEmpty(state.SpreadsheetId))
         {
-            sheets ??= new GoogleSheetsService(Config.GoogleClientId, Config.GoogleClientSecret);
+            sheets ??= new GoogleSheetsService();
             sheets.DeleteSpreadsheet(state.SpreadsheetId);
         }
 

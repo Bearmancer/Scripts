@@ -19,6 +19,7 @@
         <InternalsVisibleTo Include="CSharpScripts.Tests" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.1.0" />
         <PackageReference Include="Google.Apis" Version="*" />
         <PackageReference Include="Google.Apis.Auth" Version="*" />
         <PackageReference Include="Google.Apis.Drive.v3" Version="*" />
@@ -31,6 +32,7 @@
         <PackageReference Include="RestSharp" Version="*" />
         <PackageReference Include="Spectre.Console" Version="*-*" />
         <PackageReference Include="Spectre.Console.Cli" Version="*" />
+        <PackageReference Include="Lingua" Version="*" />
         <!-- Native completion implemented in CompletionCommands.cs -->
     </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Resilience
 {
-    public const int MAX_RETRIES = 10;
+    public const int MaxRetries = 10;
     public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(3000);
     public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(5);
     public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(5);
@@ -92,11 +92,11 @@ public static class Resilience
     private static RetryStrategyOptions<T> CreateRetryOptions<T>(string operation) =>
         new()
         {
-            MaxRetryAttempts = MAX_RETRIES,
-            Delay = BaseRetryDelay, // Base = 5s
-            MaxDelay = MaxRetryDelay, // Cap at 5 minutes
-            BackoffType = DelayBackoffType.Exponential, // 5s, 10s, 20s, 40s, 80s...
-            UseJitter = true, // Add randomness to prevent thundering herd
+            MaxRetryAttempts = MaxRetries,
+            Delay = BaseRetryDelay,
+            MaxDelay = MaxRetryDelay,
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true,
             ShouldHandle = new PredicateBuilder<T>()
                 .Handle<HttpRequestException>()
                 .Handle<TimeoutException>()
@@ -105,7 +105,9 @@ public static class Resilience
                 .HandleInner<HttpRequestException>()
                 .HandleInner<TimeoutException>()
                 .HandleInner<IOException>()
-                .HandleInner<SocketException>(),
+                .HandleInner<SocketException>()
+                .Handle<Exception>(ex => IsTransientError(ex.Message))
+                .HandleInner<Exception>(ex => IsTransientError(ex.Message)),
             OnRetry = args =>
             {
                 string message = args.Outcome.Exception?.Message ?? "Unknown error";
@@ -120,7 +122,7 @@ public static class Resilience
                     "{0} failed (attempt {1}/{2}): {3}",
                     operation,
                     args.AttemptNumber + 1,
-                    MAX_RETRIES,
+                    MaxRetries,
                     message
                 );
                 Console.Info(
@@ -139,6 +141,21 @@ public static class Resilience
         if (elapsed < ThrottleDelay)
             await Task.Delay(ThrottleDelay - elapsed, ct);
     }
+
+    /// <summary>
+    /// Check if an error message indicates a transient error that should be retried.
+    /// </summary>
+    public static bool IsTransientError(string? message) =>
+        message is not null
+        && (
+            message.Contains("busy", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("unavailable", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("503", StringComparison.Ordinal)
+            || message.Contains("429", StringComparison.Ordinal)
+            || message.Contains("rate limit", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("too many requests", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("try again", StringComparison.OrdinalIgnoreCase)
+        );
 
     public static bool IsFatalQuotaError(string message) =>
         message.Contains("daily limit", StringComparison.OrdinalIgnoreCase)

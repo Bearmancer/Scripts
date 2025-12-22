@@ -2,96 +2,21 @@ namespace CSharpScripts.Services.Sync.Google;
 
 public static class GoogleCredentialService
 {
-    private static UserCredential? cachedCredential;
+    private static ICredential? cached;
 
-    private static readonly string[] AllScopes =
+    private static readonly string[] Scopes =
     [
         SheetsService.Scope.Spreadsheets,
-        DriveService.Scope.DriveFile,
-        YouTubeServiceApi.Scope.YoutubeReadonly,
+        DriveService.Scope.Drive,
+        YouTubeServiceApi.Scope.Youtube,
     ];
 
-    /// <summary>
-    /// Gets or creates a Google API credential asynchronously.
-    /// </summary>
-    internal static async Task<UserCredential> GetCredentialAsync(
-        string clientId,
-        string clientSecret,
-        CancellationToken ct = default
-    )
-    {
-        if (cachedCredential != null)
-            return cachedCredential;
+    internal static ICredential GetCredential() =>
+        cached ??= GoogleCredential.GetApplicationDefault().CreateScoped(Scopes);
 
-        Console.Debug("Authorizing Google APIs...");
+    internal static async Task<string> GetAccessTokenAsync(CancellationToken ct = default) =>
+        await GetCredential().GetAccessTokenForRequestAsync(cancellationToken: ct)
+        ?? throw new InvalidOperationException("ADC token unavailable");
 
-        if (IsNullOrWhiteSpace(clientId))
-            throw new InvalidOperationException(
-                "Google Client ID is empty. Set GOOGLE_CLIENT_ID environment variable."
-            );
-
-        if (IsNullOrWhiteSpace(clientSecret))
-            throw new InvalidOperationException(
-                "Google Client Secret is empty. Set GOOGLE_CLIENT_SECRET environment variable."
-            );
-
-        try
-        {
-            cachedCredential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                clientSecrets: new() { ClientId = clientId, ClientSecret = clientSecret },
-                scopes: AllScopes,
-                user: "simplercs_user",
-                taskCancellationToken: ct
-            );
-        }
-        catch (AggregateException aex) when (aex.InnerException is not null)
-        {
-            var inner = aex.InnerException;
-            string detail = inner.Message switch
-            {
-                var m when m.Contains("invalid_client", StringComparison.OrdinalIgnoreCase) =>
-                    "Invalid OAuth credentials. Verify GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are correct.",
-                var m when m.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase) =>
-                    "OAuth token expired. Delete the token file in your home directory and re-authenticate.",
-                var m when m.Contains("access_denied", StringComparison.OrdinalIgnoreCase) =>
-                    "Access denied. You may have declined the authorization prompt.",
-                _ => inner.Message,
-            };
-
-            throw new InvalidOperationException($"Google authentication failed: {detail}", inner);
-        }
-
-        Console.Debug("Google APIs authorized");
-        return cachedCredential;
-    }
-
-    /// <summary>
-    /// Synchronous wrapper for backward compatibility.
-    /// Prefer GetCredentialAsync for new code.
-    /// </summary>
-    internal static UserCredential GetCredential(string clientId, string clientSecret) =>
-        GetCredentialAsync(clientId, clientSecret, CancellationToken.None).GetAwaiter().GetResult();
-
-    /// <summary>
-    /// Gets access token, refreshing if stale.
-    /// </summary>
-    public static async Task<string> GetAccessTokenAsync(
-        UserCredential? credential,
-        CancellationToken ct = default
-    )
-    {
-        if (credential == null)
-            throw new InvalidOperationException("No credential available for access token");
-
-        if (credential.Token.IsStale)
-            await credential.RefreshTokenAsync(ct);
-
-        return credential.Token.AccessToken;
-    }
-
-    /// <summary>
-    /// Synchronous wrapper for backward compatibility.
-    /// </summary>
-    public static string GetAccessToken(UserCredential? credential) =>
-        GetAccessTokenAsync(credential, CancellationToken.None).GetAwaiter().GetResult();
+    internal static string GetAccessToken() => GetAccessTokenAsync().GetAwaiter().GetResult();
 }

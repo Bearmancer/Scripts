@@ -1,3 +1,5 @@
+using SearchResult = CSharpScripts.Models.SearchResult;
+
 namespace CSharpScripts.Services.Music;
 
 sealed class DiscogsClientConfig(string token) : IClientConfig
@@ -22,7 +24,7 @@ public sealed class DiscogsService : IMusicService
 
     #region IMusicService
 
-    public async Task<List<Models.SearchResult>> SearchAsync(
+    public async Task<List<SearchResult>> SearchAsync(
         string query,
         int maxResults = 10,
         CancellationToken ct = default
@@ -39,7 +41,7 @@ public sealed class DiscogsService : IMusicService
 
                 return results
                     .Results.Take(maxResults)
-                    .Select(r => new Models.SearchResult(
+                    .Select(r => new SearchResult(
                         Source: MusicSource.Discogs,
                         Id: (r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
                         Title: r.Title ?? "",
@@ -51,7 +53,8 @@ public sealed class DiscogsService : IMusicService
                         Score: null, // Discogs doesn't provide relevance score
                         Country: r.Country,
                         CatalogNumber: r.CatalogNumber,
-                        Barcode: r.Barcode?.FirstOrDefault(),
+                        Status: null, // Discogs doesn't have status like MB
+                        Disambiguation: null, // Discogs doesn't have disambiguation
                         Genres: r.Genre?.ToList(),
                         Styles: r.Style?.ToList()
                     ))
@@ -61,14 +64,15 @@ public sealed class DiscogsService : IMusicService
         );
     }
 
-    public async Task<List<TrackMetadata>> GetReleaseTracksAsync(
+    public async Task<ReleaseData> GetReleaseAsync(
         string releaseId,
         bool deepSearch = true,
+        int? maxDiscs = null,
         CancellationToken ct = default
     )
     {
         int id = int.Parse(releaseId);
-        Models.DiscogsRelease release =
+        DiscogsRelease release =
             await GetReleaseAsync(id, ct)
             ?? throw new InvalidOperationException($"Release not found: {releaseId}");
 
@@ -93,20 +97,22 @@ public sealed class DiscogsService : IMusicService
                 a.Role?.Contains("Orchestra", StringComparison.OrdinalIgnoreCase) == true
             )
             ?.Name;
-        List<string> soloists = release
-            .ExtraArtists.Where(a =>
-                a.Role?.Contains("Soloist", StringComparison.OrdinalIgnoreCase) == true
-                || a.Role?.Contains("Performer", StringComparison.OrdinalIgnoreCase) == true
-            )
-            .Select(a => a.Name)
-            .Distinct()
-            .ToList();
+        List<string> soloists =
+        [
+            .. release
+                .ExtraArtists.Where(a =>
+                    a.Role?.Contains("Soloist", StringComparison.OrdinalIgnoreCase) == true
+                    || a.Role?.Contains("Performer", StringComparison.OrdinalIgnoreCase) == true
+                )
+                .Select(a => a.Name)
+                .Distinct(),
+        ];
 
         string? primaryArtist = release.Artists.FirstOrDefault()?.Name;
         string? label = release.Labels.FirstOrDefault()?.Name;
         string? catalogNumber = release.Labels.FirstOrDefault()?.CatalogNumber;
 
-        List<TrackMetadata> tracks = [];
+        List<TrackInfo> tracks = [];
         int discNum = 1;
         int trackNum = 0;
 
@@ -127,51 +133,142 @@ public sealed class DiscogsService : IMusicService
             }
             trackNum++;
 
+            // Parse recording info from Notes for this disc
+            var (recordingYear, recordingVenue) = ParseNotesForRecordingInfo(
+                release.Notes,
+                discNum
+            );
+
             tracks.Add(
-                new TrackMetadata(
-                    Source: MusicSource.Discogs,
-                    ReleaseId: releaseId,
+                new TrackInfo(
                     DiscNumber: discNum,
                     TrackNumber: trackNum,
                     Title: track.Title,
-                    FirstIssuedYear: originalYear ?? release.Year,
-                    RecordingYear: null, // Discogs doesn't track recording year separately
+                    Duration: ParseDuration(track.Duration),
+                    RecordingYear: recordingYear,
                     Composer: composer,
-                    WorkName: null, // TODO: Extract from title patterns
+                    WorkName: null,
                     Conductor: conductor,
                     Orchestra: orchestra,
                     Soloists: soloists,
                     Artist: primaryArtist,
-                    Album: release.Title,
-                    Label: label,
-                    CatalogNumber: catalogNumber,
-                    RecordingVenue: null,
-                    Notes: release.Notes,
-                    Duration: ParseDuration(track.Duration)
+                    RecordingVenue: recordingVenue
                 )
             );
         }
 
-        return tracks;
+        TimeSpan totalDuration = tracks
+            .Where(t => t.Duration.HasValue)
+            .Aggregate(TimeSpan.Zero, (sum, t) => sum + t.Duration!.Value);
+
+        ReleaseInfo info = new(
+            Source: MusicSource.Discogs,
+            Id: releaseId,
+            Title: release.Title,
+            Artist: primaryArtist,
+            Label: label,
+            CatalogNumber: catalogNumber,
+            Year: originalYear ?? release.Year,
+            Notes: release.Notes,
+            DiscCount: discNum,
+            TrackCount: tracks.Count,
+            TotalDuration: totalDuration
+        );
+
+        return new ReleaseData(info, tracks);
     }
 
-    public Task<TrackMetadata> EnrichTrackAsync(TrackMetadata track, CancellationToken ct = default)
+    static TimeSpan? ParseDuration(string? duration) =>
+        TimeSpan.TryParse(duration, out TimeSpan result) ? result : null;
+
+    #endregion
+
+    #region Notes Parsing
+
+    internal static (int? Year, string? Venue) ParseNotesForRecordingInfo(
+        string? notes,
+        int discNumber
+    )
     {
-        // Discogs fetches all data at once, so no enrichment needed.
-        return Task.FromResult(track);
+        if (IsNullOrWhiteSpace(notes))
+            return (null, null);
+
+        int? year = null;
+        string? venue = null;
+
+        string[] lines = notes.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (string rawLine in lines)
+        {
+            string line = rawLine.Trim();
+
+            bool appliesToDisc = true;
+            var discRangeMatch = Regex.Match(
+                line,
+                @"^(?:CD|Disc)\s*(\d+)(?:\s*[-–]\s*(\d+))?:",
+                RegexOptions.IgnoreCase
+            );
+            if (discRangeMatch.Success)
+            {
+                int startDisc = int.Parse(discRangeMatch.Groups[1].Value);
+                int endDisc = discRangeMatch.Groups[2].Success
+                    ? int.Parse(discRangeMatch.Groups[2].Value)
+                    : startDisc;
+                appliesToDisc = discNumber >= startDisc && discNumber <= endDisc;
+            }
+
+            if (!appliesToDisc)
+                continue;
+
+            // Extract year: "Recorded [Month] [Year]" or "1954 recording" or "(1954)"
+            year ??= ExtractYearFromLine(line);
+
+            // Extract venue: "@ Venue", "at Venue", "in Venue", ", Venue"
+            venue ??= ExtractVenueFromLine(line);
+        }
+
+        return (year, venue);
     }
 
-    static TimeSpan? ParseDuration(string? duration)
+    static int? ExtractYearFromLine(string line)
     {
-        if (IsNullOrWhiteSpace(duration))
-            return null;
-        var parts = duration.Split(':');
-        if (
-            parts.Length == 2
-            && int.TryParse(parts[0], out int mins)
-            && int.TryParse(parts[1], out int secs)
-        )
-            return TimeSpan.FromMinutes(mins) + TimeSpan.FromSeconds(secs);
+        // Pattern: "Recorded [optional month] [year]"
+        var recordedMatch = Regex.Match(
+            line,
+            @"[Rr]ecorded\s+(?:\w+\s+)?(\d{4})",
+            RegexOptions.IgnoreCase
+        );
+        if (recordedMatch.Success && int.TryParse(recordedMatch.Groups[1].Value, out int y1))
+            return y1;
+
+        // Pattern: "[year] recording" or "(year)"
+        var yearMatch = Regex.Match(line, @"\b(19\d{2}|20\d{2})\b");
+        if (yearMatch.Success && int.TryParse(yearMatch.Groups[1].Value, out int y2))
+            return y2;
+
+        return null;
+    }
+
+    static string? ExtractVenueFromLine(string line)
+    {
+        // Pattern: "@ Venue" or "at Venue" followed by venue name
+        var venueMatch = Regex.Match(
+            line,
+            @"(?:@|at|in)\s+([A-Z][^,\.\n]+(?:,\s*[A-Z][^,\.\n]+)?)",
+            RegexOptions.IgnoreCase
+        );
+        if (venueMatch.Success)
+            return venueMatch.Groups[1].Value.Trim();
+
+        // Pattern: ", Venue" after year (e.g., "1954, Musikverein, Vienna")
+        var commaVenueMatch = Regex.Match(
+            line,
+            @"\d{4},\s*([A-Z][^,\.\n]+(?:,\s*[A-Z][^,\.\n]+)?)",
+            RegexOptions.None
+        );
+        if (commaVenueMatch.Success)
+            return commaVenueMatch.Groups[1].Value.Trim();
+
         return null;
     }
 
@@ -260,7 +357,7 @@ public sealed class DiscogsService : IMusicService
 
     #region Release
 
-    public async Task<Models.DiscogsRelease?> GetReleaseAsync(
+    public async Task<DiscogsRelease?> GetReleaseAsync(
         int releaseId,
         CancellationToken ct = default
     )
@@ -278,7 +375,7 @@ public sealed class DiscogsService : IMusicService
         );
     }
 
-    static Models.DiscogsRelease MapRelease(Release r) =>
+    static DiscogsRelease MapRelease(Release r) =>
         new(
             Id: r.ReleaseId,
             Title: r.Title ?? "",
@@ -308,7 +405,7 @@ public sealed class DiscogsService : IMusicService
             EstimatedWeight: r.EstimatedWeight
         );
 
-    public async Task<Dictionary<string, List<Models.DiscogsTrack>>> GetTracksByMediaAsync(
+    public async Task<Dictionary<string, List<DiscogsTrack>>> GetTracksByMediaAsync(
         int releaseId,
         CancellationToken ct = default
     )
@@ -335,10 +432,7 @@ public sealed class DiscogsService : IMusicService
 
     #region Master
 
-    public async Task<Models.DiscogsMaster?> GetMasterAsync(
-        int masterId,
-        CancellationToken ct = default
-    )
+    public async Task<DiscogsMaster?> GetMasterAsync(int masterId, CancellationToken ct = default)
     {
         return await ExecuteSafeAsync(
             async () =>
@@ -353,7 +447,7 @@ public sealed class DiscogsService : IMusicService
         );
     }
 
-    static Models.DiscogsMaster MapMaster(MasterRelease m) =>
+    static DiscogsMaster MapMaster(MasterRelease m) =>
         new(
             Id: m.MasterId,
             Title: m.Title ?? "",
@@ -376,7 +470,7 @@ public sealed class DiscogsService : IMusicService
             LowestPrice: (decimal?)m.LowestPrice
         );
 
-    public async Task<List<Models.DiscogsVersion>> GetVersionsAsync(
+    public async Task<List<DiscogsVersion>> GetVersionsAsync(
         int masterId,
         int maxResults = 50,
         CancellationToken ct = default
@@ -396,7 +490,7 @@ public sealed class DiscogsService : IMusicService
         );
     }
 
-    static Models.DiscogsVersion MapVersion(ParkSquare.Discogs.Dto.Version v) =>
+    static DiscogsVersion MapVersion(ParkSquare.Discogs.Dto.Version v) =>
         new(
             Id: v.ReleaseId,
             Title: v.Title ?? "",
@@ -414,7 +508,7 @@ public sealed class DiscogsService : IMusicService
 
     #region Mappers
 
-    static Models.DiscogsTrack MapTrack(Tracklist t) =>
+    static DiscogsTrack MapTrack(Tracklist t) =>
         new(
             Position: t.Position ?? "",
             Title: t.Title ?? "",
@@ -424,7 +518,7 @@ public sealed class DiscogsService : IMusicService
             ExtraArtists: t.ExtraArtists?.Select(MapArtistRef).ToList()
         );
 
-    static Models.DiscogsFormat MapFormat(Format f) =>
+    static DiscogsFormat MapFormat(Format f) =>
         new(
             Name: f.Name ?? "",
             Quantity: f.Quantity,
@@ -432,7 +526,7 @@ public sealed class DiscogsService : IMusicService
             Descriptions: f.Descriptions?.ToList() ?? []
         );
 
-    static Models.DiscogsLabel MapLabel(Label l) =>
+    static DiscogsLabel MapLabel(Label l) =>
         new(
             Id: l.Id,
             Name: l.Name ?? "",
@@ -442,7 +536,7 @@ public sealed class DiscogsService : IMusicService
             ResourceUrl: l.ResourceUrl
         );
 
-    static Models.DiscogsCompany MapCompany(Company c) =>
+    static DiscogsCompany MapCompany(Company c) =>
         new(
             Id: c.Id,
             Name: c.Name ?? "",
@@ -452,7 +546,7 @@ public sealed class DiscogsService : IMusicService
             ResourceUrl: c.ResourceUrl
         );
 
-    static Models.DiscogsArtistRef MapArtistRef(ParkSquare.Discogs.Dto.Artist a) =>
+    static DiscogsArtistRef MapArtistRef(Artist a) =>
         new(
             Id: a.Id,
             Name: a.Name ?? "",
@@ -463,7 +557,7 @@ public sealed class DiscogsService : IMusicService
             ResourceUrl: a.ResourceUrl
         );
 
-    static Models.DiscogsImage MapImage(ParkSquare.Discogs.Dto.Image i) =>
+    static DiscogsImage MapImage(Image i) =>
         new(
             Type: i.Type ?? "",
             Uri: i.Uri,
@@ -473,7 +567,7 @@ public sealed class DiscogsService : IMusicService
             ResourceUrl: i.ResourceUrl
         );
 
-    static Models.DiscogsVideo MapVideo(ParkSquare.Discogs.Dto.Video v) =>
+    static DiscogsVideo MapVideo(Video v) =>
         new(
             Uri: v.Uri ?? "",
             Title: v.Title,
@@ -482,10 +576,10 @@ public sealed class DiscogsService : IMusicService
             Embed: v.Embed
         );
 
-    static Models.DiscogsIdentifier MapIdentifier(Identifier i) =>
+    static DiscogsIdentifier MapIdentifier(Identifier i) =>
         new(Type: i.Type ?? "", Value: i.Value ?? "", Description: i.Description);
 
-    static Models.DiscogsCommunity MapCommunity(Community c) =>
+    static DiscogsCommunity MapCommunity(Community c) =>
         new(
             Have: c.Have,
             Want: c.Want,
@@ -494,7 +588,7 @@ public sealed class DiscogsService : IMusicService
             Status: c.Status,
             DataQuality: c.DataQuality,
             Submitter: c.Submitter is { } s
-                ? new Models.DiscogsSubmitter(s.Username ?? "", s.ResourceUrl)
+                ? new DiscogsSubmitter(s.Username ?? "", s.ResourceUrl)
                 : null
         );
 

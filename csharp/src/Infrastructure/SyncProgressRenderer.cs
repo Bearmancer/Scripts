@@ -17,8 +17,7 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
             $"{snapshot.TotalVideosProcessedAcrossAllPlaylists}/{snapshot.TotalVideosAcrossAllPlaylists} videos";
         string timeText = FormatTimeText(snapshot);
 
-        Spectre.Console.Color barColor = GetBarColor(snapshot.OverallVideoPercent);
-        string colorName = barColor.ToString().ToLowerInvariant();
+        string colorName = GetBarColor(snapshot.OverallVideoPercent);
 
         Markup line = new(
             $"{Console.Colored(colorName, playlistName)} {countsText} "
@@ -35,22 +34,9 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
         return name[..(MAX_NAME_LENGTH - 3)] + "...";
     }
 
-    static string BuildProgressBar(double percent)
-    {
-        int filled = (int)(BAR_WIDTH * percent / 100.0);
-        filled = Math.Clamp(filled, 0, BAR_WIDTH);
-        int empty = BAR_WIDTH - filled;
-        return new string('━', filled) + new string('─', empty);
-    }
+    static string BuildProgressBar(double percent) => Console.WideProgressBar(percent, BAR_WIDTH);
 
-    static Spectre.Console.Color GetBarColor(double percent) =>
-        percent switch
-        {
-            >= 75 => Spectre.Console.Color.Green,
-            >= 50 => Spectre.Console.Color.Yellow,
-            >= 25 => Spectre.Console.Color.Blue,
-            _ => Spectre.Console.Color.Cyan,
-        };
+    static string GetBarColor(double percent) => Console.ProgressColor(percent);
 
     static string FormatTimeText(SyncProgressSnapshot snapshot)
     {
