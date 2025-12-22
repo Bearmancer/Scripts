@@ -1,6 +1,8 @@
 namespace CSharpScripts.Models;
 
-public record MusicBrainzArtist(
+internal record WorkDetails(string? Composer, string? ParentWorkName);
+
+internal record MusicBrainzArtist(
     Guid Id,
     string Name,
     string? SortName,
@@ -20,7 +22,7 @@ public record MusicBrainzArtist(
     int? RatingVotes
 );
 
-public record MusicBrainzRecording(
+internal record MusicBrainzRecording(
     Guid Id,
     string Title,
     string? Artist,
@@ -34,10 +36,17 @@ public record MusicBrainzRecording(
     List<string> Genres,
     double? Rating,
     int? RatingVotes,
-    string? Annotation
+    string? Annotation,
+    string? WorkName = null,
+    Guid? WorkId = null,
+    string? WorkComposer = null,
+    string? Conductor = null,
+    string? Orchestra = null,
+    string? RecordingVenue = null,
+    DateOnly? RecordingDate = null
 );
 
-public record MusicBrainzTrack(
+internal record MusicBrainzTrack(
     Guid Id,
     string Title,
     int Position,
@@ -47,7 +56,7 @@ public record MusicBrainzTrack(
     string? ArtistCredit
 );
 
-public record MusicBrainzMedium(
+internal record MusicBrainzMedium(
     int Position,
     string? Format,
     string? Title,
@@ -55,7 +64,7 @@ public record MusicBrainzMedium(
     List<MusicBrainzTrack> Tracks
 );
 
-public record MusicBrainzRelease(
+internal record MusicBrainzRelease(
     Guid Id,
     string Title,
     string? Artist,
@@ -82,7 +91,7 @@ public record MusicBrainzRelease(
     public List<MusicBrainzTrack> Tracks => [.. Media.SelectMany(m => m.Tracks)];
 }
 
-public record MusicBrainzReleaseGroup(
+internal record MusicBrainzReleaseGroup(
     Guid Id,
     string Title,
     string? Artist,
@@ -99,43 +108,13 @@ public record MusicBrainzReleaseGroup(
     string? Annotation
 );
 
-public record MusicBrainzLabel(Guid? Id, string? Name, string? CatalogNumber);
+internal record MusicBrainzLabel(Guid? Id, string? Name, string? CatalogNumber);
 
-public record MusicBrainzCredit(string Name, string Role, Guid? ArtistId, string? Attributes);
+internal record MusicBrainzCredit(string Name, string Role, Guid? ArtistId, string? Attributes);
 
-public record MusicBrainzSearchResult(
-    Guid Id,
-    string Title,
-    string? Artist,
-    int? Year,
-    string? Country,
-    string? Status,
-    string? Disambiguation,
-    int? Score
+internal record MusicBrainzEnrichmentState(
+    string ReleaseId,
+    int TotalTracks,
+    List<TrackInfo> EnrichedTracks,
+    DateTime LastUpdated
 );
-
-// Box set track with classical music metadata
-public record BoxSetTrackMetadata(
-    int DiscNumber,
-    int TrackNumber,
-    string Composer,
-    string Title,
-    int RecordingYear,
-    string Orchestra,
-    string Conductor,
-    List<string> Soloists // Optional - empty list if none
-);
-
-public record BoxSetParseOptions(int MinYear, int MaxYear)
-{
-    public void ValidateYear(int? year, string context) =>
-        _ =
-            year is null ? throw new BoxSetParseException($"Recording year missing: {context}")
-            : year < MinYear || year > MaxYear
-                ? throw new BoxSetParseException(
-                    $"Recording year {year} outside range [{MinYear}-{MaxYear}]: {context}"
-                )
-            : 0;
-}
-
-public sealed class BoxSetParseException(string message) : Exception(message);

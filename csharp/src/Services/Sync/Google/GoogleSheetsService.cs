@@ -1,6 +1,6 @@
 namespace CSharpScripts.Services.Sync.Google;
 
-public class GoogleSheetsService(string clientId, string clientSecret) : IDisposable
+public class GoogleSheetsService : IDisposable
 {
     private const string SheetName = "Scrobbles";
     private const string SpreadsheetTitle = "last.fm scrobbles";
@@ -20,7 +20,7 @@ public class GoogleSheetsService(string clientId, string clientSecret) : IDispos
     private readonly SheetsService service = new(
         new BaseClientService.Initializer
         {
-            HttpClientInitializer = GoogleCredentialService.GetCredential(clientId, clientSecret),
+            HttpClientInitializer = GoogleCredentialService.GetCredential(),
             ApplicationName = "CSharpScripts",
         }
     );
@@ -28,7 +28,7 @@ public class GoogleSheetsService(string clientId, string clientSecret) : IDispos
     private readonly DriveService driveService = new(
         new BaseClientService.Initializer
         {
-            HttpClientInitializer = GoogleCredentialService.GetCredential(clientId, clientSecret),
+            HttpClientInitializer = GoogleCredentialService.GetCredential(),
             ApplicationName = "CSharpScripts",
         }
     );
@@ -1061,9 +1061,7 @@ public class GoogleSheetsService(string clientId, string clientSecret) : IDispos
                     httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue(
                             "Bearer",
-                            GoogleCredentialService.GetAccessToken(
-                                driveService.HttpClientInitializer as UserCredential
-                            )
+                            GoogleCredentialService.GetAccessToken()
                         );
 
                     var response = Resilience.Execute(
@@ -1131,10 +1129,7 @@ public class GoogleSheetsService(string clientId, string clientSecret) : IDispos
         httpClient.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer",
-                await GoogleCredentialService.GetAccessTokenAsync(
-                    driveService.HttpClientInitializer as UserCredential,
-                    ct
-                )
+                await GoogleCredentialService.GetAccessTokenAsync(ct)
             );
 
         foreach (var sheet in toExport)

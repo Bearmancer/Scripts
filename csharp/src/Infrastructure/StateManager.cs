@@ -5,7 +5,6 @@ public static class StateManager
     public const string LastFmSyncFile = "lastfm/sync.json";
     public const string LastFmScrobblesFile = "lastfm/scrobbles.json";
     public const string YouTubeSyncFile = "youtube/sync.json";
-    public const string BoxSetCacheDirectory = "boxsets";
 
     internal static string RootDirectory = Paths.StateDirectory;
 
@@ -186,68 +185,68 @@ public static class StateManager
 
     #endregion
 
-    #region Box Set Cache Management
+    #region Release Cache Management
 
-    private static string BoxSetCachePath => Combine(Paths.StateDirectory, BoxSetCacheDirectory);
+    private static string ReleaseCachePath => Combine(Paths.StateDirectory, "releases");
 
-    public static T? LoadBoxSetCache<T>(string boxSetName)
+    public static T? LoadReleaseCache<T>(string releaseId)
         where T : class
     {
-        CreateDirectory(BoxSetCachePath);
-        var path = GetBoxSetPath(boxSetName);
+        CreateDirectory(ReleaseCachePath);
+        string path = GetReleasePath(releaseId);
         if (!File.Exists(path))
             return null;
 
-        var json = ReadAllText(path);
+        string json = ReadAllText(path);
         return JsonSerializer.Deserialize<T>(json, JsonCompact);
     }
 
-    public static void SaveBoxSetCache<T>(string boxSetName, T data)
+    public static void SaveReleaseCache<T>(string releaseId, T data)
     {
-        CreateDirectory(BoxSetCachePath);
-        WriteAllText(GetBoxSetPath(boxSetName), JsonSerializer.Serialize(data, JsonIndented));
-        Console.Debug("Saved box set cache: {0}", boxSetName);
+        CreateDirectory(ReleaseCachePath);
+        WriteAllText(GetReleasePath(releaseId), JsonSerializer.Serialize(data, JsonIndented));
+        Console.Debug("Saved release cache: {0}", releaseId);
     }
 
-    public static bool BoxSetCacheExists(string boxSetName) =>
-        File.Exists(GetBoxSetPath(boxSetName));
+    public static bool ReleaseCacheExists(string releaseId) =>
+        File.Exists(GetReleasePath(releaseId));
 
-    public static DateTime? GetBoxSetCacheAge(string boxSetName)
+    public static DateTime? GetReleaseCacheAge(string releaseId)
     {
-        var path = GetBoxSetPath(boxSetName);
+        string path = GetReleasePath(releaseId);
         return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : null;
     }
 
-    public static void DeleteBoxSetCache(string boxSetName)
+    public static void DeleteReleaseCache(string releaseId)
     {
-        var path = GetBoxSetPath(boxSetName);
+        string path = GetReleasePath(releaseId);
         if (File.Exists(path))
         {
             File.Delete(path);
-            Console.Debug("Deleted box set cache: {0}", boxSetName);
+            Console.Debug("Deleted release cache: {0}", releaseId);
         }
     }
 
-    public static void DeleteAllBoxSetCaches()
+    public static void DeleteAllReleaseCaches()
     {
-        if (Directory.Exists(BoxSetCachePath))
+        if (Directory.Exists(ReleaseCachePath))
         {
-            Directory.Delete(BoxSetCachePath, true);
-            Console.Debug("Deleted all box set caches");
+            Directory.Delete(ReleaseCachePath, true);
+            Console.Debug("Deleted all release caches");
         }
     }
 
-    public static IEnumerable<string> ListBoxSetCaches()
+    public static IEnumerable<string> ListReleaseCaches()
     {
-        if (!Directory.Exists(BoxSetCachePath))
+        if (!Directory.Exists(ReleaseCachePath))
             yield break;
 
-        foreach (var file in GetFiles(BoxSetCachePath, "*.json"))
+        foreach (string file in GetFiles(ReleaseCachePath, "*.json"))
             yield return GetFileNameWithoutExtension(file);
     }
 
-    private static string GetBoxSetPath(string boxSetName) =>
-        Combine(BoxSetCachePath, $"{SanitizeFileName(boxSetName)}.json");
+    private static string GetReleasePath(string releaseId) =>
+        Combine(ReleaseCachePath, $"{SanitizeFileName(releaseId)}.json");
 
     #endregion
 

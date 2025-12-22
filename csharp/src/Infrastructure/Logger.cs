@@ -24,7 +24,7 @@ public static class Logger
             new Dictionary<string, object>
             {
                 ["Service"] = service.ToString(),
-                ["ProcessId"] = Environment.ProcessId,
+                ["ProcessId"] = ProcessId,
             }
         );
     }
@@ -275,6 +275,7 @@ public static class Logger
             {
                 ServiceType.LastFm => "lastfm.jsonl",
                 ServiceType.YouTube => "youtube.jsonl",
+                ServiceType.Music => "music.jsonl",
                 _ => "general.jsonl",
             }
         );
@@ -299,6 +300,7 @@ public enum ServiceType
     LastFm,
     YouTube,
     Sheets,
+    Music,
 }
 
 public record LogEntry(

@@ -21,10 +21,9 @@ Thumbs.db
 
 # Temp/logs
 *.tmp
-*.log
+csharp\src\Markdown
 
 # Project-specific
-*.csv
 .fake
 
 # Secrets/Credentials

@@ -1,8 +1,0 @@
-{"task":"LastFmSync","message":"Starting sync task","level":"INFO","timestamp":"2025/12/13 15:00:20"}
-{"task":"LastFmSync","message":"Sync completed successfully","level":"DONE","timestamp":"2025/12/13 15:00:38"}
-{"message":"Starting sync task","timestamp":"2025/12/13 15:16:19","task":"YouTubeSync","level":"INFO"}
-{"message":"Sync completed successfully","timestamp":"2025/12/13 15:16:41","task":"YouTubeSync","level":"DONE"}
-{"timestamp":"2025/12/13 15:19:54","message":"Starting sync task","task":"YouTubeSync","level":"INFO"}
-{"timestamp":"2025/12/13 15:20:09","message":"Sync completed successfully","task":"YouTubeSync","level":"DONE"}
-{"timestamp":"2025/12/13 15:27:35","task":"YouTubeSync","event":"started"}
-{"timestamp":"2025/12/13 15:27:56","task":"YouTubeSync","exitCode":0,"event":"ended"}

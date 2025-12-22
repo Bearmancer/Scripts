@@ -1,67 +1,34 @@
-~~1. Remove lookup -- integrate into search of supplying an ID~~ ✅
-~~2. Refactor:~~ ✅ (Added disc count and total duration to box set summary)
+1. Read all documents inside markdown
+7. Find how to get raw response by reading suggestion: Raw Response.md
+2. Assess current invocations of metabrainz using search
+3. Compare with guide
+4. Assess for improvements
+5. Create migration plan 
+6. Implement 
 
-Show release, artist, year, label, orchestra, number of discs, total duration for box set at top
+----
 
-~~3. Rewrite each track parsing to reflect fields parsed from list below~~ ✅
-   - Added `RecordingYear` field (separate from `FirstIssuedYear`)
-   - Added `WorkName` field (placeholder - TODO: extract from Work relationships)
-   - UI now shows `RecYear` column preferring recording year over release year
-   1. Composer ✅
-   2. Work Name ✅ (field added, extraction TODO)
-   3. Soloist ✅
-   4. Conductor ✅
-   5. Orchestra ✅
-   6. Year of Recording (not release) ✅
+Ensure state is in one place -- i.e. repo level not inside csharp + create dumps inside state folder not unnested (is that what it is called?) + explain rationale for internal vs file wherever you've used it + explain if changing all to public would reduce verbosity + forget everything I said previously and this is how the music scraping should look like (both MB and Discogs) -- also I deleted JSONs/raw dumps:
 
-~~4. Create migration plan for last.fm py implementation into toolkit by assessing CLI structure~~ ✅ (See `Markdown/LastFmMigrationPlan.md`)
-~~5. Search all path invocations inside pwsh cmdlets and fix all broken invocations~~ ✅ (Fixed profile fallback path)
-~~6. Remove showing `found x results` when querying by term~~ ✅
-
-~~7. Read all methods of all commands~~ ✅ 
-   - MusicSearchCommand, MusicSchemaCommand (music)
-   - SyncAllCommand, SyncYouTubeCommand, SyncLastFmCommand, StatusCommand (sync)
-   - CleanLocalCommand, CleanPurgeCommand (clean)
-   - MailCreateCommand, MailCheckCommand, MailDeleteCommand (mail)
-   - CompletionInstallCommand, CompletionSuggestCommand (completion)
-
-~~8. Read all where user input is accepted~~ ✅
-   - All command settings with [CommandOption] or [CommandArgument] 
-   - Now validated via [AllowedValues] attribute for enum-like options
-
-~~9. Create list of all isNull values and number~~ ✅
-   - 52 occurrences of IsNullOrEmpty across codebase
-   - Most are legitimate null checks in services/orchestrators
-   - CLI validation moved to Spectre [AllowedValues] attribute
-
-~~10. Read how validation is handled -- if string.isNullOrEmpty -- utilize Spectre validation~~ ✅
-    - Created `AllowedValuesAttribute` (like PowerShell's `[ValidateSet()]`)
-    - Created `NotEmptyAttribute` for optional non-empty strings
-    - Migrated all commands: MusicSearch, MusicSchema, CleanLocal, CleanPurge, Status
-    - Removed manual validation code from Execute methods
-
-~~11. After refactor, run isNull search again to see reduction~~ ✅
-    - Before: ~54 occurrences
-    - After: ~52 occurrences (minimal reduction expected - most are service-layer checks)
-    - CLI validation now uses declarative [AllowedValues] instead of IsNullOrEmpty
-
-~~12. Migrate all values in table search result being hyperlinked -- not just ID~~ ✅
-    - Added `MakeTitleLink()` method - clicking album title opens release page
-    - Both Title and ID columns now hyperlinked in search results table
-13. 
-
-## Additional Completed Work
-
-### Async Naming Convention ✅
-- All async methods already have Async suffix
-
-### .editorconfig Created ✅
-- Unified Roslyn + ReSharper configuration
-- Suppressed: var/explicit conflicts, namespace mismatch, locale warnings, underscore naming
-- Enabled: switch expressions, pattern matching, collection expressions
-
-### Code Quality Fixes ✅
-- Removed unused CancellationToken from test class
-- Converted lambdas to expression bodies
-- Fixed redundant qualifiers (string.Join → Join, etc.)
-- Removed unused parameters/variables
+1. Start scraping any release -- box set naming is not correct as it could be any release
+2. Search all instances of box or boxset or box set and rename to accurately reflect the scope not being restricted to merely box sets
+3. Keep raw dumps of all API calls inside state/dump
+4. I presume parsing of works happens based on what is returned from Metabrainz? Therefore reconstructing should be very easy, no? I ask because earlier you said that only a rough approximation is possible.
+5. Structure all API calls inside dump with appropriate naming schemes
+6. Create log file (not inside ./csharp) to show info of all data parsed so far (higher level overview)
+7. Allow being able to resume if the operation was abruptly cancelled
+8. Check when starting if any earlier data exists -- or start afresh -- print to terminal only if pre-existing data was found
+9. Assess whether log is better or the dump for fastest way to resume operation
+10. Printing progress bar (the way YT orchestrator has it -- explain why both look different)
+11. Show top 5 rolling track details
+12. Update table in real time -- show columns and data reflecting either of the two services -- for now MusicBrainz being prioritized
+13. After each work has been parsed, i.e. a new work is added indicating the previous work has finished, write it to CSV
+14. Find best location to write this file to
+15. After all works have been parsed, i.e. the final work has finished, push to a new Google Sheet with the name of the box set (in fact call the CSV that too)
+16. Edit editorconfig to show collectionexpression and unnecessary full name of method calls as warnings instead of mere suggestions (red vs yellow)
+17. How does one force that when running dotnet build?
+18. Test folder has been purged
+19. Why does csharp have logs?
+20. Check all csharp functions to ensure that there is no duplication of data being nested inside csharp when it should be at repo level
+21. Create a method that autofills missing fields from my sheets of rankings of classical recordings searching first MusicBrainz and then Discogs if MB comes up empty -- define scheme of search --- how each query would be structured -- refer to layout and also the actual missing fields in missing fields.tsv (tsv? just copied from Sheets) -- of course `empty` in and of itself is a matter of solo vs concerto vs orchestral recording
+22. How to force Sheets to allow tables to be sortable regardless of it being a "table" of Sheets or not - 

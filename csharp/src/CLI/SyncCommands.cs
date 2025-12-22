@@ -345,12 +345,11 @@ public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
         Logger.Start(ServiceType.LastFm);
 
         return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-        {
             await new ScrobbleSyncOrchestrator(
                 forceFromDate: sinceDate,
                 ct: Program.Cts.Token
-            ).ExecuteAsync();
-        });
+            ).ExecuteAsync()
+        );
     }
 }
 
@@ -408,7 +407,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
         }
         else
         {
-            GoogleSheetsService sheets = new(Config.GoogleClientId, Config.GoogleClientSecret);
+            GoogleSheetsService sheets = new();
             int scrobbleCount = sheets.GetScrobbleCount(Config.LastFmSpreadsheetId);
             Console.Info("Scrobbles: {0}", scrobbleCount);
             Console.Info("Cached: No");

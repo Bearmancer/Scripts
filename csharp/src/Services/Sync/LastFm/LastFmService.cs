@@ -2,7 +2,8 @@ namespace CSharpScripts.Services.Sync.LastFm;
 
 public record Scrobble(string TrackName, string ArtistName, string AlbumName, DateTime? PlayedAt)
 {
-    internal string FormattedDate => PlayedAt?.ToString("yyyy/MM/dd HH:mm:ss") ?? "";
+    public string FormattedDate =>
+        PlayedAt?.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "";
 }
 
 public record FetchState

@@ -30,16 +30,17 @@ public sealed class MailTmService : IDisposableMailService
     async Task<List<MailMessage>> IDisposableMailService.GetInboxAsync()
     {
         List<MailTmMessage> messages = await GetInboxAsync();
-        return messages
-            .Select(m => new MailMessage(
+        return
+        [
+            .. messages.Select(m => new MailMessage(
                 Id: m.Id,
                 From: m.From?.Address ?? "unknown",
                 Subject: m.Subject,
                 Body: m.Text ?? m.Html ?? "",
                 ReceivedAt: m.CreatedAt.ToUniversalTime(),
                 IsRead: m.IsRead
-            ))
-            .ToList();
+            )),
+        ];
     }
 
     async Task<MailMessage> IDisposableMailService.ReadMessageAsync(string messageId)
@@ -55,10 +56,7 @@ public sealed class MailTmService : IDisposableMailService
         );
     }
 
-    async Task IDisposableMailService.ForgetSessionAsync()
-    {
-        await DeleteAccountAsync();
-    }
+    async Task IDisposableMailService.ForgetSessionAsync() => await DeleteAccountAsync();
 
     #endregion
 

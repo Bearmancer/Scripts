@@ -20,6 +20,8 @@ global using CSharpScripts.Services.Music;
 global using CSharpScripts.Services.Sync.Google;
 global using CSharpScripts.Services.Sync.LastFm;
 global using CSharpScripts.Services.Sync.YouTube;
+global using CsvHelper;
+global using CsvHelper.Configuration;
 global using Google.Apis.Auth.OAuth2;
 global using Google.Apis.Drive.v3;
 global using Google.Apis.Services;

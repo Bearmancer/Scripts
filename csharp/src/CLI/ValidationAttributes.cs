@@ -1,9 +1,5 @@
 namespace CSharpScripts.CLI;
 
-/// <summary>
-/// Validates that a command option value is one of the allowed values.
-/// Similar to PowerShell's [ValidateSet()] attribute.
-/// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class AllowedValuesAttribute(params string[] values)
     : ParameterValidationAttribute($"Must be one of: {Join(", ", values)}")
@@ -25,10 +21,6 @@ public sealed class AllowedValuesAttribute(params string[] values)
     }
 }
 
-/// <summary>
-/// Validates that a string option is not null or empty when provided.
-/// Use with optional parameters that shouldn't accept empty strings.
-/// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class NotEmptyAttribute() : ParameterValidationAttribute("Value cannot be empty")
 {

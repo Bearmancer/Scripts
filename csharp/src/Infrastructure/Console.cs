@@ -5,6 +5,8 @@ public static class Console
     public static LogLevel Level { get; set; } = LogLevel.Info;
     public static bool Suppress { get; set; }
 
+    static readonly Regex MarkupTagPattern = new(@"\[/?[^\]]+\]", RegexOptions.Compiled);
+
     public static void Debug(string message, params object?[] args) =>
         Write(LogLevel.Debug, "grey", message, args);
 
@@ -121,9 +123,7 @@ public static class Console
     /// </summary>
     public static LiveDisplay Live(IRenderable target) => AnsiConsole.Live(target);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Markup Helpers - Use these instead of raw [color]...[/] syntax
-    // ═══════════════════════════════════════════════════════════════════════════
+    #region Markup Helpers
 
     /// <summary>
     /// Escape text for safe use in Spectre markup.
@@ -146,6 +146,52 @@ public static class Console
     public static string Colored(string color, string? text) =>
         $"[{color}]{Markup.Escape(text ?? "")}[/]";
 
+    #endregion
+
+    #region Semantic Color Helpers
+
+    /// <summary>Composer color: cyan</summary>
+    public static string Composer(string? text) => Colored("cyan", text);
+
+    /// <summary>Conductor color: yellow</summary>
+    public static string Conductor(string? text) => Colored("yellow", text);
+
+    /// <summary>Orchestra/Ensemble color: green</summary>
+    public static string Orchestra(string? text) => Colored("green", text);
+
+    /// <summary>Soloist color: magenta</summary>
+    public static string Soloist(string? text) => Colored("magenta", text);
+
+    /// <summary>Year/Date color: dim</summary>
+    public static string Year(int? year) => year.HasValue ? $"[dim]({year})[/]" : "";
+
+    /// <summary>Work/Piece name color: steelblue1</summary>
+    public static string Work(string? text) => Colored("steelblue1", text);
+
+    /// <summary>Venue/Location color: dim italic</summary>
+    public static string Venue(string? text) =>
+        IsNullOrEmpty(text) ? "" : $"[dim italic]@ {Markup.Escape(text)}[/]";
+
+    /// <summary>
+    /// Combine multiple colored markup parts with a separator.
+    /// Example: CombineWith("•", Composer(c), Conductor(cond), Orchestra(orch))
+    /// </summary>
+    public static string CombineWith(string separator, params string?[] parts)
+    {
+        var nonEmpty = parts.Where(p => !IsNullOrEmpty(p)).ToList();
+        return Join($" {separator} ", nonEmpty!);
+    }
+
+    /// <summary>
+    /// Combine multiple colored markup parts with space separator.
+    /// Example: Combine(Composer(c), Year(y), Orchestra(o))
+    /// </summary>
+    public static string Combine(params string?[] parts)
+    {
+        var nonEmpty = parts.Where(p => !IsNullOrEmpty(p)).ToList();
+        return Join(" ", nonEmpty!);
+    }
+
     /// <summary>
     /// Format a source badge (Discogs=yellow, MusicBrainz=cyan).
     /// </summary>
@@ -164,6 +210,58 @@ public static class Console
         string bar = new string('█', filled) + new string('░', 20 - filled);
         string etaPart = eta is not null ? $" │ ETA: [cyan]{eta}[/]" : "";
         return $"[blue][[{completed}/{total}]][/] {bar} [yellow]{percent:F0}%[/]{etaPart}";
+    }
+
+    /// <summary>
+    /// Build a wide progress bar (40 chars) matching SyncProgressRenderer style.
+    /// </summary>
+    public static string WideProgressBar(double percent, int width = 40)
+    {
+        int filled = (int)(width * percent / 100.0);
+        filled = Math.Clamp(filled, 0, width);
+        int empty = width - filled;
+        return new string('━', filled) + new string('─', empty);
+    }
+
+    /// <summary>
+    /// Get color based on progress percentage.
+    /// </summary>
+    public static string ProgressColor(double percent) =>
+        percent switch
+        {
+            >= 75 => "green",
+            >= 50 => "yellow",
+            >= 25 => "blue",
+            _ => "cyan",
+        };
+
+    /// <summary>
+    /// Create a YT-orchestrator-style progress row for Live displays.
+    /// Format: (1/934) [1.05] Track Title  ━━━━━━━━━━────────────────────── 5% ETA: 1:30
+    /// </summary>
+    public static IRenderable LiveProgressRow(
+        string description,
+        int completed,
+        int total,
+        DateTime startTime
+    )
+    {
+        double percent = total > 0 ? (double)completed / total * 100 : 0;
+        string color = ProgressColor(percent);
+        string bar = WideProgressBar(percent);
+
+        string eta =
+            completed > 0
+                ? TimeSpan
+                    .FromSeconds(
+                        (DateTime.Now - startTime).TotalSeconds / completed * (total - completed)
+                    )
+                    .ToString(@"m\:ss", CultureInfo.InvariantCulture)
+                : "?:??";
+
+        string markup =
+            $"{Escape(description)} [{color}]{bar}[/] [yellow]{percent:F0}%[/] ETA: [cyan]{eta}[/]";
+        return new Markup(markup);
     }
 
     /// <summary>
@@ -276,8 +374,7 @@ public static class Console
 
     public static void Write(SpectreTable table) => AnsiConsole.Write(table);
 
-    public static void Write(Spectre.Console.Rendering.IRenderable renderable) =>
-        AnsiConsole.Write(renderable);
+    public static void Write(IRenderable renderable) => AnsiConsole.Write(renderable);
 
     internal static Panel CreatePanel(string content, string header) =>
         new Panel(Markup.Escape(content)).Header(Markup.Escape(header)).Expand();
@@ -328,7 +425,7 @@ public static class Console
         if (!IsNullOrEmpty(defaultValue))
             desc += $" [dim][[default: {Markup.Escape(defaultValue)}]][/]";
 
-        int rawSigLen = Regex.Replace(sig, @"\[/?[^\]]+\]", "").Length;
+        int rawSigLen = MarkupTagPattern.Replace(sig, "").Length;
         int padding = Math.Max(2, 44 - rawSigLen);
 
         AnsiConsole.MarkupLine($"[yellow]{sig}[/]{new string(' ', padding)}{desc}");
@@ -348,7 +445,7 @@ public static class Console
         string desc = Markup.Escape(description);
         desc += $" [dim][[default: {(defaultValue ? "True" : "False")}]][/]";
 
-        int rawSigLen = Regex.Replace(sig, @"\[/?[^\]]+\]", "").Length;
+        int rawSigLen = MarkupTagPattern.Replace(sig, "").Length;
         int padding = Math.Max(2, 44 - rawSigLen);
 
         AnsiConsole.MarkupLine($"[yellow]{sig}[/]{new string(' ', padding)}{desc}");
@@ -389,4 +486,6 @@ public static class Console
             return message;
         }
     }
+
+    #endregion
 }

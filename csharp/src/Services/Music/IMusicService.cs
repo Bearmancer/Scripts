@@ -1,3 +1,5 @@
+using SearchResult = CSharpScripts.Models.SearchResult;
+
 namespace CSharpScripts.Services.Music;
 
 public interface IMusicService
@@ -8,24 +10,20 @@ public interface IMusicService
     /// Free-text search. User can type anything:
     /// "Bowie Heroes 1977", "Deutsche Grammophon Beethoven", etc.
     /// </summary>
-    Task<List<Models.SearchResult>> SearchAsync(
+    Task<List<SearchResult>> SearchAsync(
         string query,
         int maxResults = 10,
         CancellationToken ct = default
     );
 
     /// <summary>
-    /// Get full track metadata for any release type (Album, EP, Box Set, etc.).
+    /// Get release with full track data for any release type (Album, EP, Box Set, etc.).
+    /// Returns ReleaseData containing release-level info + all tracks.
     /// </summary>
-    Task<List<TrackMetadata>> GetReleaseTracksAsync(
+    Task<ReleaseData> GetReleaseAsync(
         string releaseId,
         bool deepSearch = true,
+        int? maxDiscs = null,
         CancellationToken ct = default
     );
-
-    /// <summary>
-    /// Enrich a single track with deeper metadata (recordings, works, etc.).
-    /// Used for progressive loading/progress bars.
-    /// </summary>
-    Task<TrackMetadata> EnrichTrackAsync(TrackMetadata track, CancellationToken ct = default);
 }
