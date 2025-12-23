@@ -2,24 +2,33 @@
 import os
 import re
 import subprocess
-import pyperclip
-import ffmpeg
-from pathlib import Path
-from pathvalidate import sanitize_filename
-from tqdm import tqdm
-from unidecode import unidecode
 
-from toolkit.filesystem import run_command
+import ffmpeg  # type: ignore[import-untyped]
+import pyperclip  # type: ignore[import-untyped]
+from pathlib import Path
+from pathvalidate import sanitize_filename  # type: ignore[import-untyped]
+from tqdm import tqdm  # type: ignore[import-untyped]
+from unidecode import unidecode  # type: ignore[import-untyped]
+
 from toolkit.cuesheet import process_cue_file
+from toolkit.filesystem import run_command
 from toolkit.logging_config import get_logger
 
 logger = get_logger("audio")
 
+# region Constants
+
 FLAC_44 = [(176400, 24), (88200, 24), (44100, 16)]
 FLAC_48 = [(192000, 24), (96000, 24), (48000, 16)]
 
+# endregion
+
+# region Directory Preparation
+
 
 def prepare_directory(directory: Path) -> Path:
+    """Sanitize filenames and normalize disc folder names."""
+
     def sanitize_name(p: Path) -> Path:
         return p.rename(p.with_name(sanitize_filename(unidecode(p.name)))) or p
 
@@ -40,17 +49,8 @@ def prepare_directory(directory: Path) -> Path:
     return directory
 
 
-def progress_indicator(step: int, message: str) -> None:
-    terminal_width = os.get_terminal_size().columns
-    border = "=" * terminal_width
-    core = f"STEP {step}: {message}"
-
-    print(
-        f"{border}\n{core.center(terminal_width)}\n{border}\n"
-    )
-
-
 def create_output_directory(directory: Path, suffix: str) -> Path:
+    """Create output directory with suffix, copying files using robocopy."""
     destination = directory.parent / f"{directory.name} [{suffix}]"
     exclusions = ["*.log", "*.m3u", "*.cue", "*.md5"]
 
@@ -66,6 +66,7 @@ def create_output_directory(directory: Path, suffix: str) -> Path:
 
 
 def rename_file_red(path: Path) -> None:
+    """Rename files with paths exceeding 180 characters for RED compatibility."""
     if not path.exists() or not path.is_dir():
         logger.error(f"Path does not exist: {path}")
         return
@@ -90,14 +91,20 @@ def rename_file_red(path: Path) -> None:
             logger.info(f"Renamed: {file.name} -> {new_file_path.name}")
 
     if new_files_list:
-        new_file_names = f"filelist:\"{'|'.join(map(str, new_files_list))}\""
+        new_file_names = 'filelist:"' + "|".join(map(str, new_files_list)) + '"'
         pyperclip.copy(new_file_names)
         logger.info(f"Renamed {len(new_files_list)} files")
     else:
         logger.info("No files needed renaming")
 
 
+# endregion
+
+# region Artwork Analysis
+
+
 def calculate_image_size(path: Path) -> None:
+    """Report FLAC files with embedded artwork larger than 1MB."""
     exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
     problematic_files: list[Path] = []
 
@@ -123,7 +130,13 @@ def calculate_image_size(path: Path) -> None:
         logger.info("No files with embedded artwork larger than 1MB")
 
 
+# endregion
+
+# region SACD Processing
+
+
 def process_sacd_directory(directory: Path, fmt: str = "all") -> None:
+    """Extract and convert all SACD ISO files in a directory."""
     iso_files = list(directory.rglob("*.iso"))
     output_dirs: list[tuple[Path, int]] = []
 
@@ -147,6 +160,7 @@ def process_sacd_directory(directory: Path, fmt: str = "all") -> None:
 def convert_iso_to_dff_and_cue(
     iso_path: Path, base_dir: Path, disc_number: int
 ) -> list[Path]:
+    """Extract stereo and/or multichannel audio from SACD ISO."""
     probe_result = run_command(
         ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
     )[0]
@@ -186,6 +200,7 @@ def convert_iso_to_dff_and_cue(
 
 
 def convert_dff_to_flac(dff_dir: Path) -> None:
+    """Convert DFF files with CUE sheet to FLAC."""
     cue_file = next(dff_dir.rglob("*.cue"))
     dff_file = next(dff_dir.rglob("*.dff"))
 
@@ -200,6 +215,7 @@ def convert_dff_to_flac(dff_dir: Path) -> None:
 
 
 def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
+    """Calculate gain adjustment needed for target headroom."""
     if not dff_file.exists():
         raise FileNotFoundError(f"DFF file not found: {dff_file}")
 
@@ -224,7 +240,13 @@ def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
     return target_headroom_db - max(peaks)
 
 
+# endregion
+
+# region FLAC Conversion
+
+
 def convert_audio(current_step: int, directory: Path, fmt: str = "all") -> None:
+    """Convert FLAC files to various sample rates and bit depths."""
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
@@ -249,6 +271,7 @@ def convert_audio(current_step: int, directory: Path, fmt: str = "all") -> None:
 
 
 def flac_directory_conversion(directory: Path, tier: tuple[int, int]) -> None:
+    """Convert all FLAC files in directory to specified tier."""
     sample_rate, bit_depth = tier
     suffix = f"{bit_depth} - {sample_rate / 1000:.1f}"
 
@@ -261,6 +284,7 @@ def flac_directory_conversion(directory: Path, tier: tuple[int, int]) -> None:
 
 
 def downsample_flac(file: Path, tier: tuple[int, int]) -> None:
+    """Downsample a single FLAC file using SoX."""
     sample_rate, bit_depth = tier
     temp_a = file.with_name("a.flac")
     temp_b = file.with_name("b.flac")
@@ -287,7 +311,13 @@ def downsample_flac(file: Path, tier: tuple[int, int]) -> None:
     temp_b.rename(file)
 
 
+# endregion
+
+# region MP3 Conversion
+
+
 def convert_to_mp3(directory: Path) -> None:
+    """Convert all FLAC files in directory to 320kbps MP3."""
     flac_files = list(directory.rglob("*.flac"))
 
     if not flac_files:
@@ -307,7 +337,22 @@ def convert_to_mp3(directory: Path) -> None:
         )
 
 
+# endregion
+
+# region Utilities
+
+
+def progress_indicator(step: int, message: str) -> None:
+    """Print a step indicator with terminal-width borders."""
+    terminal_width = os.get_terminal_size().columns
+    border = "=" * terminal_width
+    core = f"STEP {step}: {message}"
+
+    print(f"{border}\n{core.center(terminal_width)}\n{border}\n")
+
+
 def get_metadata(file: Path) -> dict[str, str | None]:
+    """Extract audio metadata from a file using ffprobe."""
     probe_result = ffmpeg.probe(str(file))
     audio_stream = next(
         stream
@@ -324,6 +369,7 @@ def get_metadata(file: Path) -> dict[str, str | None]:
 def get_flac_tiers(
     sample_rate: int, bit_depth: int, fmt: str = "all"
 ) -> list[tuple[int, int]]:
+    """Determine which FLAC tiers to convert to based on source format."""
     tiers = FLAC_44 if sample_rate in {44100, 88200, 176400} else FLAC_48
 
     for i, (tier_sr, tier_bd) in enumerate(tiers):
@@ -332,3 +378,6 @@ def get_flac_tiers(
             return result or []
 
     raise ValueError(f"No suitable tier for {bit_depth}-bit/{sample_rate}Hz")
+
+
+# endregion

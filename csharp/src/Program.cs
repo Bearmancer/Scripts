@@ -2,15 +2,16 @@ using CSharpScripts.CLI.Commands;
 
 namespace CSharpScripts;
 
+#region Program
+
 public static class Program
 {
-    public static CancellationTokenSource Cts { get; } = new();
     private static bool cancelled;
+    public static CancellationTokenSource Cts { get; } = new();
 
     public static int Main(string[] args)
     {
-        // Global verbose flag - affects all Console.Debug() calls project-wide
-        if (args.Contains("-v") || args.Contains("--verbose"))
+        if (args.Contains(value: "-v") || args.Contains(value: "--verbose"))
         {
             Console.Level = LogLevel.Debug;
             Logger.FileLevel = LogLevel.Debug;
@@ -23,7 +24,7 @@ public static class Program
             {
                 cancelled = true;
                 Cts.Cancel();
-                Console.Warning("Cancellation requested, stopping gracefully...");
+                Console.Warning(message: "Cancellation requested, stopping gracefully...");
             }
         };
 
@@ -31,74 +32,86 @@ public static class Program
 
         app.Configure(config =>
         {
-            config.SetApplicationName("scripts");
+            config.SetApplicationName(name: "scripts");
 
             config.AddBranch(
-                "sync",
+                name: "sync",
                 sync =>
                 {
-                    sync.SetDescription("Sync data from various services");
-                    sync.AddCommand<SyncAllCommand>("all")
-                        .WithDescription("Sync YouTube and Last.fm");
-                    sync.AddCommand<SyncYouTubeCommand>("yt")
-                        .WithDescription("Sync YouTube playlists");
-                    sync.AddCommand<SyncLastFmCommand>("lastfm")
-                        .WithDescription("Sync Last.fm scrobbles");
-                    sync.AddCommand<StatusCommand>("status").WithDescription("Show sync status");
+                    sync.SetDescription(description: "Sync data from various services");
+                    sync.AddCommand<SyncAllCommand>(name: "all")
+                        .WithDescription(description: "Sync YouTube and Last.fm");
+                    sync.AddCommand<SyncYouTubeCommand>(name: "yt")
+                        .WithDescription(description: "Sync YouTube playlists");
+                    sync.AddCommand<SyncLastFmCommand>(name: "lastfm")
+                        .WithDescription(description: "Sync Last.fm scrobbles");
+                    sync.AddCommand<StatusCommand>(name: "status")
+                        .WithDescription(description: "Show sync status");
                 }
             );
 
             config.AddBranch(
-                "clean",
+                name: "clean",
                 clean =>
                 {
-                    clean.SetDescription("Clean local state");
+                    clean.SetDescription(description: "Clean local state");
                     clean
-                        .AddCommand<CleanLocalCommand>("local")
-                        .WithDescription("Clean local state files");
+                        .AddCommand<CleanLocalCommand>(name: "local")
+                        .WithDescription(description: "Clean local state files");
                     clean
-                        .AddCommand<CleanPurgeCommand>("purge")
-                        .WithDescription("Purge all state and spreadsheets");
+                        .AddCommand<CleanPurgeCommand>(name: "purge")
+                        .WithDescription(description: "Purge all state and spreadsheets");
                 }
             );
 
             config.AddBranch(
-                "music",
+                name: "music",
                 music =>
                 {
-                    music.SetDescription("Music metadata commands");
+                    music.SetDescription(description: "Music metadata commands");
                     music
-                        .AddCommand<MusicSearchCommand>("search")
-                        .WithDescription("Search or lookup a music release");
+                        .AddCommand<MusicSearchCommand>(name: "search")
+                        .WithDescription(description: "Search or lookup a music release");
+                    music
+                        .AddCommand<MusicFillCommand>(name: "fill")
+                        .WithDescription(
+                            description: "Fill missing fields in TSV/CSV using MB and Discogs"
+                        );
                 }
             );
 
             config.AddBranch(
-                "mail",
+                name: "mail",
                 mail =>
                 {
-                    mail.SetDescription("Temporary email commands");
-                    mail.AddCommand<MailCreateCommand>("create")
-                        .WithDescription("Create a temporary email");
+                    mail.SetDescription(description: "Temporary email commands");
+                    mail.AddCommand<MailCreateCommand>(name: "create")
+                        .WithDescription(description: "Create a temporary email");
                 }
             );
 
             config.AddBranch(
-                "completion",
+                name: "completion",
                 completion =>
                 {
-                    completion.SetDescription("Tab completion support");
+                    completion.SetDescription(description: "Tab completion support");
                     completion
-                        .AddCommand<CompletionInstallCommand>("install")
-                        .WithDescription("Install PowerShell tab completion to your profile");
+                        .AddCommand<CompletionInstallCommand>(name: "install")
+                        .WithDescription(
+                            description: "Install PowerShell tab completion to your profile"
+                        );
                     completion
-                        .AddCommand<CompletionSuggestCommand>("suggest")
-                        .WithDescription("Get completion suggestions (used internally)")
+                        .AddCommand<CompletionSuggestCommand>(name: "suggest")
+                        .WithDescription(
+                            description: "Get completion suggestions (used internally)"
+                        )
                         .IsHidden();
                 }
             );
         });
 
-        return app.Run(args);
+        return app.Run(args: args);
     }
 }
+
+#endregion

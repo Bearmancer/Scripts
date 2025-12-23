@@ -1,5 +1,7 @@
 namespace CSharpScripts.Models;
 
+#region Core Models
+
 internal record WorkDetails(string? Composer, string? ParentWorkName);
 
 internal record MusicBrainzArtist(
@@ -112,9 +114,15 @@ internal record MusicBrainzLabel(Guid? Id, string? Name, string? CatalogNumber);
 
 internal record MusicBrainzCredit(string Name, string Role, Guid? ArtistId, string? Attributes);
 
+#endregion
+
+#region Supporting Records
+
 internal record MusicBrainzEnrichmentState(
     string ReleaseId,
     int TotalTracks,
     List<TrackInfo> EnrichedTracks,
     DateTime LastUpdated
 );
+
+#endregion

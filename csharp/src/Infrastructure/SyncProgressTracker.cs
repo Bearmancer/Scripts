@@ -1,5 +1,7 @@
 namespace CSharpScripts.Infrastructure;
 
+#region Records
+
 public record PlaylistProgressItem(string Title, int VideoCount);
 
 public record SyncProgressSnapshot(
@@ -18,8 +20,13 @@ public record SyncProgressSnapshot(
     TimeSpan? EstimatedTimeRemaining
 );
 
+#endregion
+
+#region SyncProgressTracker
+
 public sealed class SyncProgressTracker
 {
+    private DateTime? StartTime;
     public int TotalPlaylists { get; private set; }
     public int CompletedPlaylists { get; private set; }
     public int CurrentPlaylistIndex { get; private set; } = 1;
@@ -28,8 +35,6 @@ public sealed class SyncProgressTracker
     public int CurrentPlaylistVideosProcessed { get; private set; }
     public int TotalVideosAcrossAllPlaylists { get; private set; }
     public int TotalVideosProcessedAcrossAllPlaylists { get; private set; }
-
-    DateTime? StartTime;
 
     public TimeSpan ElapsedTime =>
         StartTime.HasValue ? DateTime.UtcNow - StartTime.Value : TimeSpan.Zero;
@@ -63,7 +68,7 @@ public sealed class SyncProgressTracker
     public void Initialize(List<PlaylistProgressItem> playlists)
     {
         if (playlists.Count == 0)
-            throw new ArgumentException("Playlists cannot be empty", nameof(playlists));
+            throw new ArgumentException(message: "Playlists cannot be empty", nameof(playlists));
 
         TotalPlaylists = playlists.Count;
         CompletedPlaylists = 0;
@@ -78,12 +83,12 @@ public sealed class SyncProgressTracker
 
     public void StartPlaylist(string name, int videoCount)
     {
-        if (IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Playlist name cannot be empty", nameof(name));
+        if (IsNullOrWhiteSpace(value: name))
+            throw new ArgumentException(message: "Playlist name cannot be empty", nameof(name));
         if (videoCount < 0)
             throw new ArgumentOutOfRangeException(
                 nameof(videoCount),
-                "Video count cannot be negative"
+                message: "Video count cannot be negative"
             );
 
         CurrentPlaylistName = name;
@@ -95,9 +100,15 @@ public sealed class SyncProgressTracker
     public void UpdateVideoProgress(int videosProcessed)
     {
         if (videosProcessed < 0)
-            throw new ArgumentOutOfRangeException(nameof(videosProcessed), "Cannot be negative");
+            throw new ArgumentOutOfRangeException(
+                nameof(videosProcessed),
+                message: "Cannot be negative"
+            );
         if (videosProcessed > CurrentPlaylistTotalVideos)
-            throw new ArgumentOutOfRangeException(nameof(videosProcessed), "Cannot exceed total");
+            throw new ArgumentOutOfRangeException(
+                nameof(videosProcessed),
+                message: "Cannot exceed total"
+            );
 
         int delta = videosProcessed - CurrentPlaylistVideosProcessed;
         CurrentPlaylistVideosProcessed = videosProcessed;
@@ -130,3 +141,5 @@ public sealed class SyncProgressTracker
             EstimatedTimeRemaining: EstimatedTimeRemaining
         );
 }
+
+#endregion

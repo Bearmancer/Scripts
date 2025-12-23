@@ -16,8 +16,8 @@ insert_final_newline = true
 # =============================================================================
 # VAR PREFERENCE - Prefer explicit type except when obvious
 # =============================================================================
-dotnet_diagnostic.IDE0007.severity = none  # Don't flag var usage
-dotnet_diagnostic.IDE0008.severity = none  # Don't flag var usage
+dotnet_diagnostic.IDE0007.severity = none # Don't flag var usage
+dotnet_diagnostic.IDE0008.severity = none # Don't flag var usage
 
 # =============================================================================
 # NAMESPACE RULES
@@ -32,16 +32,16 @@ dotnet_diagnostic.IDE0161.severity = warning
 # GLOBALIZATION/LOCALE - Enable for correctness
 # =============================================================================
 # Enable StringComparison checks for correctness
-dotnet_diagnostic.CA1304.severity = suggestion  # Specify CultureInfo
-dotnet_diagnostic.CA1307.severity = suggestion  # Specify StringComparison
-dotnet_diagnostic.CA1310.severity = warning     # Specify StringComparison for correctness
+dotnet_diagnostic.CA1304.severity = suggestion # Specify CultureInfo
+dotnet_diagnostic.CA1307.severity = suggestion # Specify StringComparison
+dotnet_diagnostic.CA1310.severity = warning # Specify StringComparison for correctness
 
 # Suppress IFormatProvider for console output (too noisy for UI code)
-dotnet_diagnostic.CA1305.severity = none  # Specify IFormatProvider
-dotnet_diagnostic.CA1311.severity = none  # Specify a culture
+dotnet_diagnostic.CA1305.severity = none # Specify IFormatProvider
+dotnet_diagnostic.CA1311.severity = none # Specify a culture
 
 # Suppress FirstOrDefault on indexable collections - idiomatic for ?.FirstOrDefault()?.Property chains
-dotnet_diagnostic.CA1826.severity = none  # Do not use Enumerable methods on indexable collections
+dotnet_diagnostic.CA1826.severity = none # Do not use Enumerable methods on indexable collections
 
 # =============================================================================
 # NAMING CONVENTIONS
@@ -111,21 +111,21 @@ csharp_style_prefer_local_over_anonymous_function = true:suggestion
 # =============================================================================
 # REDUNDANT QUALIFIERS - Enable as warnings
 # =============================================================================
-dotnet_diagnostic.IDE0001.severity = warning  # Simplify name
-dotnet_diagnostic.IDE0002.severity = warning  # Simplify member access
+dotnet_diagnostic.IDE0001.severity = warning # Simplify name
+dotnet_diagnostic.IDE0002.severity = warning # Simplify member access
 
 # =============================================================================
 # UNUSED CODE - Enable as warnings
 # =============================================================================
-dotnet_diagnostic.IDE0051.severity = warning  # Private member unused
-dotnet_diagnostic.IDE0052.severity = warning  # Unread private member
-dotnet_diagnostic.IDE0059.severity = warning  # Unnecessary value assignment
-dotnet_diagnostic.IDE0060.severity = warning  # Unused parameter
+dotnet_diagnostic.IDE0051.severity = warning # Private member unused
+dotnet_diagnostic.IDE0052.severity = warning # Unread private member
+dotnet_diagnostic.IDE0059.severity = warning # Unnecessary value assignment
+dotnet_diagnostic.IDE0060.severity = warning # Unused parameter
 
 # =============================================================================
 # FORMATTING (handled by CSharpier, disable built-in)
 # =============================================================================
-dotnet_diagnostic.IDE0055.severity = none  # Formatting rule
+dotnet_diagnostic.IDE0055.severity = none # Formatting rule
 
 [*.{json,yml,yaml}]
 indent_size = 2

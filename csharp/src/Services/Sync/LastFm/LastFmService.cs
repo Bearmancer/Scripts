@@ -1,9 +1,12 @@
 namespace CSharpScripts.Services.Sync.LastFm;
 
+#region Models
+
 public record Scrobble(string TrackName, string ArtistName, string AlbumName, DateTime? PlayedAt)
 {
     public string FormattedDate =>
-        PlayedAt?.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture) ?? "";
+        PlayedAt?.ToString(format: "yyyy/MM/dd HH:mm:ss", provider: CultureInfo.InvariantCulture)
+        ?? "";
 }
 
 public record FetchState
@@ -28,11 +31,15 @@ public record FetchState
     }
 }
 
+#endregion
+
+#region LastFmService
+
 public class LastFmService(string apiKey, string username)
 {
     private const int PerPage = 200;
 
-    private readonly LastfmClient client = new(apiKey);
+    private readonly LastfmClient client = new(apiKey: apiKey);
 
     internal async Task FetchScrobblesSinceAsync(
         DateTime? fetchAfter,
@@ -41,21 +48,24 @@ public class LastFmService(string apiKey, string username)
         CancellationToken ct
     )
     {
-        Console.Debug("FetchScrobblesSince: fetchAfter={0}", fetchAfter?.ToString() ?? "null");
+        Console.Debug(
+            message: "FetchScrobblesSince: fetchAfter={0}",
+            fetchAfter?.ToString() ?? "null"
+        );
 
-        // Load existing cache to append to
-        List<Scrobble> existingScrobbles = LoadScrobbles();
+        var existingScrobbles = LoadScrobbles();
         List<Scrobble> newScrobbles = [];
 
-        // For incremental syncs (fetchAfter set), always start from page 1 (newest first)
-        // For resume of interrupted full syncs (no fetchAfter, LastPage > 0), continue from last page
-        var isIncremental = fetchAfter is not null;
-        var page = isIncremental ? 1 : (state.LastPage > 0 ? state.LastPage + 1 : 1);
-        var totalFetched = isIncremental ? 0 : state.TotalFetched;
+        bool isIncremental = fetchAfter is { };
+        int page =
+            isIncremental ? 1
+            : state.LastPage > 0 ? state.LastPage + 1
+            : 1;
+        int totalFetched = isIncremental ? 0 : state.TotalFetched;
         var stopwatch = Stopwatch.StartNew();
 
         Console.Debug(
-            "Mode: {0}, starting from page {1}, {2} already fetched, {3} in cache",
+            message: "Mode: {0}, starting from page {1}, {2} already fetched, {3} in cache",
             isIncremental ? "incremental" : "full",
             page,
             totalFetched,
@@ -64,23 +74,23 @@ public class LastFmService(string apiKey, string username)
 
         while (!ct.IsCancellationRequested)
         {
-            Console.Debug("Fetching page {0}", page);
-            var batch = await FetchPageAsync(page, ct);
+            Console.Debug(message: "Fetching page {0}", page);
+            var batch = await FetchPageAsync(page: page, ct: ct);
 
             if (ct.IsCancellationRequested || batch is null || batch.Count == 0)
             {
                 if (batch is null || batch.Count == 0)
-                    Console.Debug("No more tracks to fetch");
+                    Console.Debug(message: "No more tracks to fetch");
                 break;
             }
 
-            if (fetchAfter is not null)
+            if (fetchAfter is { })
             {
                 List<Scrobble> freshScrobbles = [.. batch.Where(s => s.PlayedAt > fetchAfter)];
 
                 foreach (var s in freshScrobbles)
                     Console.Debug(
-                        "New: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
+                        message: "New: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
                         s.TrackName,
                         s.PlayedAt
                     );
@@ -89,45 +99,57 @@ public class LastFmService(string apiKey, string username)
                 {
                     var firstExisting = batch.First();
                     Console.Debug(
-                        "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
+                        message: "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
                         firstExisting.TrackName,
                         firstExisting.PlayedAt
                     );
                     break;
                 }
 
-                newScrobbles.AddRange(freshScrobbles);
+                newScrobbles.AddRange(collection: freshScrobbles);
                 totalFetched += freshScrobbles.Count;
 
                 if (freshScrobbles.Count < batch.Count)
                 {
                     var firstExisting = batch.First(s => s.PlayedAt <= fetchAfter);
                     Console.Debug(
-                        "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
+                        message: "Exists: \"{0}\" at {1:yyyy/MM/dd HH:mm:ss}",
                         firstExisting.TrackName,
                         firstExisting.PlayedAt
                     );
-                    SaveMergedScrobbles(existingScrobbles, newScrobbles);
-                    DateTime? oldest = newScrobbles.Min(s => s.PlayedAt);
-                    DateTime? newest = newScrobbles.Max(s => s.PlayedAt);
-                    onProgress(page, totalFetched, stopwatch.Elapsed, oldest, newest);
+                    SaveMergedScrobbles(existing: existingScrobbles, newOnes: newScrobbles);
+                    var oldest = newScrobbles.Min(s => s.PlayedAt);
+                    var newest = newScrobbles.Max(s => s.PlayedAt);
+                    onProgress(
+                        arg1: page,
+                        arg2: totalFetched,
+                        arg3: stopwatch.Elapsed,
+                        arg4: oldest,
+                        arg5: newest
+                    );
                     break;
                 }
             }
             else
             {
-                newScrobbles.AddRange(batch);
+                newScrobbles.AddRange(collection: batch);
                 totalFetched += batch.Count;
             }
 
-            SaveMergedScrobbles(existingScrobbles, newScrobbles);
-            DateTime? batchOldest = batch.Min(s => s.PlayedAt);
-            DateTime? batchNewest = batch.Max(s => s.PlayedAt);
-            onProgress(page, totalFetched, stopwatch.Elapsed, batchOldest, batchNewest);
+            SaveMergedScrobbles(existing: existingScrobbles, newOnes: newScrobbles);
+            var batchOldest = batch.Min(s => s.PlayedAt);
+            var batchNewest = batch.Max(s => s.PlayedAt);
+            onProgress(
+                arg1: page,
+                arg2: totalFetched,
+                arg3: stopwatch.Elapsed,
+                arg4: batchOldest,
+                arg5: batchNewest
+            );
 
             if (batch.Count < PerPage)
             {
-                Console.Debug("Last page reached ({0} tracks)", batch.Count);
+                Console.Debug(message: "Last page reached ({0} tracks)", batch.Count);
                 break;
             }
 
@@ -138,31 +160,30 @@ public class LastFmService(string apiKey, string username)
 
         if (newScrobbles.Count > 0)
             Console.Info(
-                "Fetched {0} new scrobbles in {1:mm\\:ss}",
+                message: "Fetched {0} new scrobbles in {1:mm\\:ss}",
                 newScrobbles.Count,
                 stopwatch.Elapsed
             );
         else
-            Console.Info("No new scrobbles found");
+            Console.Info(message: "No new scrobbles found");
     }
 
     private static void SaveMergedScrobbles(List<Scrobble> existing, List<Scrobble> newOnes)
     {
-        // Merge: new scrobbles + existing, dedupe by PlayedAt
         HashSet<DateTime?> existingTimes = [.. existing.Select(s => s.PlayedAt)];
         List<Scrobble> merged =
         [
-            .. newOnes.Where(s => !existingTimes.Contains(s.PlayedAt)),
+            .. newOnes.Where(s => !existingTimes.Contains(item: s.PlayedAt)),
             .. existing,
         ];
-        StateManager.Save(StateManager.LastFmScrobblesFile, merged);
+        StateManager.Save(fileName: StateManager.LastFmScrobblesFile, state: merged);
     }
 
     private async Task<List<Scrobble>?> FetchPageAsync(int page, CancellationToken ct)
     {
         var response = await Resilience.ExecuteAsync(
             operation: "LastFm.GetRecentTracks",
-            action: () => client.User.GetRecentTracksAsync(username, limit: PerPage, page: page),
+            () => client.User.GetRecentTracksAsync(user: username, limit: PerPage, page: page),
             ct: ct
         );
 
@@ -172,18 +193,19 @@ public class LastFmService(string apiKey, string username)
         return
         [
             .. response.Select(track => new Scrobble(
-                TrackName: track.Name
-                    ?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
-                ArtistName: track.Artist?.Name ?? "",
-                AlbumName: track.Album?.Name ?? "",
+                track.Name ?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
+                track.Artist?.Name ?? "",
+                track.Album?.Name ?? "",
                 PlayedAt: track.Date
             )),
         ];
     }
 
     internal static List<Scrobble> LoadScrobbles() =>
-        StateManager.Load<List<Scrobble>>(StateManager.LastFmScrobblesFile);
+        StateManager.Load<List<Scrobble>>(fileName: StateManager.LastFmScrobblesFile);
 
     public static void DeleteScrobblesCache() =>
-        StateManager.Delete(StateManager.LastFmScrobblesFile);
+        StateManager.Delete(fileName: StateManager.LastFmScrobblesFile);
 }
+
+#endregion

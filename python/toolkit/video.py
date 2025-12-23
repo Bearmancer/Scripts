@@ -1,17 +1,21 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
-import ffmpeg
+# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false, reportUnknownLambdaType=false, reportUnknownParameterType=false
 import io
-import pyperclip
 import random
 import subprocess
 import textwrap
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
 from typing import TypedDict
-from toolkit.logging_config import get_logger
+
+import ffmpeg  # type: ignore[import-untyped]
+import pyperclip  # type: ignore[import-untyped]
+from PIL import Image, ImageDraw, ImageFont  # type: ignore[import-untyped]
+
 from toolkit.filesystem import run_command
+from toolkit.logging_config import get_logger
 
 logger = get_logger("video")
+
+# region Types and Constants
 
 
 class VideoInfo(TypedDict):
@@ -26,8 +30,13 @@ HANDBRAKE_PATH = (
 )
 MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 
+# endregion
+
+# region Chapter Extraction
+
 
 def extract_chapters(video_files: list[Path]) -> None:
+    """Extract individual chapters from video files."""
     for video_file in video_files:
         probe = ffmpeg.probe(str(video_file), show_chapters=None)
         chapters = probe.get("chapters", [])
@@ -55,7 +64,13 @@ def extract_chapters(video_files: list[Path]) -> None:
             logger.info(f"Extracted chapter {formatted_index} from {video_file.name}")
 
 
+# endregion
+
+# region Compression
+
+
 def batch_compression(path: Path) -> None:
+    """Batch compress MKV files using HandBrake."""
     mkv_files = list(path.rglob("*.mkv"))
 
     for file in mkv_files:
@@ -79,7 +94,13 @@ def batch_compression(path: Path) -> None:
             logger.error(f"Failed: {file.name}")
 
 
+# endregion
+
+# region Disc Remuxing
+
+
 def remux_disc(path: Path, fetch_mediainfo: bool = True) -> None:
+    """Remux DVD/Blu-ray discs to MKV using MakeMKV."""
     remuxable_files: list[Path] = [
         f
         for f in path.rglob("*")
@@ -101,6 +122,7 @@ def remux_disc(path: Path, fetch_mediainfo: bool = True) -> None:
 
 
 def convert_disc_to_mkv(file: Path, dvd_folder: Path) -> None:
+    """Convert disc to MKV using MakeMKV CLI."""
     makemkv_command = [
         MAKEMKV_PATH,
         "mkv",
@@ -113,6 +135,7 @@ def convert_disc_to_mkv(file: Path, dvd_folder: Path) -> None:
 
 
 def get_mediainfo(video_path: Path) -> None:
+    """Get MediaInfo and copy to clipboard."""
     logger.info(f"Getting MediaInfo for {video_path.name}")
     output_file = (
         Path.home() / "Desktop" / f"{video_path.parent.name} - {video_path.name}.txt"
@@ -130,7 +153,13 @@ def get_mediainfo(video_path: Path) -> None:
     logger.info("MediaInfo generated")
 
 
+# endregion
+
+# region Resolution Analysis
+
+
 def print_video_resolution(video_files: list[Path]) -> None:
+    """Print resolution information for video files, grouped by HD status."""
     files_hd: list[str] = []
     files_below_hd: list[tuple[str, dict[str, int]]] = []
 
@@ -152,6 +181,7 @@ def print_video_resolution(video_files: list[Path]) -> None:
 
 
 def get_video_resolution(filepath: Path) -> dict[str, int] | None:
+    """Get video resolution using ffprobe."""
     probe = ffmpeg.probe(str(filepath))
     video_streams = [s for s in probe["streams"] if s["codec_type"] == "video"]
 
@@ -165,6 +195,7 @@ def get_video_resolution(filepath: Path) -> dict[str, int] | None:
 
 
 def get_video_info(video_path: Path) -> VideoInfo:
+    """Get comprehensive video info (duration, width, height)."""
     probe = ffmpeg.probe(
         str(video_path),
         v="error",
@@ -178,9 +209,15 @@ def get_video_info(video_path: Path) -> VideoInfo:
     }
 
 
+# endregion
+
+# region GIF Creation
+
+
 def create_gif_optimized(
     input_path: Path, start: str, duration: int, max_size: int, output_dir: Path
 ) -> None:
+    """Create optimized GIF with automatic quality reduction to meet size target."""
     if not input_path.is_file():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
@@ -215,6 +252,7 @@ def create_gif_optimized(
 
 
 def get_video_info_for_gif(input_path: Path) -> tuple[float, int]:
+    """Get FPS and width for GIF creation."""
     probe = ffmpeg.probe(str(input_path))
     video_stream = next(
         (s for s in probe["streams"] if s["codec_type"] == "video"), None
@@ -237,6 +275,7 @@ def create_gif(
     fps: float,
     scale: int,
 ) -> float:
+    """Create a single GIF and return its size in MiB."""
     (
         ffmpeg.input(str(input_path), ss=start, t=duration)
         .filter("fps", fps=fps)
@@ -250,7 +289,13 @@ def create_gif(
     return size
 
 
+# endregion
+
+# region Thumbnail Extraction
+
+
 def extract_images(video_path: Path) -> None:
+    """Extract thumbnail grid and full-size images from video."""
     logger.info(f"Extracting images from {video_path.name}")
 
     if not video_path.is_file():
@@ -269,9 +314,10 @@ def add_timestamp(
     font_path: str = "calibri.ttf",
     font_size: int = 20,
 ) -> Image.Image:
+    """Add timestamp overlay to image."""
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font_path, font_size)
-    timestamp_text = f"{int(timestamp // 3600):02}:{int((timestamp % 3600) // 60):02}:{int(timestamp % 60):02}"
+    timestamp_text = f"{int(timestamp // 60):02}:{int(timestamp % 60):02}"
 
     text_width, text_height = font.getbbox(timestamp_text)[2:]
     text_position = (image.width - text_width - 20, image.height - text_height - 20)
@@ -285,6 +331,7 @@ def extract_frame(
     video_info: VideoInfo,
     target_width: int | None = None,
 ) -> Image.Image:
+    """Extract a single frame from video at specified timestamp."""
     input_stream = ffmpeg.input(str(video_path), ss=timestamp)
     if target_width:
         aspect_ratio = video_info["height"] / video_info["width"]
@@ -301,6 +348,7 @@ def extract_frame(
 def add_filename_to_header(
     draw: ImageDraw.ImageDraw, filename: str, header_size: int, image_width: int
 ) -> None:
+    """Add filename header to thumbnail grid."""
     font = ImageFont.truetype("calibri.ttf", 60)
     text_lines = textwrap.wrap(filename, width=40)
 
@@ -308,10 +356,10 @@ def add_filename_to_header(
 
     y_offset = (header_size - (len(text_lines) * (font.size + 5))) // 2
     for line in text_lines:
-        text_width, text_height = font.getbbox(line)[2:]
+        text_width, _ = font.getbbox(line)[2:]
         text_position = ((image_width - text_width) // 2, y_offset)
         draw.text(text_position, line, font=font, fill=(0, 0, 0, 255))
-        y_offset += text_height + 5
+        y_offset += font.size + 5
 
 
 def create_thumbnail_grid(
@@ -321,6 +369,7 @@ def create_thumbnail_grid(
     rows: int = 8,
     columns: int = 4,
 ) -> list[int]:
+    """Create a grid of thumbnails from video."""
     output_path = Path.home() / "Desktop" / f"{video_path.stem} - Thumbnails.jpg"
     duration = video_info["duration"]
     timestamps = [int(duration * i / (rows * columns)) for i in range(rows * columns)]
@@ -355,6 +404,7 @@ def create_thumbnail_grid(
 def save_full_size_images(
     video_path: Path, video_info: VideoInfo, thumbnail_timestamps: list[int]
 ) -> None:
+    """Save random full-size images from video, excluding thumbnail timestamps."""
     duration = video_info["duration"]
     thumbnail_timestamps_set = set(thumbnail_timestamps)
 
@@ -367,3 +417,6 @@ def save_full_size_images(
     for idx, timestamp in enumerate(possible_timestamps):
         img = extract_frame(video_path, timestamp, video_info)
         img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
+
+
+# endregion

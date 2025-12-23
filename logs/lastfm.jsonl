@@ -68,3 +68,12 @@
 {"Timestamp":"2025/12/16 09:00:30","Level":"Info","Event":"SessionEnd","SessionId":"9c30a778","Data":{"Status":"Completed","EndedAt":"2025/12/16 09:00:30","Summary":"Wrote 25 scrobbles to sheet"}}
 {"Timestamp":"2025/12/17 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"c7061e72","Data":{"Service":"LastFm","ProcessId":105852}}
 {"Timestamp":"2025/12/17 09:00:24","Level":"Info","Event":"SessionEnd","SessionId":"c7061e72","Data":{"Status":"Completed","EndedAt":"2025/12/17 09:00:24","Summary":"Wrote 12 scrobbles to sheet"}}
+{"Timestamp":"2025-12-22 11:49:42","Level":"Info","Event":"SessionStart","SessionId":"fc4beb62","Data":{"Service":"LastFm","ProcessId":8860}}
+{"Timestamp":"2025-12-22 11:49:42","Level":"Error","Event":"Exception","SessionId":"fc4beb62","Data":{"Type":"InvalidOperationException","Message":"LASTFM_API_KEY not set"}}
+{"Timestamp":"2025-12-22 11:49:42","Level":"Info","Event":"SessionEnd","SessionId":"fc4beb62","Data":{"Status":"Failed","EndedAt":"2025-12-22 11:49:42","Summary":"InvalidOperationException: LASTFM_API_KEY not set"}}
+{"Timestamp":"2025-12-22 12:31:23","Level":"Info","Event":"SessionStart","SessionId":"880fc81a","Data":{"Service":"LastFm","ProcessId":3676}}
+{"Timestamp":"2025-12-22 12:31:45","Level":"Info","Event":"SessionEnd","SessionId":"880fc81a","Data":{"Status":"Completed","EndedAt":"2025-12-22 12:31:45","Summary":"Wrote 64 scrobbles to sheet"}}
+{"Timestamp":"2025-12-22 14:16:28","Level":"Info","Event":"SessionStart","SessionId":"692a9b5a","Data":{"Service":"LastFm","ProcessId":1916}}
+{"Timestamp":"2025-12-22 14:16:44","Level":"Info","Event":"SessionEnd","SessionId":"692a9b5a","Data":{"Status":"Completed","EndedAt":"2025-12-22 14:16:44","Summary":"No new scrobbles"}}
+{"Timestamp":"2025-12-23 09:00:01","Level":"Info","Event":"SessionStart","SessionId":"977b62ea","Data":{"Service":"LastFm","ProcessId":5340}}
+{"Timestamp":"2025-12-23 09:00:21","Level":"Info","Event":"SessionEnd","SessionId":"977b62ea","Data":{"Status":"Completed","EndedAt":"2025-12-23 09:00:21","Summary":"Wrote 5 scrobbles to sheet"}}

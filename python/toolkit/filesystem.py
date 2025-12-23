@@ -2,14 +2,19 @@
 import json
 import subprocess
 from pathlib import Path
-from py3createtorrent import create_torrent
-from unidecode import unidecode
+
+from py3createtorrent import create_torrent  # type: ignore[import-untyped]
+from unidecode import unidecode  # type: ignore[import-untyped]
+
 from toolkit.logging_config import get_logger
 
 logger = get_logger("filesystem")
 
+# region Command Execution
+
 
 def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
+    """Run a subprocess command and return stdout/stderr."""
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -30,11 +35,18 @@ def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
     return unidecode(result), unidecode(error)
 
 
+# endregion
+
+# region Directory Listing
+
+
 def get_folder_size(path: Path) -> int:
+    """Calculate total size of all files in a directory recursively."""
     return sum(entry.stat().st_size for entry in path.rglob("*") if entry.is_file())
 
 
 def list_directories(path: Path, sort_order: str = "0", indent: int = 0) -> None:
+    """List directories with sizes, sorted by size or name."""
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
@@ -56,6 +68,7 @@ def list_directories(path: Path, sort_order: str = "0", indent: int = 0) -> None
 def list_files_and_directories(
     path: Path, sort_order: bool = False, indent: int = 0
 ) -> None:
+    """List files and directories with sizes."""
     indentation = "  " * indent
     folder_size = get_folder_size(path)
     output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
@@ -81,7 +94,13 @@ def list_files_and_directories(
         print(file_output)
 
 
+# endregion
+
+# region File Renaming
+
+
 def rename_file_red(path: Path) -> None:
+    """Rename files with paths exceeding 180 characters for RED compatibility."""
     if not path.exists() or not path.is_dir():
         logger.error(f"Path does not exist: {path}")
         return
@@ -109,7 +128,13 @@ def rename_file_red(path: Path) -> None:
     )
 
 
+# endregion
+
+# region Torrent Creation
+
+
 def make_torrents(folder: Path) -> None:
+    """Create RED and OPS torrents for a folder."""
     logger.info(f"Creating torrents for {folder.name}")
 
     dropbox_info_path = Path.home() / "AppData" / "Local" / "Dropbox" / "info.json"
@@ -142,3 +167,6 @@ def make_torrents(folder: Path) -> None:
     )
 
     logger.info(f"Torrents created for {folder.name}")
+
+
+# endregion

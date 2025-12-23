@@ -3,15 +3,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import chardet
-import ffmpeg
-from deflacue.deflacue import CueParser
-from pathvalidate import sanitize_filename
-from tqdm import tqdm
+import chardet  # type: ignore[import-untyped]
+import ffmpeg  # type: ignore[import-untyped]
+from deflacue.deflacue import CueParser  # type: ignore[import-untyped]
+from pathvalidate import sanitize_filename  # type: ignore[import-untyped]
+from tqdm import tqdm  # type: ignore[import-untyped]
+
+# region Data Model
 
 
 @dataclass
 class TrackInfo:
+    """Represents a single track parsed from a CUE sheet."""
+
     file: str
     parent: str
     title: str
@@ -21,7 +25,13 @@ class TrackInfo:
     metadata: dict[str, str] = field(default_factory=dict)
 
 
+# endregion
+
+# region CUE Parsing
+
+
 def parse_cue_file(cuefile_path: Path) -> Any:
+    """Parse a CUE file with automatic encoding detection."""
     cue_content = cuefile_path.read_bytes()
     cue_encoding: str = chardet.detect(cue_content)["encoding"] or "utf-8"
 
@@ -29,9 +39,8 @@ def parse_cue_file(cuefile_path: Path) -> Any:
     return parser.run()
 
 
-def extract_track_data(
-    cue_data: Any,
-) -> list[TrackInfo]:
+def extract_track_data(cue_data: Any) -> list[TrackInfo]:
+    """Extract track information from parsed CUE data."""
     album_info: dict[str, str] = cue_data.meta.data
     tracks: list[Any] = cue_data.tracks
     source_file: str = str(tracks[0].file.path)
@@ -58,12 +67,11 @@ def extract_track_data(
 def calculate_track_durations(
     tracks: list[TrackInfo], cue_file: Path
 ) -> list[TrackInfo]:
+    """Calculate duration for each track based on start times and total file duration."""
     p = Path(tracks[0].file)
     file = (cue_file.parent / p if not p.is_absolute() else p).resolve()
 
-    probe_result: dict[str, Any] = ffmpeg.probe(
-        str(file)
-    )
+    probe_result: dict[str, Any] = ffmpeg.probe(str(file))
     total_duration = float(probe_result["format"]["duration"])
 
     for i, track in enumerate(tracks[:-1]):
@@ -73,9 +81,15 @@ def calculate_track_durations(
     return tracks
 
 
+# endregion
+
+# region Track Processing
+
+
 def process_tracks(
     tracks: list[TrackInfo], cue_file: Path, volume_adjustment: float = 0.0
 ) -> None:
+    """Extract individual FLAC files from CUE sheet with volume adjustment."""
     track_count = len(tracks)
     cue_directory = cue_file.parent
 
@@ -118,6 +132,7 @@ def process_tracks(
 
 
 def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0) -> None:
+    """Process a CUE file: parse, extract tracks, and convert to FLAC."""
     cue_file = Path(cue_file).absolute()
 
     if not cue_file.exists():
@@ -127,3 +142,6 @@ def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0) -> None:
     tracks = extract_track_data(cue_data)
     tracks = calculate_track_durations(tracks, cue_file)
     process_tracks(tracks, cue_file, volume_adjustment)
+
+
+# endregion
