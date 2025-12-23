@@ -8,3 +8,7 @@ pyperclip
 chardet
 deflacue
 Pillow
+typer
+gspread
+pylast
+google-auth

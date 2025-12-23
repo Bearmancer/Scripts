@@ -21,13 +21,6 @@ Thumbs.db
 
 # Temp/logs
 *.tmp
-csharp\src\Markdown
 
 # Project-specific
 .fake
-
-# Secrets/Credentials
-**/token.json
-**/tokens/
-**/credentials.json
-**/*Credentials.json

@@ -1,36 +1,47 @@
 namespace CSharpScripts.CLI;
 
-[AttributeUsage(AttributeTargets.Property)]
+#region AllowedValuesAttribute
+
+[AttributeUsage(validOn: AttributeTargets.Property)]
 public sealed class AllowedValuesAttribute(params string[] values)
-    : ParameterValidationAttribute($"Must be one of: {Join(", ", values)}")
+    : ParameterValidationAttribute($"Must be one of: {Join(separator: ", ", value: values)}")
 {
     private readonly FrozenSet<string> allowedValues = values.ToFrozenSet(
-        StringComparer.OrdinalIgnoreCase
+        comparer: StringComparer.OrdinalIgnoreCase
     );
 
     public override ValidationResult Validate(CommandParameterContext context)
     {
         if (context.Value is null)
-            return ValidationResult.Success(); // Let [Required] handle null checks
+            return ValidationResult.Success();
 
-        var value = context.Value.ToString() ?? "";
+        string value = context.Value.ToString() ?? "";
 
-        return allowedValues.Contains(value)
+        return allowedValues.Contains(item: value)
             ? ValidationResult.Success()
             : ValidationResult.Error($"Invalid value '{value}'. {ErrorMessage}");
     }
 }
 
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class NotEmptyAttribute() : ParameterValidationAttribute("Value cannot be empty")
+#endregion
+
+#region NotEmptyAttribute
+
+[AttributeUsage(validOn: AttributeTargets.Property)]
+public sealed class NotEmptyAttribute()
+    : ParameterValidationAttribute(errorMessage: "Value cannot be empty")
 {
     public override ValidationResult Validate(CommandParameterContext context)
     {
         return context.Value switch
         {
             null => ValidationResult.Success(),
-            string s when IsNullOrWhiteSpace(s) => ValidationResult.Error(ErrorMessage),
+            string s when IsNullOrWhiteSpace(value: s) => ValidationResult.Error(
+                message: ErrorMessage
+            ),
             _ => ValidationResult.Success(),
         };
     }
 }
+
+#endregion

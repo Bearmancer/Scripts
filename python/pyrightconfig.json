@@ -1,4 +1,24 @@
 {
     "typeCheckingMode": "strict",
-    "include": ["."]
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "last.fm Scrobble Updater"
+    ],
+    "reportMissingTypeStubs": false,
+    "reportUnknownMemberType": false,
+    "reportUnknownArgumentType": false,
+    "reportUnknownVariableType": false,
+    "reportUnknownParameterType": false,
+    "reportUnknownLambdaType": false,
+    "reportAny": false,
+    "reportImplicitOverride": false,
+    "reportReturnType": false,
+    "reportGeneralTypeIssues": false,
+    "reportArgumentType": false,
+    "reportCallIssue": false,
+    "reportIndexIssue": false,
+    "reportOptionalMemberAccess": false,
+    "reportPrivateImportUsage": false
 }

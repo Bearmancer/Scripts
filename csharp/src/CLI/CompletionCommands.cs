@@ -1,29 +1,27 @@
 namespace CSharpScripts.CLI.Commands;
 
+#region CompletionInstallCommand
+
 public sealed class CompletionInstallCommand : Command<CompletionInstallCommand.Settings>
 {
-    public sealed class Settings : CommandSettings { }
-
     public override int Execute(
         CommandContext context,
         Settings settings,
         CancellationToken cancellationToken
     )
     {
-        string profilePath = GetFolderPath(SpecialFolder.UserProfile);
-        string psProfilePath = Path.Combine(
-            profilePath,
-            "Documents",
-            "PowerShell",
-            "Microsoft.PowerShell_profile.ps1"
+        string profilePath = GetFolderPath(folder: SpecialFolder.UserProfile);
+        string psProfilePath = Combine(
+            path1: profilePath,
+            path2: "Documents",
+            path3: "PowerShell",
+            path4: "Microsoft.PowerShell_profile.ps1"
         );
 
-        // Get the path to this executable
         string exePath =
             ProcessPath
-            ?? throw new InvalidOperationException("Could not determine executable path");
+            ?? throw new InvalidOperationException(message: "Could not determine executable path");
 
-        // Build the PowerShell script
         string completionScript =
             @"
 # scripts CLI tab completion (auto-generated)
@@ -31,73 +29,70 @@ Register-ArgumentCompleter -Native -CommandName scripts -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     $words = $commandAst.ToString() -split '\s+'
     & """
-            + exePath.Replace("\\", "\\\\")
+            + exePath.Replace(oldValue: "\\", newValue: "\\\\")
             + @""" completion suggest $($words[1..($words.Length-1)] -join ' ') 2>$null | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }";
 
-        string marker = "# scripts CLI tab completion";
+        var marker = "# scripts CLI tab completion";
 
-        // Check if already installed
-        if (File.Exists(psProfilePath))
+        if (File.Exists(path: psProfilePath))
         {
-            string existing = File.ReadAllText(psProfilePath);
-            if (existing.Contains(marker))
+            string existing = ReadAllText(path: psProfilePath);
+            if (existing.Contains(value: marker))
             {
-                Console.Info("Tab completion already installed in profile");
-                Console.Dim(psProfilePath);
+                Console.Info(message: "Tab completion already installed in profile");
+                Console.Dim(text: psProfilePath);
                 return 0;
             }
         }
 
-        // Ensure directory exists
-        string? profileDir = Path.GetDirectoryName(psProfilePath);
-        if (profileDir is not null && !Directory.Exists(profileDir))
-            Directory.CreateDirectory(profileDir);
+        string? profileDir = GetDirectoryName(path: psProfilePath);
+        if (profileDir is { } && !Directory.Exists(path: profileDir))
+            CreateDirectory(path: profileDir);
 
-        // Append to profile
-        File.AppendAllText(psProfilePath, NewLine + completionScript + NewLine);
+        AppendAllText(path: psProfilePath, NewLine + completionScript + NewLine);
 
-        Console.Success("Tab completion installed!");
-        Console.Info("Profile: {0}", psProfilePath);
-        Console.Warning("Restart PowerShell or run: . $PROFILE");
+        Console.Success(message: "Tab completion installed!");
+        Console.Info(message: "Profile: {0}", psProfilePath);
+        Console.Warning(message: "Restart PowerShell or run: . $PROFILE");
 
         return 0;
     }
+
+    public sealed class Settings : CommandSettings { }
 }
+
+#endregion
+
+#region CompletionSuggestCommand
 
 public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
-    {
-        [CommandArgument(0, "[PARTIAL]")]
-        [Description("Partial command to complete")]
-        public string? Partial { get; init; }
-    }
-
-    // All available commands and subcommands
-    static readonly FrozenDictionary<string, string[]> Commands = new Dictionary<string, string[]>
-    {
-        [""] = ["sync", "clean", "music", "mail", "completion", "-v", "--verbose"],
-        ["sync"] = ["all", "yt", "lastfm", "status", "-v", "--verbose", "-r", "--reset"],
-        ["clean"] = ["local", "purge"],
-        ["music"] = ["search", "lookup", "schema"],
-        ["music search"] = ["--source", "--mode", "--limit", "--fields", "--output", "-v"],
-        ["mail"] = ["create"],
-        ["completion"] = ["install", "suggest"],
-    }.ToFrozenDictionary();
-
-    // Option values
-    static readonly FrozenDictionary<string, string[]> OptionValues = new Dictionary<
+    private static readonly FrozenDictionary<string, string[]> Commands = new Dictionary<
         string,
         string[]
     >
     {
-        ["--source"] = ["discogs", "musicbrainz"],
-        ["--mode"] = ["pop", "classical"],
-        ["--output"] = ["table", "json"],
-        ["--fields"] =
+        [key: ""] = ["sync", "clean", "music", "mail", "completion", "-v", "--verbose"],
+        [key: "sync"] = ["all", "yt", "lastfm", "status", "-v", "--verbose", "-r", "--reset"],
+        [key: "clean"] = ["local", "purge"],
+        [key: "music"] = ["search", "lookup", "schema"],
+        [key: "music search"] = ["--source", "--mode", "--limit", "--fields", "--output", "-v"],
+        [key: "mail"] = ["create"],
+        [key: "completion"] = ["install", "suggest"],
+    }.ToFrozenDictionary();
+
+    private static readonly FrozenDictionary<string, string[]> OptionValues = new Dictionary<
+        string,
+        string[]
+    >
+    {
+        [key: "--source"] = ["discogs", "musicbrainz"],
+        [key: "--mode"] = ["pop", "classical"],
+        [key: "--output"] = ["table", "json"],
+        [key: "--fields"] =
         [
             "default",
             "all",
@@ -121,69 +116,79 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
     )
     {
         string partial = settings.Partial?.Trim() ?? "";
-        string[] words = partial.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] words = partial.Split(
+            separator: ' ',
+            options: StringSplitOptions.RemoveEmptyEntries
+        );
 
         List<string> suggestions = [];
 
-        // Check if we're completing an option value
         if (words.Length >= 1)
         {
             string lastWord = words[^1];
             if (
-                lastWord.StartsWith("--", StringComparison.Ordinal)
-                && OptionValues.TryGetValue(lastWord, out string[]? values)
+                lastWord.StartsWith(value: "--", comparisonType: StringComparison.Ordinal)
+                && OptionValues.TryGetValue(key: lastWord, out string[]? values)
             )
             {
-                suggestions.AddRange(values);
+                suggestions.AddRange(collection: values);
             }
             else if (
                 words.Length >= 2
-                && words[^2].StartsWith("--", StringComparison.Ordinal)
+                && words[^2].StartsWith(value: "--", comparisonType: StringComparison.Ordinal)
                 && OptionValues.TryGetValue(words[^2], out string[]? prevValues)
             )
             {
-                // Filter values that start with current input
                 suggestions.AddRange(
                     prevValues.Where(v =>
-                        v.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase)
+                        v.StartsWith(
+                            value: lastWord,
+                            comparisonType: StringComparison.OrdinalIgnoreCase
+                        )
                     )
                 );
             }
             else
             {
-                // Build context key from words
-                string contextKey = string.Join(" ", words.Take(words.Length - 1));
-                if (Commands.TryGetValue(contextKey, out string[]? cmds))
-                {
+                string contextKey = Join(separator: " ", words.Take(words.Length - 1));
+                if (Commands.TryGetValue(key: contextKey, out string[]? cmds))
                     suggestions.AddRange(
-                        cmds.Where(c => c.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
-                    );
-                }
-                else if (Commands.TryGetValue(words[0], out string[]? subCmds))
-                {
-                    suggestions.AddRange(
-                        subCmds.Where(c =>
-                            c.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase)
+                        cmds.Where(c =>
+                            c.StartsWith(
+                                value: lastWord,
+                                comparisonType: StringComparison.OrdinalIgnoreCase
+                            )
                         )
                     );
-                }
+                else if (Commands.TryGetValue(words[0], out string[]? subCmds))
+                    suggestions.AddRange(
+                        subCmds.Where(c =>
+                            c.StartsWith(
+                                value: lastWord,
+                                comparisonType: StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                    );
             }
         }
         else
         {
-            // Root level
-            if (Commands.TryGetValue("", out string[]? rootCmds))
-            {
-                suggestions.AddRange(rootCmds);
-            }
+            if (Commands.TryGetValue(key: "", out string[]? rootCmds))
+                suggestions.AddRange(collection: rootCmds);
         }
 
-        // Output suggestions (one per line for PowerShell)
         foreach (string suggestion in suggestions.Distinct())
-        {
-            Console.WriteLine(suggestion);
-        }
+            Console.WriteLine(text: suggestion);
 
         return 0;
     }
+
+    public sealed class Settings : CommandSettings
+    {
+        [CommandArgument(position: 0, template: "[PARTIAL]")]
+        [Description(description: "Partial command to complete")]
+        public string? Partial { get; init; }
+    }
 }
+
+#endregion

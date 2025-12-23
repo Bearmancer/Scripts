@@ -1,5 +1,7 @@
 namespace CSharpScripts.Services.Sync.YouTube;
 
+#region Models
+
 public record VideoChanges(
     List<string> AddedVideoIds,
     List<string> RemovedVideoIds,
@@ -21,22 +23,19 @@ public static class YouTubeChangeDetector
         var currentSet = currentVideoIds.ToHashSet();
         var storedSet = storedVideoIds.ToHashSet();
 
-        List<string> addedIds = [.. currentVideoIds.Where(id => !storedSet.Contains(id))];
+        List<string> addedIds = [.. currentVideoIds.Where(id => !storedSet.Contains(item: id))];
 
-        // Build both removedIds and removedIndices in a single pass
         List<string> removedIds = [];
         List<int> removedIndices = [];
         for (var i = 0; i < storedVideoIds.Count; i++)
-        {
-            if (!currentSet.Contains(storedVideoIds[i]))
+            if (!currentSet.Contains(storedVideoIds[index: i]))
             {
-                removedIds.Add(storedVideoIds[i]);
-                removedIndices.Add(i + 2); // +2 for 1-indexed sheet with header
+                removedIds.Add(storedVideoIds[index: i]);
+                removedIndices.Add(i + 2);
             }
-        }
 
         Console.Debug(
-            "VideoChanges: current={0}, stored={1}, added={2}, removed={3}, removedIndices={4}",
+            message: "VideoChanges: current={0}, stored={1}, added={2}, removed={3}, removedIndices={4}",
             currentVideoIds.Count,
             storedVideoIds.Count,
             addedIds.Count,
@@ -44,13 +43,17 @@ public static class YouTubeChangeDetector
             removedIndices.Count
         );
 
-        // Use SequenceEqual for cleaner reorder detection
-        var requiresFullRewrite =
+        bool requiresFullRewrite =
             addedIds.Count == 0
             && removedIndices.Count == 0
-            && !currentVideoIds.SequenceEqual(storedVideoIds);
+            && !currentVideoIds.SequenceEqual(second: storedVideoIds);
 
-        return new VideoChanges(addedIds, removedIds, removedIndices, requiresFullRewrite);
+        return new VideoChanges(
+            AddedVideoIds: addedIds,
+            RemovedVideoIds: removedIds,
+            RemovedRowIndices: removedIndices,
+            RequiresFullRewrite: requiresFullRewrite
+        );
     }
 
     internal static PlaylistChanges DetectPlaylistChanges(
@@ -58,54 +61,59 @@ public static class YouTubeChangeDetector
         Dictionary<string, PlaylistSnapshot> snapshots
     )
     {
-        Console.Debug("=== DETECTING CHANGES ===");
-        Console.Debug("Current playlists from API: {0}", currentPlaylists.Count);
-        Console.Debug("Saved snapshots in state: {0}", snapshots.Count);
+        Console.Debug(message: "=== DETECTING CHANGES ===");
+        Console.Debug(message: "Current playlists from API: {0}", currentPlaylists.Count);
+        Console.Debug(message: "Saved snapshots in state: {0}", snapshots.Count);
 
         var currentIds = currentPlaylists.Select(p => p.Id).ToHashSet();
         var previousIds = snapshots.Keys.ToHashSet();
 
-        List<string> newIds = [.. currentIds.Except(previousIds)];
-        List<string> deletedIds = [.. previousIds.Except(currentIds)];
+        List<string> newIds = [.. currentIds.Except(second: previousIds)];
+        List<string> deletedIds = [.. previousIds.Except(second: currentIds)];
         List<string> modifiedIds = [];
 
-        Console.Debug("New playlist IDs (not in snapshots): {0}", newIds.Count);
-        Console.Debug("Deleted playlist IDs (in snapshots but not API): {0}", deletedIds.Count);
+        Console.Debug(message: "New playlist IDs (not in snapshots): {0}", newIds.Count);
+        Console.Debug(
+            message: "Deleted playlist IDs (in snapshots but not API): {0}",
+            deletedIds.Count
+        );
 
-        // Build set of new IDs to skip them efficiently
         var newIdsSet = newIds.ToHashSet();
 
         foreach (var playlist in currentPlaylists)
         {
-            // Skip new playlists - no snapshot to compare
-            if (newIdsSet.Contains(playlist.Id))
+            if (newIdsSet.Contains(item: playlist.Id))
                 continue;
 
-            var snapshot = snapshots[playlist.Id];
+            var snapshot = snapshots[key: playlist.Id];
             var currentVideoIds = playlist.VideoIds.ToHashSet();
             var storedVideoIds = snapshot.VideoIds.ToHashSet();
 
-            if (!currentVideoIds.SetEquals(storedVideoIds))
+            if (!currentVideoIds.SetEquals(other: storedVideoIds))
             {
-                modifiedIds.Add(playlist.Id);
-                Console.Debug("  MODIFIED: {0}", playlist.Title);
+                modifiedIds.Add(item: playlist.Id);
+                Console.Debug(message: "  MODIFIED: {0}", playlist.Title);
             }
         }
 
-        Console.Debug("Modified playlists: {0}", modifiedIds.Count);
-        return new PlaylistChanges(newIds, deletedIds, modifiedIds);
+        Console.Debug(message: "Modified playlists: {0}", modifiedIds.Count);
+        return new PlaylistChanges(
+            NewPlaylistIds: newIds,
+            DeletedPlaylistIds: deletedIds,
+            ModifiedPlaylistIds: modifiedIds
+        );
     }
 
     public static void LogDetectedChanges(PlaylistChanges changes)
     {
         if (changes.NewPlaylistIds.Count > 0)
-            Console.Info("New playlists: {0}", changes.NewPlaylistIds.Count);
+            Console.Info(message: "New playlists: {0}", changes.NewPlaylistIds.Count);
 
         if (changes.DeletedPlaylistIds.Count > 0)
-            Console.Info("Deleted playlists: {0}", changes.DeletedPlaylistIds.Count);
+            Console.Info(message: "Deleted playlists: {0}", changes.DeletedPlaylistIds.Count);
 
         if (changes.ModifiedPlaylistIds.Count > 0)
-            Console.Info("Modified playlists: {0}", changes.ModifiedPlaylistIds.Count);
+            Console.Info(message: "Modified playlists: {0}", changes.ModifiedPlaylistIds.Count);
     }
 
     internal static OptimizedChanges DetectOptimizedChanges(
@@ -113,9 +121,9 @@ public static class YouTubeChangeDetector
         Dictionary<string, PlaylistSnapshot> snapshots
     )
     {
-        Console.Debug("=== OPTIMIZED CHANGE DETECTION ===");
+        Console.Debug(message: "=== OPTIMIZED CHANGE DETECTION ===");
         Console.Debug(
-            "Current summaries: {0}, Stored snapshots: {1}",
+            message: "Current summaries: {0}, Stored snapshots: {1}",
             currentSummaries.Count,
             snapshots.Count
         );
@@ -123,24 +131,22 @@ public static class YouTubeChangeDetector
         var currentIds = currentSummaries.Select(s => s.Id).ToHashSet();
         var previousIds = snapshots.Keys.ToHashSet();
 
-        List<string> newIds = [.. currentIds.Except(previousIds)];
-        List<string> deletedIds = [.. previousIds.Except(currentIds)];
+        List<string> newIds = [.. currentIds.Except(second: previousIds)];
+        List<string> deletedIds = [.. previousIds.Except(second: currentIds)];
         List<string> modifiedIds = [];
         List<PlaylistRename> renamed = [];
 
-        Console.Debug("New playlist IDs: {0}", newIds.Count);
-        Console.Debug("Deleted playlist IDs: {0}", deletedIds.Count);
+        Console.Debug(message: "New playlist IDs: {0}", newIds.Count);
+        Console.Debug(message: "Deleted playlist IDs: {0}", deletedIds.Count);
 
-        // Build set of new IDs to skip them efficiently
         var newIdsSet = newIds.ToHashSet();
 
         foreach (var summary in currentSummaries)
         {
-            // Skip new playlists - no snapshot to compare
-            if (newIdsSet.Contains(summary.Id))
+            if (newIdsSet.Contains(item: summary.Id))
                 continue;
 
-            var snapshot = snapshots[summary.Id];
+            var snapshot = snapshots[key: summary.Id];
 
             if (snapshot.Title != summary.Title)
                 renamed.Add(
@@ -151,28 +157,28 @@ public static class YouTubeChangeDetector
                     )
                 );
 
-            var etagChanged =
-                !IsNullOrEmpty(snapshot.ETag)
-                && !IsNullOrEmpty(summary.ETag)
+            bool etagChanged =
+                !IsNullOrEmpty(value: snapshot.ETag)
+                && !IsNullOrEmpty(value: summary.ETag)
                 && snapshot.ETag != summary.ETag;
 
-            var countChanged = snapshot.ReportedVideoCount != summary.VideoCount;
+            bool countChanged = snapshot.ReportedVideoCount != summary.VideoCount;
 
             if (etagChanged || countChanged)
             {
-                modifiedIds.Add(summary.Id);
-                var reason = (etagChanged, countChanged) switch
+                modifiedIds.Add(item: summary.Id);
+                string reason = (etagChanged, countChanged) switch
                 {
                     (true, true) => "etag+count",
                     (true, false) => "etag only (likely reorder)",
                     (false, true) => "count only",
                     _ => "unknown",
                 };
-                Console.Debug("  MODIFIED ({0}): {1}", reason, summary.Title);
+                Console.Debug(message: "  MODIFIED ({0}): {1}", reason, summary.Title);
             }
         }
 
-        Console.Debug("Total modified: {0}", modifiedIds.Count);
+        Console.Debug(message: "Total modified: {0}", modifiedIds.Count);
         return new OptimizedChanges(
             NewIds: newIds,
             DeletedIds: deletedIds,
@@ -183,9 +189,7 @@ public static class YouTubeChangeDetector
 
     public static void LogOptimizedChanges(OptimizedChanges changes)
     {
-        Console.Info("Starting sync...");
-
-        var totalChanges =
+        int totalChanges =
             changes.NewIds.Count
             + changes.DeletedIds.Count
             + changes.ModifiedIds.Count
@@ -193,85 +197,77 @@ public static class YouTubeChangeDetector
 
         if (totalChanges == 0)
         {
-            Console.Success("No changes detected.");
+            Console.Success(message: "No changes detected.");
             return;
         }
 
-        Console.Info("Changes detected: {0}", totalChanges);
+        Console.Info(message: "Changes detected: {0}", totalChanges);
 
         if (changes.NewIds.Count > 0)
-            Console.Info("  New: {0}", changes.NewIds.Count);
+            Console.Info(message: "  New: {0}", changes.NewIds.Count);
 
         if (changes.ModifiedIds.Count > 0)
-            Console.Info("  Modified: {0}", changes.ModifiedIds.Count);
+            Console.Info(message: "  Modified: {0}", changes.ModifiedIds.Count);
 
         if (changes.Renamed.Count > 0)
-            Console.Info("  Renamed: {0}", changes.Renamed.Count);
+            Console.Info(message: "  Renamed: {0}", changes.Renamed.Count);
 
         if (changes.DeletedIds.Count > 0)
-            Console.Info("  Deleted: {0}", changes.DeletedIds.Count);
+            Console.Info(message: "  Deleted: {0}", changes.DeletedIds.Count);
     }
 
-    /// <summary>
-    /// Logs detailed change information with playlist names and video deltas.
-    /// Call this method when snapshots and summaries are available.
-    /// </summary>
     public static void LogDetailedChanges(
         OptimizedChanges changes,
         List<PlaylistSummary> summaries,
         Dictionary<string, PlaylistSnapshot> snapshots
     )
     {
-        Console.Info("Starting sync...");
-
         var summaryLookup = summaries.ToDictionary(s => s.Id, s => s);
 
-        // Modified playlists with video delta
         if (changes.ModifiedIds.Count > 0)
         {
-            Console.Info("Modified playlists: {0}", changes.ModifiedIds.Count);
-            foreach (var id in changes.ModifiedIds)
+            Console.Info(message: "Modified playlists: {0}", changes.ModifiedIds.Count);
+            foreach (string id in changes.ModifiedIds)
             {
-                var name = summaryLookup.TryGetValue(id, out var s) ? s.Title : id;
-                var currentCount = s.VideoCount;
-                var previousCount = snapshots.TryGetValue(id, out var snap)
+                string name = summaryLookup.TryGetValue(key: id, out var s) ? s.Title : id;
+                int currentCount = s.VideoCount;
+                int previousCount = snapshots.TryGetValue(key: id, out var snap)
                     ? snap.VideoIds.Count
                     : 0;
-                var delta = currentCount - previousCount;
-                var deltaStr = delta >= 0 ? $"+{delta}" : delta.ToString();
-                Console.Info("  {0}: {1} videos", name, deltaStr);
+                int delta = currentCount - previousCount;
+                string deltaStr = delta >= 0 ? $"+{delta}" : delta.ToString();
+                Console.Info(message: "{0}: {1} videos", name, deltaStr);
             }
         }
 
-        // New playlists
         if (changes.NewIds.Count > 0)
         {
-            Console.Info("New playlists: {0}", changes.NewIds.Count);
-            foreach (var id in changes.NewIds)
+            Console.Info(message: "New playlists: {0}", changes.NewIds.Count);
+            foreach (string id in changes.NewIds)
             {
-                var name = summaryLookup.TryGetValue(id, out var s) ? s.Title : id;
-                var count = s.VideoCount;
-                Console.Info("  {0}: +{1} videos", name, count);
+                string name = summaryLookup.TryGetValue(key: id, out var s) ? s.Title : id;
+                int count = s.VideoCount;
+                Console.Info(message: "  {0}: +{1} videos", name, count);
             }
         }
 
-        // Renamed playlists
         if (changes.Renamed.Count > 0)
         {
-            Console.Info("Renamed playlists: {0}", changes.Renamed.Count);
+            Console.Info(message: "Renamed playlists: {0}", changes.Renamed.Count);
             foreach (var rename in changes.Renamed)
-                Console.Info("  {0} → {1}", rename.OldTitle, rename.NewTitle);
+                Console.Info(message: "  {0} → {1}", rename.OldTitle, rename.NewTitle);
         }
 
-        // Deleted playlists
         if (changes.DeletedIds.Count > 0)
         {
-            Console.Info("Deleted playlists: {0}", changes.DeletedIds.Count);
-            foreach (var id in changes.DeletedIds)
+            Console.Info(message: "Deleted playlists: {0}", changes.DeletedIds.Count);
+            foreach (string id in changes.DeletedIds)
             {
-                var name = snapshots.TryGetValue(id, out var snap) ? snap.Title : id;
-                Console.Info("  {0}", name);
+                string name = snapshots.TryGetValue(key: id, out var snap) ? snap.Title : id;
+                Console.Info(message: "  {0}", name);
             }
         }
     }
 }
+
+#endregion

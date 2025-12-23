@@ -5,7 +5,7 @@
 ----------------------------------------
 internal sealed class EmbeddedAttribute : System.Attribute
 {
-	// ─── Constructors ───
+
 	public EmbeddedAttribute();
 
 }
@@ -14,7 +14,7 @@ internal sealed class EmbeddedAttribute : System.Attribute
 ----------------------------------------
 public class ApiException : System.Exception, System.Runtime.Serialization.ISerializable
 {
-	// ─── Constructors ───
+
 	public ApiException();
 	public ApiException(string message);
 	public ApiException(string message, System.Exception innerException);
@@ -22,13 +22,13 @@ public class ApiException : System.Exception, System.Runtime.Serialization.ISeri
 }
 public class ApiQueryBuilder : ParkSquare.Discogs.IApiQueryBuilder
 {
-	// ─── Fields ───
+
 	private readonly ParkSquare.Discogs.IClientConfig _config;
 
-	// ─── Constructors ───
+
 	public ApiQueryBuilder(ParkSquare.Discogs.IClientConfig config);
 
-	// ─── Methods ───
+
 	public virtual System.Uri BuildSearchRequest(ParkSquare.Discogs.SearchCriteria criteria, ParkSquare.Discogs.PageOptions pageOptions);
 	public virtual System.Uri BuildReleaseRequest(int releaseId);
 	public virtual System.Uri BuildMasterReleaseRequest(int masterId);
@@ -41,7 +41,7 @@ public class ApiQueryBuilder : ParkSquare.Discogs.IApiQueryBuilder
 }
 public class DiscogsClient : ParkSquare.Discogs.IDiscogsClient
 {
-	// ─── Fields ───
+
 	private const string DefaultProductTitle;
 	private readonly System.Net.Http.HttpClient _httpClient;
 	private readonly ParkSquare.Discogs.IApiQueryBuilder _queryBuilder;
@@ -49,13 +49,13 @@ public class DiscogsClient : ParkSquare.Discogs.IDiscogsClient
 	private string _productTitle;
 	private string _productVersion;
 
-	// ─── Properties ───
+
 	public int MaxConcurrentRequests { get; set; }
 
-	// ─── Constructors ───
+
 	public DiscogsClient(System.Net.Http.HttpClient httpClient, ParkSquare.Discogs.IApiQueryBuilder queryBuilder);
 
-	// ─── Methods ───
+
 	public virtual System.Threading.Tasks.Task<SearchResults> SearchAsync(ParkSquare.Discogs.SearchCriteria criteria);
 	public virtual System.Threading.Tasks.Task<SearchResults> SearchAsync(ParkSquare.Discogs.SearchCriteria criteria, ParkSquare.Discogs.PageOptions pageOptions);
 	public virtual System.Threading.Tasks.Task<SearchResults> SearchAllAsync(ParkSquare.Discogs.SearchCriteria criteria);
@@ -70,7 +70,7 @@ public class DiscogsClient : ParkSquare.Discogs.IDiscogsClient
 }
 public interface IApiQueryBuilder
 {
-	// ─── Methods ───
+
 	public abstract System.Uri BuildSearchRequest(ParkSquare.Discogs.SearchCriteria criteria, ParkSquare.Discogs.PageOptions pageOptions);
 	public abstract System.Uri BuildReleaseRequest(int releaseId);
 	public abstract System.Uri BuildMasterReleaseRequest(int masterId);
@@ -79,14 +79,14 @@ public interface IApiQueryBuilder
 }
 public interface IClientConfig
 {
-	// ─── Properties ───
+
 	public abstract string AuthToken { get; }
 	public abstract string BaseUrl { get; }
 
 }
 public interface IDiscogsClient
 {
-	// ─── Methods ───
+
 	public abstract System.Threading.Tasks.Task<SearchResults> SearchAsync(ParkSquare.Discogs.SearchCriteria criteria);
 	public abstract System.Threading.Tasks.Task<SearchResults> SearchAsync(ParkSquare.Discogs.SearchCriteria criteria, ParkSquare.Discogs.PageOptions pageOptions);
 	public abstract System.Threading.Tasks.Task<SearchResults> SearchAllAsync(ParkSquare.Discogs.SearchCriteria criteria);
@@ -99,24 +99,24 @@ public interface IDiscogsClient
 }
 public class PageOptions
 {
-	// ─── Properties ───
+
 	public System.Nullable<int> PageNumber { get; set; }
 	public System.Nullable<int> PageSize { get; set; }
 
-	// ─── Constructors ───
+
 	public PageOptions();
 
 }
 internal class QueryStringBuilder
 {
-	// ─── Fields ───
+
 	private readonly System.Collections.Generic.Dictionary<string, List<object>> _items;
 
-	// ─── Constructors ───
+
 	public QueryStringBuilder();
 	public QueryStringBuilder(object values);
 
-	// ─── Methods ───
+
 	public void Add(string key, object value);
 	private void AddNewKey(string key);
 	private void AddValues(string prefix, object values);
@@ -128,7 +128,7 @@ internal class QueryStringBuilder
 }
 public class SearchCriteria
 {
-	// ─── Properties ───
+
 	public string Query { get; set; }
 	public string ReleaseTitle { get; set; }
 	public string Title { get; set; }
@@ -148,13 +148,13 @@ public class SearchCriteria
 	public string Submitter { get; set; }
 	public string Contributor { get; set; }
 
-	// ─── Constructors ───
+
 	public SearchCriteria();
 
 }
 public static class TrackListExtensions
 {
-	// ─── Methods ───
+
 	public static System.Collections.Generic.Dictionary<string, List<Tracklist>> SplitMedia(System.Collections.Generic.List<Tracklist> tracks);
 	private static System.Collections.Generic.Dictionary<string, List<Tracklist>> AllTracksOnSingleMedia(System.Collections.Generic.IEnumerable<Tracklist> tracks);
 	private static System.Collections.Generic.Dictionary<string, List<Tracklist>> SplitUsingPosition(System.Collections.Generic.List<Tracklist> tracks);
@@ -164,7 +164,7 @@ public static class TrackListExtensions
 }
 internal static class UriExtensions
 {
-	// ─── Methods ───
+
 	public static System.Uri Concat(System.Uri baseUri, string relativeUri);
 	public static System.Uri Concat(System.Uri baseUri, string relativeUri, string queryString);
 	public static System.Uri Concat(System.Uri baseUri, System.Uri relativeUri);
@@ -173,14 +173,14 @@ internal static class UriExtensions
 }
 public class VersionsCriteria
 {
-	// ─── Properties ───
+
 	public int MasterId { get; }
 	public System.Collections.Generic.List<string> Format { get; set; }
 	public System.Collections.Generic.List<string> Label { get; set; }
 	public System.Collections.Generic.List<string> ReleaseYear { get; set; }
 	public System.Collections.Generic.List<string> Country { get; set; }
 
-	// ─── Constructors ───
+
 	public VersionsCriteria(int masterId);
 
 }
@@ -189,7 +189,7 @@ public class VersionsCriteria
 ----------------------------------------
 public class Artist
 {
-	// ─── Properties ───
+
 	public string Name { get; set; }
 	public string Alias { get; set; }
 	public string Join { get; set; }
@@ -198,13 +198,13 @@ public class Artist
 	public int Id { get; set; }
 	public string ResourceUrl { get; set; }
 
-	// ─── Constructors ───
+
 	public Artist();
 
 }
 public class Community
 {
-	// ─── Properties ───
+
 	public int Want { get; set; }
 	public int Have { get; set; }
 	public ParkSquare.Discogs.Dto.Rating Rating { get; set; }
@@ -213,23 +213,23 @@ public class Community
 	public string DataQuality { get; set; }
 	public string Status { get; set; }
 
-	// ─── Constructors ───
+
 	public Community();
 
 }
 public class CommunityList
 {
-	// ─── Properties ───
+
 	public int InWantlist { get; set; }
 	public int InCollection { get; set; }
 
-	// ─── Constructors ───
+
 	public CommunityList();
 
 }
 public class Company
 {
-	// ─── Properties ───
+
 	public string Name { get; set; }
 	public string CatalogNumber { get; set; }
 	public string EntityType { get; set; }
@@ -237,79 +237,79 @@ public class Company
 	public int Id { get; set; }
 	public string ResourceUrl { get; set; }
 
-	// ─── Constructors ───
+
 	public Company();
 
 }
 public class Contributor
 {
-	// ─── Properties ───
+
 	public string Username { get; set; }
 	public string ResourceUrl { get; set; }
 
-	// ─── Constructors ───
+
 	public Contributor();
 
 }
 public class FilterFacet
 {
-	// ─── Properties ───
+
 	public string Title { get; set; }
 	public string Id { get; set; }
 	public System.Collections.Generic.List<FilterFacetValue> Values { get; set; }
 	public bool AllowsMultipleValues { get; set; }
 
-	// ─── Constructors ───
+
 	public FilterFacet();
 
 }
 public class FilterFacetValue
 {
-	// ─── Properties ───
+
 	public string Title { get; set; }
 	public string Value { get; set; }
 	public int Count { get; set; }
 
-	// ─── Constructors ───
+
 	public FilterFacetValue();
 
 }
 public class Filters
 {
-	// ─── Properties ───
+
 	public System.Collections.Generic.Dictionary<string, List<string>> Applied { get; set; }
 	public System.Collections.Generic.Dictionary<string, Dictionary<string, int>> Available { get; set; }
 
-	// ─── Constructors ───
+
 	public Filters();
 
 }
 public class Format
 {
-	// ─── Properties ───
+
 	public string Name { get; set; }
 	public string Quantity { get; set; }
 	public System.Collections.Generic.List<string> Descriptions { get; set; }
 	public string Text { get; set; }
 
-	// ─── Constructors ───
+
 	public Format();
 
 }
 public class Identifier
 {
-	// ─── Properties ───
+
 	public string Type { get; set; }
 	public string Value { get; set; }
 	public string Description { get; set; }
 
-	// ─── Constructors ───
+
 	public Identifier();
 
 }
 public class Image
 {
-	// ─── Properties ───
+
 	public string Type { get; set; }
 	public string Uri { get; set; }
 	public string ResourceUrl { get; set; }
@@ -317,13 +317,13 @@ public class Image
 	public int Width { get; set; }
 	public int Height { get; set; }
 
-	// ─── Constructors ───
+
 	public Image();
 
 }
 public class Label
 {
-	// ─── Properties ───
+
 	public string Name { get; set; }
 	public string CatalogNumber { get; set; }
 	public string EntityType { get; set; }
@@ -331,13 +331,13 @@ public class Label
 	public int Id { get; set; }
 	public string ResourceUrl { get; set; }
 
-	// ─── Constructors ───
+
 	public Label();
 
 }
 public class MasterRelease
 {
-	// ─── Properties ───
+
 	public int MasterId { get; set; }
 	public int MainReleaseId { get; set; }
 	public int MostRecentReleaseId { get; set; }
@@ -358,36 +358,36 @@ public class MasterRelease
 	public string DataQuality { get; set; }
 	public System.Collections.Generic.List<Video> Videos { get; set; }
 
-	// ─── Constructors ───
+
 	public MasterRelease();
 
 }
 public class Pagination
 {
-	// ─── Properties ───
+
 	public int Page { get; set; }
 	public int Pages { get; set; }
 	public int PerPage { get; set; }
 	public int Items { get; set; }
 	public ParkSquare.Discogs.Dto.Urls Urls { get; set; }
 
-	// ─── Constructors ───
+
 	public Pagination();
 
 }
 public class Rating
 {
-	// ─── Properties ───
+
 	public int Count { get; set; }
 	public double Average { get; set; }
 
-	// ─── Constructors ───
+
 	public Rating();
 
 }
 public class Release
 {
-	// ─── Properties ───
+
 	public int ReleaseId { get; set; }
 	public string Status { get; set; }
 	public int Year { get; set; }
@@ -424,13 +424,13 @@ public class Release
 	public int EstimatedWeight { get; set; }
 	public bool BlockedFromSale { get; set; }
 
-	// ─── Constructors ───
+
 	public Release();
 
 }
 public class SearchResult
 {
-	// ─── Properties ───
+
 	public string Country { get; set; }
 	public string Year { get; set; }
 	public System.Collections.Generic.List<string> Format { get; set; }
@@ -452,42 +452,42 @@ public class SearchResult
 	public ParkSquare.Discogs.Dto.Community Community { get; set; }
 	public System.Collections.Generic.List<Format> Formats { get; set; }
 
-	// ─── Constructors ───
+
 	public SearchResult();
 
 }
 public class SearchResults
 {
-	// ─── Properties ───
+
 	public ParkSquare.Discogs.Dto.Pagination Pagination { get; set; }
 	public System.Collections.Generic.List<SearchResult> Results { get; set; }
 
-	// ─── Constructors ───
+
 	public SearchResults();
 
 }
 public class Stats
 {
-	// ─── Properties ───
+
 	public ParkSquare.Discogs.Dto.CommunityList Community { get; set; }
 
-	// ─── Constructors ───
+
 	public Stats();
 
 }
 public class Submitter
 {
-	// ─── Properties ───
+
 	public string Username { get; set; }
 	public string ResourceUrl { get; set; }
 
-	// ─── Constructors ───
+
 	public Submitter();
 
 }
 public class Tracklist
 {
-	// ─── Properties ───
+
 	public string Position { get; set; }
 	public string Type { get; set; }
 	public string Title { get; set; }
@@ -495,33 +495,33 @@ public class Tracklist
 	public System.Collections.Generic.List<Artist> ExtraArtists { get; set; }
 	public System.Collections.Generic.List<Artist> Artists { get; set; }
 
-	// ─── Constructors ───
+
 	public Tracklist();
 
 }
 public class Urls
 {
-	// ─── Properties ───
+
 	public string Last { get; set; }
 	public string Next { get; set; }
 
-	// ─── Constructors ───
+
 	public Urls();
 
 }
 public class UserData
 {
-	// ─── Properties ───
+
 	public bool InWantlist { get; set; }
 	public bool InCollection { get; set; }
 
-	// ─── Constructors ───
+
 	public UserData();
 
 }
 public class Version
 {
-	// ─── Properties ───
+
 	public int ReleaseId { get; set; }
 	public string Label { get; set; }
 	public string Country { get; set; }
@@ -535,32 +535,32 @@ public class Version
 	public string Thumb { get; set; }
 	public ParkSquare.Discogs.Dto.Stats Stats { get; set; }
 
-	// ─── Constructors ───
+
 	public Version();
 
 }
 public class VersionResults
 {
-	// ─── Properties ───
+
 	public ParkSquare.Discogs.Dto.Pagination Pagination { get; set; }
 	public ParkSquare.Discogs.Dto.Filters Filters { get; set; }
 	public System.Collections.Generic.List<FilterFacet> FilterFacets { get; set; }
 	public System.Collections.Generic.List<Version> Versions { get; set; }
 
-	// ─── Constructors ───
+
 	public VersionResults();
 
 }
 public class Video
 {
-	// ─── Properties ───
+
 	public string Uri { get; set; }
 	public string Title { get; set; }
 	public string Description { get; set; }
 	public int Duration { get; set; }
 	public bool Embed { get; set; }
 
-	// ─── Constructors ───
+
 	public Video();
 
 }
@@ -569,10 +569,10 @@ public class Video
 ----------------------------------------
 internal sealed class NullableAttribute : System.Attribute
 {
-	// ─── Fields ───
+
 	public readonly byte[] NullableFlags;
 
-	// ─── Constructors ───
+
 	public NullableAttribute(byte );
 	public NullableAttribute(byte[] );
 

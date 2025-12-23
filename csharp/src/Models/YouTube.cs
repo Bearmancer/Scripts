@@ -1,5 +1,7 @@
 namespace CSharpScripts.Models;
 
+#region Core Models
+
 public record YouTubeVideo(
     string Title,
     string Description,
@@ -11,7 +13,7 @@ public record YouTubeVideo(
 {
     internal string VideoUrl => $"https://www.youtube.com/watch?v={VideoId}";
     internal string ChannelUrl => $"https://www.youtube.com/channel/{ChannelId}";
-    internal string FormattedDuration => Duration.ToString(@"hh\:mm\:ss");
+    internal string FormattedDuration => Duration.ToString(format: @"hh\:mm\:ss");
 }
 
 public record YouTubePlaylist(
@@ -30,6 +32,10 @@ public record PlaylistSnapshot(
     int ReportedVideoCount = 0,
     string? ETag = null
 );
+
+#endregion
+
+#region State
 
 public record YouTubeFetchState
 {
@@ -65,6 +71,10 @@ public readonly record struct PlaylistSummary(
     string? ETag
 );
 
+#endregion
+
+#region Change Tracking
+
 public record PlaylistRename(string PlaylistId, string OldTitle, string NewTitle);
 
 public record PlaylistChanges(
@@ -87,3 +97,5 @@ public record OptimizedChanges(
     internal bool HasAnyChanges =>
         NewIds.Count > 0 || DeletedIds.Count > 0 || ModifiedIds.Count > 0 || Renamed.Count > 0;
 }
+
+#endregion

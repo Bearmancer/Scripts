@@ -1,4 +1,8 @@
+using System.Text.Encodings.Web;
+
 namespace CSharpScripts.Infrastructure;
+
+#region Core
 
 public static class StateManager
 {
@@ -11,45 +15,64 @@ public static class StateManager
     public static readonly JsonSerializerOptions JsonIndented = new()
     {
         WriteIndented = true,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     public static readonly JsonSerializerOptions JsonCompact = new()
     {
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     public static T Load<T>(string fileName)
         where T : class, new()
     {
-        CreateDirectory(RootDirectory);
-        var path = GetPath(fileName);
-        if (!File.Exists(path))
+        CreateDirectory(path: RootDirectory);
+        string path = GetPath(fileName: fileName);
+        if (!File.Exists(path: path))
             return new T();
 
-        var json = ReadAllText(path);
-        return JsonSerializer.Deserialize<T>(json, JsonCompact) ?? new T();
+        string json = ReadAllText(path: path);
+        return JsonSerializer.Deserialize<T>(json: json, options: JsonCompact) ?? new T();
     }
 
     public static void Save<T>(string fileName, T state)
     {
-        CreateDirectory(RootDirectory);
-        WriteAllText(GetPath(fileName), JsonSerializer.Serialize(state, JsonCompact));
+        CreateDirectory(path: RootDirectory);
+        WriteAllText(
+            GetPath(fileName: fileName),
+            JsonSerializer.Serialize(value: state, options: JsonCompact)
+        );
     }
 
     public static void Delete(string fileName)
     {
-        var path = GetPath(fileName);
-        if (File.Exists(path))
-            File.Delete(path);
+        string path = GetPath(fileName: fileName);
+        if (File.Exists(path: path))
+            File.Delete(path: path);
     }
 
     public static void DeleteLastFmStates()
     {
-        Delete(LastFmSyncFile);
-        Delete(LastFmScrobblesFile);
-        Console.Debug("Deleted Last.fm state files");
+        Delete(fileName: LastFmSyncFile);
+        Delete(fileName: LastFmScrobblesFile);
+        Console.Debug(message: "Deleted Last.fm state files");
     }
+
+    private static string GetPath(string fileName)
+    {
+        string fullPath = Combine(
+            path1: RootDirectory,
+            fileName.EndsWith(value: ".json", comparisonType: StringComparison.Ordinal)
+                ? fileName
+                : $"{fileName}.json"
+        );
+        string? directory = GetDirectoryName(path: fullPath);
+        if (!IsNullOrEmpty(value: directory))
+            CreateDirectory(path: directory);
+        return fullPath;
+    }
+
+#endregion
 
     #region YouTube State Management
 
@@ -57,208 +80,213 @@ public static class StateManager
     private const string YouTubeDeletedSubdirectory = "youtube/deleted";
 
     private static string YouTubePlaylistsDirectory =>
-        Combine(RootDirectory, YouTubePlaylistsSubdirectory);
+        Combine(path1: RootDirectory, path2: YouTubePlaylistsSubdirectory);
 
     private static string YouTubeDeletedDirectory =>
-        Combine(RootDirectory, YouTubeDeletedSubdirectory);
+        Combine(path1: RootDirectory, path2: YouTubeDeletedSubdirectory);
 
     internal static List<YouTubeVideo> LoadPlaylistCache(string playlistTitle)
     {
-        CreateDirectory(YouTubePlaylistsDirectory);
-        var path = GetPlaylistPath(playlistTitle);
-        if (!File.Exists(path))
+        CreateDirectory(path: YouTubePlaylistsDirectory);
+        string path = GetPlaylistPath(playlistTitle: playlistTitle);
+        if (!File.Exists(path: path))
             return [];
 
-        var json = ReadAllText(path);
-        return JsonSerializer.Deserialize<List<YouTubeVideo>>(json, JsonCompact) ?? [];
+        string json = ReadAllText(path: path);
+        return JsonSerializer.Deserialize<List<YouTubeVideo>>(json: json, options: JsonCompact)
+            ?? [];
     }
 
     public static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
     {
-        CreateDirectory(YouTubePlaylistsDirectory);
-        WriteAllText(GetPlaylistPath(playlistTitle), JsonSerializer.Serialize(videos, JsonCompact));
+        CreateDirectory(path: YouTubePlaylistsDirectory);
+        WriteAllText(
+            GetPlaylistPath(playlistTitle: playlistTitle),
+            JsonSerializer.Serialize(value: videos, options: JsonCompact)
+        );
     }
 
     public static void DeletePlaylistCache(string playlistTitle)
     {
-        var path = GetPlaylistPath(playlistTitle);
-        if (File.Exists(path))
-            File.Delete(path);
+        string path = GetPlaylistPath(playlistTitle: playlistTitle);
+        if (File.Exists(path: path))
+            File.Delete(path: path);
     }
 
     public static void RenamePlaylistCache(string oldTitle, string newTitle)
     {
-        var oldPath = GetPlaylistPath(oldTitle);
-        var newPath = GetPlaylistPath(newTitle);
+        string oldPath = GetPlaylistPath(playlistTitle: oldTitle);
+        string newPath = GetPlaylistPath(playlistTitle: newTitle);
 
-        if (File.Exists(oldPath) && !File.Exists(newPath))
-            File.Move(oldPath, newPath);
+        if (File.Exists(path: oldPath) && !File.Exists(path: newPath))
+            Move(sourceFileName: oldPath, destFileName: newPath);
     }
 
     public static bool PlaylistCacheExists(string playlistTitle) =>
-        File.Exists(GetPlaylistPath(playlistTitle));
+        File.Exists(GetPlaylistPath(playlistTitle: playlistTitle));
 
     public static string ArchivePlaylistCache(string playlistTitle)
     {
-        CreateDirectory(YouTubeDeletedDirectory);
-        var sourcePath = GetPlaylistPath(playlistTitle);
-        var destPath = Combine(YouTubeDeletedDirectory, $"{SanitizeFileName(playlistTitle)}.json");
+        CreateDirectory(path: YouTubeDeletedDirectory);
+        string sourcePath = GetPlaylistPath(playlistTitle: playlistTitle);
+        string destPath = Combine(
+            path1: YouTubeDeletedDirectory,
+            $"{SanitizeFileName(name: playlistTitle)}.json"
+        );
 
-        if (File.Exists(sourcePath))
-            File.Move(sourcePath, destPath);
+        if (File.Exists(path: sourcePath))
+            Move(sourceFileName: sourcePath, destFileName: destPath);
 
         return destPath;
     }
 
     public static void DeleteAllYouTubeStates()
     {
-        Delete(YouTubeSyncFile);
+        Delete(fileName: YouTubeSyncFile);
 
-        if (Directory.Exists(YouTubePlaylistsDirectory))
-            Directory.Delete(YouTubePlaylistsDirectory, true);
+        if (Directory.Exists(path: YouTubePlaylistsDirectory))
+            Directory.Delete(path: YouTubePlaylistsDirectory, recursive: true);
 
-        Console.Debug("Deleted YouTube state files");
+        Console.Debug(message: "Deleted YouTube state files");
     }
 
     public static void MigratePlaylistFiles(Dictionary<string, PlaylistSnapshot> snapshots)
     {
-        var oldFiles = GetFiles(Paths.StateDirectory, "playlist_*.json").ToList();
+        var oldFiles = GetFiles(path: Paths.StateDirectory, searchPattern: "playlist_*.json")
+            .ToList();
 
-        var oldPlaylistsDir = Combine(Paths.StateDirectory, "playlists");
-        if (Directory.Exists(oldPlaylistsDir))
-            oldFiles.AddRange(GetFiles(oldPlaylistsDir, "*.json"));
+        string oldPlaylistsDir = Combine(path1: Paths.StateDirectory, path2: "playlists");
+        if (Directory.Exists(path: oldPlaylistsDir))
+            oldFiles.AddRange(GetFiles(path: oldPlaylistsDir, searchPattern: "*.json"));
 
         if (oldFiles.Count == 0)
             return;
 
-        CreateDirectory(YouTubePlaylistsDirectory);
+        CreateDirectory(path: YouTubePlaylistsDirectory);
         var migrated = 0;
 
-        foreach (var oldFile in oldFiles)
+        foreach (string oldFile in oldFiles)
         {
-            var fileName = GetFileName(oldFile);
-            var playlistId = fileName.Replace("playlist_", "").Replace(".json", "");
+            string fileName = GetFileName(path: oldFile);
+            string playlistId = fileName
+                .Replace(oldValue: "playlist_", newValue: "")
+                .Replace(oldValue: ".json", newValue: "");
 
-            if (!snapshots.TryGetValue(playlistId, out var snapshot))
+            if (!snapshots.TryGetValue(key: playlistId, out var snapshot))
             {
-                File.Delete(oldFile);
-                Console.Debug("Deleted orphan playlist cache: {0}", fileName);
+                File.Delete(path: oldFile);
+                Console.Debug(message: "Deleted orphan playlist cache: {0}", fileName);
                 continue;
             }
 
-            var newPath = GetPlaylistPath(snapshot.Title);
+            string newPath = GetPlaylistPath(playlistTitle: snapshot.Title);
 
-            if (!File.Exists(newPath))
+            if (!File.Exists(path: newPath))
             {
-                File.Move(oldFile, newPath);
+                Move(sourceFileName: oldFile, destFileName: newPath);
                 migrated++;
-                Console.Debug("Migrated: {0} → {1}", fileName, GetFileName(newPath));
+                Console.Debug(message: "Migrated: {0} → {1}", fileName, GetFileName(path: newPath));
             }
             else
             {
-                File.Delete(oldFile);
+                File.Delete(path: oldFile);
             }
         }
 
-        if (Directory.Exists(oldPlaylistsDir) && GetFiles(oldPlaylistsDir, "*").Length == 0)
-            Directory.Delete(oldPlaylistsDir, true);
+        if (
+            Directory.Exists(path: oldPlaylistsDir)
+            && GetFiles(path: oldPlaylistsDir, searchPattern: "*").Length == 0
+        )
+            Directory.Delete(path: oldPlaylistsDir, recursive: true);
 
         if (migrated > 0)
-            Console.Info("Migrated {0} playlist cache files to new format", migrated);
+            Console.Info(message: "Migrated {0} playlist cache files to new format", migrated);
     }
 
     private static string GetPlaylistPath(string playlistTitle) =>
-        Combine(YouTubePlaylistsDirectory, $"{SanitizeFileName(playlistTitle)}.json");
+        Combine(path1: YouTubePlaylistsDirectory, $"{SanitizeFileName(name: playlistTitle)}.json");
 
-    static readonly char[] InvalidFileNameChars = GetInvalidFileNameChars();
+    private static readonly char[] InvalidFileNameChars = GetInvalidFileNameChars();
 
-    static string SanitizeFileName(string name)
+    private static string SanitizeFileName(string name)
     {
-        if (IsNullOrWhiteSpace(name))
+        if (IsNullOrWhiteSpace(value: name))
             return "unnamed";
 
         foreach (char c in InvalidFileNameChars)
-            name = name.Replace(c, '_');
+            name = name.Replace(oldChar: c, newChar: '_');
 
-        return name.Trim().TrimEnd('.');
+        return name.Trim().TrimEnd(trimChar: '.');
     }
 
     #endregion
 
     #region Release Cache Management
 
-    private static string ReleaseCachePath => Combine(Paths.StateDirectory, "releases");
+    private static string ReleaseCachePath =>
+        Combine(path1: Paths.StateDirectory, path2: "releases");
 
     public static T? LoadReleaseCache<T>(string releaseId)
         where T : class
     {
-        CreateDirectory(ReleaseCachePath);
-        string path = GetReleasePath(releaseId);
-        if (!File.Exists(path))
+        CreateDirectory(path: ReleaseCachePath);
+        string path = GetReleasePath(releaseId: releaseId);
+        if (!File.Exists(path: path))
             return null;
 
-        string json = ReadAllText(path);
-        return JsonSerializer.Deserialize<T>(json, JsonCompact);
+        string json = ReadAllText(path: path);
+        return JsonSerializer.Deserialize<T>(json: json, options: JsonCompact);
     }
 
     public static void SaveReleaseCache<T>(string releaseId, T data)
     {
-        CreateDirectory(ReleaseCachePath);
-        WriteAllText(GetReleasePath(releaseId), JsonSerializer.Serialize(data, JsonIndented));
-        Console.Debug("Saved release cache: {0}", releaseId);
+        CreateDirectory(path: ReleaseCachePath);
+        WriteAllText(
+            GetReleasePath(releaseId: releaseId),
+            JsonSerializer.Serialize(value: data, options: JsonIndented)
+        );
+        Console.Debug(message: "Saved release cache: {0}", releaseId);
     }
 
     public static bool ReleaseCacheExists(string releaseId) =>
-        File.Exists(GetReleasePath(releaseId));
+        File.Exists(GetReleasePath(releaseId: releaseId));
 
     public static DateTime? GetReleaseCacheAge(string releaseId)
     {
-        string path = GetReleasePath(releaseId);
-        return File.Exists(path) ? File.GetLastWriteTimeUtc(path) : null;
+        string path = GetReleasePath(releaseId: releaseId);
+        return File.Exists(path: path) ? File.GetLastWriteTimeUtc(path: path) : null;
     }
 
     public static void DeleteReleaseCache(string releaseId)
     {
-        string path = GetReleasePath(releaseId);
-        if (File.Exists(path))
+        string path = GetReleasePath(releaseId: releaseId);
+        if (File.Exists(path: path))
         {
-            File.Delete(path);
-            Console.Debug("Deleted release cache: {0}", releaseId);
+            File.Delete(path: path);
+            Console.Debug(message: "Deleted release cache: {0}", releaseId);
         }
     }
 
     public static void DeleteAllReleaseCaches()
     {
-        if (Directory.Exists(ReleaseCachePath))
+        if (Directory.Exists(path: ReleaseCachePath))
         {
-            Directory.Delete(ReleaseCachePath, true);
-            Console.Debug("Deleted all release caches");
+            Directory.Delete(path: ReleaseCachePath, recursive: true);
+            Console.Debug(message: "Deleted all release caches");
         }
     }
 
     public static IEnumerable<string> ListReleaseCaches()
     {
-        if (!Directory.Exists(ReleaseCachePath))
+        if (!Directory.Exists(path: ReleaseCachePath))
             yield break;
 
-        foreach (string file in GetFiles(ReleaseCachePath, "*.json"))
-            yield return GetFileNameWithoutExtension(file);
+        foreach (string file in GetFiles(path: ReleaseCachePath, searchPattern: "*.json"))
+            yield return GetFileNameWithoutExtension(path: file);
     }
 
     private static string GetReleasePath(string releaseId) =>
-        Combine(ReleaseCachePath, $"{SanitizeFileName(releaseId)}.json");
+        Combine(path1: ReleaseCachePath, $"{SanitizeFileName(name: releaseId)}.json");
 
     #endregion
-
-    private static string GetPath(string fileName)
-    {
-        var fullPath = Combine(
-            RootDirectory,
-            fileName.EndsWith(".json", StringComparison.Ordinal) ? fileName : $"{fileName}.json"
-        );
-        var directory = GetDirectoryName(fullPath);
-        if (!IsNullOrEmpty(directory))
-            CreateDirectory(directory);
-        return fullPath;
-    }
 }

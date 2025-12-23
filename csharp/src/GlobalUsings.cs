@@ -42,6 +42,7 @@ global using Spectre.Console.Cli;
 global using Spectre.Console.Rendering;
 global using Console = CSharpScripts.Infrastructure.Console;
 global using Scrobble = CSharpScripts.Services.Sync.LastFm.Scrobble;
+global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;
 global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;

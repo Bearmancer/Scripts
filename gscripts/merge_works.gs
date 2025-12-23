@@ -39,7 +39,7 @@ function mergeWorkRows() {
     return;
   }
   
-  // Find rows to delete (merged into previous)
+
   const rowsToDelete = [];
   
   for (let i = data.length - 1; i > 1; i--) {
@@ -47,15 +47,15 @@ function mergeWorkRows() {
     const previousWork = data[i - 1][workCol];
     
     if (currentWork && currentWork === previousWork) {
-      // Update previous row's TrackEnd if column exists
+
       if (trackEndCol !== -1) {
         data[i - 1][trackEndCol] = data[i][trackEndCol];
       }
-      rowsToDelete.push(i + 1); // +1 for 1-indexed sheet rows
+      rowsToDelete.push(i + 1);
     }
   }
   
-  // Delete rows from bottom up
+
   rowsToDelete.forEach(row => {
     sheet.deleteRow(row);
   });

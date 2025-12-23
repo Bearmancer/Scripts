@@ -2,30 +2,33 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Config
 {
-    public static string GoogleClientId =>
-        GetEnvironmentVariable("GOOGLE_CLIENT_ID")
-        ?? throw new InvalidOperationException("GOOGLE_CLIENT_ID not set");
-
-    public static string GoogleClientSecret =>
-        GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
-        ?? throw new InvalidOperationException("GOOGLE_CLIENT_SECRET not set");
-
     public static string LastFmApiKey =>
-        GetEnvironmentVariable("LASTFM_API_KEY")
-        ?? throw new InvalidOperationException("LASTFM_API_KEY not set");
+        GetEnvironmentVariable(variable: "LAST_FM_API_KEY")
+        ?? throw new InvalidOperationException(message: "LASTFM_API_KEY not set");
 
     public static string LastFmUsername =>
-        GetEnvironmentVariable("LASTFM_USERNAME") ?? "kanishknishar";
+        GetEnvironmentVariable(variable: "LAST_FM_USERNAME") ?? "kanishknishar";
 
     public static string LastFmSpreadsheetId =>
-        GetEnvironmentVariable("LASTFM_SPREADSHEET_ID") ?? "";
+        GetEnvironmentVariable(variable: "LAST_FM_SPREADSHEET_ID") ?? "";
 
     public static string LastFmSpreadsheetTitle =>
-        GetEnvironmentVariable("LASTFM_SPREADSHEET_TITLE") ?? "Last.fm Scrobbles";
+        GetEnvironmentVariable(variable: "LAST_FM_SPREADSHEET_TITLE") ?? "Last.fm Scrobbles";
+
+    public static string? DiscogsToken => GetEnvironmentVariable(variable: "DISCOGS_USER_TOKEN");
 
     public static string YouTubeSpreadsheetId =>
-        GetEnvironmentVariable("YOUTUBE_SPREADSHEET_ID") ?? "";
+        GetEnvironmentVariable(variable: "YOUTUBE_SPREADSHEET_ID") ?? "";
 
     public static string YouTubeSpreadsheetTitle =>
-        GetEnvironmentVariable("YOUTUBE_SPREADSHEET_TITLE") ?? "YouTube Playlists";
+        GetEnvironmentVariable(variable: "YOUTUBE_SPREADSHEET_TITLE") ?? "YouTube Playlists";
+
+    private static BaseClientService.Initializer? googleInitializer;
+
+    public static BaseClientService.Initializer GoogleInitializer =>
+        googleInitializer ??= new BaseClientService.Initializer
+        {
+            HttpClientInitializer = GoogleCredential.GetApplicationDefault(),
+            ApplicationName = "CSharpScripts",
+        };
 }
