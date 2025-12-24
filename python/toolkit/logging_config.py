@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false, reportUnknownParameterType=false
 import atexit
 import json
 import logging
@@ -9,8 +8,6 @@ from typing import Any, cast
 
 from rich.console import Console  # type: ignore[import-untyped]
 from rich.logging import RichHandler  # type: ignore[import-untyped]
-
-# region JsonFileHandler
 
 
 class JsonFileHandler(logging.Handler):
@@ -121,11 +118,6 @@ class JsonFileHandler(logging.Handler):
         return []
 
 
-# endregion
-
-# region Logger Configuration
-
-
 def configure_logging(service_name: str = "toolkit") -> logging.Logger:
     """Configure and return a logger with console and JSON file handlers."""
     logger = logging.getLogger("toolkit")
@@ -153,6 +145,3 @@ def configure_logging(service_name: str = "toolkit") -> logging.Logger:
 def get_logger(service_name: str = "toolkit") -> logging.Logger:
     """Get or create a configured logger for the specified service."""
     return configure_logging(service_name)
-
-
-# endregion

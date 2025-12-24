@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
 import os
 import re
 import subprocess
@@ -16,14 +15,9 @@ from toolkit.logging_config import get_logger
 
 logger = get_logger("audio")
 
-# region Constants
 
 FLAC_44 = [(176400, 24), (88200, 24), (44100, 16)]
 FLAC_48 = [(192000, 24), (96000, 24), (48000, 16)]
-
-# endregion
-
-# region Directory Preparation
 
 
 def prepare_directory(directory: Path) -> Path:
@@ -98,11 +92,6 @@ def rename_file_red(path: Path) -> None:
         logger.info("No files needed renaming")
 
 
-# endregion
-
-# region Artwork Analysis
-
-
 def calculate_image_size(path: Path) -> None:
     """Report FLAC files with embedded artwork larger than 1MB."""
     exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
@@ -128,11 +117,6 @@ def calculate_image_size(path: Path) -> None:
         logger.warning(f"Found {len(problematic_files)} files with artwork > 1MB")
     else:
         logger.info("No files with embedded artwork larger than 1MB")
-
-
-# endregion
-
-# region SACD Processing
 
 
 def process_sacd_directory(directory: Path, fmt: str = "all") -> None:
@@ -240,11 +224,6 @@ def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
     return target_headroom_db - max(peaks)
 
 
-# endregion
-
-# region FLAC Conversion
-
-
 def convert_audio(current_step: int, directory: Path, fmt: str = "all") -> None:
     """Convert FLAC files to various sample rates and bit depths."""
     flac_files = list(directory.rglob("*.flac"))
@@ -311,11 +290,6 @@ def downsample_flac(file: Path, tier: tuple[int, int]) -> None:
     temp_b.rename(file)
 
 
-# endregion
-
-# region MP3 Conversion
-
-
 def convert_to_mp3(directory: Path) -> None:
     """Convert all FLAC files in directory to 320kbps MP3."""
     flac_files = list(directory.rglob("*.flac"))
@@ -335,11 +309,6 @@ def convert_to_mp3(directory: Path) -> None:
             )
             .run(quiet=True)
         )
-
-
-# endregion
-
-# region Utilities
 
 
 def progress_indicator(step: int, message: str) -> None:
@@ -378,6 +347,3 @@ def get_flac_tiers(
             return result or []
 
     raise ValueError(f"No suitable tier for {bit_depth}-bit/{sample_rate}Hz")
-
-
-# endregion

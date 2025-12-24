@@ -1,7 +1,5 @@
 namespace CSharpScripts.Orchestrators;
 
-#region YouTubePlaylistOrchestrator
-
 public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 {
     private static readonly IReadOnlyList<object> VideoHeaders =
@@ -1029,5 +1027,3 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         Console.Info(message: "Playlists: {0}", playlists.Count);
     }
 }
-
-#endregion

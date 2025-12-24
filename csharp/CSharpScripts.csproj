@@ -6,7 +6,6 @@
         <Nullable>enable</Nullable>
         <PublishAot>false</PublishAot>
         <PublishTrimmed>false</PublishTrimmed>
-        <!-- Enable IDE analyzers in terminal builds -->
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <AnalysisLevel>latest-recommended</AnalysisLevel>
     </PropertyGroup>
@@ -33,6 +32,5 @@
         <PackageReference Include="Spectre.Console" Version="*-*" />
         <PackageReference Include="Spectre.Console.Cli" Version="*" />
         <PackageReference Include="Lingua" Version="*" />
-        <!-- Native completion implemented in CompletionCommands.cs -->
     </ItemGroup>
 </Project>

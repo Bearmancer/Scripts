@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false, reportUnknownLambdaType=false, reportUnknownParameterType=false
 import io
 import random
 import subprocess
@@ -15,8 +14,6 @@ from toolkit.logging_config import get_logger
 
 logger = get_logger("video")
 
-# region Types and Constants
-
 
 class VideoInfo(TypedDict):
     duration: float
@@ -29,10 +26,6 @@ HANDBRAKE_PATH = (
     r"C:\Users\Lance\AppData\Local\Personal\HandBrakeCLI 1.8.0\HandBrakeCLI.exe"
 )
 MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
-
-# endregion
-
-# region Chapter Extraction
 
 
 def extract_chapters(video_files: list[Path]) -> None:
@@ -64,11 +57,6 @@ def extract_chapters(video_files: list[Path]) -> None:
             logger.info(f"Extracted chapter {formatted_index} from {video_file.name}")
 
 
-# endregion
-
-# region Compression
-
-
 def batch_compression(path: Path) -> None:
     """Batch compress MKV files using HandBrake."""
     mkv_files = list(path.rglob("*.mkv"))
@@ -92,11 +80,6 @@ def batch_compression(path: Path) -> None:
             logger.info(f"Converted: {file.name}")
         else:
             logger.error(f"Failed: {file.name}")
-
-
-# endregion
-
-# region Disc Remuxing
 
 
 def remux_disc(path: Path, fetch_mediainfo: bool = True) -> None:
@@ -153,11 +136,6 @@ def get_mediainfo(video_path: Path) -> None:
     logger.info("MediaInfo generated")
 
 
-# endregion
-
-# region Resolution Analysis
-
-
 def print_video_resolution(video_files: list[Path]) -> None:
     """Print resolution information for video files, grouped by HD status."""
     files_hd: list[str] = []
@@ -207,11 +185,6 @@ def get_video_info(video_path: Path) -> VideoInfo:
         "width": int(probe["streams"][0]["width"]),
         "height": int(probe["streams"][0]["height"]),
     }
-
-
-# endregion
-
-# region GIF Creation
 
 
 def create_gif_optimized(
@@ -287,11 +260,6 @@ def create_gif(
     size = output_path.stat().st_size / (1024 * 1024)
     logger.info(f"GIF: {output_path.name} ({size:.2f} MiB)")
     return size
-
-
-# endregion
-
-# region Thumbnail Extraction
 
 
 def extract_images(video_path: Path) -> None:
@@ -417,6 +385,3 @@ def save_full_size_images(
     for idx, timestamp in enumerate(possible_timestamps):
         img = extract_frame(video_path, timestamp, video_info)
         img.save(Path.home() / "Desktop" / f"{video_path.stem} - Image {idx + 1}.jpg")
-
-
-# endregion

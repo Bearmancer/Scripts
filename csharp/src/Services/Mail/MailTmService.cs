@@ -259,8 +259,6 @@ public sealed class MailTmService : IDisposableMailService
                 .Select(_ => PASSWORD_CHARS[Random.Shared.Next(maxValue: PASSWORD_CHARS.Length)]),
         ]);
 
-    #region IDisposableMailService
-
     async Task<MailAccount> IDisposableMailService.CreateAccountAsync()
     {
         var account = await CreateAccountAsync();
@@ -297,8 +295,6 @@ public sealed class MailTmService : IDisposableMailService
     }
 
     async Task IDisposableMailService.ForgetSessionAsync() => await DeleteAccountAsync();
-
-    #endregion
 }
 
 public record MailTmAccount

@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false, reportUnknownParameterType=false
 import os
 import pickle
 from datetime import datetime
@@ -10,7 +9,6 @@ from google.auth.transport.requests import Request  # type: ignore[import-untype
 
 from toolkit.logging_config import get_logger
 
-# region Constants
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 CREDS_FILE = (
@@ -28,10 +26,6 @@ LASTFM_API_SECRET = os.getenv("LASTFM_API_SECRET")
 
 logger = get_logger("lastfm")
 
-# endregion
-
-# region Authentication
-
 
 def authenticate_google_sheets() -> gspread.Client:
     """Authenticate with Google Sheets using stored credentials."""
@@ -45,11 +39,6 @@ def authenticate_google_sheets() -> gspread.Client:
             pickle.dump(creds, token_write)
 
     return gspread.authorize(creds)
-
-
-# endregion
-
-# region Sheet Operations
 
 
 def get_last_scrobble_timestamp(sheet: gspread.Worksheet) -> datetime:
@@ -81,11 +70,6 @@ def prepare_track_data(tracks: list[pylast.PlayedTrack]) -> list[list[str]]:
             ]
         )
     return values
-
-
-# endregion
-
-# region Main
 
 
 def update_scrobbles() -> None:
@@ -120,6 +104,3 @@ def update_scrobbles() -> None:
 
     sheet.insert_rows(values=sorted_new_data, row=2)
     logger.info(f"Added {len(sorted_new_data)} new scrobbles to the sheet.")
-
-
-# endregion

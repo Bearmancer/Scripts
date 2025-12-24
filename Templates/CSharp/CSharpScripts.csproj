@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Tests\**" />
+        <None Remove="Tests\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="*" />
+        <PackageReference Include="Polly" Version="*" />
+        <PackageReference Include="RestSharp" Version="*" />
+        <PackageReference Include="Spectre.Console" Version="*" />
+        <PackageReference Include="Spectre.Console.Cli" Version="*" />
+    </ItemGroup>
+</Project>

@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -8,8 +7,6 @@ import ffmpeg  # type: ignore[import-untyped]
 from deflacue.deflacue import CueParser  # type: ignore[import-untyped]
 from pathvalidate import sanitize_filename  # type: ignore[import-untyped]
 from tqdm import tqdm  # type: ignore[import-untyped]
-
-# region Data Model
 
 
 @dataclass
@@ -23,11 +20,6 @@ class TrackInfo:
     start_sec: float
     duration: float | None = None
     metadata: dict[str, str] = field(default_factory=dict)
-
-
-# endregion
-
-# region CUE Parsing
 
 
 def parse_cue_file(cuefile_path: Path) -> Any:
@@ -79,11 +71,6 @@ def calculate_track_durations(
 
     tracks[-1].duration = total_duration - tracks[-1].start_sec
     return tracks
-
-
-# endregion
-
-# region Track Processing
 
 
 def process_tracks(
@@ -142,6 +129,3 @@ def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0) -> None:
     tracks = extract_track_data(cue_data)
     tracks = calculate_track_durations(tracks, cue_file)
     process_tracks(tracks, cue_file, volume_adjustment)
-
-
-# endregion

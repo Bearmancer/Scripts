@@ -234,3 +234,6 @@
 {"Timestamp":"2025-12-23 10:00:55","Level":"Info","Event":"PlaylistUpdated","SessionId":"e7e88fec","Data":{"Title":"Bernard Haitink","Added":1,"Removed":0,"AddedVideos":["Bernard Haitink / RCO - Beethoven : Symphony No.7 Op.92 (2000 - Live)"]}}
 {"Timestamp":"2025-12-23 10:01:05","Level":"Info","Event":"PlaylistUpdated","SessionId":"e7e88fec","Data":{"Title":"Paavo Järvi","Added":1,"Removed":0,"AddedVideos":["Paavo Jarvi / RCO - Beethoven : Ouverture ‘Fidelio’ Op.72 (2007 - Live)"]}}
 {"Timestamp":"2025-12-23 10:01:09","Level":"Info","Event":"SessionEnd","SessionId":"e7e88fec","Data":{"Status":"Completed","EndedAt":"2025-12-23 10:01:09","Summary":"Updated 3 playlists"}}
+{"Timestamp":"2025-12-24 10:00:02","Level":"Info","Event":"SessionStart","SessionId":"9c9648d5","Data":{"Service":"YouTube","ProcessId":11756}}
+{"Timestamp":"2025-12-24 10:00:35","Level":"Info","Event":"PlaylistUpdated","SessionId":"9c9648d5","Data":{"Title":"Ricardo Chailly","Added":1,"Removed":0,"AddedVideos":["Maurizio Pollini / RCO - Beethoven : Piano Concerto No.5 Op.73 \"Emperor\"(2002 - Live)"]}}
+{"Timestamp":"2025-12-24 10:00:39","Level":"Info","Event":"SessionEnd","SessionId":"9c9648d5","Data":{"Status":"Completed","EndedAt":"2025-12-24 10:00:39","Summary":"Updated 1 playlists"}}

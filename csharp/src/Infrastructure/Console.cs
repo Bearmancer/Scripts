@@ -101,17 +101,13 @@ public static class Console
             Field(label: label, value: value, labelWidth: labelWidth);
     }
 
-    public static bool Confirm(string prompt, bool defaultValue = true) =>
-        AnsiConsole.Confirm(Markup.Escape(text: prompt), defaultValue: defaultValue);
+    public static void Confirm(string prompt) => AnsiConsole.Confirm(Markup.Escape(text: prompt));
 
     public static T Prompt<T>(IPrompt<T> prompt) => AnsiConsole.Prompt(prompt: prompt);
 
     public static Status Status() => AnsiConsole.Status();
 
     public static LiveDisplay Live(IRenderable target) => AnsiConsole.Live(target: target);
-
-    #region Markup Helpers
-
 
     public static string Escape(string? text) => Markup.Escape(text ?? "");
 
@@ -121,11 +117,6 @@ public static class Console
 
     public static string Colored(string color, string? text) =>
         $"[{color}]{Markup.Escape(text ?? "")}[/]";
-
-    #endregion
-
-    #region Semantic Color Helpers
-
 
     public static string Composer(string? text) => Colored(color: "cyan", text: text);
 
@@ -308,6 +299,8 @@ public static class Console
 
     public static void Write(IRenderable renderable) => AnsiConsole.Write(renderable: renderable);
 
+    public static void Render(IRenderable renderable) => AnsiConsole.Write(renderable: renderable);
+
     internal static Panel CreatePanel(string content, string header) =>
         new Panel(Markup.Escape(text: content)).Header(Markup.Escape(text: header)).Expand();
 
@@ -418,6 +411,4 @@ public static class Console
             return message;
         }
     }
-
-    #endregion
 }

@@ -1,8 +1,4 @@
-using CSharpScripts.CLI.Commands;
-
 namespace CSharpScripts;
-
-#region Program
 
 public static class Program
 {
@@ -113,5 +109,3 @@ public static class Program
         return app.Run(args: args);
     }
 }
-
-#endregion

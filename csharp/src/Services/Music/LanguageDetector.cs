@@ -1,7 +1,5 @@
 namespace CSharpScripts.Services.Music;
 
-#region LanguageDetector
-
 public static class LanguageDetector
 {
     private static readonly string CsvPath = Combine(
@@ -96,5 +94,3 @@ public static class LanguageDetector
         AppendAllText(path: CsvPath, contents: row);
     }
 }
-
-#endregion

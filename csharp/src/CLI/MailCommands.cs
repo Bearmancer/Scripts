@@ -1,7 +1,5 @@
 namespace CSharpScripts.CLI.Commands;
 
-#region MailCreateCommand
-
 public sealed class MailCreateCommand : AsyncCommand<MailCreateCommand.Settings>
 {
     public override async Task<int> ExecuteAsync(
@@ -27,10 +25,6 @@ public sealed class MailCreateCommand : AsyncCommand<MailCreateCommand.Settings>
 
     public sealed class Settings : CommandSettings { }
 }
-
-#endregion
-
-#region MailCheckCommand
 
 public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
 {
@@ -111,10 +105,6 @@ public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
     }
 }
 
-#endregion
-
-#region MailDeleteCommand
-
 public sealed class MailDeleteCommand : AsyncCommand<MailDeleteCommand.Settings>
 {
     public override async Task<int> ExecuteAsync(
@@ -141,5 +131,3 @@ public sealed class MailDeleteCommand : AsyncCommand<MailDeleteCommand.Settings>
 
     public sealed class Settings : CommandSettings { }
 }
-
-#endregion

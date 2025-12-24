@@ -1,3 +1,5 @@
+#region ParkSquare.Discogs
+
 # ParkSquare.Discogs
 ============================================================
 
@@ -580,3 +582,7 @@ internal sealed class NullableAttribute : System.Attribute
 
 
 
+
+#endregion
+
+#endregion

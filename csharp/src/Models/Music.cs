@@ -1,16 +1,10 @@
 namespace CSharpScripts.Models;
 
-#region Enums
-
 public enum MusicSource
 {
     Discogs,
     MusicBrainz,
 }
-
-#endregion
-
-#region Release Data
 
 public record ReleaseInfo(
     MusicSource Source,
@@ -27,10 +21,6 @@ public record ReleaseInfo(
 );
 
 public record ReleaseData(ReleaseInfo Info, List<TrackInfo> Tracks);
-
-#endregion
-
-#region Track Data
 
 public record TrackInfo(
     int DiscNumber,
@@ -95,10 +85,6 @@ public record WorkSummary(
         };
 }
 
-#endregion
-
-#region Search
-
 public record SearchResult(
     MusicSource Source,
     string Id,
@@ -116,5 +102,3 @@ public record SearchResult(
     List<string>? Genres = null,
     List<string>? Styles = null
 );
-
-#endregion

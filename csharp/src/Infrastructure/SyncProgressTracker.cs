@@ -1,7 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-#region Records
-
 public record PlaylistProgressItem(string Title, int VideoCount);
 
 public record SyncProgressSnapshot(
@@ -19,10 +17,6 @@ public record SyncProgressSnapshot(
     TimeSpan ElapsedTime,
     TimeSpan? EstimatedTimeRemaining
 );
-
-#endregion
-
-#region SyncProgressTracker
 
 public sealed class SyncProgressTracker
 {
@@ -141,5 +135,3 @@ public sealed class SyncProgressTracker
             EstimatedTimeRemaining: EstimatedTimeRemaining
         );
 }
-
-#endregion

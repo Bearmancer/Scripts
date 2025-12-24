@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportAny=false
 from pathlib import Path
 from typing import Annotated
 
@@ -7,7 +6,6 @@ from rich.console import Console
 
 from toolkit.logging_config import get_logger
 
-# region App Setup
 
 app = typer.Typer(
     name="toolkit",
@@ -30,10 +28,6 @@ app.add_typer(filesystem_app, name="filesystem")
 
 console = Console()
 logger = get_logger()
-
-# endregion
-
-# region Audio Commands
 
 
 @audio_app.command("convert")
@@ -92,11 +86,6 @@ def audio_art_report(
     from toolkit.audio import calculate_image_size
 
     calculate_image_size(directory.resolve())
-
-
-# endregion
-
-# region Video Commands
 
 
 @video_app.command("remux")
@@ -195,11 +184,6 @@ def video_thumbnails(
     extract_images(path.resolve())
 
 
-# endregion
-
-# region Filesystem Commands
-
-
 @filesystem_app.command("tree")
 def filesystem_tree(
     directory: Annotated[
@@ -248,11 +232,6 @@ def filesystem_torrents(
         make_torrents(resolved)
 
 
-# endregion
-
-# region Last.fm Commands
-
-
 @app.command("lastfm")
 def lastfm_update() -> None:
     """Update Last.fm scrobbles to Google Sheets."""
@@ -261,16 +240,9 @@ def lastfm_update() -> None:
     update_scrobbles()
 
 
-# endregion
-
-# region Entry Point
-
-
 def main() -> None:
     app()
 
 
 if __name__ == "__main__":
     main()
-
-# endregion

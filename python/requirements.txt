@@ -12,3 +12,5 @@ typer
 gspread
 pylast
 google-auth
+basedpyright
+cookiecutter

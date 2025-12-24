@@ -1,7 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-#region Resilience
-
 public static class Resilience
 {
     public const int MaxRetries = 10;
@@ -182,10 +180,6 @@ public static class Resilience
             && message.Contains(value: "day", comparisonType: StringComparison.OrdinalIgnoreCase);
 }
 
-#endregion
-
-#region Exceptions
-
 public sealed class DailyQuotaExceededException(string service, string message)
     : Exception($"Daily quota exceeded for {service}. Try again tomorrow. Original: {message}")
 {
@@ -206,5 +200,3 @@ public sealed class RetryExhaustedException(
     internal int Attempts { get; } = attempts;
     internal TimeSpan TotalWait { get; } = totalWait;
 }
-
-#endregion

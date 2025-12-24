@@ -310,8 +310,12 @@ function Show-SyncLog {
     $ytLog = Join-Path -Path $Script:LogDirectory -ChildPath 'youtube.jsonl'
     $lfmLog = Join-Path -Path $Script:LogDirectory -ChildPath 'lastfm.jsonl'
 
-    if ($Service -in 'all', 'youtube' -and (Test-Path $ytLog)) { $logFiles += $ytLog }
-    if ($Service -in 'all', 'lastfm' -and (Test-Path $lfmLog)) { $logFiles += $lfmLog }
+    if ($Service -in 'all', 'youtube' -and (Test-Path $ytLog)) {
+        $logFiles += $ytLog
+    }
+    if ($Service -in 'all', 'lastfm' -and (Test-Path $lfmLog)) {
+        $logFiles += $lfmLog
+    }
 
     if ($logFiles.Count -eq 0) {
         Write-Warning "No log files found in $Script:LogDirectory"
@@ -322,7 +326,9 @@ function Show-SyncLog {
     foreach ($logFile in $logFiles) {
         $serviceName = [System.IO.Path]::GetFileNameWithoutExtension($logFile)
         foreach ($line in [System.IO.File]::ReadLines($logFile)) {
-            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            if ( [string]::IsNullOrWhiteSpace($line)) {
+                continue
+            }
             try {
                 $obj = $line | ConvertFrom-Json
                 $obj | Add-Member -NotePropertyName 'Source' -NotePropertyValue $serviceName -Force
@@ -356,10 +362,12 @@ function Show-SyncLogSessions {
         [switch]$Full
     )
 
-    $sessionData = @{}
+    $sessionData = @{ }
     foreach ($entry in $Entries) {
         $sid = $entry.SessionId
-        if (-not $sid) { continue }
+        if (-not $sid) {
+            continue
+        }
 
         if (-not $sessionData.ContainsKey($sid)) {
             $sessionData[$sid] = @{
@@ -392,7 +400,7 @@ function Show-SyncLogSessions {
             }
             'SessionCrashed' {
                 $sessionData[$sid].Status = 'Crashed'
-                $sessionData[$sid].Summary = "Detected at $($entry.Data.DetectedAt)"
+                $sessionData[$sid].Summary = "Detected at $( $entry.Data.DetectedAt )"
             }
             'Exception' {
                 $sessionData[$sid].HasError = $true
@@ -449,14 +457,30 @@ function Show-SyncLogSessions {
             "~{0}s" -f [int]$span.TotalSeconds
         }
 
-        $status = if (-not $s.EndTime -and ($now - $s.StartTime).TotalHours -lt 2) { 'Running' } 
-        elseif (-not $s.EndTime) { 'Crashed' }
-        elseif ($s.HasError) { 'Failed' }
-        else { $s.Status }
+        $status = if (-not $s.EndTime -and ($now - $s.StartTime).TotalHours -lt 2) {
+            'Running'
+        }
+        elseif (-not $s.EndTime) {
+            'Crashed'
+        }
+        elseif ($s.HasError) {
+            'Failed'
+        }
+        else {
+            $s.Status
+        }
 
         $color = $statusColors[$status] ?? 'White'
-        $summary = if ($Full) { $s.Summary } else { 
-            if ($s.Summary.Length -gt 40) { $s.Summary.Substring(0, 37) + "..." } else { $s.Summary }
+        $summary = if ($Full) {
+            $s.Summary
+        }
+        else {
+            if ($s.Summary.Length -gt 40) {
+                $s.Summary.Substring(0, 37) + "..."
+            }
+            else {
+                $s.Summary
+            }
         }
 
         Write-Host ($headerFormat -f $dateTime, $serviceName, $duration, $status, $s.EventCount, $summary) -ForegroundColor $color
@@ -464,7 +488,7 @@ function Show-SyncLogSessions {
 
     Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
 
-    $taskInfo = Get-ScheduledTask -TaskName "*Sync" -ErrorAction SilentlyContinue | 
+    $taskInfo = Get-ScheduledTask -TaskName "*Sync" -ErrorAction SilentlyContinue |
     Where-Object { $_.TaskName -in 'YouTubeSync', 'LastFmSync' } |
     Get-ScheduledTaskInfo -ErrorAction SilentlyContinue
 
@@ -473,21 +497,46 @@ function Show-SyncLogSessions {
         Write-Host "Scheduled Tasks" -ForegroundColor Cyan
         Write-Host ("─" * $terminalWidth) -ForegroundColor DarkGray
         foreach ($task in $taskInfo) {
-            $lastRun = if ($task.LastRunTime -and $task.LastRunTime.Year -gt 2000) { 
-                $task.LastRunTime.ToString('yyyy/MM/dd HH:mm:ss') 
+            $lastRun = if ($task.LastRunTime -and $task.LastRunTime.Year -gt 2000) {
+                $task.LastRunTime.ToString('yyyy/MM/dd HH:mm:ss')
             }
-            else { 'Never' }
-            $nextRun = if ($task.NextRunTime) { $task.NextRunTime.ToString('yyyy/MM/dd HH:mm:ss') } else { 'Not scheduled' }
+            else {
+                'Never'
+            }
+            $nextRun = if ($task.NextRunTime) {
+                $task.NextRunTime.ToString('yyyy/MM/dd HH:mm:ss')
+            }
+            else {
+                'Not scheduled'
+            }
             $resultCode = switch ($task.LastTaskResult) {
-                0 { 'Success' }
-                1 { 'Incorrect function' }
-                267009 { 'Task running' }
-                267011 { 'Task never run' }
-                default { "Code: $($task.LastTaskResult)" }
+                0 {
+                    'Success'
+                }
+                1 {
+                    'Incorrect function'
+                }
+                267009 {
+                    'Task running'
+                }
+                267011 {
+                    'Task never run'
+                }
+                default {
+                    "Code: $( $task.LastTaskResult )"
+                }
             }
-            $resultColor = if ($task.LastTaskResult -eq 0) { 'Green' } elseif ($task.LastTaskResult -eq 267009) { 'Cyan' } else { 'Yellow' }
+            $resultColor = if ($task.LastTaskResult -eq 0) {
+                'Green'
+            }
+            elseif ($task.LastTaskResult -eq 267009) {
+                'Cyan'
+            }
+            else {
+                'Yellow'
+            }
 
-            Write-Host "  $($task.TaskName.PadRight(15))" -ForegroundColor White -NoNewline
+            Write-Host "  $($task.TaskName.PadRight(15) )" -ForegroundColor White -NoNewline
             Write-Host "Last: $lastRun  " -ForegroundColor DarkGray -NoNewline
             Write-Host "Next: $nextRun  " -ForegroundColor DarkGray -NoNewline
             Write-Host "Result: $resultCode" -ForegroundColor $resultColor
@@ -509,7 +558,7 @@ function Show-SyncLogEntries {
         # Filter out verbose events that create noise in default view
         $verboseEvents = @('PlaylistCreated', 'ScrobblesProcessed')
         $Entries = $Entries | Where-Object { $_.Event -notin $verboseEvents }
-        
+
         # Also filter out PlaylistUpdated/PlaylistDeleted/PlaylistRenamed with no actual changes
         $Entries = $Entries | Where-Object {
             if ($_.Event -eq 'PlaylistUpdated') {
@@ -549,19 +598,36 @@ function Show-SyncLogEntries {
             }
             else {
                 ($entry.Data.PSObject.Properties | Where-Object { $_.Name -notin 'Service', 'ProcessId' } | ForEach-Object {
-                    $val = if ($_.Value -is [array]) { $_.Value -join ", " } else { $_.Value }
-                    "$($_.Name): $val"
+                    $val = if ($_.Value -is [array]) {
+                        $_.Value -join ", "
+                    }
+                    else {
+                        $_.Value
+                    }
+                    "$( $_.Name ): $val"
                 }) -join " | "
             }
         }
-        else { '' }
+        else {
+            ''
+        }
 
-        $maxDetails = if ($Full) { $terminalWidth - 70 } else { 50 }
+        $maxDetails = if ($Full) {
+            $terminalWidth - 70
+        }
+        else {
+            50
+        }
         if ($details.Length -gt $maxDetails) {
             $details = $details.Substring(0, $maxDetails - 3) + "..."
         }
 
-        $sid = if ($entry.SessionId) { $entry.SessionId.Substring(0, [Math]::Min(8, $entry.SessionId.Length)) } else { '' }
+        $sid = if ($entry.SessionId) {
+            $entry.SessionId.Substring(0, [Math]::Min(8, $entry.SessionId.Length))
+        }
+        else {
+            ''
+        }
 
         Write-Host ($headerFormat -f $entry.Timestamp, $entry.Source, $entry.Level, $entry.Event, $sid, $details) -ForegroundColor $color
     }
@@ -1114,12 +1180,12 @@ function Invoke-Whisper {
 
         [Parameter()]
         [Alias('l')]
-        [string]$Language,
+        [string]$Language = 'en',
 
         [Parameter()]
         [Alias('m')]
         [ValidateSet('tiny', 'tiny.en', 'base', 'base.en', 'small', 'small.en', 'medium', 'medium.en', 'large-v1', 'large-v2', 'large-v3', 'large-v3-turbo', 'turbo', 'distil-large-v2', 'distil-large-v3', 'distil-large-v3.5', 'distil-medium.en', 'distil-small.en')]
-        [string]$Model,
+        [string]$Model = 'distil-large-v3.5',
 
         [Parameter()]
         [Alias('t')]
@@ -1151,6 +1217,13 @@ function Invoke-Whisper {
         [string[]]$ExtraArgs
     )
 
+    try {
+        $null = Get-Command -Name whisper-ctranslate2 -ErrorAction Stop
+    }
+    catch {
+        throw "whisper-ctranslate2 is not installed or not in PATH. Install it before running whisp."
+    }
+
     $item = Get-Item -Path $Path
     if ($item.PSIsContainer) {
         Invoke-WhisperFolder -Directory $item -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -NoVadFilter:$NoVadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
@@ -1164,14 +1237,21 @@ function Invoke-Whisper {
         return
     }
 
-    $effectiveModel = $Model ? $Model : ($Language -eq 'en' ? 'distil-large-v3.5' : 'large-v3')
-    $languageDisplay = $Language ? $Language : '(auto-detect)'
+    $effectiveLanguage = if ($Language -eq 'auto') {
+        $null
+    }
+    else {
+        $Language
+    }
+    $languageDisplay = $effectiveLanguage ? $effectiveLanguage : '(auto-detect)'
 
     Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Transcribing: $( $item.Name )" -ForegroundColor Cyan
-    Write-Host "             Model: $effectiveModel | Language: $languageDisplay" -ForegroundColor DarkGray
+    Write-Host "             Model: $Model | Language: $languageDisplay" -ForegroundColor DarkGray
+    Write-Host "             Legend: % | Bar | Processed/Total Audio [Elapsed<Remaining, Rate]" -ForegroundColor DarkGray
+    Write-Host "             Note: If the model is missing, a download will begin (no output is suppressed)." -ForegroundColor DarkGray
 
     $whisperArgs = @(
-        '--model', $effectiveModel
+        '--model', $Model
         '--compute_type', 'auto'
         '--output_format', 'srt'
         '--output_dir', $OutputDir
@@ -1189,8 +1269,8 @@ function Invoke-Whisper {
         $whisperArgs += '--batch_size', $BatchSize.ToString()
     }
 
-    if ($Language) {
-        $whisperArgs += '--language', $Language
+    if ($effectiveLanguage) {
+        $whisperArgs += '--language', $effectiveLanguage
     }
 
     if ($Translate) {
@@ -1287,6 +1367,13 @@ function Invoke-WhisperFolder {
         [Parameter(ValueFromRemainingArguments)]
         [string[]]$ExtraArgs
     )
+
+    try {
+        $null = Get-Command -Name whisper-ctranslate2 -ErrorAction Stop
+    }
+    catch {
+        throw "whisper-ctranslate2 is not installed or not in PATH."
+    }
 
     $extensions = @('.mp4', '.mkv', '.avi', '.mp3', '.flac', '.wav', '.webm', '.m4a', '.opus', '.ogg')
     $files = Get-ChildItem $Directory -Recurse -File | Where-Object { $_.Extension.ToLower() -in $extensions }
@@ -1500,6 +1587,15 @@ function Save-YouTubeVideo {
         [System.IO.DirectoryInfo]$OutputDir = (Get-Item .)
     )
 
+    if ($Transcribe) {
+        try {
+            $null = Get-Command -Name whisper-ctranslate2 -ErrorAction Stop
+        }
+        catch {
+            throw "whisper-ctranslate2 is required for transcription; install it before using -Transcribe."
+        }
+    }
+
     Push-Location $OutputDir
 
     foreach ($url in $Urls) {
@@ -1571,8 +1667,12 @@ function Invoke-YouTubeSync {
     Push-Location $Script:CSharpRoot
     try {
         $arguments = @('run', '--', 'sync', 'yt')
-        if ($Force) { $arguments += '--force' }
-        if ($VerbosePreference -eq 'Continue') { $arguments += '--verbose' }
+        if ($Force) {
+            $arguments += '--force'
+        }
+        if ($VerbosePreference -eq 'Continue') {
+            $arguments += '--verbose'
+        }
         & dotnet @arguments
     }
     finally {
@@ -1628,8 +1728,12 @@ function Invoke-LastFmSync {
     Push-Location $Script:CSharpRoot
     try {
         $arguments = @('run', '--', 'sync', 'lastfm')
-        if ($Since) { $arguments += '--since', $Since }
-        if ($VerbosePreference -eq 'Continue') { $arguments += '--verbose' }
+        if ($Since) {
+            $arguments += '--since', $Since
+        }
+        if ($VerbosePreference -eq 'Continue') {
+            $arguments += '--verbose'
+        }
         & dotnet @arguments
     }
     finally {
@@ -1778,7 +1882,7 @@ if (`$LASTEXITCODE -ne 0) { Read-Host 'Press Enter' }
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger @($dailyTrigger, $logonTrigger) -Settings $settings -Description $Description | Out-Null
 
     Write-Host "Registered '$TaskName'" -ForegroundColor Green
-    Write-Host "  Daily:  $($start.ToString('HH:mm'))" -ForegroundColor DarkGray
+    Write-Host "  Daily:  $($start.ToString('HH:mm') )" -ForegroundColor DarkGray
     Write-Host "  Logon:  2 min after login" -ForegroundColor DarkGray
 }
 
@@ -1806,7 +1910,3 @@ function Register-AllSyncTasks {
     Register-ScheduledSyncTask -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime '09:00:00' -Description 'Syncs Last.fm scrobbles to Google Sheets'
     Register-ScheduledSyncTask -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '10:00:00' -Description 'Syncs YouTube playlists to Google Sheets'
 }
-
-
-
-Export-ModuleMember -Function * -Alias *

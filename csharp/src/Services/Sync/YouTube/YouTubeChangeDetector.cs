@@ -1,7 +1,5 @@
 namespace CSharpScripts.Services.Sync.YouTube;
 
-#region Models
-
 public record VideoChanges(
     List<string> AddedVideoIds,
     List<string> RemovedVideoIds,
@@ -269,5 +267,3 @@ public static class YouTubeChangeDetector
         }
     }
 }
-
-#endregion

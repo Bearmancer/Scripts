@@ -1,7 +1,5 @@
 namespace CSharpScripts.CLI;
 
-#region AllowedValuesAttribute
-
 [AttributeUsage(validOn: AttributeTargets.Property)]
 public sealed class AllowedValuesAttribute(params string[] values)
     : ParameterValidationAttribute($"Must be one of: {Join(separator: ", ", value: values)}")
@@ -23,10 +21,6 @@ public sealed class AllowedValuesAttribute(params string[] values)
     }
 }
 
-#endregion
-
-#region NotEmptyAttribute
-
 [AttributeUsage(validOn: AttributeTargets.Property)]
 public sealed class NotEmptyAttribute()
     : ParameterValidationAttribute(errorMessage: "Value cannot be empty")
@@ -43,5 +37,3 @@ public sealed class NotEmptyAttribute()
         };
     }
 }
-
-#endregion
