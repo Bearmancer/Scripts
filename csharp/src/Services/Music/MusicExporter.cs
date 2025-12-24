@@ -1,7 +1,5 @@
 namespace CSharpScripts.Services.Music;
 
-#region MusicExporter
-
 public static class MusicExporter
 {
     public static string ExportWorksToCSV(string releaseTitle, List<WorkSummary> works)
@@ -105,5 +103,3 @@ public static class MusicExporter
             .Trim()
             .TrimEnd(trimChar: '.')[..Math.Min(val1: name.Length, val2: 100)];
 }
-
-#endregion

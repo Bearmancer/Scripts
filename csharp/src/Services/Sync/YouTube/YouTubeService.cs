@@ -2,8 +2,6 @@ using Google.Apis.YouTube.v3.Data;
 
 namespace CSharpScripts.Services.Sync.YouTube;
 
-#region YouTubeService
-
 public class YouTubeService : IDisposable
 {
     private const int MaxResultsPerPage = 50;
@@ -254,5 +252,3 @@ public class YouTubeService : IDisposable
     private static TimeSpan ParseDuration(string? isoDuration) =>
         IsNullOrEmpty(value: isoDuration) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(s: isoDuration);
 }
-
-#endregion

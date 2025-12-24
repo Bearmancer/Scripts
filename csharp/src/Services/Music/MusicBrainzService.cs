@@ -1,12 +1,3 @@
-using System.Collections.Frozen;
-using System.Diagnostics;
-using System.Text.Json;
-using MetaBrainz.Common;
-using MetaBrainz.MusicBrainz;
-using MetaBrainz.MusicBrainz.Interfaces.Browses;
-using MetaBrainz.MusicBrainz.Interfaces.Entities;
-using MetaBrainz.MusicBrainz.Objects;
-
 namespace CSharpScripts.Services.Music;
 
 public sealed class MusicBrainzService(
@@ -21,9 +12,7 @@ public sealed class MusicBrainzService(
 
     private static readonly JsonSerializerOptions DumpOptions = new() { WriteIndented = true };
 
-    #region Tracing
-
-    private static readonly object TraceLock = new();
+    private static readonly Lock TraceLock = new();
 
     private static string GetEntityDumpDirectory(string entity, string id) =>
         Combine(path1: Paths.DumpsDirectory, path2: entity, path3: id);
@@ -39,7 +28,6 @@ public sealed class MusicBrainzService(
         string dir = GetEntityDumpDirectory(entity: entity, id: id);
         CreateDirectory(path: dir);
 
-        // Layer 1: Raw HTTP Tracing
         string tracePath = Combine(path1: dir, path2: "http.log");
         using TextWriterTraceListener listener = new(fileName: tracePath);
 
@@ -59,7 +47,6 @@ public sealed class MusicBrainzService(
 
             if (result is { })
             {
-                // Layer 2: MetaBrainz Object Dump
                 string json = JsonSerializer.Serialize(value: result, options: DumpOptions);
                 await WriteAllTextAsync(
                     path: Combine(path1: dir, path2: "data.json"),
@@ -79,10 +66,6 @@ public sealed class MusicBrainzService(
             }
         }
     }
-
-    #endregion
-
-    #region Caching
 
     private readonly Dictionary<Guid, WorkDetails> workDetailsCache = [];
     private Guid? currentWorkId;
@@ -107,10 +90,6 @@ public sealed class MusicBrainzService(
         currentWorkRecording = recording;
         currentWorkDetails = details;
     }
-
-    #endregion
-
-    #region Search
 
     public async Task<List<SearchResult>> SearchAsync(
         string query,
@@ -298,10 +277,6 @@ public sealed class MusicBrainzService(
             ct: ct
         );
     }
-
-    #endregion
-
-    #region Lookup
 
     public async Task<ReleaseData> GetReleaseAsync(
         string releaseId,
@@ -738,10 +713,6 @@ public sealed class MusicBrainzService(
         return enriched;
     }
 
-    #endregion
-
-    #region Helpers
-
     private static MusicBrainzRelease MapRelease(IRelease r)
     {
         List<MusicBrainzMedium> media = [];
@@ -1060,8 +1031,6 @@ public sealed class MusicBrainzService(
             parts.Add($"date:{year}");
         return Join(separator: " AND ", values: parts);
     }
-
-    #endregion
 }
 
 internal record ReleaseCredits(

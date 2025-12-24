@@ -1,7 +1,5 @@
 namespace CSharpScripts.CLI.Commands;
 
-#region CompletionInstallCommand
-
 public sealed class CompletionInstallCommand : Command<CompletionInstallCommand.Settings>
 {
     public override int Execute(
@@ -54,19 +52,26 @@ Register-ArgumentCompleter -Native -CommandName scripts -ScriptBlock {
 
         AppendAllText(path: psProfilePath, NewLine + completionScript + NewLine);
 
-        Console.Success(message: "Tab completion installed!");
-        Console.Info(message: "Profile: {0}", psProfilePath);
-        Console.Warning(message: "Restart PowerShell or run: . $PROFILE");
+        var panel = new Panel(
+            new Markup(
+                $"[bold green]✓ Tab completion installed successfully![/]\n\n"
+                    + $"[dim]Profile:[/]\n[link=file:///{psProfilePath}]{psProfilePath}[/]\n\n"
+                    + $"[yellow]Action Required:[/]\nRestart PowerShell or run: [bold]. $PROFILE[/]"
+            )
+        )
+        {
+            Border = BoxBorder.Rounded,
+            Padding = new Spectre.Console.Padding(1, 1),
+            Header = new PanelHeader("[blue]System Configuration[/]"),
+        };
+
+        Console.Render(renderable: panel);
 
         return 0;
     }
 
     public sealed class Settings : CommandSettings { }
 }
-
-#endregion
-
-#region CompletionSuggestCommand
 
 public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.Settings>
 {
@@ -178,7 +183,7 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         }
 
         foreach (string suggestion in suggestions.Distinct())
-            Console.WriteLine(text: suggestion);
+            System.Console.WriteLine(value: suggestion);
 
         return 0;
     }
@@ -190,5 +195,3 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         public string? Partial { get; init; }
     }
 }
-
-#endregion

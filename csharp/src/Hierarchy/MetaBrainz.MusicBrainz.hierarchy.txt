@@ -1,3 +1,5 @@
+#region MetaBrainz.MusicBrainz
+
 # MetaBrainz.MusicBrainz
 ============================================================
 
@@ -3601,3 +3603,7 @@ internal sealed class RunnerFactory : System.Text.RegularExpressions.RegexRunner
 
 
 
+
+#endregion
+
+#endregion

@@ -1,7 +1,5 @@
 namespace CSharpScripts.Orchestrators;
 
-#region ScrobbleSyncOrchestrator
-
 public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken ct) : IDisposable
 {
     private readonly LastFmService lastFmService = new(
@@ -203,5 +201,3 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
     internal void SaveState() =>
         StateManager.Save(fileName: StateManager.LastFmSyncFile, state: state);
 }
-
-#endregion

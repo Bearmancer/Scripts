@@ -1,7 +1,5 @@
 namespace CSharpScripts.Models;
 
-#region Core Models
-
 public record DiscogsArtist(
     int Id,
     string Name,
@@ -52,10 +50,6 @@ public record DiscogsRelease(
 }
 
 public record DiscogsCredit(string Name, string Role, string? Tracks);
-
-#endregion
-
-#region Supporting Records
 
 public record DiscogsMaster(
     int Id,
@@ -149,10 +143,6 @@ public record DiscogsCommunity(
 
 public record DiscogsSubmitter(string Username, string? ResourceUrl);
 
-#endregion
-
-#region Search
-
 public record DiscogsVersion(
     int Id,
     string Title,
@@ -183,5 +173,3 @@ public record DiscogsSearchResult(
     List<string>? Styles,
     List<string>? Barcodes
 );
-
-#endregion

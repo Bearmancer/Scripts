@@ -2,8 +2,6 @@ using System.Text.Encodings.Web;
 
 namespace CSharpScripts.Infrastructure;
 
-#region Core
-
 public static class StateManager
 {
     public const string LastFmSyncFile = "lastfm/sync.json";
@@ -71,10 +69,6 @@ public static class StateManager
             CreateDirectory(path: directory);
         return fullPath;
     }
-
-#endregion
-
-    #region YouTube State Management
 
     private const string YouTubePlaylistsSubdirectory = "youtube/playlists";
     private const string YouTubeDeletedSubdirectory = "youtube/deleted";
@@ -219,10 +213,6 @@ public static class StateManager
         return name.Trim().TrimEnd(trimChar: '.');
     }
 
-    #endregion
-
-    #region Release Cache Management
-
     private static string ReleaseCachePath =>
         Combine(path1: Paths.StateDirectory, path2: "releases");
 
@@ -287,6 +277,4 @@ public static class StateManager
 
     private static string GetReleasePath(string releaseId) =>
         Combine(path1: ReleaseCachePath, $"{SanitizeFileName(name: releaseId)}.json");
-
-    #endregion
 }

@@ -5,8 +5,6 @@ using CsvHelper.Configuration;
 
 namespace CSharpScripts.Infrastructure;
 
-#region ReleaseProgressCache
-
 internal static class ReleaseProgressCache
 {
     private static string GetPath(string releaseId) =>
@@ -61,5 +59,3 @@ internal static class ReleaseProgressCache
             File.Delete(path: path);
     }
 }
-
-#endregion

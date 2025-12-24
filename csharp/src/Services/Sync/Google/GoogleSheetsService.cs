@@ -1,7 +1,5 @@
 namespace CSharpScripts.Services.Sync.Google;
 
-#region GoogleSheetsService
-
 public class GoogleSheetsService : IDisposable
 {
     private const string SheetName = "Scrobbles";
@@ -109,8 +107,6 @@ public class GoogleSheetsService : IDisposable
             return false;
         }
     }
-
-    #region Subsheet Management
 
     internal void EnsureSubsheetExists(
         string spreadsheetId,
@@ -550,10 +546,6 @@ public class GoogleSheetsService : IDisposable
             }
         );
     }
-
-    #endregion
-
-    #region Scrobble Operations
 
     internal DateTime? GetLatestScrobbleTime(string spreadsheetId)
     {
@@ -1055,10 +1047,6 @@ public class GoogleSheetsService : IDisposable
         return newId;
     }
 
-    #endregion
-
-    #region Export Operations
-
     internal int ExportEachSheetAsCSV(
         string spreadsheetId,
         string outputDirectory,
@@ -1239,8 +1227,4 @@ public class GoogleSheetsService : IDisposable
                 .ToList()
             ?? [];
     }
-
-    #endregion
 }
-
-#endregion

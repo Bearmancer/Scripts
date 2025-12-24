@@ -1,4 +1,3 @@
-# pyright: reportMissingTypeStubs=false
 import json
 import subprocess
 from pathlib import Path
@@ -9,8 +8,6 @@ from unidecode import unidecode  # type: ignore[import-untyped]
 from toolkit.logging_config import get_logger
 
 logger = get_logger("filesystem")
-
-# region Command Execution
 
 
 def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
@@ -33,11 +30,6 @@ def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
         )
 
     return unidecode(result), unidecode(error)
-
-
-# endregion
-
-# region Directory Listing
 
 
 def get_folder_size(path: Path) -> int:
@@ -94,11 +86,6 @@ def list_files_and_directories(
         print(file_output)
 
 
-# endregion
-
-# region File Renaming
-
-
 def rename_file_red(path: Path) -> None:
     """Rename files with paths exceeding 180 characters for RED compatibility."""
     if not path.exists() or not path.is_dir():
@@ -126,11 +113,6 @@ def rename_file_red(path: Path) -> None:
         if renamed_count
         else "No files needed renaming"
     )
-
-
-# endregion
-
-# region Torrent Creation
 
 
 def make_torrents(folder: Path) -> None:
@@ -167,6 +149,3 @@ def make_torrents(folder: Path) -> None:
     )
 
     logger.info(f"Torrents created for {folder.name}")
-
-
-# endregion

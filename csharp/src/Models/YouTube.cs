@@ -1,7 +1,5 @@
 namespace CSharpScripts.Models;
 
-#region Core Models
-
 public record YouTubeVideo(
     string Title,
     string Description,
@@ -32,10 +30,6 @@ public record PlaylistSnapshot(
     int ReportedVideoCount = 0,
     string? ETag = null
 );
-
-#endregion
-
-#region State
 
 public record YouTubeFetchState
 {
@@ -71,10 +65,6 @@ public readonly record struct PlaylistSummary(
     string? ETag
 );
 
-#endregion
-
-#region Change Tracking
-
 public record PlaylistRename(string PlaylistId, string OldTitle, string NewTitle);
 
 public record PlaylistChanges(
@@ -97,5 +87,3 @@ public record OptimizedChanges(
     internal bool HasAnyChanges =>
         NewIds.Count > 0 || DeletedIds.Count > 0 || ModifiedIds.Count > 0 || Renamed.Count > 0;
 }
-
-#endregion

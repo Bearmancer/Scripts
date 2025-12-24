@@ -1,7 +1,5 @@
 namespace CSharpScripts.Infrastructure;
 
-#region Logger
-
 public static class Logger
 {
     private static readonly Lock WriteLock = new();
@@ -306,10 +304,6 @@ public static class Logger
         );
 }
 
-#endregion
-
-#region Enums
-
 public enum LogLevel
 {
     Debug,
@@ -335,5 +329,3 @@ public record LogEntry(
     string? SessionId = null,
     Dictionary<string, object>? Data = null
 );
-
-#endregion

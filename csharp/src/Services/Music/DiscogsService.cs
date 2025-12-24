@@ -25,8 +25,6 @@ public sealed class DiscogsService : IMusicService
     internal DiscogsClient Client { get; }
     public MusicSource Source => MusicSource.Discogs;
 
-    #region IMusicService
-
     public async Task<List<SearchResult>> SearchAsync(
         string query,
         int maxResults = 10,
@@ -203,10 +201,6 @@ public sealed class DiscogsService : IMusicService
     private static TimeSpan? ParseDuration(string? duration) =>
         TimeSpan.TryParse(s: duration, out var result) ? result : null;
 
-    #endregion
-
-    #region Notes Parsing
-
     internal static (int? Year, string? Venue) ParseNotesForRecordingInfo(
         string? notes,
         int discNumber
@@ -290,10 +284,6 @@ public sealed class DiscogsService : IMusicService
 
         return null;
     }
-
-    #endregion
-
-    #region Search (Advanced)
 
     public async Task<List<DiscogsSearchResult>> SearchAdvancedAsync(
         string? artist = null,
@@ -379,10 +369,6 @@ public sealed class DiscogsService : IMusicService
             r.Barcode?.ToList()
         );
 
-    #endregion
-
-    #region Release
-
     public async Task<DiscogsRelease?> GetReleaseAsync(
         int releaseId,
         CancellationToken ct = default
@@ -453,10 +439,6 @@ public sealed class DiscogsService : IMusicService
             ct: ct
         );
     }
-
-    #endregion
-
-    #region Master
 
     public async Task<DiscogsMaster?> GetMasterAsync(int masterId, CancellationToken ct = default)
     {
@@ -537,10 +519,6 @@ public sealed class DiscogsService : IMusicService
             Thumb: v.Thumb
         );
 
-    #endregion
-
-    #region Mappers
-
     private static DiscogsTrack MapTrack(Tracklist t) =>
         new(
             t.Position ?? "",
@@ -620,10 +598,6 @@ public sealed class DiscogsService : IMusicService
                 : null
         );
 
-    #endregion
-
-    #region Helpers
-
     private static async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken ct)
     {
         try
@@ -655,6 +629,4 @@ public sealed class DiscogsService : IMusicService
         title?.Contains(value: " - ") == true ? title.Split(separator: " - ")[0].Trim() : null;
 
     private static int? ParseYear(string? year) => int.TryParse(s: year, out int y) ? y : null;
-
-    #endregion
 }
