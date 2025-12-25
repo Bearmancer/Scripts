@@ -1,5 +1,3 @@
-using System.Text.Encodings.Web;
-
 namespace CSharpScripts.Infrastructure;
 
 public static class StateManager

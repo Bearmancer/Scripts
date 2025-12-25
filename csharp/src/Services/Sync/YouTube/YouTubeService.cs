@@ -1,5 +1,3 @@
-using Google.Apis.YouTube.v3.Data;
-
 namespace CSharpScripts.Services.Sync.YouTube;
 
 public class YouTubeService : IDisposable

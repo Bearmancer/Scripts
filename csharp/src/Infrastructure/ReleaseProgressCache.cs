@@ -1,8 +1,3 @@
-using System.Globalization;
-using CSharpScripts.Models;
-using CsvHelper;
-using CsvHelper.Configuration;
-
 namespace CSharpScripts.Infrastructure;
 
 internal static class ReleaseProgressCache

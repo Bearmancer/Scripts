@@ -1,3 +1,4 @@
+using DiscogsVideoDto = ParkSquare.Discogs.Dto.Video;
 using Version = ParkSquare.Discogs.Dto.Version;
 
 namespace CSharpScripts.Services.Music;
@@ -573,7 +574,7 @@ public sealed class DiscogsService : IMusicService
             ResourceUrl: i.ResourceUrl
         );
 
-    private static DiscogsVideo MapVideo(Video v) =>
+    private static DiscogsVideo MapVideo(DiscogsVideoDto v) =>
         new(
             v.Uri ?? "",
             Title: v.Title,
