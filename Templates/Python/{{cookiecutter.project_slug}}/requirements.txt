@@ -1,6 +1,0 @@
-basedpyright
-rich
-tqdm
-typer
-tenacity
-
