@@ -21,8 +21,23 @@ TOKEN_FILE = Path.home() / "Services" / "last.fm Scrobble Updater" / "token.json
 SHEET_ID = "1scv0dBa7iGx0hQTqmMwvzceoZlyiRSjswz80FCO1cco"
 SHEET_NAME = "last.fm scrobbles"
 LASTFM_USERNAME = "kanishknishar"
-LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
-LASTFM_API_SECRET = os.getenv("LASTFM_API_SECRET")
+
+
+def _get_api_key() -> str:
+    """Get Last.fm API key from environment or raise error."""
+    key = os.getenv("LASTFM_API_KEY")
+    if not key:
+        raise EnvironmentError("LASTFM_API_KEY environment variable not set")
+    return key
+
+
+def _get_api_secret() -> str:
+    """Get Last.fm API secret from environment or raise error."""
+    secret = os.getenv("LASTFM_API_SECRET")
+    if not secret:
+        raise EnvironmentError("LASTFM_API_SECRET environment variable not set")
+    return secret
+
 
 logger = get_logger("lastfm")
 
@@ -58,15 +73,21 @@ def prepare_track_data(tracks: list[pylast.PlayedTrack]) -> list[list[str]]:
     """Convert track objects to row data for the sheet."""
     values: list[list[str]] = []
     for track in tracks:
-        timestamp_str = datetime.fromtimestamp(int(track.timestamp)).strftime(
+        timestamp = track.timestamp
+        if timestamp is None:
+            continue
+        timestamp_str = datetime.fromtimestamp(int(timestamp)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
+        title = str(track.track.title) if track.track.title else ""
+        album = str(track.album) if track.album else ""
+        artist_name = str(track.track.artist.name) if track.track.artist else ""
         values.append(
             [
                 timestamp_str,
-                track.track.title,
-                track.album if track.album else "",
-                track.track.artist.name,
+                title,
+                album,
+                artist_name,
             ]
         )
     return values
@@ -80,15 +101,15 @@ def update_scrobbles() -> None:
     last_datetime = get_last_scrobble_timestamp(sheet)
 
     network = pylast.LastFMNetwork(
-        api_key=LASTFM_API_KEY,
-        api_secret=LASTFM_API_SECRET,
+        api_key=_get_api_key(),
+        api_secret=_get_api_secret(),
         username=LASTFM_USERNAME,
     )
     user = network.get_user(LASTFM_USERNAME)
 
     last_unix_timestamp = int(last_datetime.timestamp()) + 1
 
-    new_tracks = list(user.get_recent_tracks(time_from=last_unix_timestamp, limit=None))
+    new_tracks = list(user.get_recent_tracks(time_from=last_unix_timestamp))
 
     if not new_tracks:
         logger.info(f"No new scrobbles since {last_datetime}.")

@@ -14,7 +14,7 @@
 ### create new structure to integrate all cohesively 
 ### create new CLI structure with all features including last.fm 
 ### do not add py scrobble to other parts of dir including pwsh
-### create new file to show best way to natively integrate all missing py features in C# 
+### create new file to show best way to natively integrate all missing py features in C# --- reserve for the end without also trying to start changing ps1
 ### consider adding of cliwrap for easier path/subprocess handling
 ### use imagesharp for image manipulation
 ### explain how imagesharp differs from pillow in handling of specifying positions within a frame and also how it extracts frame compared to PIL

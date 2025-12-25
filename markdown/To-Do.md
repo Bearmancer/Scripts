@@ -147,7 +147,7 @@ Lacks clarity if catalog numbers correspond to the label ones
 43. Create shortening of things like Deutsche Grammophon to DG automatically when filling in
 44. Create new auto-filled TSV file vertically aligned with highest confidence values without prompt (retain printing to screen)
 45. Create separate plan using native AI tool -- what is it called? Your implementation plan is created not inside dir but inside program file and is formatted differently and supports things like review
-46. Create separate plan for integrating Python scrobble inside toolkit using typer
+46. Create separate plan for integrating and moving Python scrobble inside toolkit using typer after overhaul as Typer-based; ignore C# and pwsh duplication of concern --- this py last.fm is only a token not to be invoked elsewhere
 47. Explain why .toml file exists
 48. Find way to find unapproved pwsh verbs natively and if not scan manually
 49. Create plan for migrating all verbs
@@ -248,3 +248,21 @@ var best = suggestions.GetBest();
 47. Modify prproject.toml to not show warnings for untyped libraries
 48. Fix all problems by invoking terminal cmd to show all basedpyright after changing it
 49. Decide best place to keep filloutput row both within directory structure and within a file
+50. Read @powershell_enhancements.md
+51. Isolate modules within it 
+52. Find way to integrate said modules into my pwsh module toolkit
+53. Integrate lazy loading of my module in pwsh profile
+54. Determine new paths for all tools like carapace argc and fzf first
+55. Search for files currently of all since they were installed
+56. Move to new path where it is centralized
+57. Fix $profile to use paths that align with current Dev dir being the place where module is
+59. All paths referred in .cs and .ps1 need to be tested and updated
+60. Ensure youtube downloading invokes `whisp` (after update) automatically 
+61. First recreate lazy-loading of personal module in pwsh to use pscompletion+psreadline+psfzf+argc for dotnet and winget+carapace elsewhere --- run benchmarks before and after each module to see performance hit
+62. Look at docs to ensure lazy loading but retaining being able to dynamically fill values in both carapace and argc
+63. List all cmds supported by argc by fetching the manifest and put that inside a new cmd that allows loading of argc -- and that way the entire list is visible inside pscompletion
+64. Use pscompletion menu as setting
+65. Retain psfzf's tab but mapped to ctrl+space
+66. Suppress python outdate library warning inside whisper
+67. Best way to add whisper-ctranslate2 CLI autocomplete --- psc, psreadline, carapace, fzf, argc -- do any of them have it out of the box?
+68. Force pwsh to UTF-8 always
