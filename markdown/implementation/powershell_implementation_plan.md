@@ -1,6 +1,6 @@
 # PowerShell Profile Optimization - Final Implementation Plan
 
-*Last Updated: December 25, 2025*  
+*Last Updated: December 25, 2025*
 *Verified via independent benchmarks and community research*
 
 ---
@@ -51,8 +51,8 @@ Measured via `pwsh -NoProfile -Command "Measure-Command { ... } | Select-Object 
 | Shell overhead | ~284ms | 12% | Baseline |
 | **Unaccounted** | ~645ms | 28% | Startup overhead |
 
-**Total measured components:** ~1,697ms  
-**Actual profile overhead:** ~2,058ms  
+**Total measured components:** ~1,697ms
+**Actual profile overhead:** ~2,058ms
 **Note:** Unaccounted time includes module autoload, path resolution, and first-run JIT
 
 ---
@@ -180,18 +180,18 @@ $script:CompletionsInitialized = $false
 function prompt {
     if (-not $script:CompletionsInitialized) {
         $script:CompletionsInitialized = $true
-        
+
         # PSCompletions
         Import-Module PSCompletions -ErrorAction SilentlyContinue
-        
+
         # Carapace
         $env:CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
         carapace _carapace | Out-String | Invoke-Expression
-        
+
         # argc
         argc --argc-completions powershell dotnet whisper-ctranslate2 | Out-String | Invoke-Expression
     }
-    
+
     "PS $($PWD.Path)> "
 }
 ```
@@ -213,7 +213,7 @@ $GlobalState.SessionState = $ExecutionContext.SessionState
 $null = Start-ThreadJob -ArgumentList $GlobalState -ScriptBlock {
     param($GlobalState)
     Start-Sleep -Milliseconds 200  # Required for stability
-    
+
     . $GlobalState {
         Import-Module PSCompletions -ErrorAction SilentlyContinue
         $env:CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
@@ -223,7 +223,7 @@ $null = Start-ThreadJob -ArgumentList $GlobalState -ScriptBlock {
 }
 ```
 
-**Trade-off:** 
+**Trade-off:**
 - Completions available ~1-2 seconds after prompt
 - May break VS Code shell integration
 - Requires ThreadJob module
@@ -244,12 +244,12 @@ Import-Module PSCompletions -ErrorAction SilentlyContinue
 $script:CarapaceLoaded = $false
 Register-ArgumentCompleter -Native -CommandName * -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    
+
     if (-not $script:CarapaceLoaded) {
         $script:CarapaceLoaded = $true
         carapace _carapace | Out-String | Invoke-Expression
     }
-    
+
     # Forward to carapace
     carapace $commandAst.CommandElements[0].Value powershell $wordToComplete |
         ConvertFrom-Json |

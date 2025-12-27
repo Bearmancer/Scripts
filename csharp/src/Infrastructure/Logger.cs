@@ -2,6 +2,8 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Logger
 {
+    #region Configuration & State
+
     private static readonly Lock WriteLock = new();
 
     private static ServiceType? ActiveService;
@@ -9,6 +11,10 @@ public static class Logger
 
     public static LogLevel FileLevel { get; set; } = LogLevel.Info;
     public static string? CurrentSessionId { get; private set; }
+
+    #endregion
+
+    #region Session Management
 
     public static void Start(ServiceType service)
     {
@@ -88,6 +94,10 @@ public static class Logger
         CurrentSessionId = null;
     }
 
+    #endregion
+
+    #region Core Logging
+
     public static void Event(
         string eventName,
         Dictionary<string, object>? data = null,
@@ -119,6 +129,10 @@ public static class Logger
             sessionId: SessionId
         );
     }
+
+    #endregion
+
+    #region Domain Events
 
     public static void PlaylistUpdated(
         string title,
@@ -196,6 +210,10 @@ public static class Logger
             },
             level: LogLevel.Error
         );
+
+    #endregion
+
+    #region Private Helpers
 
     private static void DetectCrashedSessions(ServiceType service)
     {
@@ -302,7 +320,11 @@ public static class Logger
                 _ => "general.jsonl",
             }
         );
+
+    #endregion
 }
+
+#region Supporting Types
 
 public enum LogLevel
 {
@@ -329,3 +351,5 @@ public record LogEntry(
     string? SessionId = null,
     Dictionary<string, object>? Data = null
 );
+
+#endregion

@@ -1,5 +1,7 @@
 namespace CSharpScripts.CLI.Commands;
 
+#region Sync All Command
+
 public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 {
     public override async Task<int> ExecuteAsync(
@@ -72,6 +74,10 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
         public bool Reset { get; init; }
     }
 }
+
+#endregion
+
+#region Sync YouTube Command
 
 public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Settings>
 {
@@ -266,6 +272,10 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
     }
 }
 
+#endregion
+
+#region Sync LastFm Command
+
 public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
 {
     public override async Task<int> ExecuteAsync(
@@ -336,6 +346,10 @@ public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
         public string? Since { get; init; }
     }
 }
+
+#endregion
+
+#region Status Command
 
 public sealed class StatusCommand : Command<StatusCommand.Settings>
 {
@@ -457,3 +471,5 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
         public string Service { get; init; } = "all";
     }
 }
+
+#endregion

@@ -1,5 +1,7 @@
 namespace CSharpScripts.Services.Sync.LastFm;
 
+#region Models
+
 public record Scrobble(string TrackName, string ArtistName, string AlbumName, DateTime? PlayedAt)
 {
     public string FormattedDate =>
@@ -28,6 +30,10 @@ public record FetchState
             NewestScrobble = newest;
     }
 }
+
+#endregion
+
+#region Service
 
 public class LastFmService(string apiKey, string username)
 {
@@ -201,3 +207,5 @@ public class LastFmService(string apiKey, string username)
     public static void DeleteScrobblesCache() =>
         StateManager.Delete(fileName: StateManager.LastFmScrobblesFile);
 }
+
+#endregion

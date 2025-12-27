@@ -1,5 +1,7 @@
 namespace CSharpScripts.CLI.Commands;
 
+#region Install Command
+
 public sealed class CompletionInstallCommand : Command<CompletionInstallCommand.Settings>
 {
     public override int Execute(
@@ -52,26 +54,22 @@ Register-ArgumentCompleter -Native -CommandName scripts -ScriptBlock {
 
         AppendAllText(path: psProfilePath, NewLine + completionScript + NewLine);
 
-        var panel = new Panel(
-            new Markup(
-                $"[bold green]✓ Tab completion installed successfully![/]\n\n"
-                    + $"[dim]Profile:[/]\n[link=file:///{psProfilePath}]{psProfilePath}[/]\n\n"
-                    + $"[yellow]Action Required:[/]\nRestart PowerShell or run: [bold]. $PROFILE[/]"
-            )
-        )
-        {
-            Border = BoxBorder.Rounded,
-            Padding = new Spectre.Console.Padding(1, 1),
-            Header = new PanelHeader("[blue]System Configuration[/]"),
-        };
-
-        Console.Render(renderable: panel);
+        Console.WritePanel(
+            header: "System Configuration",
+            markupContent: $"[bold green]✓ Tab completion installed successfully![/]\n\n"
+                + $"[dim]Profile:[/]\n[link=file:///{psProfilePath}]{psProfilePath}[/]\n\n"
+                + $"[yellow]Action Required:[/]\nRestart PowerShell or run: [bold]. $PROFILE[/]"
+        );
 
         return 0;
     }
 
     public sealed class Settings : CommandSettings { }
 }
+
+#endregion
+
+#region Suggest Command
 
 public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.Settings>
 {
@@ -83,8 +81,9 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         [key: ""] = ["sync", "clean", "music", "mail", "completion", "-v", "--verbose"],
         [key: "sync"] = ["all", "yt", "lastfm", "status", "-v", "--verbose", "-r", "--reset"],
         [key: "clean"] = ["local", "purge"],
-        [key: "music"] = ["search", "lookup", "schema"],
+        [key: "music"] = ["search", "fill", "lookup", "schema"],
         [key: "music search"] = ["--source", "--mode", "--limit", "--fields", "--output", "-v"],
+        [key: "music fill"] = ["--input", "--output", "-i", "-o"],
         [key: "mail"] = ["create"],
         [key: "completion"] = ["install", "suggest"],
     }.ToFrozenDictionary();
@@ -195,3 +194,5 @@ public sealed class CompletionSuggestCommand : Command<CompletionSuggestCommand.
         public string? Partial { get; init; }
     }
 }
+
+#endregion

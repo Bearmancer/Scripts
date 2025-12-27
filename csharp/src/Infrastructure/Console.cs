@@ -9,6 +9,8 @@ public static class Console
     public static LogLevel Level { get; set; } = LogLevel.Info;
     public static bool Suppress { get; set; }
 
+    #region Logging Methods
+
     public static void Debug(string message, params object?[] args) =>
         Write(level: LogLevel.Debug, color: "grey", message: message, args: args);
 
@@ -58,6 +60,10 @@ public static class Console
 
     public static void Tip(string text) =>
         AnsiConsole.MarkupLine($"[dim]Tip:[/] {Markup.Escape(text: text)}");
+
+    #endregion
+
+    #region Display Helpers
 
     public static void Rule(string text) =>
         AnsiConsole.Write(new Rule($"[bold cyan]{Markup.Escape(text: text)}[/]"));
@@ -109,6 +115,10 @@ public static class Console
 
     public static LiveDisplay Live(IRenderable target) => AnsiConsole.Live(target: target);
 
+    #endregion
+
+    #region Text Formatters
+
     public static string Escape(string? text) => Markup.Escape(text ?? "");
 
     public static string Bold(string? text) => $"[bold]{Markup.Escape(text ?? "")}[/]";
@@ -149,6 +159,10 @@ public static class Console
         source.Equals(value: "Discogs", comparisonType: StringComparison.OrdinalIgnoreCase)
             ? "[yellow]Discogs[/]"
             : "[cyan]MusicBrainz[/]";
+
+    #endregion
+
+    #region Progress Rendering
 
     public static string ProgressBar(int completed, int total, string? eta = null)
     {
@@ -220,6 +234,10 @@ public static class Console
             result += " " + DimText(text: suffix);
         return result;
     }
+
+    #endregion
+
+    #region Links & Tables
 
     public static void Link(string url, string text)
     {
@@ -304,7 +322,22 @@ public static class Console
     internal static Panel CreatePanel(string content, string header) =>
         new Panel(Markup.Escape(text: content)).Header(Markup.Escape(text: header)).Expand();
 
+    public static void WritePanel(string header, string markupContent)
+    {
+        var panel = new Panel(new Markup(text: markupContent))
+        {
+            Border = BoxBorder.Rounded,
+            Padding = new Spectre.Console.Padding(left: 1, top: 1, right: 1, bottom: 1),
+            Header = new PanelHeader($"[blue]{Markup.Escape(text: header)}[/]"),
+        };
+        AnsiConsole.Write(renderable: panel);
+    }
+
     internal static SpectreProgress CreateProgress() => AnsiConsole.Progress();
+
+    #endregion
+
+    #region Help System
 
     public static void Section(string title) =>
         AnsiConsole.MarkupLine($"[bold white]{Markup.Escape(text: title)}[/]");
@@ -376,6 +409,10 @@ public static class Console
         AnsiConsole.MarkupLine($"[yellow]{sig}[/]{new string(c: ' ', count: padding)}{desc}");
     }
 
+    #endregion
+
+    #region Private Helpers
+
     private static readonly Dictionary<LogLevel, string> LevelCodes = new()
     {
         [key: LogLevel.Debug] = "DEBG",
@@ -411,4 +448,6 @@ public static class Console
             return message;
         }
     }
+
+    #endregion
 }
