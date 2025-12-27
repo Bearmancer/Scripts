@@ -1,6 +1,6 @@
 # C# Implementation Plan - CLI & Services
 
-*Last Updated: December 25, 2025*  
+*Last Updated: December 25, 2025*
 *Based on Microsoft docs, Spectre.Console documentation, and community research*
 
 ---
@@ -34,7 +34,7 @@ AnsiConsole.Progress()
         new RemainingTimeColumn())
     .Start(ctx => {
         var task = ctx.AddTask("Processing", maxValue: 100);
-        
+
         // Update description dynamically
         task.Description = $"Processing file {i} of {total}";
         task.Increment(1);
@@ -120,7 +120,7 @@ public class Settings : CommandSettings
 #endregion
 
 #region Data Formatting
-// Related methods here  
+// Related methods here
 #endregion
 ```
 
@@ -136,7 +136,7 @@ public class Settings : CommandSettings
 public async Task<int> ExecuteAsync(CommandContext context, Settings settings)
 {
     var records = LoadTsvRecords(settings.InputPath);
-    
+
     await AnsiConsole.Progress()
         .Columns(
             new TaskDescriptionColumn(),
@@ -147,18 +147,18 @@ public async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         .StartAsync(async ctx =>
         {
             var task = ctx.AddTask("Processing records", maxValue: records.Count);
-            
+
             foreach (var record in records)
             {
                 task.Description = $"Searching: {record.Work} - {record.Composer}";
-                
+
                 var result = await SearchBothServicesAsync(record);
                 WriteResultToTsv(result);
-                
+
                 task.Increment(1);
             }
         });
-    
+
     return 0;
 }
 ```
@@ -195,10 +195,10 @@ public static void WritePanel(string header, string content, Color? borderColor 
         Padding = new Padding(1, 1),
         Header = new PanelHeader($"[blue]{Markup.Escape(header)}[/]"),
     };
-    
+
     if (borderColor.HasValue)
         panel.BorderColor(borderColor.Value);
-    
+
     AnsiConsole.Write(panel);
 }
 ```
@@ -225,9 +225,9 @@ public async Task<MergedSearchResult> SearchBothServicesAsync(MusicRecord record
     // Parallel queries
     var discogsTask = _discogsService.SearchAsync(record);
     var musicBrainzTask = _musicBrainzService.SearchAsync(record);
-    
+
     await Task.WhenAll(discogsTask, musicBrainzTask);
-    
+
     // Merge and sort by confidence
     return MergeResults(discogsTask.Result, musicBrainzTask.Result)
         .OrderByDescending(r => r.Confidence)

@@ -6,6 +6,8 @@ public sealed class MusicBrainzService(
     string contact = "user@example.com"
 ) : IMusicService
 {
+    #region Fields & Configuration
+
     internal Query Query { get; } =
         new(application: appName, version: appVersion, contact: contact);
     public MusicSource Source => MusicSource.MusicBrainz;
@@ -13,6 +15,10 @@ public sealed class MusicBrainzService(
     private static readonly JsonSerializerOptions DumpOptions = new() { WriteIndented = true };
 
     private static readonly Lock TraceLock = new();
+
+    #endregion
+
+    #region Logging & Diagnostics
 
     private static string GetEntityDumpDirectory(string entity, string id) =>
         Combine(path1: Paths.DumpsDirectory, path2: entity, path3: id);
@@ -67,6 +73,10 @@ public sealed class MusicBrainzService(
         }
     }
 
+    #endregion
+
+    #region Work Context Cache
+
     private readonly Dictionary<Guid, WorkDetails> workDetailsCache = [];
     private Guid? currentWorkId;
     private MusicBrainzRecording? currentWorkRecording;
@@ -90,6 +100,10 @@ public sealed class MusicBrainzService(
         currentWorkRecording = recording;
         currentWorkDetails = details;
     }
+
+    #endregion
+
+    #region Search Operations
 
     public async Task<List<SearchResult>> SearchAsync(
         string query,
@@ -277,6 +291,10 @@ public sealed class MusicBrainzService(
             ct: ct
         );
     }
+
+    #endregion
+
+    #region Entity Lookup
 
     public async Task<ReleaseData> GetReleaseAsync(
         string releaseId,
@@ -544,6 +562,10 @@ public sealed class MusicBrainzService(
         );
     }
 
+    #endregion
+
+    #region Track Building & Enrichment
+
     private static ReleaseCredits ExtractReleaseCredits(MusicBrainzRelease release)
     {
         var credits = release.Credits.Where(c => !ExcludedRoles.Contains(item: c.Role)).ToList();
@@ -712,6 +734,10 @@ public sealed class MusicBrainzService(
 
         return enriched;
     }
+
+    #endregion
+
+    #region Entity Mappers
 
     private static MusicBrainzRelease MapRelease(IRelease r)
     {
@@ -930,6 +956,10 @@ public sealed class MusicBrainzService(
             Annotation: null
         );
 
+    #endregion
+
+    #region Role Filters & Utilities
+
     private static readonly FrozenSet<string> ExcludedRoles = FrozenSet.ToFrozenSet(
         [
             "choir",
@@ -1031,6 +1061,8 @@ public sealed class MusicBrainzService(
             parts.Add($"date:{year}");
         return Join(separator: " AND ", values: parts);
     }
+
+    #endregion
 }
 
 internal record ReleaseCredits(

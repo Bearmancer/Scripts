@@ -5,6 +5,8 @@ public sealed class MailTmException(string message, Exception? inner = null)
 
 public sealed class MailTmService : IDisposableMailService
 {
+    #region Configuration
+
     private const string BASE_URL = "https://api.mail.tm";
 
     private const string PASSWORD_CHARS =
@@ -20,6 +22,10 @@ public sealed class MailTmService : IDisposableMailService
     }
 
     internal RestClient Client { get; }
+
+    #endregion
+
+    #region Account Management
 
     public async Task<MailTmAccount> CreateAccountAsync()
     {
@@ -97,6 +103,10 @@ public sealed class MailTmService : IDisposableMailService
         AuthToken = response.Data.Token;
         Console.Debug(message: "Authentication successful");
     }
+
+    #endregion
+
+    #region Inbox Operations
 
     public async Task<List<MailTmMessage>> GetInboxAsync()
     {
@@ -226,6 +236,10 @@ public sealed class MailTmService : IDisposableMailService
         );
     }
 
+    #endregion
+
+    #region Private Helpers
+
     private static MailTmMessage ParseMessage(JsonElement elem) =>
         new()
         {
@@ -258,6 +272,10 @@ public sealed class MailTmService : IDisposableMailService
                 .Range(start: 0, count: length)
                 .Select(_ => PASSWORD_CHARS[Random.Shared.Next(maxValue: PASSWORD_CHARS.Length)]),
         ]);
+
+    #endregion
+
+    #region Interface Implementation
 
     async Task<MailAccount> IDisposableMailService.CreateAccountAsync()
     {
@@ -295,7 +313,11 @@ public sealed class MailTmService : IDisposableMailService
     }
 
     async Task IDisposableMailService.ForgetSessionAsync() => await DeleteAccountAsync();
+
+    #endregion
 }
+
+#region DTO Records
 
 public record MailTmAccount
 {
@@ -383,3 +405,5 @@ public record MailTmMessage
     [JsonPropertyName(name: "isDeleted")]
     public bool IsDeleted { get; init; }
 }
+
+#endregion

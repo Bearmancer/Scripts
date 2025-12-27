@@ -13,6 +13,8 @@ public record VideoChanges(
 
 public static class YouTubeChangeDetector
 {
+    #region Video Changes
+
     internal static VideoChanges DetectVideoChanges(
         List<string> currentVideoIds,
         List<string> storedVideoIds
@@ -53,6 +55,10 @@ public static class YouTubeChangeDetector
             RequiresFullRewrite: requiresFullRewrite
         );
     }
+
+    #endregion
+
+    #region Playlist Changes
 
     internal static PlaylistChanges DetectPlaylistChanges(
         List<YouTubePlaylist> currentPlaylists,
@@ -113,6 +119,10 @@ public static class YouTubeChangeDetector
         if (changes.ModifiedPlaylistIds.Count > 0)
             Console.Info(message: "Modified playlists: {0}", changes.ModifiedPlaylistIds.Count);
     }
+
+    #endregion
+
+    #region Optimized Detection
 
     internal static OptimizedChanges DetectOptimizedChanges(
         List<PlaylistSummary> currentSummaries,
@@ -266,4 +276,6 @@ public static class YouTubeChangeDetector
             }
         }
     }
+
+    #endregion
 }

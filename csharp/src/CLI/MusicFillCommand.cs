@@ -2,6 +2,8 @@ namespace CSharpScripts.CLI.Commands;
 
 public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 {
+    #region Settings
+
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-i|--input")]
@@ -12,6 +14,10 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
         [Description("Output file path (optional, includes suggestions)")]
         public string? OutputFile { get; init; }
     }
+
+    #endregion
+
+    #region Execute
 
     public override async Task<int> ExecuteAsync(
         CommandContext context,
@@ -32,7 +38,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
             }
             else if (files.Length > 1)
             {
-                inputFile = AnsiConsole.Prompt(
+                inputFile = Console.Prompt(
                     new SelectionPrompt<string>().Title("Select input file:").AddChoices(files)
                 );
             }
@@ -85,8 +91,8 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
         Console.Info("Writing results in real-time to {0}", output);
         var fillTimer = Stopwatch.StartNew();
 
-        await AnsiConsole
-            .Progress()
+        await Console
+            .CreateProgress()
             .AutoClear(false)
             .HideCompleted(false)
             .Columns(
@@ -127,14 +133,24 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 
                     if (suggestions.HasAny())
                     {
-                        var preview = suggestions.GetPreviewMarkup();
+                        var best = suggestions.GetBest()!;
                         var elapsed = fillTimer.Elapsed;
+                        var shortWork = workName.Length > 40 ? workName[..37] + "..." : workName;
+
+                        List<string> found = [];
+                        if (!IsNullOrEmpty(best.Label))
+                            found.Add($"Label: [cyan]{Console.Escape(best.Label)}[/]");
+                        if (!IsNullOrEmpty(best.CatalogNumber))
+                            found.Add($"Cat: [cyan]{Console.Escape(best.CatalogNumber)}[/]");
+                        if (!IsNullOrEmpty(best.Year))
+                            found.Add($"Year: [cyan]{best.Year}[/]");
+
                         Console.MarkupLine(
-                            $"[green]✓[/] [dim]{elapsed:mm\\:ss}[/] Found: {preview}"
+                            $"[green]✓[/] [dim]{elapsed:mm\\:ss}[/] [bold]{Console.Escape(shortWork)}[/] → {Join(" │ ", found)} [dim]({best.Source})[/]"
                         );
                     }
 
-                    var best = suggestions.GetBest();
+                    var bestSugg = suggestions.GetBest();
                     var outputRow = new FillOutputRow(
                         Composer: record.Composer,
                         Work: record.Work,
@@ -142,14 +158,14 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
                         Conductor: record.Conductor,
                         Performers: record.Performers,
                         Label: record.Label,
-                        LabelSuggested: best?.Label ?? "",
-                        LabelConfidence: best?.Confidence.ToString() ?? "",
+                        LabelSuggested: bestSugg?.Label ?? "",
+                        LabelConfidence: bestSugg?.Confidence.ToString() ?? "",
                         Year: record.Year,
-                        YearSuggested: best?.Year ?? "",
-                        YearConfidence: best?.Confidence.ToString() ?? "",
+                        YearSuggested: bestSugg?.Year ?? "",
+                        YearConfidence: bestSugg?.Confidence.ToString() ?? "",
                         CatalogNumber: record.CatalogNumber,
-                        CatalogNumberSuggested: best?.CatalogNumber ?? "",
-                        CatalogNumberConfidence: best?.Confidence.ToString() ?? "",
+                        CatalogNumberSuggested: bestSugg?.CatalogNumber ?? "",
+                        CatalogNumberConfidence: bestSugg?.Confidence.ToString() ?? "",
                         Rating: record.Rating,
                         Comment: record.Comment
                     );
@@ -168,6 +184,10 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 
         return 0;
     }
+
+    #endregion
+
+    #region TSV/CSV Input
 
     private static List<RecordingInput> ReadRecordings(string filePath)
     {
@@ -294,6 +314,10 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
         ];
     }
 
+    #endregion
+
+    #region Search & Suggestions
+
     private static async Task<SuggestionSet> SearchForSuggestionsAsync(
         RecordingInput record,
         MusicBrainzService mbService,
@@ -334,16 +358,18 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
             });
         }
 
-        foreach (var t in tasks)
-        {
-            try
+        await Task.WhenAll(
+            tasks.Select(async t =>
             {
-                await t();
-            }
-            catch
-            { /* ignore transient search failures */
-            }
-        }
+                try
+                {
+                    await t();
+                }
+                catch
+                { /* ignore transient search failures */
+                }
+            })
+        );
 
         return suggestions;
     }
@@ -400,12 +426,33 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
         suggestions.Normalize();
     }
 
+    private static readonly FrozenDictionary<string, string> LabelAbbreviations = new Dictionary<
+        string,
+        string
+    >(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Deutsche Grammophon"] = "DG",
+        ["His Master's Voice"] = "HMV",
+        ["Columbia Masterworks"] = "Columbia",
+        ["RCA Victor Red Seal"] = "RCA Red Seal",
+        ["Decca Record Company"] = "Decca",
+        ["Angel Records"] = "Angel",
+        ["Philips Classics"] = "Philips",
+        ["London Records"] = "London",
+        ["EMI Classics"] = "EMI",
+        ["Sony Classical"] = "Sony",
+        ["Warner Classics"] = "Warner",
+    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
     private static string? ShortenLabel(string? label)
     {
         if (IsNullOrEmpty(label))
             return null;
-        if (label.Equals("Deutsche Grammophon", StringComparison.OrdinalIgnoreCase))
-            return "DG";
+
+        foreach (var (full, abbr) in LabelAbbreviations)
+            if (label.Contains(full, StringComparison.OrdinalIgnoreCase))
+                return abbr;
+
         return label;
     }
 
@@ -453,8 +500,14 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
         return checks > 0 ? Math.Min(score, 100) : 0;
     }
 
+    #endregion
+
+    #region Results Display
+
     private static void DisplayResults(List<RecordingWithSuggestions> results)
     {
+        Console.NewLine();
+        Console.Rule("Search Results");
         Console.NewLine();
 
         int suggestionsFound = 0;
@@ -467,28 +520,38 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 
             string work = item.Original.Work ?? "(Unknown Work)";
             string composer = item.Original.Composer ?? "(none)";
-            Console.MarkupLine($"[bold cyan]{Console.Escape(work)}[/]");
-            Console.MarkupLine($"  [dim]Composer:[/] {Console.Escape(composer)}");
+
+            Console.MarkupLine(
+                $"[bold cyan]{Console.Escape(work)}[/] [dim]—[/] [yellow]{Console.Escape(composer)}[/]"
+            );
+
+            Console.MarkupLine("[dim]  Input:[/]");
             if (!IsNullOrEmpty(item.Original.Orchestra))
                 Console.MarkupLine(
-                    $"  [dim]Orchestra:[/] {Console.Escape(item.Original.Orchestra)}"
+                    $"    [dim]Orchestra:[/] {Console.Escape(item.Original.Orchestra)}"
                 );
             if (!IsNullOrEmpty(item.Original.Conductor))
                 Console.MarkupLine(
-                    $"  [dim]Conductor:[/] {Console.Escape(item.Original.Conductor)}"
+                    $"    [dim]Conductor:[/] {Console.Escape(item.Original.Conductor)}"
                 );
-            if (!IsNullOrEmpty(item.Original.Year))
-                Console.MarkupLine($"  [dim]Year:[/] {item.Original.Year}");
             if (!IsNullOrEmpty(item.Original.Label))
-                Console.MarkupLine($"  [dim]Label:[/] {Console.Escape(item.Original.Label)}");
+                Console.MarkupLine($"    [dim]Label:[/] {Console.Escape(item.Original.Label)}");
+            else
+                Console.MarkupLine("    [dim]Label:[/] [red](missing)[/]");
             if (!IsNullOrEmpty(item.Original.CatalogNumber))
                 Console.MarkupLine(
-                    $"  [dim]Catalog #:[/] {Console.Escape(item.Original.CatalogNumber)}"
+                    $"    [dim]Catalog #:[/] {Console.Escape(item.Original.CatalogNumber)}"
                 );
+            else
+                Console.MarkupLine("    [dim]Catalog #:[/] [red](missing)[/]");
+            if (!IsNullOrEmpty(item.Original.Year))
+                Console.MarkupLine($"    [dim]Year:[/] {item.Original.Year}");
+            else
+                Console.MarkupLine("    [dim]Year:[/] [red](missing)[/]");
 
             if (item.Suggestions.Items.Count > 0)
             {
-                Console.MarkupLine("  [yellow]Suggestions:[/]");
+                Console.MarkupLine("[green]  Found:[/]");
                 foreach (var bundle in item.Suggestions.Items)
                 {
                     string conf =
@@ -496,14 +559,18 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
                         : bundle.Confidence >= 50 ? "[yellow]"
                         : "[dim]";
 
-                    string label = IsNullOrEmpty(bundle.Label) ? "-" : Console.Escape(bundle.Label);
+                    string label = IsNullOrEmpty(bundle.Label)
+                        ? "[dim]-[/]"
+                        : $"[cyan]{Console.Escape(bundle.Label)}[/]";
                     string cat = IsNullOrEmpty(bundle.CatalogNumber)
-                        ? "-"
-                        : Console.Escape(bundle.CatalogNumber);
-                    string year = bundle.Year ?? "-";
+                        ? "[dim]-[/]"
+                        : $"[cyan]{Console.Escape(bundle.CatalogNumber)}[/]";
+                    string year = IsNullOrEmpty(bundle.Year)
+                        ? "[dim]-[/]"
+                        : $"[cyan]{bundle.Year}[/]";
 
                     Console.MarkupLine(
-                        $"    {conf}{bundle.Confidence, 3}%[/] {label} / {cat} / {year} [dim]({bundle.Source})[/]"
+                        $"    {conf}{bundle.Confidence, 3}%[/] Label: {label} │ Cat: {cat} │ Year: {year} [dim]({bundle.Source})[/]"
                     );
                 }
             }
@@ -517,7 +584,11 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
             results.Count
         );
     }
+
+    #endregion
 }
+
+#region Supporting Types
 
 internal record RecordingInput(
     string? Composer,
@@ -610,3 +681,5 @@ internal record FillOutputRow(
     string? Rating,
     string? Comment
 );
+
+#endregion

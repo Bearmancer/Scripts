@@ -343,11 +343,20 @@ function Invoke-ToolkitPython {
         [string[]]$ArgumentList
     )
 
-    $python = (Get-Command -Name python).Source
-    $arguments = @($Script:PythonToolkit) + $ArgumentList
-    & $python @arguments
-    if ($LASTEXITCODE -ne 0) {
-        throw "Python toolkit exited with code $LASTEXITCODE"
+    # Suppress deprecation warnings from outdated libraries
+    $originalWarnings = $env:PYTHONWARNINGS
+    $env:PYTHONWARNINGS = 'ignore::DeprecationWarning,ignore::UserWarning'
+
+    try {
+        $python = (Get-Command -Name python).Source
+        $arguments = @($Script:PythonToolkit) + $ArgumentList
+        & $python @arguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "Python toolkit exited with code $LASTEXITCODE"
+        }
+    }
+    finally {
+        $env:PYTHONWARNINGS = $originalWarnings
     }
 }
 
@@ -1485,8 +1494,9 @@ function Invoke-Whisper {
     .PARAMETER BatchSize
         Batch size for batched inference. Default: 4.
 
-    .PARAMETER NoVadFilter
-        If specified, disables Voice Activity Detection filter.
+    .PARAMETER VadFilter
+        If specified, enables Voice Activity Detection to skip non-speech.
+        WARNING: May cut valid audio at speech edges. Use for faster processing when edge accuracy is not critical.
 
     .PARAMETER RepetitionPenalty
         Penalty for repeated tokens. Default: 1.1.
@@ -1542,7 +1552,8 @@ function Invoke-Whisper {
         [int]$BatchSize = 4,
 
         [Parameter()]
-        [switch]$NoVadFilter,
+        [Alias('vad')]
+        [switch]$VadFilter,
 
         [Parameter()]
         [Alias('rp')]
@@ -1561,7 +1572,7 @@ function Invoke-Whisper {
 
     $item = Get-Item -Path $Path
     if ($item.PSIsContainer) {
-        Invoke-WhisperFolder -Directory $item -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -NoVadFilter:$NoVadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
+        Invoke-WhisperFolder -Directory $item -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -VadFilter:$VadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
         return
     }
 
@@ -1594,7 +1605,7 @@ function Invoke-Whisper {
         '--repetition_penalty', $RepetitionPenalty.ToString()
     )
 
-    if (-not $NoVadFilter) {
+    if ($VadFilter) {
         $whisperArgs += '--vad_filter', 'True'
         $whisperArgs += '--vad_min_silence_duration_ms', '500'
     }
@@ -1618,7 +1629,15 @@ function Invoke-Whisper {
 
     $whisperArgs += $item.FullName
 
-    & whisper-ctranslate2 @whisperArgs
+    # Suppress deprecation warnings from whisper dependencies
+    $originalWarnings = $env:PYTHONWARNINGS
+    $env:PYTHONWARNINGS = 'ignore::DeprecationWarning,ignore::UserWarning'
+    try {
+        & whisper-ctranslate2 @whisperArgs
+    }
+    finally {
+        $env:PYTHONWARNINGS = $originalWarnings
+    }
 
     Write-Host "[$( Get-Date -Format 'HH:mm:ss' )] Completed: $( $item.Name )" -ForegroundColor Green
 }
@@ -1693,7 +1712,8 @@ function Invoke-WhisperFolder {
         [int]$BatchSize = 4,
 
         [Parameter()]
-        [switch]$NoVadFilter,
+        [Alias('vad')]
+        [switch]$VadFilter,
 
         [Parameter()]
         [Alias('rp')]
@@ -1743,7 +1763,7 @@ function Invoke-WhisperFolder {
     foreach ($file in $toProcess) {
         $current++
         Write-Host "[$current/$( $toProcess.Count )] " -ForegroundColor DarkGray -NoNewline
-        Invoke-Whisper -Path $file.FullName -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -NoVadFilter:$NoVadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
+        Invoke-Whisper -Path $file.FullName -Language $Language -Model $Model -Translate:$Translate -Force:$Force -OutputDir $OutputDir -Batched:$Batched -BatchSize $BatchSize -VadFilter:$VadFilter -RepetitionPenalty $RepetitionPenalty -ExtraArgs $ExtraArgs
         Write-Host ""
     }
 

@@ -2,6 +2,8 @@ namespace CSharpScripts.Services.Sync.Google;
 
 public class GoogleSheetsService : IDisposable
 {
+    #region Constants & Fields
+
     private const string SheetName = "Scrobbles";
     private const string SpreadsheetTitle = "last.fm scrobbles";
 
@@ -17,6 +19,10 @@ public class GoogleSheetsService : IDisposable
     private readonly SheetsService service = new(Config.GoogleInitializer);
 
     private readonly Dictionary<string, Spreadsheet> spreadsheetCache = [];
+
+    #endregion
+
+    #region Lifecycle & Cache
 
     public void Dispose()
     {
@@ -50,6 +56,10 @@ public class GoogleSheetsService : IDisposable
 
     private void InvalidateCache(string spreadsheetId) =>
         spreadsheetCache.Remove(key: spreadsheetId);
+
+    #endregion
+
+    #region Spreadsheet CRUD
 
     private Sheet? FindSheet(string spreadsheetId, string sheetName, bool forceRefresh = false)
     {
@@ -107,6 +117,10 @@ public class GoogleSheetsService : IDisposable
             return false;
         }
     }
+
+    #endregion
+
+    #region Subsheet Management
 
     internal void EnsureSubsheetExists(
         string spreadsheetId,
@@ -401,6 +415,10 @@ public class GoogleSheetsService : IDisposable
         InvalidateCache(spreadsheetId: spreadsheetId);
     }
 
+    #endregion
+
+    #region Headers & Helpers
+
     private void EnsureHeadersForSheet(
         string spreadsheetId,
         string sheetName,
@@ -546,6 +564,10 @@ public class GoogleSheetsService : IDisposable
             }
         );
     }
+
+    #endregion
+
+    #region Last.fm Scrobble Operations
 
     internal DateTime? GetLatestScrobbleTime(string spreadsheetId)
     {
@@ -783,6 +805,10 @@ public class GoogleSheetsService : IDisposable
         InsertRows(spreadsheetId: spreadsheetId, records: records);
     }
 
+    #endregion
+
+    #region Row Operations
+
     private void InsertRows(string spreadsheetId, List<IList<object>> records)
     {
         int sheetId = GetSheetId(spreadsheetId: spreadsheetId);
@@ -1015,6 +1041,10 @@ public class GoogleSheetsService : IDisposable
         Console.Debug(message: "Appended {0} rows to sheet '{1}'", rows.Count, sheetName);
     }
 
+    #endregion
+
+    #region Spreadsheet Resolution & Export
+
     internal string GetOrCreateSpreadsheet(
         string? currentSpreadsheetId,
         string? defaultSpreadsheetId,
@@ -1227,4 +1257,6 @@ public class GoogleSheetsService : IDisposable
                 .ToList()
             ?? [];
     }
+
+    #endregion
 }

@@ -2,8 +2,11 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Resilience
 {
+    #region Execution
+
     public const int MaxRetries = 10;
-    public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(milliseconds: 3000);
+
+    public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(milliseconds: 1100);
     public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(seconds: 5);
     public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(minutes: 5);
 
@@ -146,6 +149,10 @@ public static class Resilience
             await Task.Delay(ThrottleDelay - elapsed, cancellationToken: ct);
     }
 
+    #endregion
+
+    #region Error Detection
+
     public static bool IsTransientError(string? message) =>
         message is { }
         && (
@@ -178,7 +185,11 @@ public static class Resilience
         )
         || message.Contains(value: "quota", comparisonType: StringComparison.OrdinalIgnoreCase)
             && message.Contains(value: "day", comparisonType: StringComparison.OrdinalIgnoreCase);
+
+    #endregion
 }
+
+#region Exceptions
 
 public sealed class DailyQuotaExceededException(string service, string message)
     : Exception($"Daily quota exceeded for {service}. Try again tomorrow. Original: {message}")
@@ -200,3 +211,5 @@ public sealed class RetryExhaustedException(
     internal int Attempts { get; } = attempts;
     internal TimeSpan TotalWait { get; } = totalWait;
 }
+
+#endregion

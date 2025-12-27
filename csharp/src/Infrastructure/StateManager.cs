@@ -2,6 +2,8 @@ namespace CSharpScripts.Infrastructure;
 
 public static class StateManager
 {
+    #region Configuration & Core Operations
+
     public const string LastFmSyncFile = "lastfm/sync.json";
     public const string LastFmScrobblesFile = "lastfm/scrobbles.json";
     public const string YouTubeSyncFile = "youtube/sync.json";
@@ -70,6 +72,10 @@ public static class StateManager
 
     private const string YouTubePlaylistsSubdirectory = "youtube/playlists";
     private const string YouTubeDeletedSubdirectory = "youtube/deleted";
+
+    #endregion
+
+    #region YouTube Playlist Cache
 
     private static string YouTubePlaylistsDirectory =>
         Combine(path1: RootDirectory, path2: YouTubePlaylistsSubdirectory);
@@ -211,6 +217,10 @@ public static class StateManager
         return name.Trim().TrimEnd(trimChar: '.');
     }
 
+    #endregion
+
+    #region Release Cache
+
     private static string ReleaseCachePath =>
         Combine(path1: Paths.StateDirectory, path2: "releases");
 
@@ -275,4 +285,6 @@ public static class StateManager
 
     private static string GetReleasePath(string releaseId) =>
         Combine(path1: ReleaseCachePath, $"{SanitizeFileName(name: releaseId)}.json");
+
+    #endregion
 }

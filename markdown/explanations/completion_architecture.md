@@ -6,14 +6,119 @@
 
 | Scenario | Time | Delta |
 |----------|------|-------|
-| pwsh -NoProfile | ~273ms | baseline |
-| PSCompletions alone (fresh) | ~1537ms | +1264ms |
-| Carapace alone (fresh) | ~1245ms | +972ms |
-| **Current Profile** | **~1839ms** | **+1567ms** |
-| With PSFzf (eager) | ~2200ms | +1927ms |
-| With PSFzf (lazy) | ~1839ms | +0ms startup |
+| pwsh -NoProfile | ~284ms | baseline |
+| PSCompletions alone (fresh) | ~314ms | module import only |
+| PSFzf alone (fresh) | ~489ms | module import only |
+| Carapace init | ~324ms | completer registration |
+| **Current Profile** | **~2,342ms** | **+2,058ms** |
 
-**Key Optimization Applied:** PSFzf lazy loading saves ~400ms at startup.
+**Verified Component Times (Dec 26, 2025):**
+
+| Component | Import Time | Notes |
+|-----------|-------------|-------|
+| PSFzf | **489ms** | ✅ Lazy loaded (saves 489ms) |
+| Carapace | **324ms** | 670 completers |
+| PSCompletions | **314ms** | Tab handler + menu |
+| ScriptsToolkit | **128ms** | Custom functions |
+| PSReadLine | **73ms** | Pre-loaded by PowerShell |
+| argc | **61ms** | dotnet, Continwhisper completers |
+| ThreadJob | **24ms** | Used by profile |
+
+#!/usr/bin/env dotnet fsi
+
+#r "nuget: Spectre.Console"
+#r "nuget: Polly"
+
+open System
+open System.Diagnostics
+open System.IO
+open System.Text.Json
+open Spectre.Console
+open Polly
+
+let models = [| "tiny.en"; "distil-large-v3.5"; "distil-medium.en"; "distil-small.en" |]
+let implementations = [| "whisper-ctranslate2"; "faster-whisper"; "whisper-vulkan"; "faster-whisper-xxl" |]
+
+let log level message =
+    let color = match level with "SUCCESS" -> Color.Green | "WARNING" -> Color.Yellow | "ERROR" | "CRITICAL" -> Color.Red | _ -> Color.Blue
+    AnsiConsole.MarkupLine($"[{color}]{DateTime.Now:yyyy/MM/dd HH:mm:ss} | {level,-11} | {message}[/]")
+
+let run command args =
+    Policy.Handle<Exception>(fun ex -> ex.Message.Contains("timeout") || ex.Message.Contains("connection"))
+        .WaitAndRetry(10, fun i -> TimeSpan.FromSeconds(min (3.0 * pown 2.0 i) 300.0))
+        .Execute(fun () ->
+            log "INFORMATION" $"Executing: {command} {String.concat " " args}"
+            use proc = Process.Start(ProcessStartInfo(command, String.concat " " args, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false))
+            proc.WaitForExit()
+            if proc.ExitCode <> 0 then failwith (proc.StandardError.ReadToEnd()))
+
+let commandExists command =
+    try
+        use proc = Process.Start(ProcessStartInfo(command, "--version", RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true))
+        proc.WaitForExit()
+        proc.ExitCode = 0
+    with _ -> false
+
+let ensureDependencies () =
+    Environment.GetEnvironmentVariable("HF_TOKEN") |> function
+    | null -> failwith "HF_TOKEN not set. Create at: https://huggingface.co/settings/tokens"
+    | _ -> log "SUCCESS" "HF_TOKEN found"
+
+    implementations |> Array.iter (fun impl ->
+        if not (commandExists impl) then
+            log "INFORMATION" $"Installing {impl}..."
+            run "python" [| "-m"; "pip"; "install"; impl; "--upgrade" |]
+            log "SUCCESS" $"Installed {impl}")
+
+let parseSubtitles path =
+    if File.Exists(path) then
+        File.ReadAllText(path).Split([| "\n\n"; "\r\n\r\n" |], StringSplitOptions.RemoveEmptyEntries)
+        |> Array.map (fun s -> s.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        |> Array.filter (fun l -> l.Length >= 3)
+        |> Array.map (fun l -> l |> Array.skip 2 |> String.concat " ")
+        |> fun segs -> let words = segs |> Array.collect (fun t -> t.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                       (words.Length, segs.Length, if segs.Length > 0 then segs |> Array.averageBy (float << String.length) else 0.0)
+    else (0, 0, 0.0)
+
+let benchmark impl model input =
+    let output = $"output_{impl}_{model}.srt"
+    let args = if impl = "whisper-vulkan" then [| "--output-srt"; "--language"; "en"; "--model"; model; input |]
+               else [| "--output_format"; "srt"; "--language"; "en"; "--model"; model; "--output_dir"; "."; input |]
+    log "INFORMATION" $"Running {impl}/{model}..."
+    let sw = Stopwatch.StartNew()
+    try
+        run impl args; sw.Stop()
+        let (wc, sc, avg) = parseSubtitles output
+        log "SUCCESS" $"Completed {impl}/{model} in {sw.Elapsed.TotalSeconds:F2}s"
+        (impl, model, sw.Elapsed.TotalSeconds, wc, sc, avg, output, true, "")
+    with ex ->
+        sw.Stop(); log "ERROR" $"Failed {impl}/{model}: {ex.Message}"
+        (impl, model, sw.Elapsed.TotalSeconds, 0, 0, 0.0, "", false, ex.Message)
+
+let display results =
+    let baseline = results |> List.filter (fun (_, _, _, _, _, _, _, success, _) -> success) |> List.map (fun (_, _, dur, _, _, _, _, _, _) -> dur) |> List.min
+    let table = Table(Border = TableBorder.Rounded, Title = TableTitle("Whisper Implementation Benchmark Results"))
+    table.AddColumns("Implementation", "Model", "Duration (s)", "Multiplier", "Words", "Segments", "Avg Seg Len", "Status") |> ignore
+
+    results |> List.sortBy (fun (_, _, dur, _, _, _, _, success, _) -> (not success, dur / baseline))
+    |> List.iter (fun (impl, model, dur, wc, sc, avg, _, success, err) ->
+        let (color, mult, durStr, status) =
+            if success then (Color.Green, $"{dur / baseline:F2}x", $"{dur:F2}", "✓")
+            else (Color.Red, "N/A", "N/A", $"✗ {err.Substring(0, min 30 err.Length)}")
+        table.AddRow(Markup(impl), Markup(model), Markup(durStr, Style(color)), Markup(mult, Style(color)),
+                     Markup(string wc, Style(color)), Markup(string sc, Style(color)), Markup($"{avg:F1}", Style(color)), Markup(status, Style(color))) |> ignore)
+
+    AnsiConsole.Write(table)
+    File.WriteAllText("benchmark_results.json", JsonSerializer.Serialize(results, JsonSerializerOptions(WriteIndented = true)))
+    log "SUCCESS" "Results saved to benchmark_results.json"
+
+let input = fsi.CommandLineArgs |> Array.skip 1 |> Array.tryHead |> Option.defaultWith (fun () -> failwith "Usage: dotnet fsi benchmark.fsx <input-file>")
+if not (File.Exists(input)) then failwith $"Input not found: {input}"
+
+log "INFORMATION" $"Starting benchmark: {input}"
+ensureDependencies ()
+implementations |> Array.collect (fun impl -> models |> Array.map (fun model -> benchmark impl model input)) |> Array.toList |> display
+log "INFORMATION" "All implementations use OpenAI Whisper models with different backends (CTranslate2/Vulkan)"**Key Optimization Applied:** PSFzf lazy loading saves ~489ms at startup.
 
 ## Overview
 

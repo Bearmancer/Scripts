@@ -1,5 +1,7 @@
 namespace CSharpScripts.CLI.Commands;
 
+#region JSON Configuration
+
 file static class JsonOptions
 {
     internal static readonly JsonSerializerOptions Indented = new()
@@ -14,8 +16,12 @@ file static class JsonOptions
     };
 }
 
+#endregion
+
 public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Settings>
 {
+    #region Settings
+
     public sealed class Settings : CommandSettings
     {
         [CommandOption("-q|--query")]
@@ -87,7 +93,11 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         }
     }
 
+    #endregion
+
     private static readonly HashSet<string> LoggedWorkHierarchyWarnings = [];
+
+    #region Execute - Search Mode
 
     public override async Task<int> ExecuteAsync(
         CommandContext context,
@@ -307,6 +317,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         return column is "ID" or "Source" or "Title" ? value : Console.Escape(text: value);
     }
 
+    #endregion
+
+    #region Type Filtering & Scoring
+
     private static bool IsTrackResult(SearchResult r)
     {
         if (IsNullOrEmpty(value: r.ReleaseType))
@@ -475,6 +489,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         return $"[link={url}]{escapedTitle}[/]";
     }
 
+    #endregion
+
+    #region Execute - Lookup Mode (--id)
+
     private static async Task<int> PerformLookupAsync(Settings settings, CancellationToken ct)
     {
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
@@ -573,7 +591,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             bool deepSearch = settings.AutoConfirm;
             if (!deepSearch)
             {
-                string choice = AnsiConsole.Prompt(
+                string choice = Console.Prompt(
                     new SelectionPrompt<string>()
                         .Title(title: "Fetch full track metadata (recordings, composers, etc)?")
                         .AddChoices("Yes", "No")
@@ -659,6 +677,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         Console.NewLine();
         return 0;
     }
+
+    #endregion
+
+    #region Work Grouping & Display
 
     internal static List<WorkSummary> GroupTracksByWork(List<TrackInfo> tracks)
     {
@@ -775,6 +797,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
             );
         }
     }
+
+    #endregion
+
+    #region Track Enrichment with Progress
 
     private static async Task<List<TrackInfo>> EnrichTracksWithProgressAsync(
         IMusicService service,
@@ -919,8 +945,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
         Console.Suppress = true;
 
         var fillTimer = System.Diagnostics.Stopwatch.StartNew();
-        await AnsiConsole
-            .Progress()
+        await Console
+            .CreateProgress()
             .AutoClear(enabled: true)
             .HideCompleted(enabled: false)
             .Columns(
@@ -1032,4 +1058,6 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
         return enrichedTracks;
     }
+
+    #endregion
 }

@@ -1,7 +1,6 @@
-using DiscogsVideoDto = ParkSquare.Discogs.Dto.Video;
-using Version = ParkSquare.Discogs.Dto.Version;
-
 namespace CSharpScripts.Services.Music;
+
+#region Client Configuration
 
 internal sealed class DiscogsClientConfig(string token) : IClientConfig
 {
@@ -9,8 +8,12 @@ internal sealed class DiscogsClientConfig(string token) : IClientConfig
     public string BaseUrl => "https://api.discogs.com";
 }
 
+#endregion
+
 public sealed class DiscogsService : IMusicService
 {
+    #region Constructor & Properties
+
     public DiscogsService(string? token)
     {
         string validToken =
@@ -25,6 +28,10 @@ public sealed class DiscogsService : IMusicService
 
     internal DiscogsClient Client { get; }
     public MusicSource Source => MusicSource.Discogs;
+
+    #endregion
+
+    #region Search Operations
 
     public async Task<List<SearchResult>> SearchAsync(
         string query,
@@ -69,6 +76,10 @@ public sealed class DiscogsService : IMusicService
             ct: ct
         );
     }
+
+    #endregion
+
+    #region Release Data Retrieval
 
     public async Task<ReleaseData> GetReleaseAsync(
         string releaseId,
@@ -199,6 +210,10 @@ public sealed class DiscogsService : IMusicService
         return new ReleaseData(Info: info, Tracks: tracks);
     }
 
+    #endregion
+
+    #region Notes Parsing
+
     private static TimeSpan? ParseDuration(string? duration) =>
         TimeSpan.TryParse(s: duration, out var result) ? result : null;
 
@@ -286,6 +301,10 @@ public sealed class DiscogsService : IMusicService
         return null;
     }
 
+    #endregion
+
+    #region Advanced Search
+
     public async Task<List<DiscogsSearchResult>> SearchAdvancedAsync(
         string? artist = null,
         string? release = null,
@@ -369,6 +388,10 @@ public sealed class DiscogsService : IMusicService
             r.Style?.ToList(),
             r.Barcode?.ToList()
         );
+
+    #endregion
+
+    #region Entity Lookup
 
     public async Task<DiscogsRelease?> GetReleaseAsync(
         int releaseId,
@@ -506,7 +529,11 @@ public sealed class DiscogsService : IMusicService
         );
     }
 
-    private static DiscogsVersion MapVersion(Version v) =>
+    #endregion
+
+    #region Entity Mappers
+
+    private static DiscogsVersion MapVersion(ParkSquare.Discogs.Dto.Version v) =>
         new(
             Id: v.ReleaseId,
             v.Title ?? "",
@@ -599,6 +626,10 @@ public sealed class DiscogsService : IMusicService
                 : null
         );
 
+    #endregion
+
+    #region Execution & Helpers
+
     private static async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken ct)
     {
         try
@@ -630,4 +661,6 @@ public sealed class DiscogsService : IMusicService
         title?.Contains(value: " - ") == true ? title.Split(separator: " - ")[0].Trim() : null;
 
     private static int? ParseYear(string? year) => int.TryParse(s: year, out int y) ? y : null;
+
+    #endregion
 }

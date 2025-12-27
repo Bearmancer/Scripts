@@ -46,6 +46,7 @@ global using Spectre.Console;
 global using Spectre.Console.Cli;
 global using Spectre.Console.Rendering;
 global using Console = CSharpScripts.Infrastructure.Console;
+global using DiscogsVideoDto = ParkSquare.Discogs.Dto.Video;
 global using Scrobble = CSharpScripts.Services.Sync.LastFm.Scrobble;
 global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;

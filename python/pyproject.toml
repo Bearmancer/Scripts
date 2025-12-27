@@ -1,12 +1,18 @@
 [tool.basedpyright]
-typeCheckingMode = "strict"
+typeCheckingMode = "standard"
 
-exclude = ["last.fm Scrobble Updater"]
-
+# Suppress errors from untyped third-party libraries
 reportMissingTypeStubs = false
+reportUnknownVariableType = false
 reportUnknownMemberType = false
 reportUnknownArgumentType = false
-reportUnknownVariableType = false
-reportUnknownParameterType = false
-reportUnknownLambdaType = false
 reportAny = false
+reportExplicitAny = false
+
+# Allow implicit relative imports (toolkit scripts run directly, not as packages)
+reportImplicitRelativeImport = false
+
+# Allow common patterns
+reportUnusedCallResult = false
+reportCallInDefaultInitializer = false
+reportImplicitOverride = false

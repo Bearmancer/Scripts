@@ -2,6 +2,8 @@ namespace CSharpScripts.Orchestrators;
 
 public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 {
+    #region Fields & Constants
+
     private static readonly IReadOnlyList<object> VideoHeaders =
     [
         "Title",
@@ -18,12 +20,20 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 
     private readonly YouTubeService youtubeService = new();
 
+    #endregion
+
+    #region Lifecycle
+
     public void Dispose()
     {
         youtubeService?.Dispose();
         sheetsService?.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    #endregion
+
+    #region Execute Entry Points
 
     internal async Task ExecuteAsync()
     {
@@ -184,6 +194,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         return null;
     }
 
+    #endregion
+
+    #region Optimized Sync (Change Detection)
+
     private async Task ExecuteOptimizedAsync(string spreadsheetId)
     {
         Console.Debug(message: "Last change: {0:yyyy/MM/dd HH:mm:ss}", state.LastUpdated);
@@ -192,7 +206,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         SaveState();
 
         List<PlaylistSummary> summaries = [];
-        await AnsiConsole
+        await Console
             .Status()
             .Spinner(spinner: Spinner.Known.Dots)
             .StartAsync(
@@ -292,6 +306,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
             SaveState();
     }
 
+    #endregion
+
+    #region Full Sync Mode
+
     private async Task ProcessModifiedPlaylistsAsync(
         List<string> playlistIds,
         List<PlaylistSummary> summaries,
@@ -338,8 +356,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 
         Console.Suppress = true;
 
-        await AnsiConsole
-            .Progress()
+        await Console
+            .CreateProgress()
             .AutoClear(enabled: true)
             .HideCompleted(enabled: false)
             .Columns(
@@ -529,8 +547,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 
         Console.Suppress = true;
 
-        await AnsiConsole
-            .Progress()
+        await Console
+            .CreateProgress()
             .AutoClear(enabled: true)
             .HideCompleted(enabled: false)
             .Columns(
@@ -654,6 +672,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         );
     }
 
+    #endregion
+
+    #region Playlist Processing
+
     private void FinalizeSpreadsheet(string spreadsheetId, string? firstPlaylistTitle)
     {
         if (!IsNullOrEmpty(value: firstPlaylistTitle))
@@ -683,8 +705,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 
         Console.Suppress = true;
 
-        await AnsiConsole
-            .Progress()
+        await Console
+            .CreateProgress()
             .AutoClear(enabled: true)
             .HideCompleted(enabled: false)
             .Columns(
@@ -817,6 +839,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         SaveState();
     }
 
+    #endregion
+
+    #region State & Spreadsheet Management
+
     private string GetOrCreateSpreadsheet() =>
         sheetsService.GetOrCreateSpreadsheet(
             currentSpreadsheetId: state.SpreadsheetId,
@@ -839,6 +865,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         Console.Warning(message: "Playlist deleted: {0}", snapshot.Title);
         Console.Info(message: "Archived to: {0}", archivedPath);
     }
+
+    #endregion
+
+    #region Sheet Writing
 
     private void WritePlaylist(
         YouTubePlaylist playlist,
@@ -963,6 +993,10 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         );
     }
 
+    #endregion
+
+    #region Helpers
+
     private static IList<object> MapVideoToRow(YouTubeVideo v) =>
         [
             $"=HYPERLINK(\"{v.VideoUrl}\", \"{EscapeFormulaString(value: v.Title)}\")",
@@ -1026,4 +1060,6 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
         var playlists = await youtubeService.GetPlaylistSummariesAsync(ct: ct);
         Console.Info(message: "Playlists: {0}", playlists.Count);
     }
+
+    #endregion
 }

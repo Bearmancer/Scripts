@@ -2,6 +2,8 @@ namespace CSharpScripts.Services.Sync.YouTube;
 
 public class YouTubeService : IDisposable
 {
+    #region Configuration
+
     private const int MaxResultsPerPage = 50;
 
     private const string PLAYLIST_FIELDS =
@@ -19,6 +21,10 @@ public class YouTubeService : IDisposable
         service?.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    #endregion
+
+    #region Playlist Summaries
 
     internal async Task<List<PlaylistSummary>> GetPlaylistSummariesAsync(CancellationToken ct)
     {
@@ -108,6 +114,10 @@ public class YouTubeService : IDisposable
         return videoIds;
     }
 
+    #endregion
+
+    #region Playlist Fetching
+
     internal async Task<List<YouTubePlaylist>> GetPlaylistMetadataAsync(CancellationToken ct)
     {
         Console.Info(message: "Fetching playlist metadata...");
@@ -193,6 +203,10 @@ public class YouTubeService : IDisposable
         return playlists;
     }
 
+    #endregion
+
+    #region Video Details
+
     internal async Task<List<YouTubeVideo>> GetVideoDetailsForIdsAsync(
         List<string> videoIds,
         Func<List<YouTubeVideo>, Task> onBatchComplete,
@@ -249,4 +263,6 @@ public class YouTubeService : IDisposable
 
     private static TimeSpan ParseDuration(string? isoDuration) =>
         IsNullOrEmpty(value: isoDuration) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(s: isoDuration);
+
+    #endregion
 }

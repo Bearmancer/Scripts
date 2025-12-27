@@ -1,5 +1,7 @@
 namespace CSharpScripts.CLI.Commands;
 
+#region Clean Local Command
+
 public sealed class CleanLocalCommand : Command<CleanLocalCommand.Settings>
 {
     public override int Execute(
@@ -52,6 +54,10 @@ public sealed class CleanLocalCommand : Command<CleanLocalCommand.Settings>
         public string Service { get; init; } = "all";
     }
 }
+
+#endregion
+
+#region Clean Purge Command
 
 public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 {
@@ -233,3 +239,5 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
         public string Service { get; init; } = "all";
     }
 }
+
+#endregion
