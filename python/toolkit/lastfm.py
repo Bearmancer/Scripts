@@ -1,11 +1,25 @@
+"""Last.fm scrobble sync to Google Sheets.
+
+Syncs recent Last.fm scrobbles to a Google Sheets spreadsheet.
+Requires the following environment variables:
+    - LASTFM_API_KEY: Last.fm API key
+    - LASTFM_API_SECRET: Last.fm API secret
+
+Google Sheets authentication uses OAuth2 credentials stored at:
+    ~/Services/last.fm Scrobble Updater/Google Sheets Credentials.json
+    ~/Services/last.fm Scrobble Updater/token.json
+
+Usage:
+    toolkit lastfm  # Syncs new scrobbles since last sync
+"""
 import os
 import pickle
 from datetime import datetime
 from pathlib import Path
 
-import gspread  # type: ignore[import-untyped]
-import pylast  # type: ignore[import-untyped]
-from google.auth.transport.requests import Request  # type: ignore[import-untyped]
+import gspread
+import pylast
+from google.auth.transport.requests import Request
 
 from toolkit.logging_config import get_logger
 
@@ -79,9 +93,9 @@ def prepare_track_data(tracks: list[pylast.PlayedTrack]) -> list[list[str]]:
         timestamp_str = datetime.fromtimestamp(int(timestamp)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        title = str(track.track.title) if track.track.title else ""
-        album = str(track.album) if track.album else ""
-        artist_name = str(track.track.artist.name) if track.track.artist else ""
+        title: str = str(track.track.title) if track.track.title else ""  # type: ignore[reportUnknownArgumentType]
+        album: str = str(track.album) if track.album else ""
+        artist_name: str = str(track.track.artist.name) if track.track.artist else ""  # type: ignore[reportUnknownArgumentType,reportUnknownMemberType]
         values.append(
             [
                 timestamp_str,

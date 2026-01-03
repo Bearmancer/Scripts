@@ -3,11 +3,11 @@ import random
 import subprocess
 import textwrap
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
-import ffmpeg  # type: ignore[import-untyped]
-import pyperclip  # type: ignore[import-untyped]
-from PIL import Image, ImageDraw, ImageFont  # type: ignore[import-untyped]
+import ffmpeg
+import pyperclip
+from PIL import Image, ImageDraw, ImageFont
 
 from toolkit.filesystem import run_command
 from toolkit.logging_config import get_logger
@@ -31,8 +31,8 @@ MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
 def extract_chapters(video_files: list[Path]) -> None:
     """Extract individual chapters from video files."""
     for video_file in video_files:
-        probe = ffmpeg.probe(str(video_file), show_chapters=None)
-        chapters = probe.get("chapters", [])
+        probe: dict[str, Any] = ffmpeg.probe(str(video_file), show_chapters=None)
+        chapters: list[dict[str, Any]] = probe.get("chapters", [])
 
         if len(chapters) <= 1:
             logger.info(f"No chapters in {video_file.name}")
@@ -47,7 +47,7 @@ def extract_chapters(video_files: list[Path]) -> None:
                 / f"{parent_directory.name} - Chapter {formatted_index}{video_file.suffix}"
             )
 
-            (
+            (  # type: ignore[reportUnknownMemberType]
                 ffmpeg.input(
                     str(video_file), ss=chapter["start_time"], to=chapter["end_time"]
                 )
@@ -160,8 +160,10 @@ def print_video_resolution(video_files: list[Path]) -> None:
 
 def get_video_resolution(filepath: Path) -> dict[str, int] | None:
     """Get video resolution using ffprobe."""
-    probe = ffmpeg.probe(str(filepath))
-    video_streams = [s for s in probe["streams"] if s["codec_type"] == "video"]
+    probe: dict[str, Any] = ffmpeg.probe(str(filepath))
+    video_streams: list[dict[str, Any]] = [
+        s for s in probe["streams"] if s["codec_type"] == "video"
+    ]
 
     if not video_streams:
         return None
@@ -174,7 +176,7 @@ def get_video_resolution(filepath: Path) -> dict[str, int] | None:
 
 def get_video_info(video_path: Path) -> VideoInfo:
     """Get comprehensive video info (duration, width, height)."""
-    probe = ffmpeg.probe(
+    probe: dict[str, Any] = ffmpeg.probe(
         str(video_path),
         v="error",
         select_streams="v:0",
@@ -226,8 +228,8 @@ def create_gif_optimized(
 
 def get_video_info_for_gif(input_path: Path) -> tuple[float, int]:
     """Get FPS and width for GIF creation."""
-    probe = ffmpeg.probe(str(input_path))
-    video_stream = next(
+    probe: dict[str, Any] = ffmpeg.probe(str(input_path))
+    video_stream: dict[str, Any] | None = next(
         (s for s in probe["streams"] if s["codec_type"] == "video"), None
     )
 
@@ -250,7 +252,7 @@ def create_gif(
 ) -> float:
     """Create a single GIF and return its size in MiB."""
     (
-        ffmpeg.input(str(input_path), ss=start, t=duration)
+        ffmpeg.input(str(input_path), ss=start, t=duration)  # type: ignore[reportUnknownMemberType]
         .filter("fps", fps=fps)
         .filter("scale", scale, -1, flags="lanczos")
         .output(str(output_path), format="gif", gifflags="+transdiff", y=True)
@@ -300,16 +302,17 @@ def extract_frame(
     target_width: int | None = None,
 ) -> Image.Image:
     """Extract a single frame from video at specified timestamp."""
-    input_stream = ffmpeg.input(str(video_path), ss=timestamp)
+    input_stream = ffmpeg.input(str(video_path), ss=timestamp)  # type: ignore[reportUnknownMemberType]
     if target_width:
         aspect_ratio = video_info["height"] / video_info["width"]
         target_height = int(target_width * aspect_ratio)
-        input_stream = input_stream.filter("scale", target_width, target_height)
+        input_stream = input_stream.filter("scale", target_width, target_height)  # type: ignore[reportUnknownMemberType]
 
-    out, _ = input_stream.output(
+    out: bytes
+    out, _ = input_stream.output(  # type: ignore[reportUnknownMemberType]
         "pipe:", vframes=1, format="image2", vcodec="mjpeg"
     ).run(capture_stdout=True, capture_stderr=True)
-    img = Image.open(io.BytesIO(out))
+    img = Image.open(io.BytesIO(out))  # type: ignore[reportUnknownArgumentType]
     return add_timestamp(img, timestamp)
 
 

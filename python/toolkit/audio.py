@@ -1,13 +1,14 @@
 import os
 import re
 import subprocess
+from typing import Any
 
-import ffmpeg  # type: ignore[import-untyped]
-import pyperclip  # type: ignore[import-untyped]
+import ffmpeg
+import pyperclip
 from pathlib import Path
-from pathvalidate import sanitize_filename  # type: ignore[import-untyped]
-from tqdm import tqdm  # type: ignore[import-untyped]
-from unidecode import unidecode  # type: ignore[import-untyped]
+from pathvalidate import sanitize_filename
+from tqdm import tqdm
+from unidecode import unidecode
 
 from toolkit.cuesheet import process_cue_file
 from toolkit.filesystem import run_command
@@ -205,7 +206,9 @@ def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
 
     peaks: list[float] = []
 
-    _, error = (
+    _: Any
+    error: Any
+    _, error = (  # type: ignore[reportUnknownMemberType]
         ffmpeg.input(str(dff_file))
         .audio.filter("volumedetect")
         .output("null", format="null")
@@ -213,9 +216,11 @@ def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
     )
 
     if isinstance(error, (bytes, bytearray)):
-        error = error.decode("utf-8", errors="ignore")
+        error_str: str = error.decode("utf-8", errors="ignore")
+    else:
+        error_str = str(error)
 
-    if m := re.search(r"max_volume: (-\d+\.?\d*) dB", error):
+    if m := re.search(r"max_volume: (-\d+\.?\d*) dB", error_str):
         peaks.append(float(m.group(1)))
 
     if not peaks:
@@ -302,7 +307,7 @@ def convert_to_mp3(directory: Path) -> None:
     for f in tqdm(flac_files, desc="Converting to MP3"):
         output = destination / f.with_suffix(".mp3").name
 
-        (
+        (  # type: ignore[reportUnknownMemberType]
             ffmpeg.input(str(f))
             .output(
                 str(output), acodec="libmp3lame", audio_bitrate="320k", format="mp3"

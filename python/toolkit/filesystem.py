@@ -2,8 +2,8 @@ import json
 import subprocess
 from pathlib import Path
 
-from py3createtorrent import create_torrent  # type: ignore[import-untyped]
-from unidecode import unidecode  # type: ignore[import-untyped]
+from py3createtorrent import create_torrent
+from unidecode import unidecode
 
 from toolkit.logging_config import get_logger
 
