@@ -36,7 +36,6 @@ global using MetaBrainz.MusicBrainz;
 global using MetaBrainz.MusicBrainz.Interfaces.Browses;
 global using MetaBrainz.MusicBrainz.Interfaces.Entities;
 global using MetaBrainz.MusicBrainz.Interfaces.Searches;
-global using MetaBrainz.MusicBrainz.Objects;
 global using ParkSquare.Discogs;
 global using ParkSquare.Discogs.Dto;
 global using Polly;

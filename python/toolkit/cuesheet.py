@@ -2,11 +2,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import chardet  # type: ignore[import-untyped]
-import ffmpeg  # type: ignore[import-untyped]
-from deflacue.deflacue import CueParser  # type: ignore[import-untyped]
-from pathvalidate import sanitize_filename  # type: ignore[import-untyped]
-from tqdm import tqdm  # type: ignore[import-untyped]
+import chardet
+import ffmpeg
+from deflacue.deflacue import CueParser
+from pathvalidate import sanitize_filename
+from tqdm import tqdm
 
 
 @dataclass
@@ -103,7 +103,7 @@ def process_tracks(
             str((cue_file.parent / p if not p.is_absolute() else p).resolve()),
             ss=f"{track.start_sec:.6f}",
         )
-        (
+        (  # type: ignore[reportUnknownMemberType]
             stream.audio.filter("volume", volume=f"{volume_adjustment}dB")
             .output(
                 str(output_path),

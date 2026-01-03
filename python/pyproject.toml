@@ -1,18 +1,36 @@
 [tool.basedpyright]
-typeCheckingMode = "standard"
+include = ["toolkit"]
+typeCheckingMode = "strict"
 
-# Suppress errors from untyped third-party libraries
+# Suppress errors from untyped third-party libraries (ffmpeg-python, pylast, gspread, etc.)
 reportMissingTypeStubs = false
-reportUnknownVariableType = false
 reportUnknownMemberType = false
+reportUnknownVariableType = false
 reportUnknownArgumentType = false
-reportAny = false
-reportExplicitAny = false
 
-# Allow implicit relative imports (toolkit scripts run directly, not as packages)
-reportImplicitRelativeImport = false
-
-# Allow common patterns
-reportUnusedCallResult = false
-reportCallInDefaultInitializer = false
-reportImplicitOverride = false
+reportImportCycles = "error"
+reportPropertyTypeMismatch = "error"
+reportFunctionMemberAccess = "error"
+reportPrivateUsage = "error"
+reportTypeCommentUsage = "error"
+reportIncompatibleMethodOverride = "error"
+reportIncompatibleVariableOverride = "error"
+reportInconsistentConstructor = "error"
+reportOverlappingOverload = "error"
+reportUninitializedInstanceVariable = "error"
+reportCallInDefaultInitializer = "error"
+reportUnnecessaryIsInstance = "error"
+reportUnnecessaryCast = "error"
+reportUnnecessaryComparison = "error"
+reportUnnecessaryContains = "error"
+reportAssertAlwaysTrue = "error"
+reportSelfClsParameterName = "error"
+reportImplicitStringConcatenation = "error"
+reportInvalidStubStatement = "error"
+reportIncompleteStub = "error"
+reportUnsupportedDunderAll = "error"
+reportUnusedImport = "error"
+reportDuplicateImport = "error"
+reportUndefinedVariable = "error"
+reportArgumentType = "error"
+reportAttributeAccessIssue = "error"

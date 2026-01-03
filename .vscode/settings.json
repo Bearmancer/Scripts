@@ -1,0 +1,9 @@
+{
+  // === C# Configuration ===
+  "dotnet.defaultSolution": "csharp/CSharpScripts.csproj",
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "fullSolution",
+  "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "fullSolution",
+
+  // === Python Configuration ===
+  "basedpyright.analysis.configFilePath": "${workspaceFolder}/python",
+}
