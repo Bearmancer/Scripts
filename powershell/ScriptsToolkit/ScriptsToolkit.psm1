@@ -1,3 +1,4 @@
+#region ScriptsToolkit
 # ScriptsToolkit
 
 class WhisperLanguageCompleter : System.Management.Automation.IValidateSetValuesGenerator {
@@ -504,67 +505,128 @@ function Register-AllSyncTasks {
     Register-SyncTask -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '10:00' -Description 'Sync YouTube playlists'
 }
 
-function View-SyncLog {
+#region SyncLog
+function Get-SyncLog {
     <#
     .SYNOPSIS
-    View sync session logs in a formatted table.
+    Get sync session logs in a formatted table.
 
     .DESCRIPTION
-    Displays sync session history from JSONL log files. Shows session ID, service,
-    timestamp, status (OK/FAIL/RUN), and summary for each sync session.
-    Supports filtering by service and session ID.
+    Displays sync session summaries from JSONL log files. Use -Verbose for entry-level
+    detail showing individual log events.
 
     .PARAMETER Service
     Filter by service: 'youtube', 'lastfm', or 'all' (default).
 
-    .PARAMETER Count
-    Number of recent sessions to display. Default is 20.
+    .PARAMETER Size
+    Number of rows to display. Default is 10.
 
-    .PARAMETER All
-    Show all sessions instead of limiting to Count.
+    .PARAMETER Level
+    Filter entries by log level. Applies to both entry and session aggregation.
 
     .PARAMETER SessionId
     Filter to a specific session by ID prefix (first 8 characters).
 
     .EXAMPLE
-    View-SyncLog
-    Shows the 20 most recent sync sessions for all services.
+    Get-SyncLog
+    Shows the 10 most recent sync sessions for all services.
 
     .EXAMPLE
-    synclog -Service youtube -Count 10
-    Shows the 10 most recent YouTube sync sessions.
+    viewlog -Service youtube -Size 20
+    Shows the 20 most recent YouTube sync sessions.
 
     .EXAMPLE
-    View-SyncLog -SessionId 'a1b2c3d4'
+    Get-SyncLog -SessionId 'a1b2c3d4'
     Shows details for a specific session.
 
     .EXAMPLE
-    synclog -All -Verbose
-    Shows all sessions with paging enabled.
+    viewlog -Verbose -Size 50
+    Shows 50 recent entries in table format with wrapped details.
+
+    .EXAMPLE
+    viewlog -Verbose -Format List -Level Error
+    Shows error-level entries in detailed list format.
+
+    .EXAMPLE
+    viewlog -Verbose -Service lastfm
+    Shows detailed Last.fm sync entries.
     #>
-    [Alias('synclog')]
+    [Alias('viewlog')]
     [CmdletBinding()]
     param(
         [ValidateSet('youtube', 'lastfm', 'all')]
         [string]$Service = 'all',
 
         [Alias('n')]
-        [int]$Count = 20,
+        [int]$Size = 10,
 
-        [Alias('a')]
-        [switch]$All,
+        [ValidateSet('Table', 'List')]
+        [string]$Format = 'Table',
 
-        [string]$SessionId
+        [switch]$Descending,
+
+        [string]$SessionId,
+
+        [ValidateSet('All', 'Debug', 'Info', 'Success', 'Warning', 'Error', 'Fatal')]
+        [string]$Level = 'All'
     )
 
     $logFiles = @{
         youtube = Join-Path $Script:LogDirectory 'youtube.jsonl'
-        lastfm = Join-Path $Script:LogDirectory 'lastfm.jsonl'
+        lastfm  = Join-Path $Script:LogDirectory 'lastfm.jsonl'
     }
     $services = if ($Service -eq 'all') { @('youtube', 'lastfm') } else { @($Service) }
 
-    $allEntries = foreach ($svc in $services) {
-        $path = $logFiles[$svc]
+    $allEntries = Get-SyncLogEntriesFromFiles $services $logFiles
+
+    if (-not $allEntries) {
+        Write-Information "$(Get-Timestamp) No log entries found" -InformationAction Continue
+        return
+    }
+    if ($SessionId) { $allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$SessionId*" }) }
+
+    $allEntries = Add-SyncLogParsedTimestamp $allEntries
+
+    if ($Level -ne 'All') {
+        $allEntries = @($allEntries | Where-Object { $_.Level -eq $Level })
+    }
+
+    $sortDescending = $PSBoundParameters['Descending'] ?? $true
+    $verbose = $VerbosePreference -eq 'Continue' -or $PSBoundParameters.ContainsKey('Verbose')
+
+    if ($verbose) {
+        $entriesSorted = Select-SyncLogRows -Items $allEntries -Size $Size -Descending:$sortDescending -SortProperty 'ParsedTimestamp'
+        $entriesOutput = ConvertTo-SyncLogEntryOutput $entriesSorted
+
+        if ($Format -eq 'List') {
+            $entriesOutput | Format-List -Property Time, Service, Level, Event, Session, Details
+        }
+        else {
+            $entriesOutput | Format-Table -Property Time, Service, Level, Event, Session, Details -AutoSize -Wrap
+        }
+        return
+    }
+
+    $sessions = ConvertTo-SyncLogSessionOutput $allEntries
+
+    if (-not $sessions) {
+        Write-Error "$(Get-Timestamp) No sessions found"
+        return
+    }
+
+    $display = Select-SyncLogRows -Items $sessions -Size $Size -Descending:$sortDescending -SortProperty '_Sort'
+    $display | Format-Table -Property Session, Service, Time, Status, Summary -AutoSize -Wrap
+}
+
+#region SyncLog Helpers
+function Get-SyncLogEntriesFromFiles {
+    param(
+        [string[]]$Services,
+        [hashtable]$LogFiles
+    )
+
+    foreach ($svc in $Services) {
+        $path = $LogFiles[$svc]
         if (Test-Path $path) {
             Get-Content $path | ForEach-Object {
                 $entry = $_ | ConvertFrom-Json
@@ -572,45 +634,110 @@ function View-SyncLog {
             }
         }
     }
+}
 
-    if (-not $allEntries) { Write-Information "$(Get-Timestamp) No log entries found" -InformationAction Continue; return }
-    if ($SessionId) { $allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$SessionId*" }) }
+function Add-SyncLogParsedTimestamp {
+    param([object[]]$Entries)
 
-    $allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.Timestamp } | Sort-Object Timestamp)
+    $Entries | Where-Object { $_.SessionId -and $_.Timestamp } | ForEach-Object {
+        $parsed = try { [datetime]::ParseExact($_.Timestamp, 'yyyy-MM-dd HH:mm:ss', [System.Globalization.CultureInfo]::InvariantCulture) } catch { try { [datetime]$_.Timestamp } catch { $null } }
+        $_ | Add-Member -NotePropertyName 'ParsedTimestamp' -NotePropertyValue $parsed -Force -PassThru
+    } | Where-Object ParsedTimestamp
+}
 
-    $sessions = $allEntries | Group-Object SessionId | ForEach-Object {
-        $group = @($_.Group | Sort-Object Timestamp)
+function Get-SyncLogEntryDetails {
+    param($Entry)
+
+    $entryData = $Entry.Data
+    if (-not $entryData) { return '' }
+
+    $text = $entryData.PSObject?.Properties['Text']?.Value
+    if ($text) { return $text }
+
+    $parts = $entryData.PSObject.Properties | Where-Object { $_.Name -notin 'Service', 'ProcessId' } | ForEach-Object {
+        $val = if ($_.Value -is [array]) { $_.Value -join ', ' } else { $_.Value }
+        "$($_.Name): $val"
+    }
+
+    $parts -join "`n"
+}
+
+function ConvertTo-SyncLogEntryOutput {
+    param([object[]]$Entries)
+
+    $Entries | ForEach-Object {
+        [PSCustomObject]@{
+            Time    = $_.ParsedTimestamp.ToString('yyyy/MM/dd HH:mm:ss')
+            Service = $_.Service
+            Level   = $_.Level
+            Event   = $_.Event
+            Session = $_.SessionId?.Substring(0, 8) ?? ''
+            Details = Get-SyncLogEntryDetails $_
+        }
+    }
+}
+
+function ConvertTo-SyncLogSessionOutput {
+    param([object[]]$Entries)
+
+    $Entries | Group-Object SessionId | ForEach-Object {
+        $group = @($_.Group | Sort-Object ParsedTimestamp)
         $first = $group[0]
         if (-not $first -or -not $first.SessionId) { return }
 
-        $startTime = [datetime]$first.Timestamp
-        $endEvent = $group | Where-Object { $_.Event -eq 'SessionEnd' } | Select-Object -First 1
-        $summary = if ($endEvent -and $endEvent.Data.Summary) { $endEvent.Data.Summary } else { '-' }
+        $startTime = $first.ParsedTimestamp
+        # PSScriptAnalyzer doesn't recognize usage in if-expressions
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endEvent')]
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endData')]
+        $endEvent = @($group | Where-Object { $_.Event -eq 'SessionEnd' })[0]
+        $endData = if ($endEvent) { $endEvent.Data } else { $null }
+        $endTime = if ($endEvent) { $endEvent.ParsedTimestamp } else { $null }
+        $summary = if ($endData) { $endData.Summary } else { '-' }
 
         $hasError = [bool]($group | Where-Object { $_.Level -eq 'Error' })
-        $status = if ($endEvent) { if ($hasError) { 'FAIL' } else { 'OK' } } else { 'RUN' }
+        $interrupted = [bool]($group | Where-Object { $_.Event -eq 'SessionInterrupted' })
+        $crashed = [bool]($group | Where-Object { $_.Event -eq 'SessionCrashed' })
+        $endStatus = if ($endData) { $endData.Status } else { $null }
+
+        $status = switch ($true) {
+            { -not $endTime -and ((Get-Date) - $startTime).TotalHours -lt 2 } { 'Running'; break }
+            { -not $endTime } { 'Crashed'; break }
+            { $crashed } { 'Crashed'; break }
+            { $interrupted } { 'Interrupted'; break }
+            { $hasError } { 'Failed'; break }
+            { $endStatus } { $endStatus; break }
+            default { 'Completed' }
+        }
 
         [PSCustomObject]@{
-            Session = $first.SessionId.Substring(0, 8)
-            Service = $first.Service
-            Time    = $startTime.ToString('MM/dd HH:mm')
-            Status  = $status
-            Summary = $summary
-            _Sort   = $startTime
+            Session   = $first.SessionId.Substring(0, 8)
+            Service   = $first.Service
+            Time      = $startTime.ToString('yyyy/MM/dd HH:mm:ss')
+            Status    = $status
+            Summary   = $summary
+            StartTime = $startTime
+            EndTime   = $endTime
+            Duration  = if ($endTime) { ($endTime - $startTime).ToString() } else { '-' }
+            Events    = $group.Count
+            HasError  = $hasError
+            _Sort     = $startTime
         }
-    } | Sort-Object _Sort -Descending | Select-Object -Property Session, Service, Time, Status, Summary
-
-    if (-not $sessions) { Write-Information "$(Get-Timestamp) No sessions found" -InformationAction Continue; return }
-
-    $display = if ($All) { $sessions } else { $sessions | Select-Object -First $Count }
-
-    if ($VerbosePreference -eq 'Continue') {
-        $display | Format-Table -AutoSize | Out-Host -Paging
-    }
-    else {
-        $display | Format-Table -AutoSize
     }
 }
+
+function Select-SyncLogRows {
+    param(
+        [object[]]$Items,
+        [int]$Size,
+        [switch]$Descending,
+        [string]$SortProperty
+    )
+
+    $sorted = $Items | Sort-Object -Property $SortProperty -Descending:$Descending
+    $sorted | Select-Object -First $Size
+}
+#endregion SyncLog Helpers
+#endregion SyncLog
 
 function Invoke-Propolis {
     <#
@@ -669,6 +796,3 @@ function Get-ScriptsToolkitCommand {
         [PSCustomObject]@{ Alias = $aliases; Function = $func; Description = $synopsis }
     } | Format-Table -AutoSize
 }
-
-# Note: Export-ModuleMember is not needed when using a module manifest (psd1).
-# The manifest's FunctionsToExport and AliasesToExport control what is exported.
