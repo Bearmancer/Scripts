@@ -100,5 +100,12 @@ dotnet_diagnostic.IDE0065.severity = none
 dotnet_diagnostic.IDE0130.severity = none
 dotnet_diagnostic.SYSLIB1045.severity = none
 
-# Private naming underscore - not using this convention
+# Naming style rules - disabled (using TitleCase for fields, SCREAMING_SNAKE for constants)
 dotnet_naming_rule.private_members_with_underscore.severity = none
+dotnet_naming_rule.private_members_with_underscore.symbols = value
+dotnet_naming_rule.private_members_with_underscore.style = value
+dotnet_diagnostic.IDE1006.severity = none
+
+# Prefer .slnx over legacy .sln - hide .sln from file explorers
+[*.sln]
+generated_code = true

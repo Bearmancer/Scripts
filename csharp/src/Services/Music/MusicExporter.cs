@@ -4,46 +4,46 @@ public static class MusicExporter
 {
 	public static string ExportWorksToCSV(string releaseTitle, List<WorkSummary> works)
 	{
-		CreateDirectory(path: Paths.ExportsDirectory);
+		CreateDirectory(Paths.ExportsDirectory);
 
-		var sanitizedTitle = SanitizeFileName(name: releaseTitle);
+		var sanitizedTitle = SanitizeFileName(releaseTitle);
 		var path = Combine(Paths.ExportsDirectory, $"{sanitizedTitle}_works.csv");
 
-		using StreamWriter writer = new(path: path, append: false);
+		using StreamWriter writer = new(path, append: false);
 		using CsvWriter csv = new(
-			writer: writer,
-			new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture)
+			writer,
+			new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = true,
 			}
 		);
 
-		csv.WriteField(field: "Disc");
-		csv.WriteField(field: "TrackStart");
-		csv.WriteField(field: "TrackEnd");
-		csv.WriteField(field: "Work");
-		csv.WriteField(field: "Composer");
-		csv.WriteField(field: "Conductor");
-		csv.WriteField(field: "Orchestra");
-		csv.WriteField(field: "Year");
-		csv.WriteField(field: "Movements");
+		csv.WriteField("Disc");
+		csv.WriteField("TrackStart");
+		csv.WriteField("TrackEnd");
+		csv.WriteField("Work");
+		csv.WriteField("Composer");
+		csv.WriteField("Conductor");
+		csv.WriteField("Orchestra");
+		csv.WriteField("Year");
+		csv.WriteField("Movements");
 		csv.NextRecord();
 
 		foreach (WorkSummary work in works)
 		{
-			csv.WriteField(field: work.Disc);
-			csv.WriteField(field: work.FirstTrack);
-			csv.WriteField(field: work.LastTrack);
-			csv.WriteField(field: work.Work);
-			csv.WriteField(field: work.Composer);
-			csv.WriteField(field: work.Conductor);
-			csv.WriteField(field: work.Orchestra);
-			csv.WriteField(field: work.YearDisplay);
+			csv.WriteField(work.Disc);
+			csv.WriteField(work.FirstTrack);
+			csv.WriteField(work.LastTrack);
+			csv.WriteField(work.Work);
+			csv.WriteField(work.Composer);
+			csv.WriteField(work.Conductor);
+			csv.WriteField(work.Orchestra);
+			csv.WriteField(work.YearDisplay);
 			csv.WriteField(work.LastTrack - work.FirstTrack + 1);
 			csv.NextRecord();
 		}
 
-		Console.Info(message: "Exported {0} works to {1}", works.Count, GetFileName(path: path));
+		Console.Info("Exported {0} works to {1}", works.Count, GetFileName(path));
 		return path;
 	}
 
@@ -51,8 +51,8 @@ public static class MusicExporter
 	{
 		GoogleSheetsService sheets = new();
 
-		var spreadsheetId = sheets.CreateSpreadsheet(title: release.Info.Title);
-		Console.Info(message: "Created Google Sheet: {0}", release.Info.Title);
+		var spreadsheetId = sheets.CreateSpreadsheet(release.Info.Title);
+		Console.Info("Created Google Sheet: {0}", release.Info.Title);
 
 		List<object> headers =
 		[
@@ -70,10 +70,10 @@ public static class MusicExporter
 		];
 
 		sheets.WriteRecords(
-			spreadsheetId: spreadsheetId,
-			sheetName: "Sheet1",
-			headers: headers,
-			records: release.Tracks,
+			spreadsheetId,
+			"Sheet1",
+			headers,
+			release.Tracks,
 			t =>
 				[
 					t.DiscNumber,
@@ -90,8 +90,8 @@ public static class MusicExporter
 				]
 		);
 
-		var url = GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId: spreadsheetId);
-		Console.Link(url: url, text: "View spreadsheet");
+		var url = GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId);
+		Console.Link(url, "View spreadsheet");
 
 		sheets.Dispose();
 		return url;
@@ -99,7 +99,7 @@ public static class MusicExporter
 
 	private static string SanitizeFileName(string name) =>
 		GetInvalidFileNameChars()
-			.Aggregate(seed: name, (current, c) => current.Replace(oldChar: c, newChar: '_'))
+			.Aggregate(name, (current, c) => current.Replace(c, '_'))
 			.Trim()
-			.TrimEnd(trimChar: '.')[..Math.Min(val1: name.Length, val2: 100)];
+			.TrimEnd('.')[..Math.Min(name.Length, 100)];
 }

@@ -2,31 +2,17 @@ namespace CSharpScripts.Infrastructure;
 
 public static class Config
 {
-	public static string LastFmApiKey =>
-		GetEnvironmentVariable(variable: "LAST_FM_API_KEY")
-		?? throw new InvalidOperationException(message: "LASTFM_API_KEY not set");
+	public static string GoogleClientId => GetEnvVar("GOOGLE_CLIENT_ID");
+	public static string GoogleClientSecret => GetEnvVar("GOOGLE_CLIENT_SECRET");
 
-	public static string LastFmUsername =>
-		GetEnvironmentVariable(variable: "LAST_FM_USERNAME") ?? "kanishknishar";
+	public static string YouTubeSpreadsheetId => GetEnvVar("YOUTUBE_SPREADSHEET_ID");
 
-	public static string LastFmSpreadsheetId =>
-		GetEnvironmentVariable(variable: "LAST_FM_SPREADSHEET_ID") ?? "";
+	public static string LastFmApiKey => GetEnvVar("LAST_FM_API_KEY");
+	public static string LastFmApiSecret => GetEnvVar("LAST_FM_API_SECRET");
+	public static string LastFmSpreadsheetId => GetEnvVar("LAST_FM_SPREADSHEET_ID");
 
-	public static string LastFmSpreadsheetTitle =>
-		GetEnvironmentVariable(variable: "LAST_FM_SPREADSHEET_TITLE") ?? "Last.fm Scrobbles";
+	public static string DiscogsToken => GetEnvVar("DISCOGS_USER_TOKEN");
 
-	public static string? DiscogsToken => GetEnvironmentVariable(variable: "DISCOGS_USER_TOKEN");
-
-	public static string YouTubeSpreadsheetId =>
-		GetEnvironmentVariable(variable: "YOUTUBE_SPREADSHEET_ID") ?? "";
-
-	public static string YouTubeSpreadsheetTitle =>
-		GetEnvironmentVariable(variable: "YOUTUBE_SPREADSHEET_TITLE") ?? "YouTube Playlists";
-
-	public static BaseClientService.Initializer GoogleInitializer =>
-		field ??= new BaseClientService.Initializer
-		{
-			HttpClientInitializer = GoogleCredential.GetApplicationDefault(),
-			ApplicationName = "CSharpScripts",
-		};
+	private static string GetEnvVar(string name) =>
+		GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"{name} is not set");
 }

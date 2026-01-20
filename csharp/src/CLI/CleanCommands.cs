@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Commands;
+namespace CSharpScripts.CLI;
 
 #region Clean Local Command
 
@@ -10,47 +10,47 @@ public sealed class CleanLocalCommand : Command<CleanLocalCommand.Settings>
 		CancellationToken cancellationToken
 	)
 	{
-		var normalizedService = settings.Service.ToLowerInvariant();
-		var cleanAll = normalizedService == "all";
-		var cleanLastFm = cleanAll || normalizedService == "lastfm";
-		var cleanYouTube = cleanAll || normalizedService is "youtube" or "yt";
+		var cleanAll = settings.Service.IsEqualTo("all");
+		var cleanLastFm = cleanAll || settings.Service.IsEqualTo("lastfm");
+		var cleanYouTube =
+			cleanAll || settings.Service.IsEqualTo("youtube") || settings.Service.IsEqualTo("yt");
 
 		if (!cleanLastFm && !cleanYouTube)
 		{
 			Console.Warning(
-				message: "Invalid service: {0}. Use: yt, lastfm, or all",
+				"Invalid service: {0}. Use: yt, lastfm, or all",
 				settings.Service
 			);
 			return 1;
 		}
 
-		Console.Rule(text: "Clean Local");
+		Console.Rule("Clean Local");
 
 		if (cleanLastFm)
 		{
-			Console.Info(message: "Cleaning Last.fm local state...");
+			Console.Info("Cleaning Last.fm local state...");
 			StateManager.DeleteLastFmStates();
-			Console.Success(message: "  State files deleted");
+			Console.Success("  State files deleted");
 		}
 
 		if (cleanYouTube)
 		{
-			Console.Info(message: "Cleaning YouTube local state...");
+			Console.Info("Cleaning YouTube local state...");
 			StateManager.DeleteAllYouTubeStates();
-			Console.Success(message: "  State files deleted");
+			Console.Success("  State files deleted");
 		}
 
 		Console.NewLine();
-		Console.Success(message: "Clean complete");
+		Console.Success("Clean complete");
 
 		return 0;
 	}
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandArgument(position: 0, template: "[service]")]
-		[Description(description: "yt, lastfm, all (default: all)")]
-		[DefaultValue(value: "all")]
+		[CommandArgument(0, "[service]")]
+		[Description("yt, lastfm, all (default: all)")]
+		[DefaultValue("all")]
 		public string Service { get; init; } = "all";
 	}
 }
@@ -67,114 +67,114 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 		CancellationToken cancellationToken
 	)
 	{
-		var normalizedService = settings.Service.ToLowerInvariant();
-		var purgeAll = normalizedService == "all";
-		var purgeLastFm = purgeAll || normalizedService == "lastfm";
-		var purgeYouTube = purgeAll || normalizedService is "youtube" or "yt";
+		var purgeAll = settings.Service.IsEqualTo("all");
+		var purgeLastFm = purgeAll || settings.Service.IsEqualTo("lastfm");
+		var purgeYouTube =
+			purgeAll || settings.Service.IsEqualTo("youtube") || settings.Service.IsEqualTo("yt");
 
 		if (!purgeLastFm && !purgeYouTube)
 		{
 			Console.Warning(
-				message: "Invalid service: {0}. Use: yt, lastfm, or all",
+				"Invalid service: {0}. Use: yt, lastfm, or all",
 				settings.Service
 			);
 			return 1;
 		}
 
-		Console.Rule(text: "Clean Purge");
+		Console.Rule("Clean Purge");
 
 		GoogleSheetsService? sheets = null;
 
 		if (purgeLastFm)
-			PurgeLastFm(sheets: ref sheets);
+			PurgeLastFm(ref sheets);
 
 		if (purgeYouTube)
-			PurgeYouTube(sheets: ref sheets);
+			PurgeYouTube(ref sheets);
 
 		PurgeCsvExports();
 		PurgeBuildArtifacts();
 
 		Console.NewLine();
-		Console.Success(message: "Purge complete - terminal will close in 2 seconds...");
+		Console.Success("Purge complete - terminal will close in 2 seconds...");
 
-		Thread.Sleep(millisecondsTimeout: 2000);
-		Exit(exitCode: 0);
+		Thread.Sleep(2000);
+		Exit(0);
 
 		return 0;
 	}
 
 	private static void PurgeLastFm(ref GoogleSheetsService? sheets)
 	{
-		Console.Info(message: "Purging Last.fm...");
+		Console.Info("Purging Last.fm...");
 
-		FetchState state = StateManager.Load<FetchState>(fileName: StateManager.LastFmSyncFile);
-		if (!IsNullOrEmpty(value: state.SpreadsheetId))
+		FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
+		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();
-			sheets.DeleteSpreadsheet(spreadsheetId: state.SpreadsheetId);
+			sheets.DeleteSpreadsheet(state.SpreadsheetId);
 		}
 
 		StateManager.DeleteLastFmStates();
-		Console.Success(message: "  State files deleted");
+		Console.Success("  State files deleted");
 	}
 
 	private static void PurgeYouTube(ref GoogleSheetsService? sheets)
 	{
-		Console.Info(message: "Purging YouTube...");
+		Console.Info("Purging YouTube...");
 
 		YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
-			fileName: StateManager.YouTubeSyncFile
+			StateManager.YouTubeSyncFile
 		);
-		if (!IsNullOrEmpty(value: state.SpreadsheetId))
+		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();
-			sheets.DeleteSpreadsheet(spreadsheetId: state.SpreadsheetId);
+			sheets.DeleteSpreadsheet(state.SpreadsheetId);
 		}
 
 		StateManager.DeleteAllYouTubeStates();
-		Console.Success(message: "  State files deleted");
+		Console.Success("  State files deleted");
 	}
 
 	private static void PurgeCsvExports()
 	{
-		Console.Info(message: "Purging CSV exports...");
+		Console.Info("Purging CSV exports...");
 
-		var csvDir = Combine(path1: Paths.ProjectRoot, path2: "exports");
-		if (Directory.Exists(path: csvDir))
+		var csvDir = Combine(Paths.ProjectRoot, "exports");
+		if (Directory.Exists(csvDir))
 		{
-			Delete(path: csvDir, recursive: true);
-			Console.Success(message: "  exports/ deleted");
+			Delete(csvDir, true);
+			Console.Success("  exports/ deleted");
 		}
 		else
 		{
-			Console.Dim(text: "  No exports/ directory found");
+			Console.Dim("  No exports/ directory found");
 		}
 	}
 
 	private static void PurgeBuildArtifacts()
 	{
-		Console.Info(message: "Purging build artifacts...");
+		Console.Info("Purging build artifacts...");
 
-		var binDir = Combine(path1: Paths.ProjectRoot, path2: "csharp", path3: "bin");
-		var objDir = Combine(path1: Paths.ProjectRoot, path2: "csharp", path3: "obj");
+		var binDir = Combine(Paths.ProjectRoot, "csharp", "bin");
+		var objDir = Combine(Paths.ProjectRoot, "csharp", "obj");
 
 		try
 		{
-			if (Directory.Exists(path: binDir))
+			if (Directory.Exists(binDir))
 			{
-				Delete(path: binDir, recursive: true);
-				Console.Success(message: "  bin/ deleted");
+				Delete(binDir, true);
+				Console.Success("  bin/ deleted");
 			}
 
-			if (Directory.Exists(path: objDir))
+			if (Directory.Exists(objDir))
 			{
-				Delete(path: objDir, recursive: true);
-				Console.Success(message: "  obj/ deleted");
+				Delete(objDir, true);
+				Console.Success("  obj/ deleted");
 			}
 		}
 		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 		{
-			ScheduleDeferredCleanup(binDir: binDir, objDir: objDir);
+			ScheduleDeferredCleanup(binDir, objDir);
 			return;
 		}
 
@@ -183,9 +183,9 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 
 	private static void ScheduleDeferredCleanup(string binDir, string objDir)
 	{
-		Console.Warning(message: "  Build artifacts locked - scheduling deferred cleanup...");
+		Console.Warning("  Build artifacts locked - scheduling deferred cleanup...");
 
-		var csprojDir = Combine(path1: Paths.ProjectRoot, path2: "csharp");
+		var csprojDir = Combine(Paths.ProjectRoot, "csharp");
 		var script = $$"""
 			Start-Sleep -Seconds 2
 			if (Test-Path '{{binDir}}') { Remove-Item -Recurse -Force '{{binDir}}' }
@@ -198,21 +198,21 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 			new ProcessStartInfo
 			{
 				FileName = "pwsh",
-				Arguments = $"-Command \"{script.Replace(oldValue: "\"", newValue: "\\\"")}\"",
+				Arguments = $"-Command \"{script.Replace("\"", "\\\"")}\"",
 				UseShellExecute = true,
 				CreateNoWindow = false,
 			}
 		);
 
-		Console.Success(message: "  Cleanup scheduled - will run after this process exits");
+		Console.Success("  Cleanup scheduled - will run after this process exits");
 	}
 
 	private static void RebuildProject()
 	{
 		Console.NewLine();
-		Console.Info(message: "Rebuilding...");
+		Console.Info("Rebuilding...");
 
-		var csprojDir = Combine(path1: Paths.ProjectRoot, path2: "csharp");
+		var csprojDir = Combine(Paths.ProjectRoot, "csharp");
 		var process = Process.Start(
 			new ProcessStartInfo
 			{
@@ -228,16 +228,16 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 		process?.WaitForExit();
 
 		if (process?.ExitCode == 0)
-			Console.Success(message: "Build complete");
+			Console.Success("Build complete");
 		else
-			Console.Error(message: "Build failed. Run 'dotnet build' manually.");
+			Console.Error("Build failed. Run 'dotnet build' manually.");
 	}
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandArgument(position: 0, template: "[service]")]
-		[Description(description: "yt, lastfm, all (default: all)")]
-		[DefaultValue(value: "all")]
+		[CommandArgument(0, "[service]")]
+		[Description("yt, lastfm, all (default: all)")]
+		[DefaultValue("all")]
 		public string Service { get; init; } = "all";
 	}
 }

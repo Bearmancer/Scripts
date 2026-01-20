@@ -3,13 +3,13 @@ namespace CSharpScripts.Orchestrators;
 public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken ct) : IDisposable
 {
 	private readonly LastFmService lastFmService = new(
-		apiKey: Config.LastFmApiKey,
-		username: Config.LastFmUsername
+		Config.LastFmApiKey,
+		"kanishknishar"
 	);
 
 	private readonly GoogleSheetsService sheetsService = new();
 
-	private FetchState state = StateManager.Load<FetchState>(fileName: StateManager.LastFmSyncFile);
+	private FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
 
 	public void Dispose()
 	{
@@ -19,33 +19,33 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 
 	internal async Task ExecuteAsync()
 	{
-		Console.Info(message: "Starting Last.fm sync...");
+		Console.Info("Starting Last.fm sync...");
 		var spreadsheetId = GetOrCreateSpreadsheet();
 
 		if (forceFromDate.HasValue)
 		{
 			Console.Info(
-				message: "Force resync from {0}",
-				forceFromDate.Value.ToString(format: "yyyy/MM/dd")
+				"Force resync from {0}",
+				forceFromDate.Value.ToString("yyyy/MM/dd")
 			);
 			sheetsService.DeleteScrobblesOnOrAfter(
-				spreadsheetId: spreadsheetId,
-				fromDate: forceFromDate.Value
+				spreadsheetId,
+				forceFromDate.Value
 			);
 			state = new FetchState { SpreadsheetId = spreadsheetId };
 			SaveState();
 			LastFmService.DeleteScrobblesCache();
-			await FetchScrobblesAsync(forceFromDate.Value.AddSeconds(value: -1));
+			await FetchScrobblesAsync(forceFromDate.Value.AddSeconds(-1));
 		}
 		else if (!state.FetchComplete && state.LastPage > 0)
 		{
 			Console.Warning(
-				message: "Resuming full sync from page {0} ({1} scrobbles fetched)",
+				"Resuming full sync from page {0} ({1} scrobbles fetched)",
 				state.LastPage + 1,
 				state.TotalFetched
 			);
 
-			await FetchScrobblesAsync(fetchAfter: null);
+			await FetchScrobblesAsync(null);
 		}
 		else
 		{
@@ -53,10 +53,10 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 
 			if (cachedScrobbles.Count > 0)
 			{
-				DateTime? newestCached = cachedScrobbles[index: 0].PlayedAt;
+				DateTime? newestCached = cachedScrobbles[0].PlayedAt;
 				DateTime? oldestCached = cachedScrobbles[^1].PlayedAt;
 
-				Console.Debug(message: "Cache: {0} scrobbles", cachedScrobbles.Count);
+				Console.Debug("Cache: {0} scrobbles", cachedScrobbles.Count);
 
 				if (
 					state.OldestScrobble.HasValue
@@ -64,26 +64,26 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 					&& oldestCached.HasValue
 					&& newestCached.HasValue
 				)
-					await FetchScrobblesAsync(fetchAfter: newestCached);
+					await FetchScrobblesAsync(newestCached);
 			}
 			else
 			{
 				DateTime? latestInSheet = sheetsService.GetLatestScrobbleTime(
-					spreadsheetId: spreadsheetId
+					spreadsheetId
 				);
 
 				if (latestInSheet != null)
 				{
 					Console.Info(
-						message: "Latest in sheet: {0}",
-						latestInSheet.Value.ToString(format: "yyyy/MM/dd HH:mm:ss")
+						"Latest in sheet: {0}",
+						latestInSheet.Value.ToString("yyyy/MM/dd HH:mm:ss")
 					);
-					await FetchScrobblesAsync(fetchAfter: latestInSheet);
+					await FetchScrobblesAsync(latestInSheet);
 				}
 				else
 				{
-					Console.Info(message: "No existing data. Full sync...");
-					await FetchScrobblesAsync(fetchAfter: null);
+					Console.Info("No existing data. Full sync...");
+					await FetchScrobblesAsync(null);
 				}
 			}
 		}
@@ -103,24 +103,24 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 
 		if (scrobbles.Count == 0)
 		{
-			Console.Success(message: "No new scrobbles to sync");
-			Logger.End(success: true, summary: "No changes detected");
+			Console.Success("No new scrobbles to sync");
+			Logger.End(true, "No changes detected");
 			return;
 		}
 
 		List<Scrobble> newScrobbles = sheetsService.GetNewScrobbles(
-			spreadsheetId: spreadsheetId,
-			allScrobbles: scrobbles
+			spreadsheetId,
+			scrobbles
 		);
 
 		if (newScrobbles.Count == 0)
 		{
-			Console.Success(message: "Sheet is up to date");
-			Logger.End(success: true, summary: "No new scrobbles");
+			Console.Success("Sheet is up to date");
+			Logger.End(true, "No new scrobbles");
 			return;
 		}
 
-		WriteToSheets(scrobbles: newScrobbles, spreadsheetId: spreadsheetId);
+		WriteToSheets(newScrobbles, spreadsheetId);
 	}
 
 	private async Task FetchScrobblesAsync(DateTime? fetchAfter)
@@ -131,11 +131,11 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 		try
 		{
 			await lastFmService.FetchScrobblesSinceAsync(
-				fetchAfter: fetchAfter,
-				state: state,
+				fetchAfter,
+				state,
 				(page, total, elapsed, oldest, newest) =>
 				{
-					state.Update(page: page, total: total, oldest: oldest, newest: newest);
+					state.Update(page, total, oldest, newest);
 					saveStateCounter++;
 
 					if (saveStateCounter >= saveStateInterval)
@@ -145,13 +145,13 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 					}
 
 					Console.Progress(
-						message: "Page: {0} | Tracks: {1} | Elapsed: {2}",
+						"Page: {0} | Tracks: {1} | Elapsed: {2}",
 						page,
 						total,
-						elapsed.ToString(format: @"hh\:mm\:ss")
+						elapsed.ToString(@"hh\:mm\:ss")
 					);
 				},
-				ct: ct
+				ct
 			);
 		}
 		finally
@@ -161,7 +161,7 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 
 		if (ct.IsCancellationRequested)
 			Console.Warning(
-				message: "Stopped at page {0} ({1} scrobbles)",
+				"Stopped at page {0} ({1} scrobbles)",
 				state.LastPage,
 				state.TotalFetched
 			);
@@ -171,7 +171,7 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 	{
 		if (ct.IsCancellationRequested)
 		{
-			Logger.Interrupted(progress: "Interrupted before writing to sheets");
+			Logger.Interrupted("Interrupted before writing to sheets");
 			return;
 		}
 
@@ -179,18 +179,18 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 			(a, b) => b.PlayedAt.GetValueOrDefault().CompareTo(a.PlayedAt.GetValueOrDefault())
 		);
 
-		sheetsService.EnsureSheetExists(spreadsheetId: spreadsheetId);
-		sheetsService.WriteScrobbles(spreadsheetId: spreadsheetId, scrobbles: scrobbles);
+		sheetsService.EnsureSheetExists(spreadsheetId);
+		sheetsService.WriteScrobbles(spreadsheetId, scrobbles);
 
-		Console.Success(message: "Wrote {0} scrobbles.", scrobbles.Count);
-		Logger.End(success: true, $"Wrote {scrobbles.Count} scrobbles to sheet");
+		Console.Success("Wrote {0} scrobbles.", scrobbles.Count);
+		Logger.End(true, $"Wrote {scrobbles.Count} scrobbles to sheet");
 	}
 
 	private string GetOrCreateSpreadsheet() =>
 		sheetsService.GetOrCreateSpreadsheet(
-			currentSpreadsheetId: state.SpreadsheetId,
-			defaultSpreadsheetId: Config.LastFmSpreadsheetId,
-			spreadsheetTitle: Config.LastFmSpreadsheetTitle,
+			state.SpreadsheetId,
+			Config.LastFmSpreadsheetId,
+			"Last.fm Scrobbles",
 			id =>
 			{
 				state.SpreadsheetId = id;
@@ -199,5 +199,5 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 		);
 
 	internal void SaveState() =>
-		StateManager.Save(fileName: StateManager.LastFmSyncFile, state: state);
+		StateManager.Save(StateManager.LastFmSyncFile, state);
 }

@@ -11,7 +11,7 @@ public record YouTubeVideo(
 {
 	internal string VideoUrl => $"https://www.youtube.com/watch?v={VideoId}";
 	internal string ChannelUrl => $"https://www.youtube.com/channel/{ChannelId}";
-	internal string FormattedDuration => Duration.ToString(format: @"hh\:mm\:ss");
+	internal string FormattedDuration => Duration.ToString(@"hh\:mm\:ss");
 }
 
 public record YouTubePlaylist(

@@ -323,7 +323,7 @@ def add_filename_to_header(
     font = ImageFont.truetype("calibri.ttf", 60)
     text_lines = textwrap.wrap(filename, width=40)
 
-    draw.rectangle([(0, 0), (image_width, header_size)], fill=(240, 240, 240))
+    draw.rectangle(((0, 0), (image_width, header_size)), fill=(240, 240, 240))
 
     y_offset = (header_size - (len(text_lines) * (font.size + 5))) // 2
     for line in text_lines:

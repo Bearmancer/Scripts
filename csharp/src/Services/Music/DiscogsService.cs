@@ -1,14 +1,10 @@
 namespace CSharpScripts.Services.Music;
 
-#region Client Configuration
-
 internal sealed class DiscogsClientConfig(string token) : IClientConfig
 {
 	public string AuthToken => token;
-	public string BaseUrl => "https://api.discogs.com";
+	public string BaseUrl { get; } = "https://api.discogs.com";
 }
-
-#endregion
 
 public sealed class DiscogsService : IMusicService
 {
@@ -17,13 +13,9 @@ public sealed class DiscogsService : IMusicService
 	public DiscogsService(string? token)
 	{
 		var validToken =
-			token
-			?? throw new ArgumentException(message: "Discogs token is required", nameof(token));
+			token ?? throw new ArgumentException("Discogs token is required", nameof(token));
 		HttpClient http = new(new HttpClientHandler());
-		Client = new DiscogsClient(
-			httpClient: http,
-			new ApiQueryBuilder(new DiscogsClientConfig(token: validToken))
-		);
+		Client = new DiscogsClient(http, new ApiQueryBuilder(new DiscogsClientConfig(validToken)));
 	}
 
 	internal DiscogsClient Client { get; }
@@ -44,24 +36,24 @@ public sealed class DiscogsService : IMusicService
 			{
 				SearchCriteria criteria = new() { Query = query };
 				SearchResults results = await Client.SearchAsync(
-					criteria: criteria,
+					criteria,
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100),
+						PageSize = Math.Min(maxResults, 100),
 					}
 				);
 
 				return results
-					.Results.Take(count: maxResults)
+					.Results.Take(maxResults)
 					.Select(r => new SearchResult(
 						Source: MusicSource.Discogs,
 						(r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
 						r.Title ?? "",
-						ExtractArtist(title: r.Title),
-						ParseYear(year: r.Year),
-						r.Format is { } fmt ? Join(separator: ", ", values: fmt) : null,
-						r.Label is { } lbl ? Join(separator: ", ", values: lbl) : null,
+						ExtractArtist(r.Title),
+						ParseYear(r.Year),
+						r.Format is { } fmt ? Join(", ", fmt) : null,
+						r.Label is { } lbl ? Join(", ", lbl) : null,
 						ReleaseType: r.Type,
 						Score: null,
 						Country: r.Country,
@@ -73,7 +65,7 @@ public sealed class DiscogsService : IMusicService
 					))
 					.ToList();
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -88,37 +80,22 @@ public sealed class DiscogsService : IMusicService
 		CancellationToken ct = default
 	)
 	{
-		var id = int.Parse(s: releaseId);
+		var id = int.Parse(releaseId);
 		DiscogsRelease release =
-			await GetReleaseAsync(releaseId: id, ct: ct)
+			await GetReleaseAsync(id, ct)
 			?? throw new InvalidOperationException($"Release not found: {releaseId}");
 
 		var originalYear = release.MasterId.HasValue
-			? (await GetMasterAsync(masterId: release.MasterId.Value, ct: ct))?.Year
+			? (await GetMasterAsync(release.MasterId.Value, ct))?.Year
 			: null;
 
-		var composer = release
-			.ExtraArtists.FirstOrDefault(a =>
-				a.Role?.Contains("Composed By", StringComparison.OrdinalIgnoreCase) == true
-			)
-			?.Name;
-		var conductor = release
-			.ExtraArtists.FirstOrDefault(a =>
-				a.Role?.Contains("Conductor", StringComparison.OrdinalIgnoreCase) == true
-			)
-			?.Name;
-		var orchestra = release
-			.ExtraArtists.FirstOrDefault(a =>
-				a.Role?.Contains("Orchestra", StringComparison.OrdinalIgnoreCase) == true
-			)
-			?.Name;
+		var composer = release.ExtraArtists.FirstOrDefault(a => a.Role.Has("Composed By"))?.Name;
+		var conductor = release.ExtraArtists.FirstOrDefault(a => a.Role.Has("Conductor"))?.Name;
+		var orchestra = release.ExtraArtists.FirstOrDefault(a => a.Role.Has("Orchestra"))?.Name;
 		List<string> soloists =
 		[
 			.. release
-				.ExtraArtists.Where(a =>
-					a.Role?.Contains("Soloist", StringComparison.OrdinalIgnoreCase) == true
-					|| a.Role?.Contains("Performer", StringComparison.OrdinalIgnoreCase) == true
-				)
+				.ExtraArtists.Where(a => a.Role.Has("Soloist") || a.Role.Has("Performer"))
 				.Select(a => a.Name)
 				.Distinct(),
 		];
@@ -134,12 +111,8 @@ public sealed class DiscogsService : IMusicService
 		foreach (DiscogsTrack track in release.Tracks)
 		{
 			if (
-				track.Position.StartsWith($"{discNum + 1}-", StringComparison.Ordinal)
-				|| (
-					discNum == 1
-					&& track.Position.StartsWith("1-", StringComparison.Ordinal)
-					&& trackNum > 0
-				)
+				track.Position.Starts($"{discNum + 1}-", Ordinal)
+				|| (discNum == 1 && track.Position.Starts("1-", Ordinal) && trackNum > 0)
 			)
 			{
 				discNum++;
@@ -196,7 +169,7 @@ public sealed class DiscogsService : IMusicService
 	#region Notes Parsing
 
 	private static TimeSpan? ParseDuration(string? duration) =>
-		TimeSpan.TryParse(s: duration, out TimeSpan result) ? result : null;
+		TimeSpan.TryParse(duration, out TimeSpan result) ? result : null;
 
 	internal static (int? Year, string? Venue) ParseNotesForRecordingInfo(
 		string? notes,
@@ -209,7 +182,7 @@ public sealed class DiscogsService : IMusicService
 		int? year = null;
 		string? venue = null;
 
-		var lines = notes.Split(['\n', '\r'], options: StringSplitOptions.RemoveEmptyEntries);
+		var lines = notes.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 
 		foreach (var rawLine in lines)
 		{
@@ -217,15 +190,15 @@ public sealed class DiscogsService : IMusicService
 
 			var appliesToDisc = true;
 			Match discRangeMatch = Regex.Match(
-				input: line,
-				pattern: @"^(?:CD|Disc)\s*(\d+)(?:\s*[-–]\s*(\d+))?:",
-				options: RegexOptions.IgnoreCase
+				line,
+				@"^(?:CD|Disc)\s*(\d+)(?:\s*[-–]\s*(\d+))?:",
+				RegexOptions.IgnoreCase
 			);
 			if (discRangeMatch.Success)
 			{
-				var startDisc = int.Parse(s: discRangeMatch.Groups[groupnum: 1].Value);
-				var endDisc = discRangeMatch.Groups[groupnum: 2].Success
-					? int.Parse(s: discRangeMatch.Groups[groupnum: 2].Value)
+				var startDisc = int.Parse(discRangeMatch.Groups[1].Value);
+				var endDisc = discRangeMatch.Groups[2].Success
+					? int.Parse(discRangeMatch.Groups[2].Value)
 					: startDisc;
 				appliesToDisc = discNumber >= startDisc && discNumber <= endDisc;
 			}
@@ -233,9 +206,9 @@ public sealed class DiscogsService : IMusicService
 			if (!appliesToDisc)
 				continue;
 
-			year ??= ExtractYearFromLine(line: line);
+			year ??= ExtractYearFromLine(line);
 
-			venue ??= ExtractVenueFromLine(line: line);
+			venue ??= ExtractVenueFromLine(line);
 		}
 
 		return (year, venue);
@@ -244,18 +217,18 @@ public sealed class DiscogsService : IMusicService
 	private static int? ExtractYearFromLine(string line)
 	{
 		Match recordedMatch = Regex.Match(
-			input: line,
-			pattern: @"[Rr]ecorded\s+(?:\w+\s+)?(\d{4})",
-			options: RegexOptions.IgnoreCase
+			line,
+			@"[Rr]ecorded\s+(?:\w+\s+)?(\d{4})",
+			RegexOptions.IgnoreCase
 		);
 		if (
 			recordedMatch.Success
-			&& int.TryParse(s: recordedMatch.Groups[groupnum: 1].Value, out var y1)
+			&& int.TryParse(recordedMatch.Groups[1].Value, out var y1)
 		)
 			return y1;
 
-		Match yearMatch = Regex.Match(input: line, pattern: @"\b(19\d{2}|20\d{2})\b");
-		if (yearMatch.Success && int.TryParse(s: yearMatch.Groups[groupnum: 1].Value, out var y2))
+		Match yearMatch = Regex.Match(line, @"\b(19\d{2}|20\d{2})\b");
+		if (yearMatch.Success && int.TryParse(yearMatch.Groups[1].Value, out var y2))
 			return y2;
 
 		return null;
@@ -311,20 +284,20 @@ public sealed class DiscogsService : IMusicService
 			async () =>
 			{
 				SearchResults results = await Client.SearchAsync(
-					criteria: criteria,
+					criteria,
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100),
+						PageSize = Math.Min(maxResults, 100),
 					}
 				);
 
 				return results
-					.Results.Take(count: maxResults)
-					.Select(selector: MapSearchResult)
+					.Results.Take(maxResults)
+					.Select(MapSearchResult)
 					.ToList();
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -346,7 +319,7 @@ public sealed class DiscogsService : IMusicService
 			label: label,
 			genre: genre,
 			maxResults: 1,
-			ct: ct
+			ct
 		);
 		return results.Count > 0 ? results[index: 0] : null;
 	}
@@ -382,13 +355,13 @@ public sealed class DiscogsService : IMusicService
 		return await ExecuteSafeAsync(
 			async () =>
 			{
-				Release? release = await Client.GetReleaseAsync(releaseId: releaseId);
+				Release? release = await Client.GetReleaseAsync(releaseId);
 				if (release is null)
 					return null;
 
-				return MapRelease(r: release);
+				return MapRelease(release);
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -407,18 +380,18 @@ public sealed class DiscogsService : IMusicService
 			Notes: r.Notes,
 			Uri: r.Uri,
 			ResourceUrl: r.ResourceUrl,
-			r.Artists?.Select(selector: MapArtistRef).ToList() ?? [],
-			r.ExtraArtists?.Select(selector: MapArtistRef).ToList() ?? [],
-			r.Labels?.Select(selector: MapLabel).ToList() ?? [],
-			r.Companies?.Select(selector: MapCompany).ToList() ?? [],
+			r.Artists?.Select(MapArtistRef).ToList() ?? [],
+			r.ExtraArtists?.Select(MapArtistRef).ToList() ?? [],
+			r.Labels?.Select(MapLabel).ToList() ?? [],
+			r.Companies?.Select(MapCompany).ToList() ?? [],
 			r.Genres?.ToList() ?? [],
 			r.Styles?.ToList() ?? [],
-			r.Tracklist?.Select(selector: MapTrack).ToList() ?? [],
-			r.Formats?.Select(selector: MapFormat).ToList() ?? [],
-			r.Identifiers?.Select(selector: MapIdentifier).ToList() ?? [],
-			r.Images?.Select(selector: MapImage).ToList() ?? [],
-			r.Videos?.Select(selector: MapVideo).ToList() ?? [],
-			r.Community is { } c ? MapCommunity(c: c) : null,
+			r.Tracklist?.Select(MapTrack).ToList() ?? [],
+			r.Formats?.Select(MapFormat).ToList() ?? [],
+			r.Identifiers?.Select(MapIdentifier).ToList() ?? [],
+			r.Images?.Select(MapImage).ToList() ?? [],
+			r.Videos?.Select(MapVideo).ToList() ?? [],
+			r.Community is { } c ? MapCommunity(c) : null,
 			EstimatedWeight: r.EstimatedWeight
 		);
 
@@ -430,7 +403,7 @@ public sealed class DiscogsService : IMusicService
 		return await ExecuteSafeDictAsync(
 			async () =>
 			{
-				Release release = await Client.GetReleaseAsync(releaseId: releaseId);
+				Release release = await Client.GetReleaseAsync(releaseId);
 				if (release?.Tracklist is null)
 					return [];
 
@@ -438,10 +411,10 @@ public sealed class DiscogsService : IMusicService
 
 				return mediaDict.ToDictionary(
 					kvp => kvp.Key,
-					kvp => kvp.Value.Select(selector: MapTrack).ToList()
+					kvp => kvp.Value.Select(MapTrack).ToList()
 				);
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -450,13 +423,13 @@ public sealed class DiscogsService : IMusicService
 		return await ExecuteSafeAsync(
 			async () =>
 			{
-				MasterRelease? master = await Client.GetMasterReleaseAsync(masterId: masterId);
+				MasterRelease? master = await Client.GetMasterReleaseAsync(masterId);
 				if (master is null)
 					return null;
 
-				return MapMaster(m: master);
+				return MapMaster(master);
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -473,12 +446,12 @@ public sealed class DiscogsService : IMusicService
 			ResourceUrl: m.ResourceUrl,
 			Uri: m.Uri,
 			DataQuality: m.DataQuality,
-			m.Artists?.Select(selector: MapArtistRef).ToList() ?? [],
+			m.Artists?.Select(MapArtistRef).ToList() ?? [],
 			m.Genres?.ToList() ?? [],
 			m.Styles?.ToList() ?? [],
-			m.Tracklist?.Select(selector: MapTrack).ToList() ?? [],
-			m.Images?.Select(selector: MapImage).ToList() ?? [],
-			m.Videos?.Select(selector: MapVideo).ToList() ?? [],
+			m.Tracklist?.Select(MapTrack).ToList() ?? [],
+			m.Images?.Select(MapImage).ToList() ?? [],
+			m.Videos?.Select(MapVideo).ToList() ?? [],
 			QuantityForSale: m.QuantityForSale,
 			(decimal?)m.LowestPrice
 		);
@@ -493,20 +466,20 @@ public sealed class DiscogsService : IMusicService
 			async () =>
 			{
 				VersionResults results = await Client.GetVersionsAsync(
-					new VersionsCriteria(masterId: masterId),
+					new VersionsCriteria(masterId),
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100),
+						PageSize = Math.Min(maxResults, 100),
 					}
 				);
 
 				return results
-					.Versions.Take(count: maxResults)
-					.Select(selector: MapVersion)
+					.Versions.Take(maxResults)
+					.Select(MapVersion)
 					.ToList();
 			},
-			ct: ct
+			ct
 		);
 	}
 
@@ -521,7 +494,7 @@ public sealed class DiscogsService : IMusicService
 			Format: v.Format,
 			Label: v.Label,
 			Country: v.Country,
-			ParseYear(year: v.ReleaseYear),
+			ParseYear(v.ReleaseYear),
 			CatalogNumber: v.CatalogNumber,
 			Status: v.Status,
 			ResourceUrl: v.ResourceUrl,
@@ -534,8 +507,8 @@ public sealed class DiscogsService : IMusicService
 			t.Title ?? "",
 			Duration: t.Duration,
 			Type: t.Type,
-			t.Artists?.Select(selector: MapArtistRef).ToList(),
-			t.ExtraArtists?.Select(selector: MapArtistRef).ToList()
+			t.Artists?.Select(MapArtistRef).ToList(),
+			t.ExtraArtists?.Select(MapArtistRef).ToList()
 		);
 
 	private static DiscogsFormat MapFormat(Format f) =>
@@ -615,33 +588,33 @@ public sealed class DiscogsService : IMusicService
 	{
 		try
 		{
-			return await Resilience.ExecuteAsync(operation: "Discogs", action: action, ct: ct);
+			return await Resilience.ExecuteAsync("Discogs", action, ct);
 		}
 		catch (Exception ex)
 		{
-			Console.CriticalFailure(service: "Discogs", message: ex.Message);
+			Console.CriticalFailure("Discogs", ex.Message);
 			throw;
 		}
 	}
 
 	private static Task<T?> ExecuteSafeAsync<T>(Func<Task<T?>> action, CancellationToken ct)
-		where T : class => ExecuteAsync(action: action, ct: ct);
+		where T : class => ExecuteAsync(action, ct);
 
 	private static Task<List<T>> ExecuteSafeListAsync<T>(
 		Func<Task<List<T>>> action,
 		CancellationToken ct
-	) => ExecuteAsync(action: action, ct: ct);
+	) => ExecuteAsync(action, ct);
 
 	private static Task<Dictionary<TKey, TValue>> ExecuteSafeDictAsync<TKey, TValue>(
 		Func<Task<Dictionary<TKey, TValue>>> action,
 		CancellationToken ct
 	)
-		where TKey : notnull => ExecuteAsync(action: action, ct: ct);
+		where TKey : notnull => ExecuteAsync(action, ct);
 
 	private static string? ExtractArtist(string? title) =>
-		title?.Contains(value: " - ") == true ? title.Split(separator: " - ")[0].Trim() : null;
+		title?.Contains(" - ") == true ? title.Split(" - ")[0].Trim() : null;
 
-	private static int? ParseYear(string? year) => int.TryParse(s: year, out var y) ? y : null;
+	private static int? ParseYear(string? year) => int.TryParse(year, out var y) ? y : null;
 
 	#endregion
 }

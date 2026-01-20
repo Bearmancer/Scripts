@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Commands;
+namespace CSharpScripts.CLI;
 
 #region JSON Configuration
 
@@ -8,11 +8,6 @@ file static class JsonOptions
 	{
 		WriteIndented = true,
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-	};
-
-	internal static readonly JsonSerializerOptions CaseInsensitive = new()
-	{
-		PropertyNameCaseInsensitive = true,
 	};
 }
 
@@ -106,7 +101,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 	)
 	{
 		if (!IsNullOrEmpty(settings.Id))
-			return await PerformLookupAsync(settings: settings, ct: cancellationToken);
+			return await PerformLookupAsync(settings, ct: cancellationToken);
 
 		var discogsToken = Config.DiscogsToken;
 		var source = settings.Source.ToLowerInvariant();
@@ -116,7 +111,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		if (searchDiscogs && IsNullOrEmpty(discogsToken))
 		{
-			Console.Warning(message: "DISCOGS_USER_TOKEN not set, using MusicBrainz");
+			Console.Warning("DISCOGS_USER_TOKEN not set, using MusicBrainz");
 			searchDiscogs = false;
 			searchMusicBrainz = true;
 		}
@@ -126,10 +121,9 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			: searchDiscogs ? "Discogs"
 			: "MusicBrainz";
 
-		Console.Info(message: "Searching {0}...", sourceLabel);
+		Console.Info("Searching {0}...", sourceLabel);
 
 		List<SearchResult> results = [];
-		var filteredCount = 0;
 
 		if (searchMusicBrainz)
 		{
@@ -144,7 +138,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		if (searchDiscogs)
 		{
-			DiscogsService discogs = new(token: discogsToken);
+			DiscogsService discogs = new(discogsToken);
 			List<SearchResult> discogsResults = await discogs.SearchAsync(
 				settings.Query!,
 				maxResults: settings.Limit,
@@ -156,7 +150,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				.. discogsResults.Select(r =>
 					r with
 					{
-						Score = CalculateRelevanceScore(settings.Query!, r: r),
+						Score = CalculateRelevanceScore(settings.Query!, r),
 					}
 				),
 			];
@@ -169,54 +163,59 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		if (!IsNullOrEmpty(settings.Type))
 		{
 			var beforeCount = results.Count;
-			var normalizedFilter = NormalizeType(input: settings.Type);
+			var normalizedFilter = NormalizeType(settings.Type);
 
-			results = [.. results.Where(r => MatchesType(r: r, filter: normalizedFilter))];
-			filteredCount = beforeCount - results.Count;
+			results = [.. results.Where(r => MatchesType(r, normalizedFilter))];
+			var filteredCount = beforeCount - results.Count;
 
 			if (settings.Verbose)
+			{
 				Console.Dim(
 					$"[DEBUG] Filter '{settings.Type}' -> normalized '{normalizedFilter}', removed {filteredCount}"
 				);
+			}
 		}
 
-		var trackCount = results.Count(predicate: IsTrackResult);
+		var trackCount = results.Count(IsTrackResult);
 		if (trackCount > 0)
 		{
-			results = [.. results.Where(r => !IsTrackResult(r: r))];
-			filteredCount += trackCount;
+			results = [.. results.Where(r => !IsTrackResult(r))];
 
 			if (settings.Verbose)
+			{
 				Console.Dim(
 					$"[DEBUG] Excluded {trackCount} track-level results (focusing on collections)"
 				);
+			}
 		}
 
 		if (settings.Verbose && results.Count > 0)
-			SaveSearchDumps(settings.Query!, results: results);
+		{
+			SaveSearchDumps(settings.Query!, results);
+		}
 
 		if (results.Count == 0)
 		{
-			Console.Warning(message: "No results found.");
+			Console.Warning("No results found.");
 			return 0;
 		}
 
-		if (settings.Output.Equals("json", StringComparison.OrdinalIgnoreCase))
+		if (settings.Output.IsEqualTo("json"))
 		{
-			var json = JsonSerializer.Serialize(value: results, options: JsonOptions.Indented);
+			var json = JsonSerializer.Serialize(results, JsonOptions.Indented);
 			System.Console.WriteLine(json);
 			return 0;
 		}
 
 		List<string> columns = GetColumns(settings);
 		SpectreTable table = new();
-		table.Border(border: TableBorder.Rounded);
+		table.Border(TableBorder.Rounded);
 		foreach (var col in columns)
 			table.AddColumn(col);
 
 		foreach (SearchResult r in results)
 		{
-			List<string> values = [.. columns.Select(col => GetFieldValue(column: col, r: r))];
+			List<string> values = [.. columns.Select(col => GetFieldValue(col, r))];
 			table.AddRow([.. values]);
 		}
 
@@ -232,13 +231,13 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			[
 				.. settings
 					.Fields.Split(
-						separator: ',',
+						',',
 						StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
 					)
-					.Select(selector: NormalizeFieldName),
+					.Select(NormalizeFieldName),
 			];
 
-		var isClassical = settings.Mode.Equals(value: "classical");
+		var isClassical = settings.Mode.Equals("classical");
 
 		List<string> columns = isClassical
 			? ["Composer", "Work", "Performers", "Year", "ID"]
@@ -287,17 +286,17 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		var value = column switch
 		{
 			"Artist" => r.Artist ?? "",
-			"Title" => MakeTitleLink(r: r),
-			"Year" => r.Year?.ToString(provider: CultureInfo.InvariantCulture) ?? "",
-			"Type" => NormalizeTypeForDisplay(type: r.ReleaseType) ?? "",
-			"ID" => MakeIdLink(r: r),
+			"Title" => MakeTitleLink(r),
+			"Year" => r.Year?.ToString(CultureInfo.InvariantCulture) ?? "",
+			"Type" => NormalizeTypeForDisplay(r.ReleaseType) ?? "",
+			"ID" => MakeIdLink(r),
 			"Source" => Console.SourceBadge(r.Source.ToString()),
-			"Score" => r.Score?.ToString(provider: CultureInfo.InvariantCulture) ?? "",
+			"Score" => r.Score?.ToString(CultureInfo.InvariantCulture) ?? "",
 			"Label" => r.Label ?? "",
 			"Format" => r.Format ?? "",
 			"Country" => r.Country ?? "",
-			"Genres" => r.Genres is { Count: > 0 } ? Join(separator: ", ", values: r.Genres) : "",
-			"Styles" => r.Styles is { Count: > 0 } ? Join(separator: ", ", values: r.Styles) : "",
+			"Genres" => r.Genres is { Count: > 0 } ? Join(", ", r.Genres) : "",
+			"Styles" => r.Styles is { Count: > 0 } ? Join(", ", r.Styles) : "",
 			"CatNo" => r.CatalogNumber ?? "",
 			"Composer" => "",
 			"Work" => r.Title,
@@ -320,7 +319,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		var type = r.ReleaseType.ToLowerInvariant();
 
 		return type is "recording" or "track" or "single"
-			&& r.Format?.Contains(value: "Single") != true;
+			&& r.Format?.Contains("Single") != true;
 	}
 
 	private static int CalculateRelevanceScore(string query, SearchResult r)
@@ -357,14 +356,14 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		else if (artistLower?.Contains(queryLower) == true)
 			substringBonus = 20;
 
-		var score = (int)Math.Min(val1: 100, termScore + substringBonus);
-		return Math.Max(val1: 1, val2: score);
+		var score = (int)Math.Min(100, termScore + substringBonus);
+		return Math.Max(1, score);
 	}
 
 	private static void SaveSearchDumps(string query, List<SearchResult> results)
 	{
-		var timestamp = DateTime.Now.ToString(format: "yyyyMMdd-HHmmss");
-		var sanitizedQuery = SanitizeForFolder(input: query);
+		var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+		var sanitizedQuery = SanitizeForFolder(query);
 		var folderName = $"{timestamp}-{sanitizedQuery}";
 		var dumpDir = Combine(Paths.DumpsDirectory, "music-search", folderName);
 
@@ -372,18 +371,18 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		for (var i = 0; i < results.Count; i++)
 		{
-			SearchResult result = results[index: i];
+			SearchResult result = results[i];
 			var source = result.Source == MusicSource.Discogs ? "discogs" : "musicbrainz";
 			var fileName = $"{i + 1:D3}-{source}-{result.Id}.json";
 			var filePath = Combine(dumpDir, fileName);
 
-			var json = JsonSerializer.Serialize(value: result, options: JsonOptions.Indented);
-			WriteAllText(path: filePath, contents: json);
+			var json = JsonSerializer.Serialize(result, JsonOptions.Indented);
+			WriteAllText(filePath, json);
 		}
 
 		var allPath = Combine(dumpDir, "_all-results.json");
-		var allJson = JsonSerializer.Serialize(value: results, options: JsonOptions.Indented);
-		WriteAllText(path: allPath, contents: allJson);
+		var allJson = JsonSerializer.Serialize(results, JsonOptions.Indented);
+		WriteAllText(allPath, allJson);
 
 		Console.Dim($"[DEBUG] Saved {results.Count} results to: {dumpDir}");
 	}
@@ -409,7 +408,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 	private static bool MatchesType(SearchResult r, string filter)
 	{
-		if (IsNullOrEmpty(value: r.ReleaseType))
+		if (IsNullOrEmpty(r.ReleaseType))
 			return false;
 
 		var normalized = r.ReleaseType.ToLowerInvariant();
@@ -455,7 +454,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				? $"https://www.discogs.com/release/{r.Id}"
 				: $"https://musicbrainz.org/release/{r.Id}";
 
-		var escapedTitle = Console.Escape(text: r.Title);
+		var escapedTitle = Console.Escape(r.Title);
 		return $"[link={url}]{escapedTitle}[/]";
 	}
 
@@ -466,8 +465,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 	private static async Task<int> PerformLookupAsync(Settings settings, CancellationToken ct)
 	{
 		using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-			token1: ct,
-			token2: Program.Cts.Token
+			ct,
+			Program.cts.Token
 		);
 		CancellationToken token = linkedCts.Token;
 
@@ -478,24 +477,24 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		if (isDiscogs)
 		{
-			if (!int.TryParse(s: settings.Id, result: out _))
+			if (!int.TryParse(settings.Id, out _))
 			{
-				Console.Error(message: "Invalid Discogs ID (must be number)");
+				Console.Error("Invalid Discogs ID (must be number)");
 				return 1;
 			}
 			var discogsToken = Config.DiscogsToken;
 			if (IsNullOrEmpty(discogsToken))
 			{
-				Console.CriticalFailure(service: "Discogs", message: "DISCOGS_USER_TOKEN not set");
+				Console.CriticalFailure("Discogs", "DISCOGS_USER_TOKEN not set");
 				return 1;
 			}
-			service = new DiscogsService(token: discogsToken);
+			service = new DiscogsService(discogsToken);
 		}
 		else
 		{
-			if (!Guid.TryParse(input: settings.Id, result: out _))
+			if (!Guid.TryParse(settings.Id, out _))
 			{
-				Console.Error(message: "Invalid MusicBrainz ID (must be GUID)");
+				Console.Error("Invalid MusicBrainz ID (must be GUID)");
 				return 1;
 			}
 			service = new MusicBrainzService();
@@ -506,45 +505,43 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		await Console
 			.Status()
-			.Spinner(spinner: Spinner.Known.Dots)
-			.SpinnerStyle(Style.Parse(text: "cyan"))
+			.Spinner(Spinner.Known.Dots)
+			.SpinnerStyle(Style.Parse("cyan"))
 			.StartAsync(
 				$"[cyan]Fetching release info from {sourceName}...[/]",
-				async ctx =>
-				{
+				async _ =>
 					release = await service.GetReleaseAsync(
 						settings.Id,
 						deepSearch: false,
 						ct: token
-					);
-				}
+					)
 			);
 
 		if (release is null || release.Tracks.Count == 0)
 		{
-			Console.Warning(message: "No tracks found.");
+			Console.Warning("No tracks found.");
 			return 0;
 		}
 
 		ReleaseInfo info = release.Info;
-		TrackInfo header = release.Tracks[index: 0];
+		TrackInfo header = release.Tracks[0];
 
 		Console.NewLine();
-		Console.Rule(text: "Release Info");
+		Console.Rule("Release Info");
 		Console.NewLine();
-		Console.Field(label: "Release:", value: info.Title);
-		Console.Field(label: "Artist:", value: info.Artist);
-		Console.Field(label: "Year:", info.Year?.ToString());
-		Console.Field(label: "Label:", value: info.Label);
-		Console.Field(label: "Catalog:", value: info.CatalogNumber);
-		Console.FieldIfPresent(label: "Conductor:", value: header.Conductor);
-		Console.FieldIfPresent(label: "Orchestra:", value: header.Orchestra);
-		Console.FieldIfPresent(label: "Venue:", value: header.RecordingVenue);
+		Console.Field("Release:", info.Title);
+		Console.Field("Artist:", info.Artist);
+		Console.Field("Year:", info.Year?.ToString());
+		Console.Field("Label:", info.Label);
+		Console.Field("Catalog:", info.CatalogNumber);
+		Console.FieldIfPresent("Conductor:", header.Conductor);
+		Console.FieldIfPresent("Orchestra:", header.Orchestra);
+		Console.FieldIfPresent("Venue:", header.RecordingVenue);
 		if (header.Soloists.Count > 0)
-			Console.Field(label: "Soloists:", $"{header.Soloists.Count} listed");
+			Console.Field("Soloists:", $"{header.Soloists.Count} listed");
 
-		Console.Field(label: "Discs:", info.DiscCount.ToString());
-		Console.Field(label: "Tracks:", info.TrackCount.ToString());
+		Console.Field("Discs:", info.DiscCount.ToString());
+		Console.Field("Tracks:", info.TrackCount.ToString());
 		if (info.TotalDuration.HasValue && info.TotalDuration.Value > TimeSpan.Zero)
 		{
 			TimeSpan td = info.TotalDuration.Value;
@@ -552,7 +549,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				td.Days > 0 ? $"{td.Days}d {td.Hours}h {td.Minutes}m"
 				: td.Hours > 0 ? $"{td.Hours}h {td.Minutes}m"
 				: $"{td.Minutes}m {td.Seconds}s";
-			Console.Field(label: "Duration:", value: durationText);
+			Console.Field("Duration:", durationText);
 		}
 		Console.NewLine();
 
@@ -563,10 +560,10 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			{
 				var choice = Console.Prompt(
 					new SelectionPrompt<string>()
-						.Title(title: "Fetch full track metadata (recordings, composers, etc)?")
+						.Title("Fetch full track metadata (recordings, composers, etc)?")
 						.AddChoices("Yes", "No")
 				);
-				deepSearch = choice == "Yes";
+				deepSearch = choice.IsEqualTo("Yes", Ordinal);
 			}
 
 			if (deepSearch)
@@ -574,25 +571,25 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				List<TrackInfo> enrichedTracks = await EnrichTracksWithProgressAsync(
 					(MusicBrainzService)service,
 					settings.Id,
-					releaseTitle: info.Title,
-					tracks: release.Tracks,
-					fresh: settings.Fresh,
-					ct: token
+					info.Title,
+					release.Tracks,
+					settings.Fresh,
+					token
 				);
-				release = new ReleaseData(Info: info, Tracks: enrichedTracks);
-				var sheetUrl = MusicExporter.ExportToSheets(release);
+				release = new ReleaseData(info, enrichedTracks);
+				MusicExporter.ExportToSheets(release);
 			}
 		}
 
 		SpectreTable table = new();
-		table.Border(border: TableBorder.Simple);
+		table.Border(TableBorder.Simple);
 
 		if (isDiscogs)
 		{
-			table.AddColumn(column: "Disc");
-			table.AddColumn(column: "Track");
-			table.AddColumn(column: "Title");
-			table.AddColumn(column: "Duration");
+			table.AddColumn("Disc");
+			table.AddColumn("Track");
+			table.AddColumn("Title");
+			table.AddColumn("Duration");
 
 			foreach (TrackInfo track in release.Tracks)
 			{
@@ -601,37 +598,37 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				table.AddRow(
 					track.DiscNumber.ToString(),
 					track.TrackNumber.ToString(),
-					Console.Escape(text: track.Title),
+					Console.Escape(track.Title),
 					duration
 				);
 			}
 		}
 		else
 		{
-			table.AddColumn(new TableColumn(header: "Disc").NoWrap().Centered());
-			table.AddColumn(new TableColumn(header: "Tracks").NoWrap().Centered());
-			table.AddColumn(new TableColumn(header: "Work").NoWrap());
-			table.AddColumn(column: "Composer");
-			table.AddColumn(new TableColumn(header: "Year").NoWrap().Centered());
-			table.AddColumn(new TableColumn(header: "Duration").NoWrap().RightAligned());
-			table.AddColumn(column: "Conductor");
-			table.AddColumn(column: "Orchestra");
-			table.AddColumn(column: "Soloists");
+			table.AddColumn(new TableColumn("Disc").NoWrap().Centered());
+			table.AddColumn(new TableColumn("Tracks").NoWrap().Centered());
+			table.AddColumn(new TableColumn("Work").NoWrap());
+			table.AddColumn("Composer");
+			table.AddColumn(new TableColumn("Year").NoWrap().Centered());
+			table.AddColumn(new TableColumn("Duration").NoWrap().RightAligned());
+			table.AddColumn("Conductor");
+			table.AddColumn("Orchestra");
+			table.AddColumn("Soloists");
 
-			List<WorkSummary> works = GroupTracksByWork(tracks: release.Tracks);
+			List<WorkSummary> works = GroupTracksByWork(release.Tracks);
 			foreach (WorkSummary work in works)
 			{
 				var duration =
 					work.TotalDuration > TimeSpan.Zero
-						? work.TotalDuration.ToString(format: @"m\:ss")
+						? work.TotalDuration.ToString(@"m\:ss")
 						: "";
 				var soloists =
-					work.Soloists.Count > 0 ? Join(separator: ", ", values: work.Soloists) : "";
+					work.Soloists.Count > 0 ? Join(", ", work.Soloists) : "";
 
 				table.AddRow(
 					work.Disc.ToString(),
 					work.TrackRange,
-					Console.Escape(text: work.Work),
+					Console.Escape(work.Work),
 					Console.Escape(work.Composer ?? ""),
 					work.YearDisplay,
 					duration,
@@ -665,7 +662,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			if (currentGroup.Count == 0)
 				return;
 
-			TrackInfo first = currentGroup[index: 0];
+			TrackInfo first = currentGroup[0];
 			List<int> years =
 			[
 				.. currentGroup
@@ -678,7 +675,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 			TimeSpan totalDuration = currentGroup
 				.Where(t => t.Duration.HasValue)
-				.Aggregate(seed: TimeSpan.Zero, (sum, t) => sum + t.Duration!.Value);
+				.Aggregate(TimeSpan.Zero, (sum, t) => sum + t.Duration!.Value);
 
 			List<string> soloists = [.. currentGroup.SelectMany(t => t.Soloists).Distinct()];
 
@@ -687,7 +684,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			works.Add(
 				new WorkSummary(
 					Disc: first.DiscNumber,
-					FirstTrack: currentGroup[index: 0].TrackNumber,
+					FirstTrack: currentGroup[0].TrackNumber,
 					LastTrack: currentGroup[^1].TrackNumber,
 					Work: displayWork,
 					Composer: first.Composer,
@@ -718,7 +715,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		FlushGroup();
 
-		DetectMissingWorkHierarchy(works: works);
+		DetectMissingWorkHierarchy(works);
 
 		return works;
 	}
@@ -729,7 +726,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		for (var i = 0; i < works.Count - 1; i++)
 		{
-			WorkSummary current = works[index: i];
+			WorkSummary current = works[i];
 			WorkSummary next = works[i + 1];
 
 			if (current.FirstTrack != current.LastTrack || next.FirstTrack != next.LastTrack)
@@ -738,8 +735,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			if (current.Disc != next.Disc)
 				continue;
 
-			var currentColon = current.Work.IndexOf(value: ':');
-			var nextColon = next.Work.IndexOf(value: ':');
+			var currentColon = current.Work.IndexOf(':');
+			var nextColon = next.Work.IndexOf(':');
 
 			if (currentColon > 5 && nextColon > 5)
 			{
@@ -757,7 +754,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				continue;
 
 			Console.Warning(
-				message: "Work hierarchy missing for '{0}' - tracks not grouped",
+				"Work hierarchy missing for '{0}' - tracks not grouped",
 				missing
 			);
 		}
@@ -778,25 +775,25 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 	{
 		var total = tracks.Count;
 
-		Logger.Start(service: ServiceType.Music);
+		Logger.Start(ServiceType.Music);
 		Logger.Event(
-			eventName: "ReleaseStart",
+			"ReleaseStart",
 			new Dictionary<string, object>
 			{
-				[key: "ReleaseId"] = releaseId,
-				[key: "ReleaseTitle"] = releaseTitle,
-				[key: "TotalTracks"] = total,
+				["ReleaseId"] = releaseId,
+				["ReleaseTitle"] = releaseTitle,
+				["TotalTracks"] = total,
 			}
 		);
 
 		if (fresh)
 		{
-			ReleaseProgressCache.Delete(releaseId: releaseId);
-			StateManager.DeleteReleaseCache(releaseId: releaseId);
-			Console.Info(message: "Cleared cached state for fresh fetch");
+			ReleaseProgressCache.Delete(releaseId);
+			StateManager.DeleteReleaseCache(releaseId);
+			Console.Info("Cleared cached state for fresh fetch");
 		}
 
-		List<TrackInfo> enrichedTracks = ReleaseProgressCache.Load(releaseId: releaseId);
+		List<TrackInfo> enrichedTracks = ReleaseProgressCache.Load(releaseId);
 		var startIndex = enrichedTracks.Count;
 		var resumeSource = "none";
 
@@ -807,7 +804,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		else
 		{
 			MusicBrainzEnrichmentState? cachedState =
-				StateManager.LoadReleaseCache<MusicBrainzEnrichmentState>(releaseId: releaseId);
+				StateManager.LoadReleaseCache<MusicBrainzEnrichmentState>(releaseId);
 			if (cachedState is { } && cachedState.TotalTracks == total)
 			{
 				enrichedTracks = cachedState.EnrichedTracks;
@@ -818,32 +815,29 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		if (startIndex > 0)
 		{
-			Console.Info(
-				message: "Resuming from {0} (track {1}/{2})",
-				resumeSource,
-				startIndex + 1,
-				total
-			);
+			Console.Info("Resuming from {0} (track {1}/{2})", resumeSource, startIndex + 1, total);
 			Logger.Event(
-				eventName: "ReleaseResume",
+				"ReleaseResume",
 				new Dictionary<string, object>
 				{
-					[key: "Source"] = resumeSource,
-					[key: "TracksEnriched"] = startIndex,
+					["Source"] = resumeSource,
+					["TracksEnriched"] = startIndex,
 				}
 			);
 
-			foreach (TrackInfo? t in enrichedTracks.TakeLast(count: 3))
+			foreach (TrackInfo t in enrichedTracks.TakeLast(3))
+			{
 				Console.MarkupLine(
-					$"  [dim]└[/] {t.DiscNumber}.{t.TrackNumber:D2} {Console.Escape(text: t.Title)}"
+					$"  [dim]└[/] {t.DiscNumber}.{t.TrackNumber:D2} {Console.Escape(t.Title)}"
 				);
+			}
 			Console.NewLine();
 		}
 
 		if (startIndex >= total)
 		{
-			Console.Success(message: "All tracks already enriched from cache");
-			StateManager.DeleteReleaseCache(releaseId: releaseId);
+			Console.Success("All tracks already enriched from cache");
+			StateManager.DeleteReleaseCache(releaseId);
 			return enrichedTracks;
 		}
 
@@ -855,7 +849,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		{
 			var discTrack = $"{t.DiscNumber}.{t.TrackNumber:D2}";
 			var title = t.Title;
-			var duration = t.Duration?.ToString(format: @"m\:ss") ?? "";
+			var duration = t.Duration?.ToString(@"m\:ss") ?? "";
 			var header = IsNullOrEmpty(duration)
 				? $"[{discTrack}] {title}"
 				: $"[{discTrack}] {title} ({duration})";
@@ -863,12 +857,12 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			List<string> parts = [];
 
 			if (!IsNullOrEmpty(t.WorkName))
-				parts.Add(Console.Work(text: t.WorkName));
+				parts.Add(Console.Work(t.WorkName));
 
 			var year = t.RecordingYear;
-			if (!IsNullOrEmpty(value: t.Composer))
+			if (!IsNullOrEmpty(t.Composer))
 				parts.Add(
-					Console.Combine(Console.Composer(text: t.Composer), Console.Year(year: year))
+					Console.Combine(Console.Composer(t.Composer), Console.Year(year))
 				);
 			else if (year is { } y)
 				parts.Add($"({y})");
@@ -888,31 +882,25 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				parts.Add(Console.Venue(t.RecordingVenue));
 
 			if (t.Soloists.Count > 0)
-				parts.Add($"feat. {Join(separator: ", ", values: t.Soloists)}");
+				parts.Add($"feat. {Join(", ", t.Soloists)}");
 
-			return (header, Join(separator: " ", values: parts));
+			return (header, Join(" ", parts));
 		}
 
 		void SaveState()
 		{
 			StateManager.SaveReleaseCache(
-				releaseId: releaseId,
-				new MusicBrainzEnrichmentState(
-					ReleaseId: releaseId,
-					TotalTracks: total,
-					EnrichedTracks: enrichedTracks,
-					LastUpdated: DateTime.Now
-				)
+				releaseId,
+				new MusicBrainzEnrichmentState(releaseId, total, enrichedTracks, DateTime.Now)
 			);
 		}
 
 		Console.Suppress = true;
 
-		var fillTimer = Stopwatch.StartNew();
 		await Console
 			.CreateProgress()
-			.AutoClear(enabled: true)
-			.HideCompleted(enabled: false)
+			.AutoClear(true)
+			.HideCompleted(false)
 			.Columns(
 				new TaskDescriptionColumn(),
 				new ProgressBarColumn(),
@@ -934,7 +922,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 				for (var i = startIndex; i < tracks.Count; i++)
 				{
-					TrackInfo track = tracks[index: i];
+					TrackInfo track = tracks[i];
 
 					if (ct.IsCancellationRequested)
 					{
@@ -946,25 +934,25 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 					try
 					{
 						TrackInfo enriched = await ((MusicBrainzService)service).EnrichTrackAsync(
-							track: track,
-							ct: ct
+							track,
+							ct
 						);
-						enrichedTracks.Add(item: enriched);
-						ReleaseProgressCache.AppendTrack(releaseId: releaseId, track: enriched);
+						enrichedTracks.Add(enriched);
+						ReleaseProgressCache.AppendTrack(releaseId, enriched);
 						completed++;
 
-						(string Header, string Detail) info = FormatTrackDetail(t: enriched);
-						recentTracks.Enqueue(item: info);
+						(string Header, string Detail) info = FormatTrackDetail(enriched);
+						recentTracks.Enqueue(info);
 						if (recentTracks.Count > 5)
 							recentTracks.Dequeue();
 
 						if (completed % 10 == 0)
 							Logger.Event(
-								eventName: "TrackProgress",
+								"TrackProgress",
 								new Dictionary<string, object>
 								{
-									[key: "Completed"] = completed,
-									[key: "Total"] = total,
+									["Completed"] = completed,
+									["Total"] = total,
 								}
 							);
 
@@ -988,7 +976,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 					{
 						SaveState();
 						Console.Suppress = false;
-						Console.Error(message: "Error: {0}", ex.Message);
+						Console.Error("Error: {0}", ex.Message);
 						cancelled = true;
 						break;
 					}
@@ -1000,9 +988,9 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		if (cancelled)
 		{
-			Console.Warning(message: "Enrichment interrupted at {0}/{1} tracks", completed, total);
+			Console.Warning("Enrichment interrupted at {0}/{1} tracks", completed, total);
 			Console.Info(
-				message: "Run the same command again to resume from track {0}",
+				"Run the same command again to resume from track {0}",
 				completed + 1
 			);
 			Logger.Interrupted($"{completed}/{total} tracks");
@@ -1011,13 +999,13 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		{
 			Console.Complete($"Enriched {total} tracks");
 
-			List<WorkSummary> works = GroupTracksByWork(tracks: enrichedTracks);
-			Logger.End(success: true, $"{total} tracks, {works.Count} works");
+			List<WorkSummary> works = GroupTracksByWork(enrichedTracks);
+			Logger.End(true, $"{total} tracks, {works.Count} works");
 
-			MusicExporter.ExportWorksToCSV(releaseTitle: releaseTitle, works: works);
+			MusicExporter.ExportWorksToCSV(releaseTitle, works);
 
-			StateManager.DeleteReleaseCache(releaseId: releaseId);
-			ReleaseProgressCache.Delete(releaseId: releaseId);
+			StateManager.DeleteReleaseCache(releaseId);
+			ReleaseProgressCache.Delete(releaseId);
 		}
 
 		return enrichedTracks;
