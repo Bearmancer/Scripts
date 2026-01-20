@@ -19,26 +19,20 @@ public static class LanguageDetector
 		string? orchestra
 	)
 	{
-		CheckField(disc: disc, track: track, fieldName: "Work", value: work);
-		CheckField(disc: disc, track: track, fieldName: "Composer", value: composer);
-		CheckField(disc: disc, track: track, fieldName: "Conductor", value: conductor);
-		CheckField(disc: disc, track: track, fieldName: "Orchestra", value: orchestra);
+		CheckField(disc, track, fieldName: "Work", value: work);
+		CheckField(disc, track, fieldName: "Composer", value: composer);
+		CheckField(disc, track, fieldName: "Conductor", value: conductor);
+		CheckField(disc, track, fieldName: "Orchestra", value: orchestra);
 	}
 
 	private static void CheckField(int disc, int track, string fieldName, string? value)
 	{
-		if (IsNullOrWhiteSpace(value: value))
+		if (IsNullOrWhiteSpace(value))
 			return;
 
-		var nonLatinChars = DetectNonLatinChars(text: value);
+		var nonLatinChars = DetectNonLatinChars(value);
 		if (nonLatinChars is { })
-			LogIssue(
-				disc: disc,
-				track: track,
-				field: fieldName,
-				value: value,
-				$"Non-Latin: {nonLatinChars}"
-			);
+			LogIssue(disc, track, field: fieldName, value, $"Non-Latin: {nonLatinChars}");
 	}
 
 	private static string? DetectNonLatinChars(string text)
@@ -47,18 +41,18 @@ public static class LanguageDetector
 		foreach (var c in text)
 		{
 			if (
-				char.IsAsciiLetter(c: c)
-				|| char.IsDigit(c: c)
-				|| char.IsPunctuation(c: c)
-				|| char.IsWhiteSpace(c: c)
-				|| IsLatinDiacritic(c: c)
+				char.IsAsciiLetter(c)
+				|| char.IsDigit(c)
+				|| char.IsPunctuation(c)
+				|| char.IsWhiteSpace(c)
+				|| IsLatinDiacritic(c)
 			)
 				continue;
 
-			nonLatin.Add(item: c);
+			nonLatin.Add(c);
 		}
 
-		return nonLatin.Count > 0 ? new string([.. nonLatin.Distinct().Take(count: 10)]) : null;
+		return nonLatin.Count > 0 ? new string([.. nonLatin.Distinct().Take(10)]) : null;
 	}
 
 	private static bool IsLatinDiacritic(char c)
@@ -72,21 +66,21 @@ public static class LanguageDetector
 
 	private static void LogIssue(int disc, int track, string field, string value, string issue)
 	{
-		var dir = GetDirectoryName(path: CsvPath)!;
-		CreateDirectory(path: dir);
+		var dir = GetDirectoryName(CsvPath)!;
+		CreateDirectory(dir);
 
-		if (!headerWritten && !File.Exists(path: CsvPath))
+		if (!headerWritten && !File.Exists(CsvPath))
 		{
-			AppendAllText(path: CsvPath, contents: "Disc,Track,Field,Value,Issue\n");
+			AppendAllText(CsvPath, "Disc,Track,Field,Value,Issue\n");
 			headerWritten = true;
 		}
 
 		var escapedValue =
-			value.Contains(value: ',') || value.Contains(value: '"') || value.Contains(value: '\n')
-				? $"\"{value.Replace(oldValue: "\"", newValue: "\"\"")}\""
+			value.Contains(',') || value.Contains('"') || value.Contains('\n')
+				? $"\"{value.Replace("\"", "\"\"")}\""
 				: value;
 
 		var row = $"{disc},{track},{field},{escapedValue},{issue}\n";
-		AppendAllText(path: CsvPath, contents: row);
+		AppendAllText(CsvPath, row);
 	}
 }

@@ -1,12 +1,36 @@
+[project]
+name = "toolkit"
+version = "1.0.0"
+description = "Personal toolkit for audio, video, and file operations"
+requires-python = ">=3.11"
+dependencies = [
+    "argcomplete",
+    "rich",
+    "httpx",
+    "mutagen",
+]
+
+[project.scripts]
+toolkit = "toolkit.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.basedpyright]
 include = ["toolkit"]
 typeCheckingMode = "strict"
+pythonPlatform = "All"
 
-# Suppress errors from untyped third-party libraries (ffmpeg-python, pylast, gspread, etc.)
+# Suppress errors from untyped third-party libraries
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
+reportUnknownParameterType = false
+reportUnknownLambdaType = false
+reportMissingImports = false
+reportMissingModuleSource = false
 
 reportImportCycles = "error"
 reportPropertyTypeMismatch = "error"

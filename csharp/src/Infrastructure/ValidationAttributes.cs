@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+namespace CSharpScripts.Infrastructure;
 
 [AttributeUsage(validOn: AttributeTargets.Property)]
 public sealed class AllowedValuesAttribute(params string[] values)

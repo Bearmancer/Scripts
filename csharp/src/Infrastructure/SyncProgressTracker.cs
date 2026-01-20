@@ -62,7 +62,7 @@ public sealed class SyncProgressTracker
 	public void Initialize(List<PlaylistProgressItem> playlists)
 	{
 		if (playlists.Count == 0)
-			throw new ArgumentException(message: "Playlists cannot be empty", nameof(playlists));
+			throw new ArgumentException("Playlists cannot be empty", nameof(playlists));
 
 		TotalPlaylists = playlists.Count;
 		CompletedPlaylists = 0;
@@ -77,12 +77,12 @@ public sealed class SyncProgressTracker
 
 	public void StartPlaylist(string name, int videoCount)
 	{
-		if (IsNullOrWhiteSpace(value: name))
-			throw new ArgumentException(message: "Playlist name cannot be empty", nameof(name));
+		if (IsNullOrWhiteSpace(name))
+			throw new ArgumentException("Playlist name cannot be empty", nameof(name));
 		if (videoCount < 0)
 			throw new ArgumentOutOfRangeException(
 				nameof(videoCount),
-				message: "Video count cannot be negative"
+				"Video count cannot be negative"
 			);
 
 		CurrentPlaylistName = name;
@@ -96,12 +96,12 @@ public sealed class SyncProgressTracker
 		if (videosProcessed < 0)
 			throw new ArgumentOutOfRangeException(
 				nameof(videosProcessed),
-				message: "Cannot be negative"
+				"Cannot be negative"
 			);
 		if (videosProcessed > CurrentPlaylistTotalVideos)
 			throw new ArgumentOutOfRangeException(
 				nameof(videosProcessed),
-				message: "Cannot exceed total"
+				"Cannot exceed total"
 			);
 
 		var delta = videosProcessed - CurrentPlaylistVideosProcessed;

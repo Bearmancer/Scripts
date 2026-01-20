@@ -1,5 +1,3 @@
-using Google.Apis.Drive.v3.Data;
-
 namespace CSharpScripts.Services.Sync.Google;
 
 public class GoogleSheetsService : IDisposable
@@ -16,9 +14,9 @@ public class GoogleSheetsService : IDisposable
 		"Album",
 	]);
 
-	private readonly DriveService driveService = new(Config.GoogleInitializer);
+	private readonly DriveService driveService = new(GoogleCredentials.Initializer);
 
-	private readonly SheetsService service = new(Config.GoogleInitializer);
+	private readonly SheetsService service = new(GoogleCredentials.Initializer);
 
 	private readonly Dictionary<string, Spreadsheet> spreadsheetCache = [];
 
@@ -38,26 +36,21 @@ public class GoogleSheetsService : IDisposable
 
 	private Spreadsheet GetSpreadsheetMetadata(string spreadsheetId, bool forceRefresh = false)
 	{
-		if (
-			!forceRefresh
-			&& spreadsheetCache.TryGetValue(key: spreadsheetId, out Spreadsheet? cached)
-		)
+		if (!forceRefresh && spreadsheetCache.TryGetValue(spreadsheetId, out Spreadsheet? cached))
 			return cached;
 
 		Spreadsheet spreadsheet = Resilience.Execute(
-			operation: "Sheets.Get",
+			"Sheets.Get",
 			() =>
 			{
-				SpreadsheetsResource.GetRequest request = service.Spreadsheets.Get(
-					spreadsheetId: spreadsheetId
-				);
+				SpreadsheetsResource.GetRequest request = service.Spreadsheets.Get(spreadsheetId);
 				request.Fields =
 					"spreadsheetId,properties/title,sheets(properties(sheetId,title,index,gridProperties))";
 				return request.Execute();
 			}
 		);
 
-		spreadsheetCache[key: spreadsheetId] = spreadsheet;
+		spreadsheetCache[spreadsheetId] = spreadsheet;
 		return spreadsheet;
 	}
 
@@ -69,40 +62,37 @@ public class GoogleSheetsService : IDisposable
 
 	private Sheet? FindSheet(string spreadsheetId, string sheetName, bool forceRefresh = false)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(
-			spreadsheetId: spreadsheetId,
-			forceRefresh: forceRefresh
-		);
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId, forceRefresh);
 		return spreadsheet.Sheets?.FirstOrDefault(s =>
-			s.Properties?.Title?.Equals(value: sheetName) == true
+			s.Properties?.Title.IsEqualTo(sheetName, Ordinal) == true
 		);
 	}
 
 	internal string CreateSpreadsheet(string title = SpreadsheetTitle)
 	{
 		Spreadsheet response = Resilience.Execute(
-			operation: "Sheets.Create",
+			"Sheets.Create",
 			() =>
 			{
 				Spreadsheet spreadsheet = new()
 				{
 					Properties = new SpreadsheetProperties { Title = title },
 				};
-				return service.Spreadsheets.Create(body: spreadsheet).Execute();
+				return service.Spreadsheets.Create(spreadsheet).Execute();
 			}
 		);
 		return response?.SpreadsheetId
-			?? throw new InvalidOperationException(message: "Failed to create spreadsheet");
+			?? throw new InvalidOperationException("Failed to create spreadsheet");
 	}
 
 	internal void DeleteSpreadsheet(string spreadsheetId)
 	{
-		Console.Info(message: "Deleting spreadsheet: {0}", spreadsheetId);
+		Console.Info("Deleting spreadsheet: {0}", spreadsheetId);
 		Resilience.Execute(
-			operation: "Drive.Delete",
-			() => driveService.Files.Delete(fileId: spreadsheetId).Execute()
+			"Drive.Delete",
+			() => driveService.Files.Delete(spreadsheetId).Execute()
 		);
-		Console.Success(message: "Spreadsheet deleted");
+		Console.Success("Spreadsheet deleted");
 	}
 
 	internal bool SpreadsheetExists(string spreadsheetId)
@@ -110,8 +100,8 @@ public class GoogleSheetsService : IDisposable
 		try
 		{
 			Resilience.Execute(
-				operation: "Sheets.Get",
-				() => service.Spreadsheets.Get(spreadsheetId: spreadsheetId).Execute()
+				"Sheets.Get",
+				() => service.Spreadsheets.Get(spreadsheetId).Execute()
 			);
 			return true;
 		}
@@ -131,14 +121,11 @@ public class GoogleSheetsService : IDisposable
 		IEnumerable<object> headers
 	)
 	{
-		Sheet? existingSheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: sheetName);
+		Sheet? existingSheet = FindSheet(spreadsheetId, sheetName);
 
 		if (existingSheet == null)
 		{
-			var targetIndex = GetAlphabeticalInsertIndex(
-				spreadsheetId: spreadsheetId,
-				newSheetName: sheetName
-			);
+			var targetIndex = GetAlphabeticalInsertIndex(spreadsheetId, newSheetName: sheetName);
 
 			BatchUpdateSpreadsheetRequest request = new()
 			{
@@ -158,21 +145,18 @@ public class GoogleSheetsService : IDisposable
 				],
 			};
 			Resilience.Execute(
-				operation: "Sheets.BatchUpdate.AddSheet",
-				() =>
-					service
-						.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
-						.Execute()
+				"Sheets.BatchUpdate.AddSheet",
+				() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 			);
-			InvalidateCache(spreadsheetId: spreadsheetId);
+			InvalidateCache(spreadsheetId);
 		}
 
-		EnsureHeadersForSheet(spreadsheetId: spreadsheetId, sheetName: sheetName, headers: headers);
+		EnsureHeadersForSheet(spreadsheetId, sheetName, headers);
 	}
 
 	private int GetAlphabeticalInsertIndex(string spreadsheetId, string newSheetName)
 	{
-		List<string> existingNames = GetSubsheetNames(spreadsheetId: spreadsheetId);
+		List<string> existingNames = GetSubsheetNames(spreadsheetId);
 		existingNames.Add(newSheetName);
 		existingNames.Sort(comparer: StringComparer.OrdinalIgnoreCase);
 		return existingNames.IndexOf(newSheetName);
@@ -180,10 +164,7 @@ public class GoogleSheetsService : IDisposable
 
 	internal void ReorderSheetsAlphabetically(string spreadsheetId)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(
-			spreadsheetId: spreadsheetId,
-			forceRefresh: true
-		);
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId, forceRefresh: true);
 		List<Sheet> sheets =
 			spreadsheet
 				.Sheets?.Where(s => s.Properties?.Title != null && s.Properties?.SheetId != null)
@@ -194,12 +175,12 @@ public class GoogleSheetsService : IDisposable
 			return;
 
 		var sortedSheets = sheets
-			.OrderBy(s => s.Properties?.Title, comparer: StringComparer.OrdinalIgnoreCase)
+			.OrderBy(s => s.Properties?.Title, StringComparer.OrdinalIgnoreCase)
 			.ToList();
 
 		var needsReorder = false;
 		for (var i = 0; i < sheets.Count; i++)
-			if (sheets[index: i].Properties?.SheetId != sortedSheets[index: i].Properties?.SheetId)
+			if (sheets[i].Properties?.SheetId != sortedSheets[i].Properties?.SheetId)
 			{
 				needsReorder = true;
 				break;
@@ -208,7 +189,7 @@ public class GoogleSheetsService : IDisposable
 		if (!needsReorder)
 			return;
 
-		Console.Info(message: "Reordering {0} sheets alphabetically...", sheets.Count);
+		Console.Info("Reordering {0} sheets alphabetically...", sheets.Count);
 
 		List<Request> requests = [];
 		for (var i = 0; i < sortedSheets.Count; i++)
@@ -219,7 +200,7 @@ public class GoogleSheetsService : IDisposable
 					{
 						Properties = new SheetProperties
 						{
-							SheetId = sortedSheets[index: i].Properties?.SheetId,
+							SheetId = sortedSheets[i].Properties?.SheetId,
 							Index = i,
 						},
 						Fields = "index",
@@ -229,19 +210,16 @@ public class GoogleSheetsService : IDisposable
 
 		BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.ReorderSheets",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: batchRequest, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.ReorderSheets",
+			() => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
-		Console.Success(message: "Sheets reordered alphabetically");
+		InvalidateCache(spreadsheetId);
+		Console.Success("Sheets reordered alphabetically");
 	}
 
 	internal void DeleteSubsheet(string spreadsheetId, string sheetName)
 	{
-		Sheet? sheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: sheetName);
+		Sheet? sheet = FindSheet(spreadsheetId, sheetName);
 		if (sheet?.Properties?.SheetId == null)
 			return;
 
@@ -256,38 +234,34 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.DeleteSheet",
+			"Sheets.BatchUpdate.DeleteSheet",
 			() =>
 				service
-					.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
+					.Spreadsheets.BatchUpdate(request, spreadsheetId)
 					.Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
+		InvalidateCache(spreadsheetId);
 	}
 
 	internal List<string> GetSubsheetNames(string spreadsheetId)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId: spreadsheetId);
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
 		return spreadsheet
 				.Sheets?.Select(s => s.Properties?.Title ?? "")
-				.Where(t => !IsNullOrEmpty(value: t))
+				.Where(t => !IsNullOrEmpty(t))
 				.ToList()
 			?? [];
 	}
 
 	internal void ClearSubsheet(string spreadsheetId, string sheetName)
 	{
-		var escapedName = EscapeSheetName(name: sheetName);
+		var escapedName = EscapeSheetName(sheetName);
 		var range = $"{escapedName}!A2:Z";
 		Resilience.Execute(
-			operation: "Sheets.Values.Clear",
+			"Sheets.Values.Clear",
 			() =>
 				service
-					.Spreadsheets.Values.Clear(
-						new ClearValuesRequest(),
-						spreadsheetId: spreadsheetId,
-						range: range
-					)
+					.Spreadsheets.Values.Clear(new ClearValuesRequest(), spreadsheetId, range)
 					.Execute()
 		);
 	}
@@ -297,20 +271,16 @@ public class GoogleSheetsService : IDisposable
 		if (rows.Count == 0)
 			return;
 
-		var escapedName = EscapeSheetName(name: sheetName);
+		var escapedName = EscapeSheetName(sheetName);
 		ValueRange body = new() { Values = rows };
 		var range = $"{escapedName}!A2";
 
 		Resilience.Execute(
-			operation: "Sheets.Values.Update",
+			"Sheets.Values.Update",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.UpdateRequest updateRequest =
-					service.Spreadsheets.Values.Update(
-						body: body,
-						spreadsheetId: spreadsheetId,
-						range: range
-					);
+					service.Spreadsheets.Values.Update(body, spreadsheetId, range);
 				updateRequest.ValueInputOption = SpreadsheetsResource
 					.ValuesResource
 					.UpdateRequest
@@ -329,16 +299,16 @@ public class GoogleSheetsService : IDisposable
 		Func<T, IList<object>> rowMapper
 	)
 	{
-		ClearSubsheet(spreadsheetId: spreadsheetId, sheetName: sheetName);
+		ClearSubsheet(spreadsheetId, sheetName);
 
 		List<IList<object>> allRows =
 		[
 			[.. headers],
-			.. records.Select(selector: rowMapper),
+			.. records.Select(rowMapper),
 		];
 
 		if (allRows.Count > 0)
-			WriteRows(spreadsheetId: spreadsheetId, sheetName: sheetName, rows: allRows);
+			WriteRows(spreadsheetId, sheetName, allRows);
 	}
 
 	internal void AppendRecords<T>(
@@ -348,14 +318,14 @@ public class GoogleSheetsService : IDisposable
 		Func<T, IList<object>> rowMapper
 	)
 	{
-		List<IList<object>> rows = [.. records.Select(selector: rowMapper)];
+		List<IList<object>> rows = [.. records.Select(rowMapper)];
 		if (rows.Count > 0)
-			AppendRows(spreadsheetId: spreadsheetId, sheetName: sheetName, rows: rows);
+			AppendRows(spreadsheetId, sheetName, rows);
 	}
 
 	internal void RenameSubsheet(string spreadsheetId, string oldName, string newName)
 	{
-		Sheet? sheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: oldName);
+		Sheet? sheet = FindSheet(spreadsheetId, sheetName: oldName);
 		if (sheet?.Properties?.SheetId == null)
 			return;
 
@@ -378,25 +348,25 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.Rename",
+			"Sheets.BatchUpdate.Rename",
 			() =>
 				service
-					.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
+					.Spreadsheets.BatchUpdate(request, spreadsheetId)
 					.Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
-		Console.Debug(message: "Renamed sheet '{0}' to '{1}'", oldName, newName);
+		InvalidateCache(spreadsheetId);
+		Console.Debug("Renamed sheet '{0}' to '{1}'", oldName, newName);
 	}
 
 	internal void CleanupDefaultSheet(string spreadsheetId)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId: spreadsheetId);
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
 
 		if (spreadsheet.Sheets?.Count <= 1)
 			return;
 
 		Sheet? defaultSheet = spreadsheet.Sheets?.FirstOrDefault(s =>
-			s.Properties?.Title == "Sheet1"
+			s.Properties?.Title.IsEqualTo("Sheet1", Ordinal) == true
 		);
 		if (defaultSheet?.Properties?.SheetId == null)
 			return;
@@ -415,13 +385,10 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.DeleteSheet1",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.DeleteSheet1",
+			() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
+		InvalidateCache(spreadsheetId);
 	}
 
 	#endregion
@@ -434,7 +401,7 @@ public class GoogleSheetsService : IDisposable
 		IEnumerable<object> headers
 	)
 	{
-		var escapedName = EscapeSheetName(name: sheetName);
+		var escapedName = EscapeSheetName(sheetName);
 		var range = $"{escapedName}!1:1";
 		ValueRange body = new()
 		{
@@ -444,15 +411,11 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.Values.Update.Headers",
+			"Sheets.Values.Update.Headers",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.UpdateRequest updateRequest =
-					service.Spreadsheets.Values.Update(
-						body: body,
-						spreadsheetId: spreadsheetId,
-						range: range
-					);
+					service.Spreadsheets.Values.Update(body, spreadsheetId, range);
 				updateRequest.ValueInputOption = SpreadsheetsResource
 					.ValuesResource
 					.UpdateRequest
@@ -464,30 +427,30 @@ public class GoogleSheetsService : IDisposable
 	}
 
 	private static string EscapeSheetName(string name) =>
-		name.Contains(value: '\'') || name.Contains(value: ' ') || name.Contains(value: '-')
-			? $"'{name.Replace(oldValue: "'", newValue: "''")}'"
+		name.Contains('\'') || name.Contains(' ') || name.Contains('-')
+			? $"'{name.Replace("'", "''")}'"
 			: name;
 
 	private static string SanitizeForFileName(string name) =>
-		name.Replace(oldValue: ":", newValue: " -")
-			.Replace(oldValue: "/", newValue: "-")
-			.Replace(oldValue: "\\", newValue: "-")
-			.Replace(oldValue: "?", newValue: "")
-			.Replace(oldValue: "*", newValue: "")
-			.Replace(oldValue: "[", newValue: "(")
-			.Replace(oldValue: "]", newValue: ")");
+		name.Replace(":", " -")
+			.Replace("/", "-")
+			.Replace("\\", "-")
+			.Replace("?", "")
+			.Replace("*", "")
+			.Replace("[", "(")
+			.Replace("]", ")");
 
 	internal void EnsureSheetExists(string spreadsheetId)
 	{
-		Sheet? sheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: SheetName);
+		Sheet? sheet = FindSheet(spreadsheetId, sheetName: SheetName);
 
 		if (sheet == null)
 		{
-			Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId: spreadsheetId);
-			RenameDefaultSheet(spreadsheetId: spreadsheetId, spreadsheet: spreadsheet);
+			Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
+			RenameDefaultSheet(spreadsheetId, spreadsheet);
 		}
 
-		EnsureHeaders(spreadsheetId: spreadsheetId);
+		EnsureHeaders(spreadsheetId);
 	}
 
 	private void RenameDefaultSheet(string spreadsheetId, Spreadsheet spreadsheet)
@@ -518,13 +481,10 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.RenameDefault",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.RenameDefault",
+			() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
+		InvalidateCache(spreadsheetId);
 	}
 
 	private void EnsureHeaders(string spreadsheetId)
@@ -532,19 +492,16 @@ public class GoogleSheetsService : IDisposable
 		var range = $"{SheetName}!1:1";
 		IList<IList<object>> existing = Resilience
 			.Execute(
-				operation: "Sheets.Values.Get.Headers",
-				() =>
-					service
-						.Spreadsheets.Values.Get(spreadsheetId: spreadsheetId, range: range)
-						.Execute()
+				"Sheets.Values.Get.Headers",
+				() => service.Spreadsheets.Values.Get(spreadsheetId, range).Execute()
 			)
 			.Values;
 
 		var needsUpdate =
 			existing == null
 			|| existing.Count == 0
-			|| existing[index: 0].Count != Headers.Count
-			|| !existing[index: 0].SequenceEqual(second: Headers);
+			|| existing[0].Count != Headers.Count
+			|| !existing[0].SequenceEqual(Headers);
 
 		if (!needsUpdate)
 			return;
@@ -557,15 +514,11 @@ public class GoogleSheetsService : IDisposable
 			],
 		};
 		Resilience.Execute(
-			operation: "Sheets.Values.Update.Headers",
+			"Sheets.Values.Update.Headers",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.UpdateRequest updateRequest =
-					service.Spreadsheets.Values.Update(
-						body: body,
-						spreadsheetId: spreadsheetId,
-						range: range
-					);
+					service.Spreadsheets.Values.Update(body, spreadsheetId, range);
 				updateRequest.ValueInputOption = SpreadsheetsResource
 					.ValuesResource
 					.UpdateRequest
@@ -586,11 +539,11 @@ public class GoogleSheetsService : IDisposable
 		{
 			var range = $"{SheetName}!A2";
 			ValueRange response = Resilience.Execute(
-				operation: "Sheets.Values.Get.LatestTime",
+				"Sheets.Values.Get.LatestTime",
 				() =>
 				{
 					SpreadsheetsResource.ValuesResource.GetRequest request =
-						service.Spreadsheets.Values.Get(spreadsheetId: spreadsheetId, range: range);
+						service.Spreadsheets.Values.Get(spreadsheetId, range);
 					request.ValueRenderOption = SpreadsheetsResource
 						.ValuesResource
 						.GetRequest
@@ -603,26 +556,26 @@ public class GoogleSheetsService : IDisposable
 			if (response.Values == null || response.Values.Count == 0)
 				return null;
 
-			IList<object> firstRow = response.Values[index: 0];
+			IList<object> firstRow = response.Values[0];
 			if (firstRow == null || firstRow.Count == 0)
 				return null;
 
-			var rawValue = firstRow[index: 0];
+			var rawValue = firstRow[0];
 			Console.Debug(
-				message: "Sheet raw value: '{0}' (type: {1})",
+				"Sheet raw value: '{0}' (type: {1})",
 				rawValue,
 				rawValue?.GetType().Name ?? "null"
 			);
 
 			if (rawValue is double or int or long or float or decimal)
 			{
-				var serialDate = Convert.ToDouble(value: rawValue);
-				var parsed = DateTime.FromOADate(d: serialDate);
-				Console.Debug(message: "Parsed from OADate: {0:yyyy/MM/dd HH:mm:ss}", parsed);
+				var serialDate = Convert.ToDouble(rawValue);
+				var parsed = DateTime.FromOADate(serialDate);
+				Console.Debug("Parsed from OADate: {0:yyyy/MM/dd HH:mm:ss}", parsed);
 				return parsed;
 			}
 
-			var latestTimeStr = rawValue?.ToString()?.TrimStart(trimChar: '\'') ?? "";
+			var latestTimeStr = rawValue?.ToString()?.TrimStart('\'') ?? "";
 			string[] formats =
 			[
 				"yyyy/MM/dd HH:mm:ss",
@@ -632,15 +585,15 @@ public class GoogleSheetsService : IDisposable
 			];
 			if (
 				DateTime.TryParseExact(
-					s: latestTimeStr,
-					formats: formats,
+					latestTimeStr,
+					formats,
 					provider: null,
 					style: DateTimeStyles.None,
 					out DateTime parsedStr
 				)
 			)
 			{
-				Console.Debug(message: "Parsed from string: {0:yyyy/MM/dd HH:mm:ss}", parsedStr);
+				Console.Debug("Parsed from string: {0:yyyy/MM/dd HH:mm:ss}", parsedStr);
 				return parsedStr;
 			}
 
@@ -654,8 +607,10 @@ public class GoogleSheetsService : IDisposable
 
 	internal bool SheetExists(string spreadsheetId)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId: spreadsheetId);
-		return spreadsheet.Sheets?.Any(s => s.Properties?.Title?.Equals(value: SheetName) == true)
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
+		return spreadsheet.Sheets?.Any(s =>
+				s.Properties?.Title.IsEqualTo(SheetName, Ordinal) == true
+			)
 			?? false;
 	}
 
@@ -663,11 +618,11 @@ public class GoogleSheetsService : IDisposable
 	{
 		var range = $"{SheetName}!A:A";
 		ValueRange response = Resilience.Execute(
-			operation: "Sheets.Values.Get.RowCount",
+			"Sheets.Values.Get.RowCount",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.GetRequest request =
-					service.Spreadsheets.Values.Get(spreadsheetId: spreadsheetId, range: range);
+					service.Spreadsheets.Values.Get(spreadsheetId, range);
 				return request.Execute();
 			}
 		);
@@ -680,16 +635,16 @@ public class GoogleSheetsService : IDisposable
 
 	internal int DeleteScrobblesOnOrAfter(string spreadsheetId, DateTime fromDate)
 	{
-		if (!SheetExists(spreadsheetId: spreadsheetId))
+		if (!SheetExists(spreadsheetId))
 			return 0;
 
 		var range = $"{SheetName}!A2:A";
 		ValueRange response = Resilience.Execute(
-			operation: "Sheets.Values.Get.AllDates",
+			"Sheets.Values.Get.AllDates",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.GetRequest request =
-					service.Spreadsheets.Values.Get(spreadsheetId: spreadsheetId, range: range);
+					service.Spreadsheets.Values.Get(spreadsheetId, range);
 				request.ValueRenderOption = SpreadsheetsResource
 					.ValuesResource
 					.GetRequest
@@ -709,19 +664,19 @@ public class GoogleSheetsService : IDisposable
 				break;
 
 			DateTime? rowDate = null;
-			var rawValue = row[index: 0];
+			var rawValue = row[0];
 
 			if (rawValue is double or int or long or float or decimal)
 			{
-				rowDate = DateTime.FromOADate(Convert.ToDouble(value: rawValue));
+				rowDate = DateTime.FromOADate(Convert.ToDouble(rawValue));
 			}
 			else
 			{
-				var dateStr = rawValue?.ToString()?.TrimStart(trimChar: '\'') ?? "";
+				var dateStr = rawValue?.ToString()?.TrimStart('\'') ?? "";
 				if (
 					DateTime.TryParseExact(
-						s: dateStr,
-						format: "yyyy/MM/dd HH:mm:ss",
+						dateStr,
+						"yyyy/MM/dd HH:mm:ss",
 						provider: null,
 						style: DateTimeStyles.None,
 						out DateTime parsed
@@ -740,12 +695,12 @@ public class GoogleSheetsService : IDisposable
 			return 0;
 
 		Console.Info(
-			message: "Deleting {0} scrobbles from {1} onwards...",
+			"Deleting {0} scrobbles from {1} onwards...",
 			rowsToDelete,
-			fromDate.ToString(format: "yyyy/MM/dd")
+			fromDate.ToString("yyyy/MM/dd")
 		);
 
-		var sheetId = GetSheetId(spreadsheetId: spreadsheetId);
+		var sheetId = GetSheetId(spreadsheetId);
 		BatchUpdateSpreadsheetRequest deleteRequest = new()
 		{
 			Requests =
@@ -767,27 +722,24 @@ public class GoogleSheetsService : IDisposable
 		};
 
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.DeleteRows",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: deleteRequest, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.DeleteRows",
+			() => service.Spreadsheets.BatchUpdate(deleteRequest, spreadsheetId).Execute()
 		);
 
-		Console.Success(message: "Deleted {0} scrobbles", rowsToDelete);
+		Console.Success("Deleted {0} scrobbles", rowsToDelete);
 		return rowsToDelete;
 	}
 
 	internal List<Scrobble> GetNewScrobbles(string spreadsheetId, List<Scrobble> allScrobbles)
 	{
-		if (!SheetExists(spreadsheetId: spreadsheetId))
+		if (!SheetExists(spreadsheetId))
 		{
-			Console.Debug(message: "Sheet does not exist, returning all scrobbles");
-			EnsureSheetExists(spreadsheetId: spreadsheetId);
+			Console.Debug("Sheet does not exist, returning all scrobbles");
+			EnsureSheetExists(spreadsheetId);
 			return allScrobbles;
 		}
 
-		DateTime? latestInSheet = GetLatestScrobbleTime(spreadsheetId: spreadsheetId);
+		DateTime? latestInSheet = GetLatestScrobbleTime(spreadsheetId);
 		if (latestInSheet == null)
 			return allScrobbles;
 
@@ -797,12 +749,10 @@ public class GoogleSheetsService : IDisposable
 	internal void WriteScrobbles(string spreadsheetId, List<Scrobble> scrobbles)
 	{
 		var records = scrobbles
-			.Select(s =>
-				(IList<object>)["'" + s.FormattedDate, s.TrackName, s.ArtistName, s.AlbumName]
-			)
+			.Select(s => (IList<object>)[s.FormattedDate, s.TrackName, s.ArtistName, s.AlbumName])
 			.ToList();
 
-		InsertRows(spreadsheetId: spreadsheetId, records: records);
+		InsertRows(spreadsheetId, records);
 	}
 
 	#endregion
@@ -811,7 +761,7 @@ public class GoogleSheetsService : IDisposable
 
 	private void InsertRows(string spreadsheetId, List<IList<object>> records)
 	{
-		var sheetId = GetSheetId(spreadsheetId: spreadsheetId);
+		var sheetId = GetSheetId(spreadsheetId);
 
 		List<RowData> rowDataList = [];
 		foreach (IList<object> record in records)
@@ -865,17 +815,14 @@ public class GoogleSheetsService : IDisposable
 		};
 
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.InsertAndUpdateRows",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: batchRequest, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.InsertAndUpdateRows",
+			() => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
 		);
 	}
 
 	private int GetSheetId(string spreadsheetId)
 	{
-		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId: spreadsheetId);
+		Spreadsheet spreadsheet = GetSpreadsheetMetadata(spreadsheetId);
 		Sheet? sheet = spreadsheet.Sheets?.FirstOrDefault(s => s.Properties.Title == SheetName);
 		return sheet?.Properties?.SheetId
 			?? throw new InvalidOperationException($"Sheet '{SheetName}' not found.");
@@ -888,10 +835,10 @@ public class GoogleSheetsService : IDisposable
 		bool ascending = true
 	)
 	{
-		Sheet? sheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: sheetName);
+		Sheet? sheet = FindSheet(spreadsheetId, sheetName);
 		if (sheet?.Properties?.SheetId == null)
 		{
-			Console.Warning(message: "Sheet '{0}' not found for sorting", sheetName);
+			Console.Warning("Sheet '{0}' not found for sorting", sheetName);
 			return;
 		}
 
@@ -927,13 +874,10 @@ public class GoogleSheetsService : IDisposable
 		};
 
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.Sort",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: request, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.Sort",
+			() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 		);
-		Console.Debug(message: "Sorted sheet '{0}' by column {1}", sheetName, columnIndex);
+		Console.Debug("Sorted sheet '{0}' by column {1}", sheetName, columnIndex);
 	}
 
 	internal void DeleteRowsFromSubsheet(
@@ -945,29 +889,29 @@ public class GoogleSheetsService : IDisposable
 		if (rowIndices.Count == 0)
 			return;
 
-		Sheet? sheet = FindSheet(spreadsheetId: spreadsheetId, sheetName: sheetName);
+		Sheet? sheet = FindSheet(spreadsheetId, sheetName);
 		if (sheet?.Properties?.SheetId == null)
 		{
-			Console.Warning(message: "Sheet '{0}' not found for row deletion", sheetName);
+			Console.Warning("Sheet '{0}' not found for row deletion", sheetName);
 			return;
 		}
 
 		var sortedIndices = rowIndices.OrderByDescending(i => i).ToList();
 		List<(int Start, int End)> ranges = [];
 
-		var rangeStart = sortedIndices[index: 0];
-		var rangeEnd = sortedIndices[index: 0];
+		var rangeStart = sortedIndices[0];
+		var rangeEnd = sortedIndices[0];
 
 		for (var i = 1; i < sortedIndices.Count; i++)
-			if (sortedIndices[index: i] == rangeEnd - 1)
+			if (sortedIndices[i] == rangeEnd - 1)
 			{
-				rangeEnd = sortedIndices[index: i];
+				rangeEnd = sortedIndices[i];
 			}
 			else
 			{
 				ranges.Add((rangeEnd, rangeStart));
-				rangeStart = sortedIndices[index: i];
-				rangeEnd = sortedIndices[index: i];
+				rangeStart = sortedIndices[i];
+				rangeEnd = sortedIndices[i];
 			}
 		ranges.Add((rangeEnd, rangeStart));
 
@@ -991,15 +935,12 @@ public class GoogleSheetsService : IDisposable
 
 		BatchUpdateSpreadsheetRequest batchRequest = new() { Requests = requests };
 		Resilience.Execute(
-			operation: "Sheets.BatchUpdate.DeleteRows",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(body: batchRequest, spreadsheetId: spreadsheetId)
-					.Execute()
+			"Sheets.BatchUpdate.DeleteRows",
+			() => service.Spreadsheets.BatchUpdate(batchRequest, spreadsheetId).Execute()
 		);
-		InvalidateCache(spreadsheetId: spreadsheetId);
+		InvalidateCache(spreadsheetId);
 		Console.Debug(
-			message: "Deleted {0} rows ({1} ranges) from sheet '{2}'",
+			"Deleted {0} rows ({1} ranges) from sheet '{2}'",
 			rowIndices.Count,
 			ranges.Count,
 			sheetName
@@ -1011,20 +952,16 @@ public class GoogleSheetsService : IDisposable
 		if (rows.Count == 0)
 			return;
 
-		var escapedName = EscapeSheetName(name: sheetName);
+		var escapedName = EscapeSheetName(sheetName);
 		ValueRange body = new() { Values = rows };
 		var range = $"{escapedName}!A:E";
 
 		Resilience.Execute(
-			operation: "Sheets.Values.Append",
+			"Sheets.Values.Append",
 			() =>
 			{
 				SpreadsheetsResource.ValuesResource.AppendRequest appendRequest =
-					service.Spreadsheets.Values.Append(
-						body: body,
-						spreadsheetId: spreadsheetId,
-						range: range
-					);
+					service.Spreadsheets.Values.Append(body, spreadsheetId, range);
 				appendRequest.ValueInputOption = SpreadsheetsResource
 					.ValuesResource
 					.AppendRequest
@@ -1039,7 +976,7 @@ public class GoogleSheetsService : IDisposable
 			}
 		);
 
-		Console.Debug(message: "Appended {0} rows to sheet '{1}'", rows.Count, sheetName);
+		Console.Debug("Appended {0} rows to sheet '{1}'", rows.Count, sheetName);
 	}
 
 	#endregion
@@ -1053,28 +990,25 @@ public class GoogleSheetsService : IDisposable
 		Action<string> onSpreadsheetResolved
 	)
 	{
-		if (
-			!IsNullOrEmpty(value: currentSpreadsheetId)
-			&& SpreadsheetExists(spreadsheetId: currentSpreadsheetId)
-		)
+		if (!IsNullOrEmpty(currentSpreadsheetId) && SpreadsheetExists(currentSpreadsheetId))
 			return currentSpreadsheetId;
 
-		if (!IsNullOrEmpty(value: defaultSpreadsheetId))
+		if (!IsNullOrEmpty(defaultSpreadsheetId))
 		{
-			if (SpreadsheetExists(spreadsheetId: defaultSpreadsheetId))
+			if (SpreadsheetExists(defaultSpreadsheetId))
 			{
-				onSpreadsheetResolved(obj: defaultSpreadsheetId);
+				onSpreadsheetResolved(defaultSpreadsheetId);
 				return defaultSpreadsheetId;
 			}
 
-			Console.Warning(message: "Default spreadsheet not found: {0}", defaultSpreadsheetId);
+			Console.Warning("Default spreadsheet not found: {0}", defaultSpreadsheetId);
 		}
 
-		Console.Info(message: "Creating spreadsheet: {0}", spreadsheetTitle);
-		var newId = CreateSpreadsheet(title: spreadsheetTitle);
-		onSpreadsheetResolved(obj: newId);
+		Console.Info("Creating spreadsheet: {0}", spreadsheetTitle);
+		var newId = CreateSpreadsheet(spreadsheetTitle);
+		onSpreadsheetResolved(newId);
 
-		Console.Info(message: "Created new spreadsheet: {0}", newId);
+		Console.Info("Created new spreadsheet: {0}", newId);
 		return newId;
 	}
 
@@ -1084,21 +1018,19 @@ public class GoogleSheetsService : IDisposable
 		CancellationToken ct = default
 	)
 	{
-		CreateDirectory(path: outputDirectory);
+		CreateDirectory(outputDirectory);
 
-		Console.Info(message: "Fetching spreadsheet metadata...");
+		Console.Info("Fetching spreadsheet metadata...");
 
 		Spreadsheet spreadsheet = Resilience.Execute(
-			operation: "Sheets.Get",
-			() => service.Spreadsheets.Get(spreadsheetId: spreadsheetId).Execute(),
-			ct: ct
+			"Sheets.Get",
+			() => service.Spreadsheets.Get(spreadsheetId).Execute(),
+			ct
 		);
 
 		List<Sheet> sheets =
 			spreadsheet.Sheets?.Where(s => s.Properties?.SheetId != null).ToList() ?? [];
-		var existingFiles = GetFiles(path: outputDirectory, searchPattern: "*.csv")
-			.Select(selector: GetFileName)
-			.ToHashSet();
+		var existingFiles = GetFiles(outputDirectory, "*.csv").Select(GetFileName).ToHashSet();
 		var toExport = sheets
 			.Where(s =>
 				!existingFiles.Contains($"{SanitizeForFileName(s.Properties?.Title ?? "")}.csv")
@@ -1133,14 +1065,14 @@ public class GoogleSheetsService : IDisposable
 				);
 				task.Value = alreadyExported;
 
-				foreach (Sheet? sheet in toExport)
+				foreach (Sheet sheet in toExport)
 				{
 					if (ct.IsCancellationRequested)
 						break;
 
 					var sheetTitle = sheet.Properties?.Title ?? "";
 					var sheetId = sheet.Properties!.SheetId;
-					var safeFileName = SanitizeForFileName(name: sheetTitle);
+					var safeFileName = SanitizeForFileName(sheetTitle);
 					var outputPath = Combine(outputDirectory, $"{safeFileName}.csv");
 
 					task.Description = $"Exporting: {sheetTitle}";
@@ -1149,14 +1081,14 @@ public class GoogleSheetsService : IDisposable
 						$"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetId}";
 
 					var response = Resilience.Execute(
-						operation: "Sheets.ExportCSV",
-						() => service.HttpClient.GetByteArrayAsync(requestUri: exportUrl).Result,
-						ct: ct
+						"Sheets.ExportCSV",
+						() => service.HttpClient.GetByteArrayAsync(exportUrl).Result,
+						ct
 					);
 
-					WriteAllBytes(path: outputPath, bytes: response);
+					WriteAllBytes(outputPath, response);
 					exported++;
-					task.Increment(value: 1);
+					task.Increment(1);
 				}
 			});
 
@@ -1171,29 +1103,26 @@ public class GoogleSheetsService : IDisposable
 		CancellationToken ct = default
 	)
 	{
-		CreateDirectory(path: outputDirectory);
+		CreateDirectory(outputDirectory);
 
-		Console.Info(message: "Fetching spreadsheet metadata...");
+		Console.Info("Fetching spreadsheet metadata...");
 
 		Spreadsheet spreadsheet = await Resilience.ExecuteAsync(
-			operation: "Sheets.Get",
-			async () =>
-				await service
-					.Spreadsheets.Get(spreadsheetId: spreadsheetId)
-					.ExecuteAsync(cancellationToken: ct),
-			ct: ct
+			"Sheets.Get",
+			async () => await service.Spreadsheets.Get(spreadsheetId).ExecuteAsync(ct),
+			ct
 		);
 
 		List<Sheet> sheets = spreadsheet.Sheets?.ToList() ?? [];
 		if (sheets.Count == 0)
 		{
-			Console.Warning(message: "No sheets found");
+			Console.Warning("No sheets found");
 			return 0;
 		}
 
-		var existingFiles = GetFiles(path: outputDirectory, searchPattern: "*.csv")
-			.Select(f => GetFileNameWithoutExtension(path: f))
-			.ToHashSet(comparer: StringComparer.OrdinalIgnoreCase);
+		var existingFiles = GetFiles(outputDirectory, "*.csv")
+			.Select(f => GetFileNameWithoutExtension(f))
+			.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
 		var toExport = sheets
 			.Where(s => !existingFiles.Contains(SanitizeForFileName(s.Properties?.Title ?? "")))
@@ -1201,26 +1130,22 @@ public class GoogleSheetsService : IDisposable
 
 		if (toExport.Count == 0)
 		{
-			Console.Info(message: "All {0} sheets already exported", sheets.Count);
+			Console.Info("All {0} sheets already exported", sheets.Count);
 			return sheets.Count;
 		}
 
 		var totalSheets = sheets.Count;
 		var alreadyExported = totalSheets - toExport.Count;
-		Console.Info(
-			message: "Exporting {0} sheets ({1} already done)...",
-			toExport.Count,
-			alreadyExported
-		);
+		Console.Info("Exporting {0} sheets ({1} already done)...", toExport.Count, alreadyExported);
 
-		foreach (Sheet? sheet in toExport)
+		foreach (Sheet sheet in toExport)
 		{
 			if (ct.IsCancellationRequested)
 				break;
 
 			var sheetTitle = sheet.Properties?.Title ?? "";
 			var sheetId = sheet.Properties!.SheetId;
-			var safeFileName = SanitizeForFileName(name: sheetTitle);
+			var safeFileName = SanitizeForFileName(sheetTitle);
 			var outputPath = Combine(outputDirectory, $"{safeFileName}.csv");
 
 			Console.Dim($"Exporting: {sheetTitle}");
@@ -1229,38 +1154,34 @@ public class GoogleSheetsService : IDisposable
 				$"https://docs.google.com/spreadsheets/d/{spreadsheetId}/export?format=csv&gid={sheetId}";
 
 			var response = await Resilience.ExecuteAsync(
-				operation: "Sheets.ExportCSV",
-				async () =>
-					await service.HttpClient.GetByteArrayAsync(
-						requestUri: exportUrl,
-						cancellationToken: ct
-					),
-				ct: ct
+				"Sheets.ExportCSV",
+				async () => await service.HttpClient.GetByteArrayAsync(exportUrl, ct),
+				ct
 			);
 
-			await WriteAllBytesAsync(path: outputPath, bytes: response, cancellationToken: ct);
+			await WriteAllBytesAsync(outputPath, response, ct);
 		}
 
-		Console.Success(message: "Exported {0} sheets", toExport.Count);
+		Console.Success("Exported {0} sheets", toExport.Count);
 		return sheets.Count;
 	}
 
 	internal List<(string Id, string Url)> FindDuplicateSpreadsheets(string title)
 	{
 		var query =
-			$"name = '{title.Replace(oldValue: "'", newValue: "\\'")}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
+			$"name = '{title.Replace("'", "\\'")}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
 
 		FilesResource.ListRequest request = driveService.Files.List();
 		request.Q = query;
 		request.Fields = "files(id, name, webViewLink)";
 
 		FileList response = Resilience.Execute(
-			operation: "Drive.Files.List",
+			"Drive.Files.List",
 			() => request.Execute()
 		);
 
 		return response
-				.Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(spreadsheetId: f.Id)))
+				.Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))
 				.ToList()
 			?? [];
 	}

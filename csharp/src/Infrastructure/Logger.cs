@@ -19,18 +19,18 @@ public static class Logger
 	public static void Start(ServiceType service)
 	{
 		ActiveService = service;
-		SessionId = Guid.NewGuid().ToString(format: "N")[..8];
+		SessionId = Guid.NewGuid().ToString("N")[..8];
 		CurrentSessionId = SessionId;
 
-		CreateDirectory(path: Paths.LogDirectory);
-		DetectCrashedSessions(service: service);
+		CreateDirectory(Paths.LogDirectory);
+		DetectCrashedSessions(service);
 
 		Event(
-			eventName: "SessionStart",
+			"SessionStart",
 			new Dictionary<string, object>
 			{
-				[key: "Service"] = service.ToString(),
-				[key: "ProcessId"] = ProcessId,
+				["Service"] = service.ToString(),
+				["ProcessId"] = ProcessId,
 			}
 		);
 	}
@@ -44,30 +44,30 @@ public static class Logger
 		{
 			Dictionary<string, object> exData = new()
 			{
-				[key: "Type"] = exception.GetType().Name,
-				[key: "Message"] = exception.Message,
+				["Type"] = exception.GetType().Name,
+				["Message"] = exception.Message,
 			};
 			if (exception.InnerException is { } inner)
 			{
-				exData[key: "InnerType"] = inner.GetType().Name;
-				exData[key: "InnerMessage"] = inner.Message;
+				exData["InnerType"] = inner.GetType().Name;
+				exData["InnerMessage"] = inner.Message;
 			}
 			if (exception is AggregateException aex)
-				exData[key: "ErrorCount"] = aex.InnerExceptions.Count;
-			Event(eventName: "Exception", data: exData, level: LogLevel.Error);
+				exData["ErrorCount"] = aex.InnerExceptions.Count;
+			Event("Exception", exData, LogLevel.Error);
 		}
 
 		var status = success ? "Completed" : "Failed";
 
 		Dictionary<string, object> data = new()
 		{
-			[key: "Status"] = status,
-			[key: "EndedAt"] = DateTime.Now.ToString(format: "yyyy/MM/dd HH:mm:ss"),
+			["Status"] = status,
+			["EndedAt"] = DateFormat.NowFull,
 		};
 		if (summary is { })
-			data[key: "Summary"] = summary;
+			data["Summary"] = summary;
 
-		Event(eventName: "SessionEnd", data: data);
+		Event("SessionEnd", data);
 
 		ActiveService = null;
 		SessionId = null;
@@ -81,13 +81,13 @@ public static class Logger
 
 		Dictionary<string, object> data = new()
 		{
-			[key: "Status"] = "Interrupted",
-			[key: "EndedAt"] = DateTime.Now.ToString(format: "yyyy/MM/dd HH:mm:ss"),
+			["Status"] = "Interrupted",
+			["EndedAt"] = DateFormat.NowFull,
 		};
 		if (progress is { })
-			data[key: "Progress"] = progress;
+			data["Progress"] = progress;
 
-		Event(eventName: "SessionInterrupted", data: data, level: LogLevel.Warning);
+		Event("SessionInterrupted", data, LogLevel.Warning);
 
 		ActiveService = null;
 		SessionId = null;
@@ -108,11 +108,11 @@ public static class Logger
 			return;
 
 		WriteJsonEntry(
-			service: ActiveService.Value,
-			level: level,
-			eventName: eventName,
+			ActiveService.Value,
+			level,
+			eventName,
 			data ?? [],
-			sessionId: SessionId
+			SessionId
 		);
 	}
 
@@ -122,11 +122,11 @@ public static class Logger
 			return;
 
 		WriteJsonEntry(
-			service: ActiveService.Value,
-			level: level,
-			eventName: "Message",
-			new Dictionary<string, object> { [key: "Text"] = text },
-			sessionId: SessionId
+			ActiveService.Value,
+			level,
+			"Message",
+			new Dictionary<string, object> { ["Text"] = text },
+			SessionId
 		);
 	}
 
@@ -148,67 +148,67 @@ public static class Logger
 
 		Dictionary<string, object> data = new()
 		{
-			[key: "Title"] = title,
-			[key: "Added"] = added,
-			[key: "Removed"] = removed,
+			["Title"] = title,
+			["Added"] = added,
+			["Removed"] = removed,
 		};
 
 		if (addedTitles?.Count > 0)
-			data[key: "AddedVideos"] = addedTitles;
+			data["AddedVideos"] = addedTitles;
 		if (removedTitles?.Count > 0)
-			data[key: "RemovedVideos"] = removedTitles;
+			data["RemovedVideos"] = removedTitles;
 		if (removedVideoIds?.Count > 0)
-			data[key: "RemovedVideoUrls"] = removedVideoIds
+			data["RemovedVideoUrls"] = removedVideoIds
 				.Select(id => $"https://www.youtube.com/watch?v={id}")
 				.ToList();
 
-		Event(eventName: "PlaylistUpdated", data: data);
+		Event("PlaylistUpdated", data);
 	}
 
 	public static void PlaylistRenamed(string oldTitle, string newTitle) =>
 		Event(
-			eventName: "PlaylistRenamed",
+			"PlaylistRenamed",
 			new Dictionary<string, object>
 			{
-				[key: "OldTitle"] = oldTitle,
-				[key: "NewTitle"] = newTitle,
+				["OldTitle"] = oldTitle,
+				["NewTitle"] = newTitle,
 			}
 		);
 
 	public static void PlaylistDeleted(string title, int videoCount) =>
 		Event(
-			eventName: "PlaylistDeleted",
-			new Dictionary<string, object> { [key: "Title"] = title, [key: "Videos"] = videoCount }
+			"PlaylistDeleted",
+			new Dictionary<string, object> { ["Title"] = title, ["Videos"] = videoCount }
 		);
 
 	public static void ScrobblesProcessed(int fetched, int written) =>
 		Event(
-			eventName: "ScrobblesProcessed",
+			"ScrobblesProcessed",
 			new Dictionary<string, object>
 			{
-				[key: "Fetched"] = fetched,
-				[key: "Written"] = written,
+				["Fetched"] = fetched,
+				["Written"] = written,
 			}
 		);
 
 	public static void ApiError(string api, string error, int? statusCode = null)
 	{
-		Dictionary<string, object> data = new() { [key: "Api"] = api, [key: "Error"] = error };
+		Dictionary<string, object> data = new() { ["Api"] = api, ["Error"] = error };
 		if (statusCode.HasValue)
-			data[key: "StatusCode"] = statusCode.Value;
+			data["StatusCode"] = statusCode.Value;
 
-		Event(eventName: "ApiError", data: data, level: LogLevel.Error);
+		Event("ApiError", data, LogLevel.Error);
 	}
 
 	public static void NetworkError(string operation, string error) =>
 		Event(
-			eventName: "NetworkError",
+			"NetworkError",
 			new Dictionary<string, object>
 			{
-				[key: "Operation"] = operation,
-				[key: "Error"] = error,
+				["Operation"] = operation,
+				["Error"] = error,
 			},
-			level: LogLevel.Error
+			LogLevel.Error
 		);
 
 	#endregion
@@ -217,23 +217,23 @@ public static class Logger
 
 	private static void DetectCrashedSessions(ServiceType service)
 	{
-		var logPath = GetLogPath(service: service);
-		if (!File.Exists(path: logPath))
+		var logPath = GetLogPath(service);
+		if (!File.Exists(logPath))
 			return;
 
 		Dictionary<string, string> openSessions = [];
 
-		foreach (var line in ReadLines(path: logPath))
+		foreach (var line in ReadLines(logPath))
 		{
-			if (IsNullOrWhiteSpace(value: line))
+			if (IsNullOrWhiteSpace(line))
 				continue;
 
 			LogEntry? entry = null;
 			try
 			{
 				entry = JsonSerializer.Deserialize<LogEntry>(
-					json: line,
-					options: StateManager.JsonCompact
+					line,
+					StateManager.JsonCompact
 				);
 			}
 			catch
@@ -246,9 +246,9 @@ public static class Logger
 
 			_ = entry.Event switch
 			{
-				"SessionStart" => openSessions[key: sessionId] = entry.Timestamp,
+				"SessionStart" => openSessions[sessionId] = entry.Timestamp,
 				"SessionEnd" or "SessionInterrupted" or "SessionCrashed" => openSessions.Remove(
-					key: sessionId
+					sessionId
 				)
 					? null
 					: null,
@@ -259,22 +259,22 @@ public static class Logger
 		foreach ((var crashedId, var startTime) in openSessions)
 		{
 			Console.Warning(
-				message: "Detected crashed session {0} started at {1}",
+				"Detected crashed session {0} started at {1}",
 				crashedId,
 				startTime
 			);
 
 			AppendJsonLine(
-				path: logPath,
+				logPath,
 				new LogEntry(
-					DateTime.Now.ToString(format: "yyyy/MM/dd HH:mm:ss"),
+					DateFormat.NowFull,
 					Level: "Error",
 					Event: "SessionCrashed",
 					SessionId: crashedId,
 					new Dictionary<string, object>
 					{
-						[key: "OriginalStart"] = startTime,
-						[key: "DetectedAt"] = DateTime.Now.ToString(format: "yyyy/MM/dd HH:mm:ss"),
+						["OriginalStart"] = startTime,
+						["DetectedAt"] = DateFormat.NowFull,
 					}
 				)
 			);
@@ -290,28 +290,28 @@ public static class Logger
 	)
 	{
 		LogEntry entry = new(
-			DateTime.Now.ToString(format: "yyyy/MM/dd HH:mm:ss"),
+			DateFormat.NowFull,
 			level.ToString(),
 			Event: eventName,
 			SessionId: sessionId,
 			data.Count > 0 ? data : null
 		);
 
-		AppendJsonLine(GetLogPath(service: service), entry: entry);
+		AppendJsonLine(GetLogPath(service), entry);
 	}
 
 	internal static void AppendJsonLine(string path, LogEntry entry)
 	{
-		var json = JsonSerializer.Serialize(value: entry, options: StateManager.JsonCompact);
+		var json = JsonSerializer.Serialize(entry, StateManager.JsonCompact);
 		lock (WriteLock)
 		{
-			AppendAllText(path: path, json + NewLine);
+			AppendAllText(path, json + NewLine);
 		}
 	}
 
 	internal static string GetLogPath(ServiceType service) =>
 		Combine(
-			path1: Paths.LogDirectory,
+			Paths.LogDirectory,
 			service switch
 			{
 				ServiceType.LastFm => "lastfm.jsonl",

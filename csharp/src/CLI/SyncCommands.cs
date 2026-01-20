@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Commands;
+namespace CSharpScripts.CLI;
 
 #region Sync All Command
 
@@ -18,25 +18,25 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 
 		if (settings.Reset)
 		{
-			Console.Info(message: "Clearing local cache...");
+			Console.Info("Clearing local cache...");
 			StateManager.DeleteLastFmStates();
 			StateManager.DeleteAllYouTubeStates();
-			Console.Success(message: "Cache cleared");
+			Console.Success("Cache cleared");
 		}
 
-		Console.Rule(text: "YouTube Sync");
+		Console.Rule("YouTube Sync");
 		var ytResult = await RunYouTubeSyncAsync();
 
 		Console.NewLine();
-		Console.Rule(text: "Last.fm Sync");
+		Console.Rule("Last.fm Sync");
 		var lfResult = await RunLastFmSyncAsync();
 
 		Console.NewLine();
 		if (ytResult == 0 && lfResult == 0)
-			Console.Success(message: "All syncs complete!");
+			Console.Success("All syncs complete!");
 		else
 			Console.Warning(
-				message: "Completed with errors (YouTube: {0}, Last.fm: {1})",
+				"Completed with errors (YouTube: {0}, Last.fm: {1})",
 				ytResult,
 				lfResult
 			);
@@ -46,31 +46,31 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 
 	private static async Task<int> RunYouTubeSyncAsync()
 	{
-		Logger.Start(service: ServiceType.YouTube);
+		Logger.Start(ServiceType.YouTube);
 		return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-			await new YouTubePlaylistOrchestrator(ct: Program.Cts.Token).ExecuteAsync()
+			await new YouTubePlaylistOrchestrator(Program.cts.Token).ExecuteAsync()
 		);
 	}
 
 	private static async Task<int> RunLastFmSyncAsync()
 	{
-		Logger.Start(service: ServiceType.LastFm);
+		Logger.Start(ServiceType.LastFm);
 		return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
 			await new ScrobbleSyncOrchestrator(
-				forceFromDate: null,
-				ct: Program.Cts.Token
+				null,
+				Program.cts.Token
 			).ExecuteAsync()
 		);
 	}
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandOption(template: "-v|--verbose")]
-		[Description(description: "Debug logging")]
+		[CommandOption("-v|--verbose")]
+		[Description("Debug logging")]
 		public bool Verbose { get; init; }
 
-		[CommandOption(template: "-r|--reset")]
-		[Description(description: "Clear cache first")]
+		[CommandOption("-r|--reset")]
+		[Description("Clear cache first")]
 		public bool Reset { get; init; }
 	}
 }
@@ -93,21 +93,21 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
 			Logger.FileLevel = LogLevel.Debug;
 		}
 
-		Logger.Start(service: ServiceType.YouTube);
+		Logger.Start(ServiceType.YouTube);
 
 		return await ExecuteWithErrorHandlingAsync(async () =>
 		{
 			if (settings.Reset)
 			{
-				Console.Info(message: "Clearing YouTube cache...");
+				Console.Info("Clearing YouTube cache...");
 				StateManager.DeleteAllYouTubeStates();
-				Console.Success(message: "Cache cleared");
+				Console.Success("Cache cleared");
 			}
 
 			if (settings.ShowSessionId)
-				Console.Info(message: "Session ID: {0}", Logger.CurrentSessionId);
+				Console.Info("Session ID: {0}", Logger.CurrentSessionId);
 
-			await new YouTubePlaylistOrchestrator(ct: Program.Cts.Token).ExecuteAsync();
+			await new YouTubePlaylistOrchestrator(Program.cts.Token).ExecuteAsync();
 		});
 	}
 
@@ -120,64 +120,64 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
 		}
 		catch (DailyQuotaExceededException ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
 			Console.Error(
-				message: "Try again tomorrow or request quota increase from Google Cloud Console."
+				"Try again tomorrow or request quota increase from Google Cloud Console."
 			);
 			if (ex.InnerException != null)
-				Console.Error(message: "Inner: {0}", ex.InnerException.Message);
-			Logger.End(success: false, $"DailyQuotaExceededException: {ex.Message}", exception: ex);
+				Console.Error("Inner: {0}", ex.InnerException.Message);
+			Logger.End(false, $"DailyQuotaExceededException: {ex.Message}", ex);
 			return 1;
 		}
 		catch (RetryExhaustedException ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
-			Console.Error(message: "Wait 15-30 minutes and try again. Progress has been saved.");
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
 			if (ex.InnerException != null)
 				Console.Error(
-					message: "Inner: {0}: {1}",
+					"Inner: {0}: {1}",
 					ex.InnerException.GetType().Name,
 					ex.InnerException.Message
 				);
-			Logger.End(success: false, $"RetryExhaustedException: {ex.Message}", exception: ex);
+			Logger.End(false, $"RetryExhaustedException: {ex.Message}", ex);
 			return 1;
 		}
 		catch (AggregateException aex)
 		{
 			foreach (Exception ex in aex.InnerExceptions)
 			{
-				Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
+				Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
 				if (ex.InnerException != null)
 					Console.Error(
-						message: "  Inner: {0}: {1}",
+						"  Inner: {0}: {1}",
 						ex.InnerException.GetType().Name,
 						ex.InnerException.Message
 					);
 			}
-			Exception firstError = aex.InnerExceptions[index: 0];
+			Exception firstError = aex.InnerExceptions[0];
 			var summary =
 				$"AggregateException ({aex.InnerExceptions.Count} errors): {firstError.GetType().Name}: {firstError.Message}";
-			Logger.End(success: false, summary: summary, exception: aex);
+			Logger.End(false, summary, aex);
 			return 1;
 		}
 		catch (OperationCanceledException)
 		{
-			Console.Warning(message: "Operation cancelled by user");
-			Logger.Interrupted(progress: "Cancelled by Ctrl+C");
+			Console.Warning("Operation cancelled by user");
+			Logger.Interrupted("Cancelled by Ctrl+C");
 			return 130;
 		}
 		catch (Exception ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
 			if (ex.InnerException != null)
 				Console.Error(
-					message: "Inner: {0}: {1}",
+					"Inner: {0}: {1}",
 					ex.InnerException.GetType().Name,
 					ex.InnerException.Message
 				);
 			if (ex.StackTrace != null)
 			{
-				var firstStackLine = ex.StackTrace.Split(separator: '\n')[0].Trim();
+				var firstStackLine = ex.StackTrace.Split('\n')[0].Trim();
 				Console.Dim($"Stack: {firstStackLine}");
 			}
 
@@ -186,7 +186,7 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
 					? $"{ex.GetType().Name}: {ex.Message} (Inner: {ex.InnerException.Message})"
 					: $"{ex.GetType().Name}: {ex.Message}";
 
-			Logger.End(success: false, summary: summary, exception: ex);
+			Logger.End(false, summary, ex);
 			return 1;
 		}
 	}
@@ -200,46 +200,46 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
 		}
 		catch (DailyQuotaExceededException ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
 			Console.Error(
-				message: "Try again tomorrow or request quota increase from Google Cloud Console."
+				"Try again tomorrow or request quota increase from Google Cloud Console."
 			);
 			if (ex.InnerException != null)
-				Console.Error(message: "Inner: {0}", ex.InnerException.Message);
-			Logger.End(success: false, $"DailyQuotaExceededException: {ex.Message}", exception: ex);
+				Console.Error("Inner: {0}", ex.InnerException.Message);
+			Logger.End(false, $"DailyQuotaExceededException: {ex.Message}", ex);
 			return 1;
 		}
 		catch (RetryExhaustedException ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
-			Console.Error(message: "Wait 15-30 minutes and try again. Progress has been saved.");
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("Wait 15-30 minutes and try again. Progress has been saved.");
 			if (ex.InnerException != null)
 				Console.Error(
-					message: "Inner: {0}: {1}",
+					"Inner: {0}: {1}",
 					ex.InnerException.GetType().Name,
 					ex.InnerException.Message
 				);
-			Logger.End(success: false, $"RetryExhaustedException: {ex.Message}", exception: ex);
+			Logger.End(false, $"RetryExhaustedException: {ex.Message}", ex);
 			return 1;
 		}
 		catch (OperationCanceledException)
 		{
-			Console.Warning(message: "Operation cancelled by user");
-			Logger.Interrupted(progress: "Cancelled by Ctrl+C");
+			Console.Warning("Operation cancelled by user");
+			Logger.Interrupted("Cancelled by Ctrl+C");
 			return 130;
 		}
 		catch (Exception ex)
 		{
-			Console.Error(message: "{0}: {1}", ex.GetType().Name, ex.Message);
+			Console.Error("{0}: {1}", ex.GetType().Name, ex.Message);
 			if (ex.InnerException != null)
 				Console.Error(
-					message: "Inner: {0}: {1}",
+					"Inner: {0}: {1}",
 					ex.InnerException.GetType().Name,
 					ex.InnerException.Message
 				);
 			if (ex.StackTrace != null)
 			{
-				var firstStackLine = ex.StackTrace.Split(separator: '\n')[0].Trim();
+				var firstStackLine = ex.StackTrace.Split('\n')[0].Trim();
 				Console.Dim($"Stack: {firstStackLine}");
 			}
 
@@ -248,26 +248,26 @@ public sealed class SyncYouTubeCommand : AsyncCommand<SyncYouTubeCommand.Setting
 					? $"{ex.GetType().Name}: {ex.Message} (Inner: {ex.InnerException.Message})"
 					: $"{ex.GetType().Name}: {ex.Message}";
 
-			Logger.End(success: false, summary: summary, exception: ex);
+			Logger.End(false, summary, ex);
 			return 1;
 		}
 	}
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandOption(template: "-v|--verbose")]
-		[Description(description: "Debug logging")]
-		[DefaultValue(value: false)]
+		[CommandOption("-v|--verbose")]
+		[Description("Debug logging")]
+		[DefaultValue(false)]
 		public bool Verbose { get; init; }
 
-		[CommandOption(template: "-r|--reset")]
-		[Description(description: "Clear cache first")]
-		[DefaultValue(value: false)]
+		[CommandOption("-r|--reset")]
+		[Description("Clear cache first")]
+		[DefaultValue(false)]
 		public bool Reset { get; init; }
 
-		[CommandOption(template: "-i|--session-id")]
-		[Description(description: "Show session ID")]
-		[DefaultValue(value: false)]
+		[CommandOption("-i|--session-id")]
+		[Description("Show session ID")]
+		[DefaultValue(false)]
 		public bool ShowSessionId { get; init; }
 	}
 }
@@ -292,57 +292,57 @@ public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
 
 		if (settings.Reset)
 		{
-			Console.Info(message: "Clearing Last.fm local cache...");
+			Console.Info("Clearing Last.fm local cache...");
 			StateManager.DeleteLastFmStates();
-			Console.Success(message: "Cache cleared");
+			Console.Success("Cache cleared");
 		}
 
 		DateTime? sinceDate = null;
-		if (!IsNullOrEmpty(value: settings.Since))
+		if (!IsNullOrEmpty(settings.Since))
 		{
 			if (
 				!DateTime.TryParseExact(
-					s: settings.Since,
-					format: "yyyy/MM/dd",
-					provider: null,
-					style: DateTimeStyles.None,
+					settings.Since,
+					"yyyy/MM/dd",
+					null,
+					DateTimeStyles.None,
 					out DateTime parsed
 				)
 			)
 			{
-				Console.Error(message: "Invalid date format. Use yyyy/MM/dd (e.g. 2024/01/01)");
+				Console.Error("Invalid date format. Use yyyy/MM/dd (e.g. 2024/01/01)");
 				return 1;
 			}
 
 			sinceDate = parsed;
 			Console.Warning(
-				message: "Will delete existing data on/after {0} and re-sync",
-				sinceDate.Value.ToString(format: "yyyy/MM/dd")
+				"Will delete existing data on/after {0} and re-sync",
+				sinceDate.Value.ToString("yyyy/MM/dd")
 			);
 		}
 
-		Logger.Start(service: ServiceType.LastFm);
+		Logger.Start(ServiceType.LastFm);
 
 		return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
 			await new ScrobbleSyncOrchestrator(
-				forceFromDate: sinceDate,
-				ct: Program.Cts.Token
+				sinceDate,
+				Program.cts.Token
 			).ExecuteAsync()
 		);
 	}
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandOption(template: "-v|--verbose")]
-		[Description(description: "Debug logging")]
+		[CommandOption("-v|--verbose")]
+		[Description("Debug logging")]
 		public bool Verbose { get; init; }
 
-		[CommandOption(template: "-r|--reset")]
-		[Description(description: "Clear cache first")]
+		[CommandOption("-r|--reset")]
+		[Description("Clear cache first")]
 		public bool Reset { get; init; }
 
-		[CommandOption(template: "--since")]
-		[Description(description: "Sync from date (yyyy/MM/dd)")]
+		[CommandOption("--since")]
+		[Description("Sync from date (yyyy/MM/dd)")]
 		public string? Since { get; init; }
 	}
 }
@@ -360,11 +360,11 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 	)
 	{
 		var checkLastFm =
-			IsNullOrEmpty(value: settings.Service) || settings.Service.Equals(value: "lastfm");
+			IsNullOrEmpty(settings.Service) || settings.Service.Equals("lastfm");
 		var checkYouTube =
-			IsNullOrEmpty(value: settings.Service)
-			|| settings.Service.Equals(value: "yt")
-			|| settings.Service.Equals(value: "youtube");
+			IsNullOrEmpty(settings.Service)
+			|| settings.Service.Equals("yt")
+			|| settings.Service.Equals("youtube");
 
 		if (checkLastFm)
 			ShowLastFmStatus();
@@ -377,34 +377,34 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 
 	private static void ShowLastFmStatus()
 	{
-		Console.Info(message: "=== Last.fm ===");
-		var stateFile = Combine(path1: Paths.StateDirectory, path2: StateManager.LastFmSyncFile);
-		var hasState = File.Exists(path: stateFile);
+		Console.Info("=== Last.fm ===");
+		var stateFile = Combine(Paths.StateDirectory, StateManager.LastFmSyncFile);
+		var hasState = File.Exists(stateFile);
 		var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{Config.LastFmSpreadsheetId}";
 
 		if (hasState)
 		{
-			var json = ReadAllText(path: stateFile);
+			var json = ReadAllText(stateFile);
 			FetchState state =
 				JsonSerializer.Deserialize<FetchState>(
-					json: json,
-					options: StateManager.JsonIndented
+					json,
+					StateManager.JsonIndented
 				) ?? new FetchState();
-			Console.Info(message: "Scrobbles: {0}", state.TotalFetched);
-			Console.Info(message: "Cached: Yes");
+			Console.Info("Scrobbles: {0}", state.TotalFetched);
+			Console.Info("Cached: Yes");
 			Console.Info(
-				message: "Last sync: {0}",
-				state.LastUpdated.ToString(format: "yyyy/MM/dd HH:mm:ss")
+				"Last sync: {0}",
+				state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss")
 			);
-			Console.Link(url: spreadsheetUrl, text: "Spreadsheet");
+			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}
 		else
 		{
 			GoogleSheetsService sheets = new();
-			var scrobbleCount = sheets.GetScrobbleCount(spreadsheetId: Config.LastFmSpreadsheetId);
-			Console.Info(message: "Scrobbles: {0}", scrobbleCount);
-			Console.Info(message: "Cached: No");
-			Console.Link(url: spreadsheetUrl, text: "Spreadsheet");
+			var scrobbleCount = sheets.GetScrobbleCount(Config.LastFmSpreadsheetId);
+			Console.Info("Scrobbles: {0}", scrobbleCount);
+			Console.Info("Cached: No");
+			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}
 
 		Console.NewLine();
@@ -412,39 +412,39 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 
 	private static void ShowYouTubeStatus()
 	{
-		Console.Info(message: "=== YouTube ===");
-		var stateFile = Combine(path1: Paths.StateDirectory, path2: StateManager.YouTubeSyncFile);
-		var cached = File.Exists(path: stateFile);
+		Console.Info("=== YouTube ===");
+		var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeSyncFile);
+		var cached = File.Exists(stateFile);
 
 		if (cached)
 		{
-			var json = ReadAllText(path: stateFile);
+			var json = ReadAllText(stateFile);
 			YouTubeFetchState state =
 				JsonSerializer.Deserialize<YouTubeFetchState>(
-					json: json,
-					options: StateManager.JsonIndented
+					json,
+					StateManager.JsonIndented
 				) ?? new YouTubeFetchState();
 			var totalVideos = state.PlaylistSnapshots.Values.Sum(s => s.VideoIds.Count);
 			var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{state.SpreadsheetId}";
 
 			if (!state.FetchComplete)
-				Console.Warning(message: "Fetch incomplete - run sync to resume");
+				Console.Warning("Fetch incomplete - run sync to resume");
 
 			Console.Info(
-				message: "Playlists: {0} | Videos: {1}",
+				"Playlists: {0} | Videos: {1}",
 				state.PlaylistSnapshots.Count,
 				totalVideos
 			);
-			Console.Info(message: "Cached: Yes");
+			Console.Info("Cached: Yes");
 			Console.Info(
-				message: "Last sync: {0}",
-				state.LastUpdated.ToString(format: "yyyy/MM/dd HH:mm:ss")
+				"Last sync: {0}",
+				state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss")
 			);
-			Console.Link(url: spreadsheetUrl, text: "Spreadsheet");
+			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}
 		else
 		{
-			Console.Info(message: "Cached: No");
+			Console.Info("Cached: No");
 		}
 
 		Console.NewLine();
@@ -452,8 +452,8 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 
 	public sealed class Settings : CommandSettings
 	{
-		[CommandArgument(position: 0, template: "[service]")]
-		[Description(description: "yt, lastfm (omit for all)")]
+		[CommandArgument(0, "[service]")]
+		[Description("yt, lastfm (omit for all)")]
 		[AllowedValues("yt", "youtube", "lastfm", "all")]
 		public string Service { get; init; } = "all";
 	}

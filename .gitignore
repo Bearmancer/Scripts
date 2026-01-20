@@ -5,6 +5,9 @@
 *.exe
 *.pdb
 
+# Legacy solution format - use .slnx instead
+*.sln
+
 # Python
 __pycache__/
 

@@ -6,12 +6,12 @@ public static class Resilience
 
 	public const int MaxRetries = 10;
 
-	public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(milliseconds: 1100);
-	public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(seconds: 5);
-	public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(minutes: 5);
+	public static readonly TimeSpan ThrottleDelay = TimeSpan.FromMilliseconds(1100);
+	public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(5);
+	public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(5);
 
 	private static DateTime lastCallTime = DateTime.MinValue;
-	private static readonly SemaphoreSlim Semaphore = new(initialCount: 1, maxCount: 1);
+	private static readonly SemaphoreSlim Semaphore = new(1, 1);
 
 	public static async Task<T> ExecuteAsync<T>(
 		string operation,
@@ -19,13 +19,13 @@ public static class Resilience
 		CancellationToken ct = default
 	)
 	{
-		await Semaphore.WaitAsync(cancellationToken: ct);
+		await Semaphore.WaitAsync(ct);
 		try
 		{
-			await ApplyThrottleAsync(ct: ct);
+			await ApplyThrottleAsync(ct);
 
-			ResiliencePipeline<T> pipeline = CreateAsyncPipeline<T>(operation: operation);
-			return await pipeline.ExecuteAsync(async _ => await action(), cancellationToken: ct);
+			ResiliencePipeline<T> pipeline = CreateAsyncPipeline<T>(operation);
+			return await pipeline.ExecuteAsync(async _ => await action(), ct);
 		}
 		finally
 		{
@@ -41,35 +41,35 @@ public static class Resilience
 	)
 	{
 		await ExecuteAsync(
-			operation: operation,
+			operation,
 			async () =>
 			{
 				await action();
 				return true;
 			},
-			ct: ct
+			ct
 		);
 	}
 
 	private static ResiliencePipeline<T> CreateAsyncPipeline<T>(string operation) =>
 		new ResiliencePipelineBuilder<T>()
-			.AddRetry(CreateRetryOptions<T>(operation: operation))
+			.AddRetry(CreateRetryOptions<T>(operation))
 			.Build();
 
 	private static ResiliencePipeline<T> CreateSyncPipeline<T>(string operation) =>
 		new ResiliencePipelineBuilder<T>()
-			.AddRetry(CreateRetryOptions<T>(operation: operation))
+			.AddRetry(CreateRetryOptions<T>(operation))
 			.Build();
 
 	public static T Execute<T>(string operation, Func<T> action, CancellationToken ct = default)
 	{
-		Semaphore.Wait(cancellationToken: ct);
+		Semaphore.Wait(ct);
 		try
 		{
 			ApplyThrottle();
 
-			ResiliencePipeline<T> pipeline = CreateSyncPipeline<T>(operation: operation);
-			return pipeline.Execute(_ => action(), cancellationToken: ct);
+			ResiliencePipeline<T> pipeline = CreateSyncPipeline<T>(operation);
+			return pipeline.Execute(_ => action(), ct);
 		}
 		finally
 		{
@@ -80,13 +80,13 @@ public static class Resilience
 
 	public static void Execute(string operation, Action action, CancellationToken ct = default) =>
 		Execute(
-			operation: operation,
+			operation,
 			() =>
 			{
 				action();
 				return true;
 			},
-			ct: ct
+			ct
 		);
 
 	private static void ApplyThrottle()
@@ -113,29 +113,29 @@ public static class Resilience
 				.HandleInner<TimeoutException>()
 				.HandleInner<IOException>()
 				.HandleInner<SocketException>()
-				.Handle<Exception>(ex => IsTransientError(message: ex.Message))
-				.HandleInner<Exception>(ex => IsTransientError(message: ex.Message)),
+				.Handle<Exception>(ex => IsTransientError(ex.Message))
+				.HandleInner<Exception>(ex => IsTransientError(ex.Message)),
 			OnRetry = args =>
 			{
 				var message = args.Outcome.Exception?.Message ?? "Unknown error";
 
-				if (IsFatalQuotaError(message: message))
+				if (IsFatalQuotaError(message))
 				{
-					var serviceName = operation.Split(separator: '.')[0];
-					throw new DailyQuotaExceededException(service: serviceName, message: message);
+					var serviceName = operation.Split('.')[0];
+					throw new DailyQuotaExceededException(serviceName, message);
 				}
 
 				Console.Warning(
-					message: "{0} failed (attempt {1}/{2}): {3}",
+					"{0} failed (attempt {1}/{2}): {3}",
 					operation,
 					args.AttemptNumber + 1,
 					MaxRetries,
 					message
 				);
 				Console.Info(
-					message: "Retrying in {0:F0}s (at {1:HH:mm:ss})",
+					"Retrying in {0:F0}s (at {1:HH:mm:ss})",
 					args.RetryDelay.TotalSeconds,
-					DateTime.Now.Add(value: args.RetryDelay)
+					DateTime.Now.Add(args.RetryDelay)
 				);
 
 				return ValueTask.CompletedTask;
@@ -146,7 +146,7 @@ public static class Resilience
 	{
 		TimeSpan elapsed = DateTime.Now - lastCallTime;
 		if (elapsed < ThrottleDelay)
-			await Task.Delay(ThrottleDelay - elapsed, cancellationToken: ct);
+			await Task.Delay(ThrottleDelay - elapsed, ct);
 	}
 
 	#endregion
@@ -156,34 +156,19 @@ public static class Resilience
 	public static bool IsTransientError(string? message) =>
 		message is { }
 		&& (
-			message.Contains(value: "busy")
-			|| message.Contains(
-				value: "unavailable",
-				comparisonType: StringComparison.OrdinalIgnoreCase
-			)
-			|| message.Contains(value: "503")
-			|| message.Contains(value: "429")
-			|| message.Contains(
-				value: "rate limit",
-				comparisonType: StringComparison.OrdinalIgnoreCase
-			)
-			|| message.Contains(
-				value: "too many requests",
-				comparisonType: StringComparison.OrdinalIgnoreCase
-			)
-			|| message.Contains(
-				value: "try again",
-				comparisonType: StringComparison.OrdinalIgnoreCase
-			)
+			message.Contains("busy")
+			|| message.Has("unavailable")
+			|| message.Contains("503")
+			|| message.Contains("429")
+			|| message.Has("rate limit")
+			|| message.Has("too many requests")
+			|| message.Has("try again")
 		);
 
 	public static bool IsFatalQuotaError(string message) =>
-		message.Contains(value: "daily limit")
-		|| message.Contains(
-			value: "quota exceeded",
-			comparisonType: StringComparison.OrdinalIgnoreCase
-		)
-		|| (message.Contains(value: "quota") && message.Contains(value: "day"));
+		message.Contains("daily limit")
+		|| message.Has("quota exceeded")
+		|| (message.Contains("quota") && message.Contains("day"));
 
 	#endregion
 }
@@ -204,7 +189,7 @@ public sealed class RetryExhaustedException(
 )
 	: Exception(
 		$"{operation} failed after {attempts} retries ({totalWait:hh\\:mm\\:ss} total wait). Last error: {inner.Message}",
-		innerException: inner
+		inner
 	)
 {
 	internal int Attempts { get; } = attempts;

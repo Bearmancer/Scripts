@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Commands;
+namespace CSharpScripts.CLI;
 
 public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 {
@@ -335,7 +335,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 			List<SearchResult> mbResults = await mbService.SearchAsync(
 				query,
 				maxResults: 5,
-				ct: ct
+				ct
 			);
 			ExtractSuggestions(
 				results: mbResults,
@@ -352,7 +352,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 				List<SearchResult> discogsResults = await discogsService.SearchAsync(
 					query,
 					maxResults: 5,
-					ct: ct
+					ct
 				);
 				ExtractSuggestions(
 					results: discogsResults,
