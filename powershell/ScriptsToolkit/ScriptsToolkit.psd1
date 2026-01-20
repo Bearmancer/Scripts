@@ -22,7 +22,7 @@
         'Register-SyncTask', 'Register-AllSyncTasks'
 
         # Utilities
-        'View-SyncLog', 'Invoke-Propolis', 'Get-ScriptsToolkitCommand'
+        'Get-SyncLog', 'Invoke-Propolis', 'Get-ScriptsToolkitCommand'
     )
 
     AliasesToExport   = @(
@@ -31,6 +31,6 @@
         'whisper', 'whisp', 'wpj'
         'ytdl'
         'regtask', 'regall'
-        'synclog', 'propolis', 'stk'
+        'viewlog', 'propolis', 'stk'
     )
 }

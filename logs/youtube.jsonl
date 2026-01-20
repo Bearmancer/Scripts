@@ -271,3 +271,6 @@
 {"Timestamp":"2026-01-19 12:38:18","Level":"Info","Event":"PlaylistUpdated","SessionId":"cc19e9b5","Data":{"Title":"Semyon Bychkov","Added":1,"Removed":0,"AddedVideos":["Schostakowitsch - Sinfonie Nr. 7 | Semyon Bychkov | WDR Sinfonieorchester"]}}
 {"Timestamp":"2026-01-19 12:38:23","Level":"Info","Event":"PlaylistUpdated","SessionId":"cc19e9b5","Data":{"Title":"Simon Rattle","Added":0,"Removed":1,"RemovedVideos":["Mahler: Symphony No.6    S. Rattle 50th birth special live 2005"],"RemovedVideoUrls":["https://www.youtube.com/watch?v=evkqveDro8Q"]}}
 {"Timestamp":"2026-01-19 12:38:26","Level":"Info","Event":"SessionEnd","SessionId":"cc19e9b5","Data":{"Status":"Completed","EndedAt":"2026-01-19 12:38:26","Summary":"Updated 6 playlists"}}
+{"Timestamp":"2026-01-20 15:06:33","Level":"Info","Event":"SessionStart","SessionId":"b25d0c81","Data":{"Service":"YouTube","ProcessId":18544}}
+{"Timestamp":"2026-01-20 15:07:21","Level":"Info","Event":"PlaylistUpdated","SessionId":"b25d0c81","Data":{"Title":"François-Xavier Roth","Added":1,"Removed":0,"AddedVideos":["Haydn Symphonies 8 & 45 Concertos Trumpet & Horn François Xavier Roth Les Siecles"]}}
+{"Timestamp":"2026-01-20 15:07:23","Level":"Info","Event":"SessionEnd","SessionId":"b25d0c81","Data":{"Status":"Completed","EndedAt":"2026-01-20 15:07:23","Summary":"Updated 1 playlists"}}

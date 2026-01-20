@@ -119,3 +119,5 @@
 {"Timestamp":"2026-01-19 12:38:26","Level":"Error","Event":"SessionCrashed","SessionId":"b69c0fa5","Data":{"OriginalStart":"2026-01-19 10:23:49","DetectedAt":"2026-01-19 12:38:26"}}
 {"Timestamp":"2026-01-19 12:38:26","Level":"Info","Event":"SessionStart","SessionId":"ae4cc244","Data":{"Service":"LastFm","ProcessId":17596}}
 {"Timestamp":"2026-01-19 12:38:39","Level":"Info","Event":"SessionEnd","SessionId":"ae4cc244","Data":{"Status":"Completed","EndedAt":"2026-01-19 12:38:39","Summary":"Wrote 248 scrobbles to sheet"}}
+{"Timestamp":"2026-01-20 15:07:23","Level":"Info","Event":"SessionStart","SessionId":"ab100e8f","Data":{"Service":"LastFm","ProcessId":18544}}
+{"Timestamp":"2026-01-20 15:07:34","Level":"Info","Event":"SessionEnd","SessionId":"ab100e8f","Data":{"Status":"Completed","EndedAt":"2026-01-20 15:07:34","Summary":"Wrote 25 scrobbles to sheet"}}
