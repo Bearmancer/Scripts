@@ -56,8 +56,6 @@ public class ScrobbleSyncOrchestrator(DateTime? forceFromDate, CancellationToken
 				DateTime? newestCached = cachedScrobbles[0].PlayedAt;
 				DateTime? oldestCached = cachedScrobbles[^1].PlayedAt;
 
-				Console.Debug("Cache: {0} scrobbles", cachedScrobbles.Count);
-
 				if (
 					state.OldestScrobble.HasValue
 					&& state.NewestScrobble.HasValue

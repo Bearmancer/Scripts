@@ -4,6 +4,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 {
 	#region Fields & Constants
 
+	private const int DescriptionColumnWidth = 40;
+
 	private static readonly IReadOnlyList<object> VideoHeaders =
 	[
 		"Title",
@@ -363,7 +365,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			.AutoClear(true)
 			.HideCompleted(false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(DescriptionColumnWidth),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),
@@ -556,7 +558,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			.AutoClear(true)
 			.HideCompleted(false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(DescriptionColumnWidth),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),
@@ -565,9 +567,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			.StartAsync(async ctx =>
 			{
 				ProgressTask task = ctx.AddTask(
-					Console.TaskTitle(
-						$"Fetching video IDs ({alreadyFetched}/{playlists.Count} done)"
-					),
+					Console.TaskTitle($"Fetching video IDs ({alreadyFetched}/{playlists.Count} done)"),
 					maxValue: playlists.Count
 				);
 				task.Value = alreadyFetched;
@@ -711,6 +711,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 		// Calculate widths for vertical alignment
 		var prefixWidth = $"({totalPlaylists}/{totalPlaylists})".Length;
 		var titleWidth = Math.Min(40, playlistsToProcess.Max(p => p.Title.Length));
+		var suffixWidth = $"(0/{playlistsToProcess.Max(p => p.VideoIds.Count)} videos)".Length;
+		var totalDescriptionWidth = prefixWidth + 1 + titleWidth + 1 + suffixWidth;
 
 		Console.Suppress = true;
 
@@ -719,7 +721,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			.AutoClear(true)
 			.HideCompleted(false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(totalDescriptionWidth),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),

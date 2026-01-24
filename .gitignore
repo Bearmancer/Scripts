@@ -1,6 +1,7 @@
 # Build outputs
 [Bb]in/
 [Oo]bj/
+publish/
 *.dll
 *.exe
 *.pdb
