@@ -4,6 +4,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 {
 	#region Fields & Constants
 
+	private const int PlaylistTitleWidth = 36;
+
 	private static readonly IReadOnlyList<object> VideoHeaders =
 	[
 		"Title",
@@ -372,7 +374,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			.StartAsync(async ctx =>
 			{
 				ProgressTask task = ctx.AddTask(
-					Console.TaskTitle($"Fetching video IDs (0/{playlistIds.Count})"),
+					Console.TaskTitle($"Fetching video IDs (0/{playlistIds.Count})", PlaylistTitleWidth),
 					maxValue: playlistIds.Count
 				);
 
@@ -382,7 +384,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 						break;
 
 					PlaylistSummary summary = summaryLookup[playlistId];
-					task.Description = Console.TaskTitle(summary.Title);
+					task.Description = Console.TaskTitle(summary.Title, PlaylistTitleWidth);
 
 					List<string> videoIds = await youtubeService.GetPlaylistVideoIdsAsync(
 						playlistId,
@@ -566,7 +568,8 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 			{
 				ProgressTask task = ctx.AddTask(
 					Console.TaskTitle(
-						$"Fetching video IDs ({alreadyFetched}/{playlists.Count} done)"
+						$"Fetching video IDs ({alreadyFetched}/{playlists.Count} done)",
+						PlaylistTitleWidth
 					),
 					maxValue: playlists.Count
 				);
@@ -582,7 +585,7 @@ public class YouTubePlaylistOrchestrator(CancellationToken ct) : IDisposable
 					}
 
 					YouTubePlaylist playlist = playlists[i];
-					task.Description = Console.TaskTitle(playlist.Title);
+					task.Description = Console.TaskTitle(playlist.Title, PlaylistTitleWidth);
 
 					List<string> videoIds = await youtubeService.GetPlaylistVideoIdsAsync(
 						playlist.Id,

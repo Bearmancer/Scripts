@@ -223,7 +223,13 @@ public static class Console
 
 	public static Markup CheckItemMarkup(string text) => new($"  {CheckItem(text)}");
 
-	public static string TaskTitle(string title) => Colored("cyan", title);
+	public static string TaskTitle(string title, int width = 0)
+	{
+		var display = width > 0 ? title.PadRight(width) : title;
+		if (display.Length > width && width > 0)
+			display = display[..(width - 3)] + "...";
+		return Colored("cyan", display);
+	}
 
 	public static string TaskDescription(
 		string? prefix,

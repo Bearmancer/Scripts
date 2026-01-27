@@ -1,6 +1,6 @@
 @{
     RootModule        = 'ScriptsToolkit.psm1'
-    ModuleVersion     = '5.1.0'
+    ModuleVersion     = '5.2.0'
     GUID              = '3e9ddc4f-071f-4b0a-a5d0-1bc364f204c8'
     Author            = 'Lance'
     CompanyName       = 'Personal'
@@ -19,7 +19,8 @@
         'Save-YouTubeDownload'
 
         # Scheduled Tasks
-        'Register-SyncTask', 'Register-AllSyncTasks'
+        'Register-LastFmSyncTask', 'Register-YouTubeSyncTask', 'Register-StateCommitTask'
+        'Register-AllSyncTasks', 'Unregister-AllSyncTasks'
 
         # Utilities
         'Get-SyncLog', 'Invoke-Propolis', 'Get-ScriptsToolkitCommand'
@@ -27,10 +28,10 @@
 
     AliasesToExport   = @(
         'scripts'
-        'syncyt', 'synclf', 'syncall'
+        'syncyt', 'music', 'sync'
         'whisper', 'whisp', 'wpj'
         'ytdl'
-        'regtask', 'regall'
+        'reglfm', 'regyt', 'regcommit', 'regall', 'unreg'
         'viewlog', 'propolis', 'stk'
     )
 }

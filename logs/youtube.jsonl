@@ -286,3 +286,9 @@
 {"Timestamp":"2026-01-23 10:00:11","Level":"Info","Event":"SessionEnd","SessionId":"f97a3437","Data":{"Status":"Completed","EndedAt":"2026-01-23 10:00:11","Summary":"No changes detected"}}
 {"Timestamp":"2026-01-24 09:08:47","Level":"Info","Event":"SessionStart","SessionId":"b71f4d16","Data":{"Service":"YouTube","ProcessId":6948}}
 {"Timestamp":"2026-01-24 09:08:58","Level":"Info","Event":"SessionEnd","SessionId":"b71f4d16","Data":{"Status":"Completed","EndedAt":"2026-01-24 09:08:58","Summary":"No changes detected"}}
+{"Timestamp":"2026-01-27 09:42:36","Level":"Info","Event":"SessionStart","SessionId":"c674fec7","Data":{"Service":"YouTube","ProcessId":8796}}
+{"Timestamp":"2026-01-27 09:43:09","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Daniel Harding","Added":1,"Removed":0,"AddedVideos":["Richard Strauss | Don Juan, op. 20 - Daniel Harding, Wiener Philharmoniker (2026, live)"]}}
+{"Timestamp":"2026-01-27 09:43:16","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Eugene Ormandy","Added":1,"Removed":0,"AddedVideos":["Mahler: Symphony No.10 (Cooke, 2nd version) E. Ormandy / PHO 1967 live"]}}
+{"Timestamp":"2026-01-27 09:43:19","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Franz Welser-Möst","Added":1,"Removed":0,"AddedVideos":["Richard Strauss | Symphonia Domestica, op. 53 - Franz Welser-Möst, Wiener Philharmoniker (2021 live)"]}}
+{"Timestamp":"2026-01-27 09:43:25","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Simon Rattle","Added":1,"Removed":0,"AddedVideos":["Beethoven Symphonies Nos. 4 and 5, Funeral March Leonora Prohaska - CBSO - Rattle (Frankfurt, 1995)"]}}
+{"Timestamp":"2026-01-27 09:43:26","Level":"Info","Event":"SessionEnd","SessionId":"c674fec7","Data":{"Status":"Completed","EndedAt":"2026-01-27 09:43:26","Summary":"Updated 4 playlists"}}

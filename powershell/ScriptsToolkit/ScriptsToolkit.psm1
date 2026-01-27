@@ -1,5 +1,4 @@
-#region ScriptsToolkit
-# ScriptsToolkit
+# ScriptsToolkit Module File
 
 class WhisperLanguageCompleter : System.Management.Automation.IValidateSetValuesGenerator {
     [string[]] GetValidValues() { return $Script:WhisperLanguages }
@@ -11,19 +10,23 @@ class WhisperModelCompleter : System.Management.Automation.IValidateSetValuesGen
 
 $Script:RepositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Script:CSharpRoot = Join-Path $Script:RepositoryRoot 'csharp'
+$Script:CSharpPublish = Join-Path $Script:CSharpRoot 'publish'
+$Script:ScriptsExe = Join-Path $Script:CSharpPublish 'scripts.exe'
 $Script:PythonRoot = Join-Path $Script:RepositoryRoot 'python'
 $Script:LogDirectory = Join-Path $Script:RepositoryRoot 'logs'
 
 . "$PSScriptRoot\ScriptsToolkit.Data.ps1"
 
+#region CLI Wrappers
 function Invoke-Scripts {
     <#
     .SYNOPSIS
     Invoke the C# CLI for sync, music metadata, and utilities.
 
     .DESCRIPTION
-    Runs the C# dotnet project with the specified arguments. This is the main entry point
+    Runs the compiled scripts.exe with the specified arguments. This is the main entry point
     for all C# CLI commands including sync operations, music metadata queries, and utilities.
+    Falls back to dotnet run if the compiled exe is not found.
 
     .PARAMETER Arguments
     Arguments to pass to the C# CLI.
@@ -44,7 +47,13 @@ function Invoke-Scripts {
     [CmdletBinding()]
     param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
 
-    dotnet run --project $Script:CSharpRoot -- @Arguments
+    if (Test-Path $Script:ScriptsExe) {
+        & $Script:ScriptsExe @Arguments
+    }
+    else {
+        Write-Warning "scripts.exe not found. Run 'regall' to compile. Falling back to dotnet run..."
+        dotnet run --project $Script:CSharpRoot -- @Arguments
+    }
 }
 
 function Sync-YouTube {
@@ -78,21 +87,47 @@ function Sync-LastFm {
 
     .DESCRIPTION
     Fetches scrobble history from Last.fm API and syncs to a configured Google Sheets spreadsheet.
-    Supports incremental sync from last known timestamp.
+    Supports incremental sync from last known timestamp and optional date filtering.
+    Always rebuilds from source to ensure latest changes are reflected.
+
+    .PARAMETER Date
+    Sync scrobbles from a specific date onwards. Format: dd/MM/yyyy (e.g., 20/01/2026).
+    This will delete existing scrobbles from that date forward and re-sync them.
 
     .EXAMPLE
     Sync-LastFm
-    Runs a full Last.fm scrobble sync.
+    Runs full Last.fm scrobble sync from last known timestamp.
 
     .EXAMPLE
-    synclf --dry-run
-    Preview sync without making changes.
-    #>
-    [Alias('synclf')]
-    [CmdletBinding()]
-    param()
+    music 20/01/2026
+    Sync scrobbles from January 20, 2026 onwards using the 'music' alias.
 
-    Invoke-Scripts sync lastfm @args
+    .EXAMPLE
+    Sync-LastFm -Date 01/12/2024
+    Re-sync scrobbles from December 1, 2024.
+    #>
+    [Alias('music')]
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0, ValueFromPipeline)]
+        [string]$Date
+    )
+
+    $cliArgs = @('sync', 'lastfm')
+
+    if ($Date) {
+        try {
+            $dateObj = [datetime]::ParseExact($Date, 'dd/MM/yyyy', [System.Globalization.CultureInfo]::InvariantCulture)
+            # C# CLI expects --since with yyyy/MM/dd format (use InvariantCulture to preserve slashes)
+            $formattedDate = $dateObj.ToString('yyyy/MM/dd', [System.Globalization.CultureInfo]::InvariantCulture)
+            $cliArgs += '--since', $formattedDate
+        }
+        catch {
+            Write-Error -Message "Invalid date format. Expected dd/MM/yyyy (e.g., 20/01/2026). Received: '$Date'" -ErrorAction Stop
+            return
+        }
+    }
+    Invoke-Scripts @cliArgs @args
 }
 
 function Sync-All {
@@ -102,23 +137,27 @@ function Sync-All {
 
     .DESCRIPTION
     Runs YouTube sync followed by Last.fm sync in sequence. Useful for scheduled tasks
-    or manual full syncs.
+    or manual full syncs. Always builds from source.
 
     .EXAMPLE
     Sync-All
     Syncs YouTube then Last.fm.
 
     .EXAMPLE
-    syncall --dry-run
-    Preview both syncs without making changes.
+    sync
+    Same as above using the 'sync' alias.
     #>
-    [Alias('syncall')]
+    [Alias('sync')]
     [CmdletBinding()]
     param()
 
-    Invoke-Scripts sync all @args
-}
+    $cliArgs = @('sync', 'all')
 
+    Invoke-Scripts @cliArgs @args
+}
+#endregion CLI Wrappers
+
+#region Whisper Transcription
 function Invoke-Whisper {
     <#
     .SYNOPSIS
@@ -234,57 +273,6 @@ function Invoke-Whisper {
     }
 }
 
-function Invoke-WhisperEnglish {
-    <#
-    .SYNOPSIS
-    Transcribe audio/video optimized for English content.
-
-    .DESCRIPTION
-    Wrapper for Invoke-Whisper with English language and distil-large-v3.5 model pre-configured.
-    The distilled model is faster while maintaining high accuracy for English content.
-
-    .PARAMETER InputPath
-    Path to the audio/video file or directory to transcribe.
-
-    .PARAMETER Translate
-    Translate non-English audio to English (useful for multilingual content).
-
-    .PARAMETER Quiet
-    Suppress verbose whisper output.
-
-    .PARAMETER ExtraArgs
-    Additional arguments to pass to whisper-ctranslate2.
-
-    .EXAMPLE
-    Invoke-WhisperEnglish podcast.mp3
-    Transcribes English podcast using the fast distilled model.
-
-    .EXAMPLE
-    whisp *.mp4
-    Transcribes all MP4 files using the 'whisp' alias.
-    #>
-    [Alias('whisp')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('FilePath', 'FullName', 'Path')]
-        [string]$InputPath,
-
-        [Alias('t')]
-        [switch]$Translate,
-
-        [Alias('q')]
-        [switch]$Quiet,
-
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]$ExtraArgs
-    )
-
-    process {
-        Invoke-Whisper $InputPath -Language en -Model 'distil-large-v3.5' -Translate:$Translate -Quiet:$Quiet @ExtraArgs
-    }
-}
-
 function Invoke-WhisperJapanese {
     <#
     .SYNOPSIS
@@ -335,7 +323,9 @@ function Invoke-WhisperJapanese {
         Invoke-Whisper $InputPath -Language ja -Translate:$Translate -Quiet:$Quiet @ExtraArgs
     }
 }
+#endregion Whisper Transcription
 
+#region YouTube Utilities
 function Save-YouTubeDownload {
     <#
     .SYNOPSIS
@@ -343,7 +333,7 @@ function Save-YouTubeDownload {
 
     .DESCRIPTION
     Downloads YouTube videos using yt-dlp and optionally transcribes them using Whisper.
-    By default, downloads are transcribed with Invoke-WhisperEnglish unless -NoTranscribe is specified.
+    By default, downloads are transcribed with Invoke-Whisper unless -NoTranscribe is specified.
 
     .PARAMETER Urls
     One or more YouTube URLs to download.
@@ -389,123 +379,289 @@ function Save-YouTubeDownload {
         if ($NoTranscribe -or -not (Test-Path $filePath)) { continue }
 
         if ($Translate) { Invoke-Whisper $filePath -Translate }
-        else { Invoke-WhisperEnglish $filePath }
+        else { Invoke-Whisper $filePath -Language en -Model 'distil-large-v3.5' }
     }
 }
+#endregion YouTube Utilities
 
-function Register-SyncTask {
+#region Scheduled Tasks
+function Register-LastFmSyncTask {
     <#
     .SYNOPSIS
-    Register a Windows scheduled task for sync operations.
+    Register Last.fm sync scheduled task.
 
     .DESCRIPTION
-    Creates a Windows Scheduled Task that runs a sync command daily and at logon.
-    Requires Administrator privileges. Validates the command before registering.
-    Replaces existing task with the same name.
+    Creates a Windows Scheduled Task for Last.fm sync at 09:00 daily.
+    Catches up missed runs automatically.
 
-    .PARAMETER TaskName
-    Name for the scheduled task (e.g., 'YouTubeSync', 'LastFmSync').
+    .EXAMPLE
+    Register-LastFmSyncTask
+    Registers Last.fm sync at 09:00 AM.
+    #>
+    [Alias('reglfm')]
+    [CmdletBinding()]
+    param()
 
-    .PARAMETER Command
-    The sync command to run (e.g., 'sync yt', 'sync lastfm').
+    Register-SyncTaskInternal -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime '09:00' -Description 'Sync Last.fm scrobbles (09:00 daily)'
+}
+
+function Register-YouTubeSyncTask {
+    <#
+    .SYNOPSIS
+    Register YouTube sync scheduled task.
+
+    .DESCRIPTION
+    Creates a Windows Scheduled Task for YouTube sync at 09:00 daily.
+    Catches up missed runs automatically.
+
+    .EXAMPLE
+    Register-YouTubeSyncTask
+    Registers YouTube sync at 09:00 AM.
+    #>
+    [Alias('regyt')]
+    [CmdletBinding()]
+    param()
+
+    Register-SyncTaskInternal -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '09:00' -Description 'Sync YouTube playlists (09:00 daily)'
+}
+
+function Register-StateCommitTask {
+    <#
+    .SYNOPSIS
+    Register scheduled task to auto-commit state and log changes.
+
+    .DESCRIPTION
+    Creates a Windows Scheduled Task that runs daily at 09:10 to check for
+    uncommitted changes in state/ and logs/ directories, then commits and
+    pushes using gh CLI with the Bearmancer account. Pauses on failure.
 
     .PARAMETER DailyTime
-    Time of day to run the task. Default is 09:00.
+    Time of day to run. Default is 09:10.
 
-    .PARAMETER Description
-    Description for the scheduled task.
-
-    .EXAMPLE
-    Register-SyncTask -TaskName 'YouTubeSync' -Command 'sync yt'
-    Registers YouTube sync to run daily at 9 AM and at logon.
+    .PARAMETER GitAccount
+    GitHub account for commits. Default is 'Bearmancer'.
 
     .EXAMPLE
-    regtask -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime '22:00'
-    Registers Last.fm sync to run at 10 PM daily.
+    Register-StateCommitTask
+    Registers state commit task at 09:10 AM.
     #>
-    [Alias('regtask')]
+    [Alias('regcommit')]
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [string]$TaskName,
-
-        [Parameter(Mandatory)]
-        [string]$Command,
-
-        [TimeSpan]$DailyTime = '09:00',
-
-        [string]$Description = 'Scheduled sync task'
+        [TimeSpan]$DailyTime = '09:10',
+        [string]$GitAccount = 'Bearmancer'
     )
 
-    $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        throw 'Requires Administrator privileges.'
-    }
-
-    if (-not (Test-Path $Script:CSharpRoot)) { throw "Project not found: $Script:CSharpRoot" }
-    Assert-NetworkAvailable
-
-    Write-Information "$(Get-Timestamp) Validating: $Command" -InformationAction Continue
-    Push-Location $Script:CSharpRoot
-    try {
-        $result = dotnet run -- $Command --dry-run 2>&1
-        if ($LASTEXITCODE -ne 0) { throw "Validation failed: $result" }
-    }
-    finally { Pop-Location }
-
-    $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
-    if ($existing) {
-        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
-        Write-Information "$(Get-Timestamp) Removed existing: $TaskName" -InformationAction Continue
-    }
+    $taskName = 'StateAutoCommit'
 
     $taskScript = @"
-Set-Location '$Script:CSharpRoot'
-dotnet run -- $Command
-if (`$LASTEXITCODE -ne 0) { Read-Host 'Press Enter' }
+`$ErrorActionPreference = 'Continue'
+Set-Location '$Script:RepositoryRoot'
+
+try {
+    # Check for uncommitted changes in state and logs directories
+    `$status = git status --porcelain -- state/ logs/
+    if (-not `$status) {
+        Write-Host 'No changes to commit'
+        exit 0
+    }
+
+    # Count changes by directory
+    `$stateChanges = (`$status | Where-Object { `$_ -match 'state/' }).Count
+    `$logChanges = (`$status | Where-Object { `$_ -match 'logs/' }).Count
+
+    # Stage all data file changes
+    git add state/ logs/
+
+    # Build dynamic commit message
+    `$parts = @()
+    if (`$stateChanges -gt 0) { `$parts += "state (`$stateChanges)" }
+    if (`$logChanges -gt 0) { `$parts += "logs (`$logChanges)" }
+    `$summary = `$parts -join ', '
+    `$timestamp = Get-Date -Format 'yyyy/MM/dd HH:mm'
+    `$message = "Auto-sync [`$summary] `$timestamp"
+
+    git commit -m `$message
+
+    # Push using gh (ensures correct account: $GitAccount)
+    `$authStatus = gh auth status --hostname github.com 2>&1
+    if (`$LASTEXITCODE -ne 0) {
+        Write-Host 'GitHub auth required. Opening browser...'
+        gh auth login --hostname github.com --git-protocol https --web
+    }
+
+    git push origin main
+    Write-Host "Pushed: `$message"
+}
+catch {
+    Write-Host "ERROR: `$_" -ForegroundColor Red
+    Read-Host 'Press Enter to close'
+    exit 1
+}
 "@
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($taskScript))
     $pwsh = (Get-Command pwsh).Source
 
-    $action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -EncodedCommand $encoded" -WorkingDirectory $Script:CSharpRoot
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+    $action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -EncodedCommand $encoded" -WorkingDirectory $Script:RepositoryRoot
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 
     $start = [datetime]::Today.Add($DailyTime)
     if ($start -le (Get-Date)) { $start = $start.AddDays(1) }
 
-    $triggers = @((New-ScheduledTaskTrigger -Daily -At $start), (New-ScheduledTaskTrigger -AtLogOn))
-    Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $triggers -Settings $settings -Description $Description | Out-Null
+    $dailyTrigger = New-ScheduledTaskTrigger -Daily -At $start
+    $description = "Auto-commit state/logs changes daily at $($start.ToString('HH:mm')) (Account: $GitAccount)"
 
-    Write-Information "$(Get-Timestamp) Registered: $TaskName (Daily: $($start.ToString('HH:mm')), Logon)" -InformationAction Continue
+    $existing = Get-ScheduledTask -TaskName $taskName -ErrorAction Ignore
+    if ($existing) {
+        Set-ScheduledTask -TaskName $taskName -Action $action -Trigger $dailyTrigger -Settings $settings | Out-Null
+        Write-Information "$(Get-Timestamp) Updated: $taskName (Daily: $($start.ToString('HH:mm')))" -InformationAction Continue
+    }
+    else {
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $dailyTrigger -Settings $settings -Description $description | Out-Null
+        Write-Information "$(Get-Timestamp) Registered: $taskName (Daily: $($start.ToString('HH:mm')))" -InformationAction Continue
+    }
 }
 
 function Register-AllSyncTasks {
     <#
     .SYNOPSIS
-    Register all default sync scheduled tasks.
+    Compile scripts.exe and register all sync scheduled tasks at 9 AM.
 
     .DESCRIPTION
-    Convenience function to register both LastFmSync (9 AM) and YouTubeSync (10 AM)
-    scheduled tasks. Requires Administrator privileges.
+    Compiles the C# project to scripts.exe, then registers all three tasks at 9 AM:
+    - LastFmSync:      09:00 (runs first)
+    - YouTubeSync:     09:00 (same time as LastFm)
+    - StateAutoCommit: 09:10 (after syncs complete)
+
+    Tasks use StartWhenAvailable to catch up missed runs. All tasks pause on failure.
 
     .EXAMPLE
     Register-AllSyncTasks
-    Registers both sync tasks with default schedules.
+    Compiles and registers all sync tasks.
 
     .EXAMPLE
     regall
-    Same as above using the alias.
+    Same as above.
     #>
     [Alias('regall')]
     [CmdletBinding()]
     param()
 
     Assert-NetworkAvailable
-    Register-SyncTask -TaskName 'LastFmSync' -Command 'sync lastfm' -Description 'Sync Last.fm scrobbles'
-    Register-SyncTask -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime '10:00' -Description 'Sync YouTube playlists'
+    Build-Scripts
+    Register-LastFmSyncTask
+    Register-YouTubeSyncTask
+    Register-StateCommitTask
 }
 
-#region SyncLog
+function Build-Scripts {
+    <#
+    .SYNOPSIS
+    Compile the C# project to scripts.exe.
+
+    .DESCRIPTION
+    Runs dotnet publish to create a single-file executable at csharp/publish/scripts.exe.
+
+    .EXAMPLE
+    Build-Scripts
+    Compiles the C# project.
+    #>
+    [CmdletBinding()]
+    param()
+
+    Write-Information "$(Get-Timestamp) Compiling scripts.exe..." -InformationAction Continue
+    $result = dotnet publish $Script:CSharpRoot -c Release -r win-x64 -o $Script:CSharpPublish 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Compilation failed: $result"
+        return
+    }
+    Write-Information "$(Get-Timestamp) Compiled: $Script:ScriptsExe" -InformationAction Continue
+}
+
+function Unregister-AllSyncTasks {
+    <#
+    .SYNOPSIS
+    Unregister all sync scheduled tasks.
+
+    .DESCRIPTION
+    Removes LastFmSync, YouTubeSync, and StateAutoCommit scheduled tasks.
+
+    .EXAMPLE
+    Unregister-AllSyncTasks
+    Removes all registered sync tasks.
+
+    .EXAMPLE
+    unreg
+    Same as above.
+    #>
+    [Alias('unreg')]
+    [CmdletBinding()]
+    param()
+
+    @('LastFmSync', 'YouTubeSync', 'StateAutoCommit') | ForEach-Object {
+        $task = Get-ScheduledTask -TaskName $_ -ErrorAction Ignore
+        if ($task) {
+            Unregister-ScheduledTask -TaskName $_ -Confirm:$false
+            Write-Information "$(Get-Timestamp) Removed: $_" -InformationAction Continue
+        }
+    }
+}
+
+function Register-SyncTaskInternal {
+    <#
+    .SYNOPSIS
+    Internal helper to register or update a sync scheduled task.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$TaskName,
+        [Parameter(Mandatory)][string]$Command,
+        [Parameter(Mandatory)][TimeSpan]$DailyTime,
+        [Parameter(Mandatory)][string]$Description
+    )
+
+    if (-not (Test-Path $Script:ScriptsExe)) {
+        throw "scripts.exe not found: $Script:ScriptsExe. Run Build-Scripts first."
+    }
+
+    $taskScript = @"
+`$ErrorActionPreference = 'Continue'
+try {
+    & '$Script:ScriptsExe' $Command
+    if (`$LASTEXITCODE -ne 0) {
+        Write-Host 'Sync failed with exit code:' `$LASTEXITCODE -ForegroundColor Red
+        Read-Host 'Press Enter to close'
+    }
+}
+catch {
+    Write-Host "ERROR: `$_" -ForegroundColor Red
+    Read-Host 'Press Enter to close'
+}
+"@
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($taskScript))
+    $pwsh = (Get-Command pwsh).Source
+
+    $action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -EncodedCommand $encoded" -WorkingDirectory $Script:RepositoryRoot
+    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+
+    $start = [datetime]::Today.Add($DailyTime)
+    if ($start -le (Get-Date)) { $start = $start.AddDays(1) }
+
+    $dailyTrigger = New-ScheduledTaskTrigger -Daily -At $start
+
+    $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
+    if ($existing) {
+        Set-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings | Out-Null
+        Write-Information "$(Get-Timestamp) Updated: $TaskName (Daily: $($start.ToString('HH:mm')))" -InformationAction Continue
+    }
+    else {
+        Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings -Description $Description | Out-Null
+        Write-Information "$(Get-Timestamp) Registered: $TaskName (Daily: $($start.ToString('HH:mm')))" -InformationAction Continue
+    }
+}
+#endregion Scheduled Tasks
+
+#region Log Files
 function Get-SyncLog {
     <#
     .SYNOPSIS
@@ -737,8 +893,9 @@ function Select-SyncLogRows {
     $sorted | Select-Object -First $Size
 }
 #endregion SyncLog Helpers
-#endregion SyncLog
+#endregion Log Files
 
+#region Utilities
 function Invoke-Propolis {
     <#
     .SYNOPSIS
@@ -796,3 +953,4 @@ function Get-ScriptsToolkitCommand {
         [PSCustomObject]@{ Alias = $aliases; Function = $func; Description = $synopsis }
     } | Format-Table -AutoSize
 }
+#endregion Utilities
