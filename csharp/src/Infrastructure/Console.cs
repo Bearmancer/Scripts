@@ -223,13 +223,7 @@ public static class Console
 
 	public static Markup CheckItemMarkup(string text) => new($"  {CheckItem(text)}");
 
-	public static string TaskTitle(string title, int width = 0)
-	{
-		var display = width > 0 ? title.PadRight(width) : title;
-		if (display.Length > width && width > 0)
-			display = display[..(width - 3)] + "...";
-		return Colored("cyan", display);
-	}
+	public static string TaskTitle(string title) => Colored("cyan", title);
 
 	public static string TaskDescription(
 		string? prefix,
@@ -463,4 +457,20 @@ public static class Console
 	}
 
 	#endregion
+}
+
+/// <summary>
+/// A progress column that displays task descriptions with a fixed width for vertical alignment.
+/// </summary>
+public sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
+{
+	public Justify Alignment { get; set; } = Justify.Left;
+
+	public override int? GetColumnWidth(RenderOptions options) => width;
+
+	public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
+	{
+		var text = task.Description?.Replace("\n", " ").Replace("\r", "").Trim() ?? string.Empty;
+		return new Markup(text).Overflow(Overflow.Ellipsis).Justify(Alignment);
+	}
 }

@@ -96,7 +96,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 			.AutoClear(false)
 			.HideCompleted(false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(60),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),

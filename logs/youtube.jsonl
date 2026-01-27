@@ -292,3 +292,6 @@
 {"Timestamp":"2026-01-27 09:43:19","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Franz Welser-Möst","Added":1,"Removed":0,"AddedVideos":["Richard Strauss | Symphonia Domestica, op. 53 - Franz Welser-Möst, Wiener Philharmoniker (2021 live)"]}}
 {"Timestamp":"2026-01-27 09:43:25","Level":"Info","Event":"PlaylistUpdated","SessionId":"c674fec7","Data":{"Title":"Simon Rattle","Added":1,"Removed":0,"AddedVideos":["Beethoven Symphonies Nos. 4 and 5, Funeral March Leonora Prohaska - CBSO - Rattle (Frankfurt, 1995)"]}}
 {"Timestamp":"2026-01-27 09:43:26","Level":"Info","Event":"SessionEnd","SessionId":"c674fec7","Data":{"Status":"Completed","EndedAt":"2026-01-27 09:43:26","Summary":"Updated 4 playlists"}}
+{"Timestamp":"2026-01-27 12:47:45","Level":"Info","Event":"SessionStart","SessionId":"cbfca21f","Data":{"Service":"YouTube","ProcessId":7396}}
+{"Timestamp":"2026-01-27 12:47:57","Level":"Info","Event":"SessionEnd","SessionId":"cbfca21f","Data":{"Status":"Completed","EndedAt":"2026-01-27 12:47:57","Summary":"No changes detected"}}
+{"Timestamp":"2026-01-27 12:51:14","Level":"Info","Event":"SessionStart","SessionId":"f9893762","Data":{"Service":"YouTube","ProcessId":12172}}

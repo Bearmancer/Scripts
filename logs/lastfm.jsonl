@@ -170,3 +170,7 @@
 {"Timestamp":"2026-01-23 10:00:26","Level":"Info","Event":"SessionEnd","SessionId":"eab70cb9","Data":{"Status":"Completed","EndedAt":"2026-01-23 10:00:26","Summary":"No new scrobbles"}}
 {"Timestamp":"2026-01-24 09:05:31","Level":"Info","Event":"SessionStart","SessionId":"1ca2294a","Data":{"Service":"LastFm","ProcessId":22020}}
 {"Timestamp":"2026-01-24 09:05:45","Level":"Info","Event":"SessionEnd","SessionId":"1ca2294a","Data":{"Status":"Completed","EndedAt":"2026-01-24 09:05:45","Summary":"Wrote 22 scrobbles to sheet"}}
+{"Timestamp":"2026-01-27 12:48:12","Level":"Info","Event":"SessionStart","SessionId":"91a4d391","Data":{"Service":"LastFm","ProcessId":15520}}
+{"Timestamp":"2026-01-27 12:48:25","Level":"Info","Event":"SessionEnd","SessionId":"91a4d391","Data":{"Status":"Completed","EndedAt":"2026-01-27 12:48:25","Summary":"Wrote 32 scrobbles to sheet"}}
+{"Timestamp":"2026-01-27 12:51:10","Level":"Info","Event":"SessionStart","SessionId":"104e6672","Data":{"Service":"LastFm","ProcessId":20468}}
+{"Timestamp":"2026-01-27 12:51:16","Level":"Info","Event":"SessionEnd","SessionId":"104e6672","Data":{"Status":"Completed","EndedAt":"2026-01-27 12:51:16","Summary":"No new scrobbles"}}

@@ -548,7 +548,7 @@ function Register-AllSyncTasks {
     param()
 
     Assert-NetworkAvailable
-    Build-Scripts
+    # Build-Scripts is called by each Register-*Task function but skips if up-to-date
     Register-LastFmSyncTask
     Register-YouTubeSyncTask
     Register-StateCommitTask
@@ -561,13 +561,35 @@ function Build-Scripts {
 
     .DESCRIPTION
     Runs dotnet publish to create a single-file executable at csharp/publish/scripts.exe.
+    Skips compilation if the exe is newer than all source files.
+
+    .PARAMETER Force
+    Force recompilation even if exe is up-to-date.
 
     .EXAMPLE
     Build-Scripts
-    Compiles the C# project.
+    Compiles the C# project if needed.
+
+    .EXAMPLE
+    Build-Scripts -Force
+    Forces recompilation.
     #>
     [CmdletBinding()]
-    param()
+    param([switch]$Force)
+
+    # Check if rebuild is needed
+    if (-not $Force -and (Test-Path $Script:ScriptsExe)) {
+        $exeTime = (Get-Item $Script:ScriptsExe).LastWriteTime
+        $srcDir = Join-Path $Script:CSharpRoot 'src'
+        $newerSource = Get-ChildItem $srcDir -Recurse -Include '*.cs', '*.csproj' |
+            Where-Object { $_.LastWriteTime -gt $exeTime } |
+            Select-Object -First 1
+
+        if (-not $newerSource) {
+            Write-Information "$(Get-Timestamp) scripts.exe is up-to-date" -InformationAction Continue
+            return
+        }
+    }
 
     Write-Information "$(Get-Timestamp) Compiling scripts.exe..." -InformationAction Continue
     $result = dotnet publish $Script:CSharpRoot -c Release -r win-x64 -o $Script:CSharpPublish 2>&1
@@ -620,8 +642,10 @@ function Register-SyncTaskInternal {
         [Parameter(Mandatory)][string]$Description
     )
 
+    # Ensure exe exists (Build-Scripts skips if up-to-date)
+    Build-Scripts
     if (-not (Test-Path $Script:ScriptsExe)) {
-        throw "scripts.exe not found: $Script:ScriptsExe. Run Build-Scripts first."
+        throw "scripts.exe not found after build: $Script:ScriptsExe"
     }
 
     $taskScript = @"

@@ -902,7 +902,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			.AutoClear(true)
 			.HideCompleted(false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(60),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),

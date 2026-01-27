@@ -1051,7 +1051,7 @@ public class GoogleSheetsService : IDisposable
 			.AutoClear(enabled: true)
 			.HideCompleted(enabled: false)
 			.Columns(
-				new TaskDescriptionColumn(),
+				new FixedWidthDescriptionColumn(40),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn(),
