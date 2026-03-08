@@ -1,6 +1,6 @@
 @{
     RootModule        = 'ScriptsToolkit.psm1'
-    ModuleVersion     = '5.2.0'
+    ModuleVersion     = '5.5.0'
     GUID              = '3e9ddc4f-071f-4b0a-a5d0-1bc364f204c8'
     Author            = 'Lance'
     CompanyName       = 'Personal'
@@ -8,30 +8,30 @@
     PowerShellVersion = '7.5'
 
     FunctionsToExport = @(
-        # CLI Wrappers
-        'Invoke-Scripts'
+        'Invoke-Tools'
         'Sync-YouTube', 'Sync-LastFm', 'Sync-All'
-
-        # Whisper Transcription
+        'Invoke-Toolkit'
+        'Convert-Audio', 'Rename-AudioRed', 'Get-AudioArtReport'
+        'Invoke-Remux', 'Compress-Video'
+        'Get-VideoChapters', 'Get-VideoResolutions', 'New-Gif', 'Get-VideoThumbnails'
+        'New-Torrent'
         'Invoke-Whisper', 'Invoke-WhisperEnglish', 'Invoke-WhisperJapanese'
-
-        # YouTube
         'Save-YouTubeDownload'
-
-        # Scheduled Tasks
-        'Register-LastFmSyncTask', 'Register-YouTubeSyncTask', 'Register-StateCommitTask'
+        'Register-LastFmSyncTask', 'Register-YouTubeSyncTask'
         'Register-AllSyncTasks', 'Unregister-AllSyncTasks'
-
-        # Utilities
-        'Get-SyncLog', 'Invoke-Propolis', 'Get-ScriptsToolkitCommand'
+        'Get-SyncLog', 'Get-YouTubePlaylistLog', 'Get-SyncStatus'
+        'Invoke-Propolis', 'Get-ToolkitCommand'
     )
 
     AliasesToExport   = @(
-        'scripts'
+        'tools'
         'syncyt', 'music', 'sync'
+        'sacd', 'renred', 'artreport'
+        'remux', 'hb'
+        'gif', 'mktor'
         'whisper', 'whisp', 'wpj'
         'ytdl'
-        'reglfm', 'regyt', 'regcommit', 'regall', 'unreg'
-        'viewlog', 'propolis', 'stk'
+        'reglfm', 'regyt', 'regall', 'unreg'
+        'viewlog', 'ytlog', 'syncstatus', 'propolis', 'stk'
     )
 }

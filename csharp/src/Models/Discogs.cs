@@ -1,6 +1,6 @@
 namespace CSharpScripts.Models;
 
-public record DiscogsArtist(
+internal sealed record DiscogsArtist(
 	int Id,
 	string Name,
 	string? RealName,
@@ -12,7 +12,7 @@ public record DiscogsArtist(
 	List<string> Urls
 );
 
-public record DiscogsRelease(
+internal sealed record DiscogsRelease(
 	int Id,
 	string Title,
 	int Year,
@@ -49,9 +49,9 @@ public record DiscogsRelease(
 		];
 }
 
-public record DiscogsCredit(string Name, string Role, string? Tracks);
+internal sealed record DiscogsCredit(string Name, string Role, string? Tracks);
 
-public record DiscogsMaster(
+internal sealed record DiscogsMaster(
 	int Id,
 	string Title,
 	int Year,
@@ -73,7 +73,7 @@ public record DiscogsMaster(
 	decimal? LowestPrice
 );
 
-public record DiscogsTrack(
+internal sealed record DiscogsTrack(
 	string Position,
 	string Title,
 	string? Duration,
@@ -82,9 +82,14 @@ public record DiscogsTrack(
 	List<DiscogsArtistRef>? ExtraArtists
 );
 
-public record DiscogsFormat(string Name, string? Quantity, string? Text, List<string> Descriptions);
+internal sealed record DiscogsFormat(
+	string Name,
+	string? Quantity,
+	string? Text,
+	List<string> Descriptions
+);
 
-public record DiscogsLabel(
+internal sealed record DiscogsLabel(
 	int Id,
 	string Name,
 	string? CatalogNumber,
@@ -93,7 +98,7 @@ public record DiscogsLabel(
 	string? ResourceUrl
 );
 
-public record DiscogsCompany(
+internal sealed record DiscogsCompany(
 	int Id,
 	string Name,
 	string? CatalogNumber,
@@ -102,7 +107,7 @@ public record DiscogsCompany(
 	string? ResourceUrl
 );
 
-public record DiscogsArtistRef(
+internal sealed record DiscogsArtistRef(
 	int Id,
 	string Name,
 	string? Anv,
@@ -112,7 +117,7 @@ public record DiscogsArtistRef(
 	string? ResourceUrl
 );
 
-public record DiscogsImage(
+internal sealed record DiscogsImage(
 	string Type,
 	string? Uri,
 	string? Uri150,
@@ -121,7 +126,7 @@ public record DiscogsImage(
 	string? ResourceUrl
 );
 
-public record DiscogsVideo(
+internal sealed record DiscogsVideo(
 	string Uri,
 	string? Title,
 	string? Description,
@@ -129,9 +134,9 @@ public record DiscogsVideo(
 	bool Embed
 );
 
-public record DiscogsIdentifier(string Type, string Value, string? Description);
+internal sealed record DiscogsIdentifier(string Type, string Value, string? Description);
 
-public record DiscogsCommunity(
+internal sealed record DiscogsCommunity(
 	int Have,
 	int Want,
 	double? Rating,
@@ -141,9 +146,9 @@ public record DiscogsCommunity(
 	DiscogsSubmitter? Submitter
 );
 
-public record DiscogsSubmitter(string Username, string? ResourceUrl);
+internal sealed record DiscogsSubmitter(string Username, string? ResourceUrl);
 
-public record DiscogsVersion(
+internal sealed record DiscogsVersion(
 	int Id,
 	string Title,
 	string? Format,
@@ -156,7 +161,7 @@ public record DiscogsVersion(
 	string? Thumb
 );
 
-public record DiscogsSearchResult(
+internal sealed record DiscogsSearchResult(
 	int ReleaseId,
 	int? MasterId,
 	string? Title,

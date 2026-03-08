@@ -180,3 +180,89 @@
 {"Timestamp":"2026-01-27 19:55:19","Level":"Warning","Event":"SessionInterrupted","SessionId":"79e3ccb7","Data":{"Status":"Interrupted","EndedAt":"2026-01-27 19:55:19","Progress":"Fetched 0 scrobbles across 0 pages"}}
 {"Timestamp":"2026-01-28 09:00:01","Level":"Info","Event":"SessionStart","SessionId":"4eecc555","Data":{"Service":"LastFm","ProcessId":9040}}
 {"Timestamp":"2026-01-28 09:03:21","Level":"Info","Event":"SessionEnd","SessionId":"4eecc555","Data":{"Status":"Completed","EndedAt":"2026-01-28 09:03:21","Summary":"Wrote 18078 scrobbles to sheet"}}
+{"Timestamp":"2026-01-29 18:37:52","Level":"Info","Event":"SessionStart","SessionId":"8d3d834b","Data":{"Service":"LastFm","ProcessId":13620}}
+{"Timestamp":"2026-01-29 18:38:16","Level":"Info","Event":"SessionEnd","SessionId":"8d3d834b","Data":{"Status":"Completed","EndedAt":"2026-01-29 18:38:16","Summary":"Wrote 60 scrobbles to sheet"}}
+{"Timestamp":"2026-01-29 19:30:05","Level":"Info","Event":"SessionStart","SessionId":"be90626b","Data":{"Service":"LastFm","ProcessId":20912}}
+{"Timestamp":"2026-01-29 19:30:16","Level":"Info","Event":"SessionEnd","SessionId":"be90626b","Data":{"Status":"Completed","EndedAt":"2026-01-29 19:30:16","Summary":"Wrote 9 scrobbles to sheet"}}
+{"Timestamp":"2026-01-30 19:10:01","Level":"Info","Event":"SessionStart","SessionId":"fdbc78a1","Data":{"Service":"LastFm","ProcessId":15420}}
+{"Timestamp":"2026-01-30 19:10:16","Level":"Info","Event":"SessionEnd","SessionId":"fdbc78a1","Data":{"Status":"Completed","EndedAt":"2026-01-30 19:10:16","Summary":"Wrote 38 scrobbles to sheet"}}
+{"Timestamp":"2026-01-31 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"603c44df","Data":{"Service":"LastFm","ProcessId":25004}}
+{"Timestamp":"2026-01-31 09:00:15","Level":"Info","Event":"SessionEnd","SessionId":"603c44df","Data":{"Status":"Completed","EndedAt":"2026-01-31 09:00:15","Summary":"Wrote 24 scrobbles to sheet"}}
+{"Timestamp":"2026-02-01 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"c7c9883b","Data":{"Service":"LastFm","ProcessId":13700}}
+{"Timestamp":"2026-02-01 09:00:15","Level":"Info","Event":"SessionEnd","SessionId":"c7c9883b","Data":{"Status":"Completed","EndedAt":"2026-02-01 09:00:15","Summary":"Wrote 17 scrobbles to sheet"}}
+{"Timestamp":"2026-02-01 19:43:03","Level":"Info","Event":"SessionStart","SessionId":"6ec56fe1","Data":{"Service":"LastFm","ProcessId":17288}}
+{"Timestamp":"2026-02-01 19:43:06","Level":"Warning","Event":"SessionInterrupted","SessionId":"6ec56fe1","Data":{"Status":"Interrupted","EndedAt":"2026-02-01 19:43:06","Progress":"Fetched 17 scrobbles across 1 pages"}}
+{"Timestamp":"2026-02-02 20:56:12","Level":"Info","Event":"SessionStart","SessionId":"a181d4b5","Data":{"Service":"LastFm","ProcessId":7376}}
+{"Timestamp":"2026-02-02 20:56:24","Level":"Info","Event":"SessionEnd","SessionId":"a181d4b5","Data":{"Status":"Completed","EndedAt":"2026-02-02 20:56:24","Summary":"Wrote 52 scrobbles to sheet"}}
+{"Timestamp":"2026-02-03 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"fb7e85f2","Data":{"Service":"LastFm","ProcessId":15456}}
+{"Timestamp":"2026-02-03 09:00:13","Level":"Info","Event":"SessionEnd","SessionId":"fb7e85f2","Data":{"Status":"Completed","EndedAt":"2026-02-03 09:00:13","Summary":"Wrote 3 scrobbles to sheet"}}
+{"Timestamp":"2026-02-04 19:14:31","Level":"Info","Event":"SessionStart","SessionId":"fcc94283","Data":{"Service":"LastFm","ProcessId":30768}}
+{"Timestamp":"2026-02-04 19:14:49","Level":"Info","Event":"SessionEnd","SessionId":"fcc94283","Data":{"Status":"Completed","EndedAt":"2026-02-04 19:14:49","Summary":"Wrote 45 scrobbles to sheet"}}
+{"Timestamp":"2026-02-06 10:43:27","Level":"Info","Event":"SessionStart","SessionId":"e74f303e","Data":{"Service":"LastFm","ProcessId":17452}}
+{"Timestamp":"2026-02-06 10:43:42","Level":"Info","Event":"SessionEnd","SessionId":"e74f303e","Data":{"Status":"Completed","EndedAt":"2026-02-06 10:43:42","Summary":"Wrote 52 scrobbles to sheet"}}
+{"Timestamp":"2026-02-07 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"5ee74121","Data":{"Service":"LastFm","ProcessId":77208}}
+{"Timestamp":"2026-02-07 09:00:17","Level":"Info","Event":"SessionEnd","SessionId":"5ee74121","Data":{"Status":"Completed","EndedAt":"2026-02-07 09:00:17","Summary":"Wrote 14 scrobbles to sheet"}}
+{"Timestamp":"2026-02-08 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"0384207a","Data":{"Service":"LastFm","ProcessId":60164}}
+{"Timestamp":"2026-02-08 09:00:15","Level":"Info","Event":"SessionEnd","SessionId":"0384207a","Data":{"Status":"Completed","EndedAt":"2026-02-08 09:00:15","Summary":"Wrote 20 scrobbles to sheet"}}
+{"Timestamp":"2026-02-09 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"37dba9ce","Data":{"Service":"LastFm","ProcessId":13744}}
+{"Timestamp":"2026-02-09 09:00:15","Level":"Info","Event":"SessionEnd","SessionId":"37dba9ce","Data":{"Status":"Completed","EndedAt":"2026-02-09 09:00:15","Summary":"Wrote 7 scrobbles to sheet"}}
+{"Timestamp":"2026-02-10 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"ee627eaa","Data":{"Service":"LastFm","ProcessId":3924}}
+{"Timestamp":"2026-02-10 09:00:13","Level":"Info","Event":"SessionEnd","SessionId":"ee627eaa","Data":{"Status":"Completed","EndedAt":"2026-02-10 09:00:13","Summary":"Wrote 17 scrobbles to sheet"}}
+{"Timestamp":"2026-02-11 09:00:04","Level":"Info","Event":"SessionStart","SessionId":"46fc6eb2","Data":{"Service":"LastFm","ProcessId":19128}}
+{"Timestamp":"2026-02-11 09:00:17","Level":"Info","Event":"SessionEnd","SessionId":"46fc6eb2","Data":{"Status":"Completed","EndedAt":"2026-02-11 09:00:17","Summary":"Wrote 16 scrobbles to sheet"}}
+{"Timestamp":"2026-02-12 03:45:27","Level":"Info","Event":"SessionStart","SessionId":"0a0e359a","Data":{"Service":"LastFm","ProcessId":1720}}
+{"Timestamp":"2026-02-12 03:45:53","Level":"Info","Event":"SessionEnd","SessionId":"0a0e359a","Data":{"Status":"Completed","EndedAt":"2026-02-12 03:45:53","Summary":"Wrote 1075 scrobbles to sheet"}}
+{"Timestamp":"2026-02-13 09:00:01","Level":"Info","Event":"SessionStart","SessionId":"0e440e7b","Data":{"Service":"LastFm","ProcessId":137828}}
+{"Timestamp":"2026-02-13 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"0e440e7b","Data":{"Status":"Completed","EndedAt":"2026-02-13 09:00:14","Summary":"Wrote 29 scrobbles to sheet"}}
+{"Timestamp":"2026-02-14 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"d033f47d","Data":{"Service":"LastFm","ProcessId":136312}}
+{"Timestamp":"2026-02-14 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"d033f47d","Data":{"Status":"Completed","EndedAt":"2026-02-14 09:00:14","Summary":"Wrote 21 scrobbles to sheet"}}
+{"Timestamp":"2026-02-15 09:01:04","Level":"Info","Event":"SessionStart","SessionId":"e3039e78","Data":{"Service":"LastFm","ProcessId":134140}}
+{"Timestamp":"2026-02-15 09:01:21","Level":"Info","Event":"SessionEnd","SessionId":"e3039e78","Data":{"Status":"Completed","EndedAt":"2026-02-15 09:01:21","Summary":"Wrote 18 scrobbles to sheet"}}
+{"Timestamp":"2026-02-16 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"53331d03","Data":{"Service":"LastFm","ProcessId":133264}}
+{"Timestamp":"2026-02-16 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"53331d03","Data":{"Status":"Completed","EndedAt":"2026-02-16 09:00:14","Summary":"Wrote 18 scrobbles to sheet"}}
+{"Timestamp":"2026-02-17 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"78944a1c","Data":{"Service":"LastFm","ProcessId":23992}}
+{"Timestamp":"2026-02-17 09:00:12","Level":"Info","Event":"SessionEnd","SessionId":"78944a1c","Data":{"Status":"Completed","EndedAt":"2026-02-17 09:00:12","Summary":"Wrote 31 scrobbles to sheet"}}
+{"Timestamp":"2026-02-18 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"aaafc105","Data":{"Service":"LastFm","ProcessId":7084}}
+{"Timestamp":"2026-02-18 09:00:13","Level":"Info","Event":"SessionEnd","SessionId":"aaafc105","Data":{"Status":"Completed","EndedAt":"2026-02-18 09:00:13","Summary":"Wrote 15 scrobbles to sheet"}}
+{"Timestamp":"2026-02-19 09:00:01","Level":"Info","Event":"SessionStart","SessionId":"1acd5bd9","Data":{"Service":"LastFm","ProcessId":9148}}
+{"Timestamp":"2026-02-19 09:00:12","Level":"Info","Event":"SessionEnd","SessionId":"1acd5bd9","Data":{"Status":"Completed","EndedAt":"2026-02-19 09:00:12","Summary":"Wrote 16 scrobbles to sheet"}}
+{"Timestamp":"2026-02-20 01:23:36","Level":"Info","Event":"SessionStart","SessionId":"6ade2f54","Data":{"Service":"LastFm","ProcessId":19348}}
+{"Timestamp":"2026-02-20 01:23:46","Level":"Info","Event":"SessionEnd","SessionId":"6ade2f54","Data":{"Status":"Completed","EndedAt":"2026-02-20 01:23:46","Summary":"Wrote 47 scrobbles to sheet"}}
+{"Timestamp":"2026-02-20 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"d2f47446","Data":{"Service":"LastFm","ProcessId":12112}}
+{"Timestamp":"2026-02-20 09:00:12","Level":"Info","Event":"SessionEnd","SessionId":"d2f47446","Data":{"Status":"Completed","EndedAt":"2026-02-20 09:00:12","Summary":"No new scrobbles"}}
+{"Timestamp":"2026-02-21 09:11:46","Level":"Info","Event":"SessionStart","SessionId":"bed04312","Data":{"Service":"LastFm","ProcessId":13748}}
+{"Timestamp":"2026-02-21 09:11:58","Level":"Info","Event":"SessionEnd","SessionId":"bed04312","Data":{"Status":"Completed","EndedAt":"2026-02-21 09:11:58","Summary":"Wrote 14 scrobbles to sheet"}}
+{"Timestamp":"2026-02-22 01:42:45","Level":"Info","Event":"SessionStart","SessionId":"edcb4380","Data":{"Service":"LastFm","ProcessId":29484}}
+{"Timestamp":"2026-02-22 01:43:06","Level":"Info","Event":"SessionEnd","SessionId":"edcb4380","Data":{"Status":"Completed","EndedAt":"2026-02-22 01:43:06","Summary":"Wrote 366 scrobbles to sheet"}}
+{"Timestamp":"2026-02-22 09:00:05","Level":"Info","Event":"SessionStart","SessionId":"2fcf0d8f","Data":{"Service":"LastFm","ProcessId":22600}}
+{"Timestamp":"2026-02-22 09:00:19","Level":"Info","Event":"SessionEnd","SessionId":"2fcf0d8f","Data":{"Status":"Completed","EndedAt":"2026-02-22 09:00:19","Summary":"Wrote 6 scrobbles to sheet"}}
+{"Timestamp":"2026-02-23 09:00:06","Level":"Info","Event":"SessionStart","SessionId":"4113a6e3","Data":{"Service":"LastFm","ProcessId":18980}}
+{"Timestamp":"2026-02-23 09:00:19","Level":"Info","Event":"SessionEnd","SessionId":"4113a6e3","Data":{"Status":"Completed","EndedAt":"2026-02-23 09:00:19","Summary":"Wrote 29 scrobbles to sheet"}}
+{"Timestamp":"2026-02-24 09:00:06","Level":"Info","Event":"SessionStart","SessionId":"38581f22","Data":{"Service":"LastFm","ProcessId":24268}}
+{"Timestamp":"2026-02-24 09:00:19","Level":"Info","Event":"SessionEnd","SessionId":"38581f22","Data":{"Status":"Completed","EndedAt":"2026-02-24 09:00:19","Summary":"Wrote 59 scrobbles to sheet"}}
+{"Timestamp":"2026-02-25 09:00:05","Level":"Info","Event":"SessionStart","SessionId":"56289b14","Data":{"Service":"LastFm","ProcessId":22100}}
+{"Timestamp":"2026-02-25 09:00:19","Level":"Info","Event":"SessionEnd","SessionId":"56289b14","Data":{"Status":"Completed","EndedAt":"2026-02-25 09:00:19","Summary":"Wrote 13 scrobbles to sheet"}}
+{"Timestamp":"2026-02-26 05:53:04","Level":"Info","Event":"SessionStart","SessionId":"514c13e9","Data":{"Service":"LastFm","ProcessId":7456}}
+{"Timestamp":"2026-02-26 05:53:19","Level":"Info","Event":"SessionEnd","SessionId":"514c13e9","Data":{"Status":"Completed","EndedAt":"2026-02-26 05:53:19","Summary":"Wrote 173 scrobbles to sheet"}}
+{"Timestamp":"2026-02-26 09:00:10","Level":"Info","Event":"SessionStart","SessionId":"5884794d","Data":{"Service":"LastFm","ProcessId":24620}}
+{"Timestamp":"2026-02-26 09:00:22","Level":"Info","Event":"SessionEnd","SessionId":"5884794d","Data":{"Status":"Completed","EndedAt":"2026-02-26 09:00:22","Summary":"No new scrobbles"}}
+{"Timestamp":"2026-02-27 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"ed8d383f","Data":{"Service":"LastFm","ProcessId":6748}}
+{"Timestamp":"2026-02-27 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"ed8d383f","Data":{"Status":"Completed","EndedAt":"2026-02-27 09:00:14","Summary":"Wrote 16 scrobbles to sheet"}}
+{"Timestamp":"2026-02-28 09:00:05","Level":"Info","Event":"SessionStart","SessionId":"9fd8e5a8","Data":{"Service":"LastFm","ProcessId":16020}}
+{"Timestamp":"2026-02-28 09:00:18","Level":"Info","Event":"SessionEnd","SessionId":"9fd8e5a8","Data":{"Status":"Completed","EndedAt":"2026-02-28 09:00:18","Summary":"Wrote 11 scrobbles to sheet"}}
+{"Timestamp":"2026-03-01 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"4f16dba2","Data":{"Service":"LastFm","ProcessId":10308}}
+{"Timestamp":"2026-03-01 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"4f16dba2","Data":{"Status":"Completed","EndedAt":"2026-03-01 09:00:14","Summary":"Wrote 9 scrobbles to sheet"}}
+{"Timestamp":"2026-03-02 09:00:05","Level":"Info","Event":"SessionStart","SessionId":"8616ffb3","Data":{"Service":"LastFm","ProcessId":13624}}
+{"Timestamp":"2026-03-02 09:00:17","Level":"Info","Event":"SessionEnd","SessionId":"8616ffb3","Data":{"Status":"Completed","EndedAt":"2026-03-02 09:00:17","Summary":"Wrote 12 scrobbles to sheet"}}
+{"Timestamp":"2026-03-03 09:00:06","Level":"Info","Event":"SessionStart","SessionId":"4cf8573d","Data":{"Service":"LastFm","ProcessId":12220}}
+{"Timestamp":"2026-03-03 09:00:18","Level":"Info","Event":"SessionEnd","SessionId":"4cf8573d","Data":{"Status":"Completed","EndedAt":"2026-03-03 09:00:18","Summary":"Wrote 5 scrobbles to sheet"}}
+{"Timestamp":"2026-03-04 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"ec9e9648","Data":{"Service":"LastFm","ProcessId":29744}}
+{"Timestamp":"2026-03-04 09:00:15","Level":"Info","Event":"SessionEnd","SessionId":"ec9e9648","Data":{"Status":"Completed","EndedAt":"2026-03-04 09:00:15","Summary":"Wrote 2 scrobbles to sheet"}}
+{"Timestamp":"2026-03-05 09:00:03","Level":"Info","Event":"SessionStart","SessionId":"9765f07c","Data":{"Service":"LastFm","ProcessId":26220}}
+{"Timestamp":"2026-03-05 09:00:16","Level":"Info","Event":"SessionEnd","SessionId":"9765f07c","Data":{"Status":"Completed","EndedAt":"2026-03-05 09:00:16","Summary":"Wrote 7 scrobbles to sheet"}}
+{"Timestamp":"2026-03-06 09:00:06","Level":"Info","Event":"SessionStart","SessionId":"72c00b76","Data":{"Service":"LastFm","ProcessId":25364}}
+{"Timestamp":"2026-03-06 09:00:20","Level":"Info","Event":"SessionEnd","SessionId":"72c00b76","Data":{"Status":"Completed","EndedAt":"2026-03-06 09:00:20","Summary":"Wrote 2 scrobbles to sheet"}}
+{"Timestamp":"2026-03-07 09:00:06","Level":"Info","Event":"SessionStart","SessionId":"3cc99cca","Data":{"Service":"LastFm","ProcessId":12808}}
+{"Timestamp":"2026-03-07 09:00:19","Level":"Info","Event":"SessionEnd","SessionId":"3cc99cca","Data":{"Status":"Completed","EndedAt":"2026-03-07 09:00:19","Summary":"Wrote 16 scrobbles to sheet"}}
+{"Timestamp":"2026-03-08 09:00:02","Level":"Info","Event":"SessionStart","SessionId":"ee7e321b","Data":{"Service":"LastFm","ProcessId":1172}}
+{"Timestamp":"2026-03-08 09:00:14","Level":"Info","Event":"SessionEnd","SessionId":"ee7e321b","Data":{"Status":"Completed","EndedAt":"2026-03-08 09:00:14","Summary":"Wrote 12 scrobbles to sheet"}}

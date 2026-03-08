@@ -4,9 +4,9 @@ Set-StrictMode -Version Latest
 $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONWARNINGS = 'ignore'
 
-carapace _carapace | Out-String | Invoke-Expression
+# carapace _carapace | Out-String | Invoke-Expression
 
-Import-Module $PSScriptRoot\ScriptsToolkit\ScriptsToolkit.psd1
+# Import-Module $PSScriptRoot\ScriptsToolkit\ScriptsToolkit.psd1
 
-Import-Module PSCompletions
-Set-PSReadLineOption -PredictionViewStyle ListView
+# Import-Module PSCompletions
+# Set-PSReadLineOption -PredictionViewStyle ListView

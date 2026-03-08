@@ -1,21 +1,18 @@
 namespace CSharpScripts.Services.Music;
 
-public static class MusicExporter
+internal static class MusicExporter
 {
 	public static string ExportWorksToCSV(string releaseTitle, List<WorkSummary> works)
 	{
-		CreateDirectory(Paths.ExportsDirectory);
+		Directory.CreateDirectory(Paths.ExportsDirectory);
 
 		var sanitizedTitle = SanitizeFileName(releaseTitle);
-		var path = Combine(Paths.ExportsDirectory, $"{sanitizedTitle}_works.csv");
+		var path = Path.Combine(Paths.ExportsDirectory, $"{sanitizedTitle}_works.csv");
 
 		using StreamWriter writer = new(path, append: false);
 		using CsvWriter csv = new(
 			writer,
-			new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = true,
-			}
+			new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true }
 		);
 
 		csv.WriteField("Disc");
@@ -43,16 +40,19 @@ public static class MusicExporter
 			csv.NextRecord();
 		}
 
-		Console.Info("Exported {0} works to {1}", works.Count, GetFileName(path));
+		Log.Information("Exported {0} works to {1}", works.Count, Path.GetFileName(path));
 		return path;
 	}
 
-	public static string ExportToSheets(ReleaseData release)
+	public static async Task<string> ExportToSheetsAsync(
+		ReleaseData release,
+		CancellationToken ct = default
+	)
 	{
-		GoogleSheetsService sheets = new();
+		GoogleSheetsService sheets = await GoogleSheetsService.CreateAsync(ct);
 
-		var spreadsheetId = sheets.CreateSpreadsheet(release.Info.Title);
-		Console.Info("Created Google Sheet: {0}", release.Info.Title);
+		var spreadsheetId = await sheets.CreateSpreadsheetAsync(release.Info.Title, ct);
+		Log.Information("Created Google Sheet: {0}", release.Info.Title);
 
 		List<object> headers =
 		[
@@ -69,7 +69,7 @@ public static class MusicExporter
 			"Label",
 		];
 
-		sheets.WriteRecords(
+		await sheets.WriteRecordsAsync(
 			spreadsheetId,
 			"Sheet1",
 			headers,
@@ -87,18 +87,19 @@ public static class MusicExporter
 					t.Duration is { } d && d > TimeSpan.Zero ? d.ToString(@"m\:ss") : "",
 					release.Info.Title,
 					release.Info.Label ?? "",
-				]
+				],
+			ct
 		);
 
 		var url = GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId);
-		Console.Link(url, "View spreadsheet");
+		Log.Information("MusicSheetUrl {Url}", url);
 
 		sheets.Dispose();
 		return url;
 	}
 
 	private static string SanitizeFileName(string name) =>
-		GetInvalidFileNameChars()
+		Path.GetInvalidFileNameChars()
 			.Aggregate(name, (current, c) => current.Replace(c, '_'))
 			.Trim()
 			.TrimEnd('.')[..Math.Min(name.Length, 100)];

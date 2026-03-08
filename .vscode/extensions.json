@@ -11,9 +11,6 @@
         // PowerShell
         "ms-vscode.powershell",
 
-        // Git
-        "eamodio.gitlens",
-        
         // Documents
         "yzhang.markdown-all-in-one",
         "mechatroner.rainbow-csv",

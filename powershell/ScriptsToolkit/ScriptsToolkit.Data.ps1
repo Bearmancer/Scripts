@@ -1,5 +1,9 @@
 # ScriptsToolkit Data File
-# Constants, completers, and shared helpers
+#region Constants, completers, and shared helpers
+
+$Script:TIME_FORMAT = 'HH:mm:ss'
+$Script:DATETIME_FORMAT = 'yyyy/MM/dd HH:mm:ss'
+
 
 $Script:MediaExtensions = @('.mp4', '.mkv', '.avi', '.mp3', '.flac', '.wav', '.webm', '.m4a', '.opus', '.ogg')
 
@@ -18,8 +22,9 @@ $Script:WhisperModels = @(
     'large-v1', 'large-v2', 'large-v3', 'large-v3-turbo', 'turbo',
     'distil-large-v2', 'distil-large-v3', 'distil-large-v3.5', 'distil-medium.en', 'distil-small.en'
 )
+#endregion
 
-function Get-Timestamp { "[$(Get-Date -Format 'HH:mm:ss')]" }
+function Get-Timestamp { "[$(Get-Date -Format $Script:TIME_FORMAT)]" }
 
 function Assert-NetworkAvailable {
     if (-not [System.Net.NetworkInformation.NetworkInterface]::GetIsNetworkAvailable()) {

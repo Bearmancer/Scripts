@@ -1,12 +1,12 @@
 namespace CSharpScripts.Models;
 
-public enum MusicSource
+internal enum MusicSource
 {
 	Discogs,
 	MusicBrainz,
 }
 
-public record ReleaseInfo(
+internal sealed record ReleaseInfo(
 	MusicSource Source,
 	string Id,
 	string Title,
@@ -20,9 +20,9 @@ public record ReleaseInfo(
 	TimeSpan? TotalDuration
 );
 
-public record ReleaseData(ReleaseInfo Info, List<TrackInfo> Tracks);
+internal sealed record ReleaseData(ReleaseInfo Info, List<TrackInfo> Tracks);
 
-public record TrackInfo(
+internal sealed record TrackInfo(
 	int DiscNumber,
 	int TrackNumber,
 	string Title,
@@ -58,7 +58,7 @@ public record TrackInfo(
 	}
 }
 
-public record WorkSummary(
+internal sealed record WorkSummary(
 	int Disc,
 	int FirstTrack,
 	int LastTrack,
@@ -85,7 +85,7 @@ public record WorkSummary(
 		};
 }
 
-public record SearchResult(
+internal sealed record SearchResult(
 	MusicSource Source,
 	string Id,
 	string Title,

@@ -1,6 +1,6 @@
 namespace CSharpScripts.Services.Music;
 
-public interface IMusicService
+internal interface IMusicService
 {
 	MusicSource Source { get; }
 
@@ -12,7 +12,6 @@ public interface IMusicService
 
 	Task<ReleaseData> GetReleaseAsync(
 		string releaseId,
-		bool deepSearch = true,
 		int? maxDiscs = null,
 		CancellationToken ct = default
 	);

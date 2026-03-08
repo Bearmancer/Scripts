@@ -1,3 +1,5 @@
+root = true
+
 [*]
 indent_style = tab
 indent_size = 4
@@ -105,7 +107,8 @@ dotnet_naming_rule.private_members_with_underscore.severity = none
 dotnet_naming_rule.private_members_with_underscore.symbols = value
 dotnet_naming_rule.private_members_with_underscore.style = value
 dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.CA1707.severity = none
 
-# Prefer .slnx over legacy .sln - hide .sln from file explorers
+# Hide legacy .sln in favor of .slnx (modern solution format)
 [*.sln]
 generated_code = true

@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, cast
 
-from rich.console import Console  # type: ignore[import-untyped]
-from rich.logging import RichHandler  # type: ignore[import-untyped]
+from rich.console import Console
+from rich.logging import RichHandler
 
 
 class JsonFileHandler(logging.Handler):
@@ -78,7 +78,11 @@ class JsonFileHandler(logging.Handler):
             return
 
         lock_content = self.lock_path.read_text(encoding="utf-8")
-        stale_session_id, stale_started_at = lock_content.split("|")
+        parts = lock_content.split("|", maxsplit=1)
+        if len(parts) != 2:
+            self._delete_lock()
+            return
+        stale_session_id, stale_started_at = parts
 
         self._append_entry(
             {
@@ -112,7 +116,10 @@ class JsonFileHandler(logging.Handler):
         content = self.log_path.read_text(encoding="utf-8").strip()
         if not content:
             return []
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            return []
         if isinstance(data, list):
             return cast(list[dict[str, Any]], data)
         return []
@@ -121,7 +128,7 @@ class JsonFileHandler(logging.Handler):
 def configure_logging(service_name: str = "toolkit") -> logging.Logger:
     """Configure and return a logger with console and JSON file handlers."""
     logger = logging.getLogger("toolkit")
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     if not logger.handlers:
         console = Console()
@@ -132,11 +139,11 @@ def configure_logging(service_name: str = "toolkit") -> logging.Logger:
             rich_tracebacks=True,
             markup=True,
         )
-        console_handler.setLevel(logging.INFO)
+        console_handler.setLevel(logging.DEBUG)
         logger.addHandler(console_handler)
 
         json_handler = JsonFileHandler(service_name)
-        json_handler.setLevel(logging.INFO)
+        json_handler.setLevel(logging.DEBUG)
         logger.addHandler(json_handler)
 
     return logger

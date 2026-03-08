@@ -1,40 +1,24 @@
 import json
-import subprocess
 from pathlib import Path
 
 from py3createtorrent import create_torrent
-from unidecode import unidecode
 
+from toolkit.exceptions import FileOperationError
 from toolkit.logging_config import get_logger
 
 logger = get_logger("filesystem")
 
 
-def run_command(cmd: list[str], cwd: str | None = None) -> tuple[str, str]:
-    """Run a subprocess command and return stdout/stderr."""
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="ignore",
-        cwd=cwd,
-    )
-
-    result, error = process.communicate()
-
-    if process.returncode != 0:
-        raise subprocess.CalledProcessError(
-            process.returncode, cmd, output=result, stderr=error
-        )
-
-    return unidecode(result), unidecode(error)
-
-
 def get_folder_size(path: Path) -> int:
     """Calculate total size of all files in a directory recursively."""
-    return sum(entry.stat().st_size for entry in path.rglob("*") if entry.is_file())
+    total = 0
+    for entry in path.rglob("*"):
+        try:
+            if entry.is_file():
+                total += entry.stat().st_size
+        except OSError:
+            continue
+    return total
 
 
 def list_directories(path: Path, sort_order: str = "0", indent: int = 0) -> None:
@@ -104,9 +88,12 @@ def rename_file_red(path: Path) -> None:
             )
             new_name = file.stem[:new_length] + file.suffix
             new_file_path = file.with_name(new_name)
-            file.rename(new_file_path)
-            renamed_count += 1
-            logger.info(f"Renamed: {file.name}")
+            try:
+                file.rename(new_file_path)
+                renamed_count += 1
+                logger.info(f"Renamed: {file.name}")
+            except OSError as e:
+                logger.error(f"Failed to rename {file.name}: {e.strerror} (errno {e.errno})")
 
     logger.info(
         f"Renamed {renamed_count} files"
@@ -124,7 +111,10 @@ def make_torrents(folder: Path) -> None:
     if not dropbox_info_path.exists():
         raise FileNotFoundError("Dropbox info.json not found")
 
-    data = json.loads(dropbox_info_path.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(dropbox_info_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Malformed Dropbox info.json: {e}") from e
     dropbox_path = data.get("personal", {}).get("path")
     if not dropbox_path:
         raise ValueError("Dropbox path not found in info.json")
@@ -132,20 +122,28 @@ def make_torrents(folder: Path) -> None:
 
     rename_file_red(folder)
 
-    create_torrent(
-        path=str(folder),
-        trackers=["https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce"],
-        private=True,
-        source="OPS",
-        output=str(dropbox / "Lance" / f"{folder.name} - OPS.torrent"),
-    )
+    try:
+        create_torrent(
+            path=str(folder),
+            trackers=["https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce"],
+            private=True,
+            source="OPS",
+            output=str(dropbox / "Lance" / f"{folder.name} - OPS.torrent"),
+        )
+    except (RuntimeError, ValueError, OSError) as e:
+        logger.error(f"Failed to create OPS torrent for {folder.name}: {e}")
+        raise FileOperationError(f"Failed to create OPS torrent for {folder.name}", folder) from e
 
-    create_torrent(
-        path=str(folder),
-        trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"],
-        private=True,
-        source="RED",
-        output=str(dropbox / "Lance" / f"{folder.name} - RED.torrent"),
-    )
+    try:
+        create_torrent(
+            path=str(folder),
+            trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"],
+            private=True,
+            source="RED",
+            output=str(dropbox / "Lance" / f"{folder.name} - RED.torrent"),
+        )
+    except (RuntimeError, ValueError, OSError) as e:
+        logger.error(f"Failed to create RED torrent for {folder.name}: {e}")
+        raise FileOperationError(f"Failed to create RED torrent for {folder.name}", folder) from e
 
     logger.info(f"Torrents created for {folder.name}")
