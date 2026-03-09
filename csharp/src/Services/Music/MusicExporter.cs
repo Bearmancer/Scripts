@@ -42,7 +42,7 @@ internal static class MusicExporter
 			csv.WriteField(Join("; ", work.RecordingVenues));
 			csv.WriteField(work.YearDisplay);
 			csv.WriteField(
-				work.TotalDuration > TimeSpan.Zero ? work.TotalDuration.ToString(@"h\:mm\:ss") : ""
+				work.TotalDuration > TimeSpan.Zero ? work.TotalDuration.ToString(@"hh\:mm\:ss") : ""
 			);
 			csv.WriteField(work.LastTrack - work.FirstTrack + 1);
 			csv.NextRecord();

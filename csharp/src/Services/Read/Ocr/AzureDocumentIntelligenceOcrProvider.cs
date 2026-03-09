@@ -49,11 +49,10 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 	public async Task<DocumentPageResult> OcrImageAsync(
 		byte[] imageBytes,
-		string mimeType,
+		string _,
 		CancellationToken ct = default
 	)
 	{
-		_ = mimeType;
 		AnalyzeResult result = await AnalyzeAsync(imageBytes, ct);
 		return ExtractStructured(result);
 	}
