@@ -2,6 +2,7 @@ namespace CSharpScripts.Core.Auth;
 
 internal static class Secrets
 {
+	// Temporary default supplied for the Karajan OCR workflow when no endpoint env var is set.
 	private const string DefaultAzureDocumentIntelligenceEndpoint =
 		"https://document-intelligence-lance.cognitiveservices.azure.com/";
 
