@@ -5,7 +5,11 @@ using System.Text;
 using CSharpScripts.Services.Read.Ocr;
 using UglyToad.PdfPig;
 
-internal sealed class LocalPdfExtractor(string filePath, CancellationToken ct = default)
+internal sealed class LocalPdfExtractor(
+	string filePath,
+	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
+	CancellationToken ct = default
+)
 {
 	public async Task<ArticleContent> ExtractAsync()
 	{
@@ -39,12 +43,12 @@ internal sealed class LocalPdfExtractor(string filePath, CancellationToken ct = 
 
 	private async Task<string> OcrWithFallbackAsync(byte[] pdfBytes)
 	{
-		if (AzureDocumentIntelligenceOcrProvider.IsConfigured)
+		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(azureDocumentIntelligence))
 		{
 			try
 			{
 				return await AzureDocumentIntelligenceOcrProvider
-					.CreateConfigured()
+					.CreateConfigured(azureDocumentIntelligence)
 					.OcrPdfAsync(pdfBytes, ct);
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)

@@ -5,7 +5,11 @@ using System.Net;
 using System.Text;
 using CSharpScripts.Services.Read.Ocr;
 
-internal sealed partial class LocalEpubExtractor(string filePath, CancellationToken ct = default)
+internal sealed partial class LocalEpubExtractor(
+	string filePath,
+	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
+	CancellationToken ct = default
+)
 {
 	[GeneratedRegex(@"\d+")]
 	private static partial Regex DigitGroups();
@@ -68,7 +72,7 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 		string mimeType
 	)
 	{
-		if (AzureDocumentIntelligenceOcrProvider.IsConfigured)
+		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(azureDocumentIntelligence))
 		{
 			try
 			{
@@ -76,7 +80,7 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 					$"[{pageNumber}/{totalPages}] Azure Document Intelligence: {name} ({bytes.Length:N0} bytes)..."
 				);
 				return await AzureDocumentIntelligenceOcrProvider
-					.CreateConfigured()
+					.CreateConfigured(azureDocumentIntelligence)
 					.OcrImageAsync(bytes, mimeType, ct);
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)

@@ -184,6 +184,23 @@ internal sealed class SecretsTests
 
 		Core.Auth.Secrets.AzureDocumentIntelligenceModelId.Should().Be("prebuilt-layout");
 	}
+
+	[Test]
+	public void WhenAzureDocumentIntelligenceOptionsAreProvidedThenEnvironmentVariablesAreNotRequired()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_KEY", null);
+
+		Services.Read.Ocr.AzureDocumentIntelligenceOcrProvider.IsConfigured(
+			new Services.Read.Ocr.AzureDocumentIntelligenceOptions(
+				"https://example.cognitiveservices.azure.com/",
+				"test-key",
+				null
+			)
+		)
+			.Should()
+			.BeTrue();
+	}
 }
 
 internal sealed class LanguageIdentifierTests

@@ -4,7 +4,18 @@ Utilities for OCR/document extraction and music metadata workflows.
 
 ## Azure document transcription setup
 
-The `tools read` command now prefers **Azure Document Intelligence** for local scanned PDFs and EPUB page images whenever these environment variables are set:
+You only need **two Azure values** to use Azure OCR here:
+
+- endpoint
+- API key
+
+You can pass them directly to the CLI, so environment variables are optional:
+
+```powershell
+tools read .\booklet.pdf --azure-docintel-endpoint "https://<resource>.cognitiveservices.azure.com/" --azure-docintel-key "<api-key>"
+```
+
+The `tools read` command prefers **Azure Document Intelligence** for local scanned PDFs and EPUB page images whenever either the command-line options or these environment variables are set:
 
 - `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT`
 - `AZURE_DOCUMENT_INTELLIGENCE_KEY`

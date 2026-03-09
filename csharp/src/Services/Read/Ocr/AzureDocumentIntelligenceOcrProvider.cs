@@ -25,19 +25,23 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 		ModelId = IsNullOrWhiteSpace(modelId) ? "prebuilt-layout" : modelId;
 	}
 
-	internal static bool IsConfigured =>
-		!IsNullOrWhiteSpace(Secrets.AzureDocumentIntelligenceEndpoint)
-		&& !IsNullOrWhiteSpace(Secrets.AzureDocumentIntelligenceKey);
+	internal static bool IsConfigured(AzureDocumentIntelligenceOptions? options = null) =>
+		!IsNullOrWhiteSpace(options?.Endpoint ?? Secrets.AzureDocumentIntelligenceEndpoint)
+		&& !IsNullOrWhiteSpace(options?.ApiKey ?? Secrets.AzureDocumentIntelligenceKey);
 
-	internal static AzureDocumentIntelligenceOcrProvider CreateConfigured() =>
+	internal static AzureDocumentIntelligenceOcrProvider CreateConfigured(
+		AzureDocumentIntelligenceOptions? options = null
+	) =>
 		new(
-			Secrets.AzureDocumentIntelligenceEndpoint
+			options?.Endpoint
+				?? Secrets.AzureDocumentIntelligenceEndpoint
 				?? throw new InvalidOperationException(
 					"AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT is not set"
 				),
-			Secrets.AzureDocumentIntelligenceKey
+			options?.ApiKey
+				?? Secrets.AzureDocumentIntelligenceKey
 				?? throw new InvalidOperationException("AZURE_DOCUMENT_INTELLIGENCE_KEY is not set"),
-			Secrets.AzureDocumentIntelligenceModelId
+			options?.ModelId ?? Secrets.AzureDocumentIntelligenceModelId
 		);
 
 	public async Task<string> OcrPdfAsync(byte[] pdfBytes, CancellationToken ct = default)
@@ -181,3 +185,9 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 	[GeneratedRegex(@"\s*\n\s*")]
 	private static partial Regex InlineNewline();
 }
+
+internal sealed record AzureDocumentIntelligenceOptions(
+	string? Endpoint,
+	string? ApiKey,
+	string? ModelId
+);

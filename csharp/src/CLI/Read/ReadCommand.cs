@@ -27,6 +27,18 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 		[CommandOption("--skip-validation")]
 		[Description("Skip EPUBCheck validation")]
 		public bool SkipValidation { get; init; }
+
+		[CommandOption("--azure-docintel-endpoint")]
+		[Description("Azure Document Intelligence endpoint (optional; env var fallback still works)")]
+		public string? AzureDocumentIntelligenceEndpoint { get; init; }
+
+		[CommandOption("--azure-docintel-key")]
+		[Description("Azure Document Intelligence API key (optional; env var fallback still works)")]
+		public string? AzureDocumentIntelligenceKey { get; init; }
+
+		[CommandOption("--azure-docintel-model")]
+		[Description("Azure Document Intelligence model id (defaults to prebuilt-layout)")]
+		public string? AzureDocumentIntelligenceModel { get; init; }
 	}
 
 	public override async Task<int> ExecuteAsync(
@@ -40,6 +52,11 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 			async () =>
 			{
 				ArticleContent content;
+				AzureDocumentIntelligenceOptions azureDocumentIntelligence = new(
+					settings.AzureDocumentIntelligenceEndpoint,
+					settings.AzureDocumentIntelligenceKey,
+					settings.AzureDocumentIntelligenceModel
+				);
 
 				// Detect local file path first
 				if (
@@ -50,6 +67,7 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					UI.Info("Local PDF detected — using LocalPdfExtractor.");
 					content = await new LocalPdfExtractor(
 						settings.Source,
+						azureDocumentIntelligence,
 						cancellationToken
 					).ExtractAsync();
 				}
@@ -58,9 +76,10 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					&& settings.Source.EndsWith(".epub", OrdinalIgnoreCase)
 				)
 				{
-					UI.Info("Local EPUB detected — using LocalEpubExtractor + Document AI.");
+					UI.Info("Local EPUB detected — using LocalEpubExtractor + OCR.");
 					content = await new LocalEpubExtractor(
 						settings.Source,
+						azureDocumentIntelligence,
 						cancellationToken
 					).ExtractAsync();
 				}
