@@ -20,9 +20,12 @@ internal static class MusicExporter
 		csv.WriteField("TrackEnd");
 		csv.WriteField("Work");
 		csv.WriteField("Composer");
-		csv.WriteField("Conductor");
 		csv.WriteField("Orchestra");
+		csv.WriteField("Conductor");
+		csv.WriteField("Soloists");
+		csv.WriteField("Venue");
 		csv.WriteField("Year");
+		csv.WriteField("Duration");
 		csv.WriteField("Movements");
 		csv.NextRecord();
 
@@ -33,9 +36,14 @@ internal static class MusicExporter
 			csv.WriteField(work.LastTrack);
 			csv.WriteField(work.Work);
 			csv.WriteField(work.Composer);
-			csv.WriteField(work.Conductor);
 			csv.WriteField(work.Orchestra);
+			csv.WriteField(work.Conductor);
+			csv.WriteField(Join("; ", work.Soloists));
+			csv.WriteField(Join("; ", work.RecordingVenues));
 			csv.WriteField(work.YearDisplay);
+			csv.WriteField(
+				work.TotalDuration > TimeSpan.Zero ? work.TotalDuration.ToString(@"h\:mm\:ss") : ""
+			);
 			csv.WriteField(work.LastTrack - work.FirstTrack + 1);
 			csv.NextRecord();
 		}

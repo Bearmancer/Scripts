@@ -39,6 +39,22 @@ internal sealed class LocalPdfExtractor(string filePath, CancellationToken ct = 
 
 	private async Task<string> OcrWithFallbackAsync(byte[] pdfBytes)
 	{
+		if (AzureDocumentIntelligenceOcrProvider.IsConfigured)
+		{
+			try
+			{
+				return await AzureDocumentIntelligenceOcrProvider
+					.CreateConfigured()
+					.OcrPdfAsync(pdfBytes, ct);
+			}
+			catch (Exception ex) when (ex is not OperationCanceledException)
+			{
+				UI.Warn(
+					$"Azure Document Intelligence failed ({ex.GetType().Name}: {ex.Message}). Attempting Google Vision fallback..."
+				);
+			}
+		}
+
 		GoogleVisionOcrProvider primary = new();
 		try
 		{

@@ -176,6 +176,14 @@ internal sealed class SecretsTests
 
 		act.Should().Throw<InvalidOperationException>().WithMessage("*GOOGLE_CLIENT_ID*");
 	}
+
+	[Test]
+	public void WhenAzureDocumentIntelligenceModelUnsetThenDefaultModelIsLayout()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID", null);
+
+		Core.Auth.Secrets.AzureDocumentIntelligenceModelId.Should().Be("prebuilt-layout");
+	}
 }
 
 internal sealed class LanguageIdentifierTests

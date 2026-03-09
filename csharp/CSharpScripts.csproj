@@ -11,6 +11,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="AngleSharp" Version="*" />
+		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
 		<PackageReference Include="Azure.Identity" Version="*" />
 		<PackageReference Include="Azure.AI.Translation.Text" Version="*" />
 		<PackageReference Include="CsvHelper" Version="*" />
