@@ -36,11 +36,13 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 			options?.Endpoint
 				?? Secrets.AzureDocumentIntelligenceEndpoint
 				?? throw new InvalidOperationException(
-					"AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT is not set"
+					"Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
 				),
 			options?.ApiKey
 				?? Secrets.AzureDocumentIntelligenceKey
-				?? throw new InvalidOperationException("AZURE_DOCUMENT_INTELLIGENCE_KEY is not set"),
+				?? throw new InvalidOperationException(
+					"Azure Document Intelligence API key is not set. Pass --azure-docintel-key or set AZURE_DOCUMENT_INTELLIGENCE_KEY."
+				),
 			options?.ModelId ?? Secrets.AzureDocumentIntelligenceModelId
 		);
 

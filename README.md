@@ -4,7 +4,21 @@ Utilities for OCR/document extraction and music metadata workflows.
 
 ## Azure document transcription setup
 
-You only need **two Azure values** to use Azure OCR here:
+For the Karajan OCR workflow in this repository, the shortest path is:
+
+```powershell
+tools read .\1000054936.jpg --azure-docintel-key "<api-key>"
+```
+
+That works because this repo already defaults the Azure Document Intelligence endpoint to:
+
+```text
+https://document-intelligence-lance.cognitiveservices.azure.com/
+```
+
+You only need to pass `--azure-docintel-endpoint` if you want to use a different Azure resource.
+
+If you are not using that default resource, you only need **two Azure values** to use Azure OCR here:
 
 - endpoint
 - API key
@@ -42,7 +56,7 @@ You can then run:
 tools read .\booklet.pdf --azure-docintel-endpoint "https://<resource-name>.cognitiveservices.azure.com/" --azure-docintel-key "<key-1-or-key-2>"
 ```
 
-The `tools read` command prefers **Azure Document Intelligence** for local scanned PDFs, standalone page images, and EPUB page images whenever either the command-line options or these environment variables are set:
+The `tools read` command prefers **Azure Document Intelligence** for local scanned PDFs, standalone page images, and EPUB page images whenever an API key is available through the command-line options or these environment variables:
 
 - `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT`
 - `AZURE_DOCUMENT_INTELLIGENCE_KEY`

@@ -29,11 +29,13 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 		public bool SkipValidation { get; init; }
 
 		[CommandOption("--azure-docintel-endpoint")]
-		[Description("Azure Document Intelligence endpoint (optional; env var fallback still works)")]
+		[Description(
+			"Azure Document Intelligence endpoint (optional; defaults to the repo's Karajan OCR resource, env var fallback still works)"
+		)]
 		public string? AzureDocumentIntelligenceEndpoint { get; init; }
 
 		[CommandOption("--azure-docintel-key")]
-		[Description("Azure Document Intelligence API key (optional; env var fallback still works)")]
+		[Description("Azure Document Intelligence API key (pass directly or via env var)")]
 		public string? AzureDocumentIntelligenceKey { get; init; }
 
 		[CommandOption("--azure-docintel-model")]

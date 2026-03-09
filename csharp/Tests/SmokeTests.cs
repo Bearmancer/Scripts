@@ -225,6 +225,19 @@ internal sealed class SecretsTests
 			.Should()
 			.BeTrue();
 	}
+
+	[Test]
+	public void WhenOnlyAzureDocumentIntelligenceApiKeyIsProvidedThenHardcodedEndpointStillWorks()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+
+		Action act = () =>
+			_ = Services.Read.Ocr.AzureDocumentIntelligenceOcrProvider.CreateConfigured(
+				new Services.Read.Ocr.AzureDocumentIntelligenceOptions(null, "test-key", null)
+			);
+
+		act.Should().NotThrow();
+	}
 }
 
 internal sealed class LanguageIdentifierTests
