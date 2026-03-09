@@ -67,7 +67,7 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 	{
 		List<string> bodyBlocks = [];
 		var skippedCount = 0;
-		Dictionary<int, float> pageHeights = result.Pages
+		var pageHeights = result.Pages
 			.Where(static page => page.Height is > 0)
 			.ToDictionary(page => page.PageNumber, page => page.Height!.Value);
 
@@ -123,7 +123,7 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 	private static bool IsHeaderFooterParagraph(
 		DocumentParagraph paragraph,
-		IReadOnlyDictionary<int, float> pageHeights
+		Dictionary<int, float> pageHeights
 	)
 	{
 		if (paragraph.Role is { } role)
@@ -138,7 +138,7 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 		foreach (BoundingRegion region in paragraph.BoundingRegions)
 		{
-			var pageHeight = pageHeights.TryGetValue(region.PageNumber, out float knownPageHeight)
+			var pageHeight = pageHeights.TryGetValue(region.PageNumber, out var knownPageHeight)
 				? knownPageHeight
 				: (float?)null;
 			if (IsHeaderOrFooter(region.Polygon, pageHeight))

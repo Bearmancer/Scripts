@@ -26,11 +26,11 @@ internal sealed partial class LocalImageExtractor(
 
 		ct.ThrowIfCancellationRequested();
 		UI.Info($"Reading local image: {filePath}");
-		byte[] bytes = await File.ReadAllBytesAsync(filePath, ct);
+		var bytes = await File.ReadAllBytesAsync(filePath, ct);
 		UI.Info($"File size: {bytes.Length:N0} bytes");
 
-		string name = Path.GetFileName(filePath);
-		string mimeType = GetMimeType(name);
+		var name = Path.GetFileName(filePath);
+		var mimeType = GetMimeType(name);
 		DocumentPageResult result = await OcrImageWithFallbackAsync(name, bytes, mimeType);
 		UI.Ok(
 			$"  → {result.BodyBlocks.Count} blocks, {result.SkippedHeadersFooters} headers/footers stripped"
@@ -88,13 +88,13 @@ internal sealed partial class LocalImageExtractor(
 		StringBuilder sb = new();
 		var firstBody = true;
 
-		foreach (string block in blocks)
+		foreach (var block in blocks)
 		{
-			string text = block.Trim();
+			var text = block.Trim();
 			if (string.IsNullOrEmpty(text))
 				continue;
 
-			string encoded = WebUtility.HtmlEncode(text);
+			var encoded = WebUtility.HtmlEncode(text);
 
 			if (IsSectionHeading(text))
 			{

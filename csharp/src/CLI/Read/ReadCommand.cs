@@ -1,5 +1,6 @@
 namespace CSharpScripts.CLI.Read;
 
+using CSharpScripts.Services.Read.Ocr;
 using CSharpScripts.Services.Read.Validation;
 
 internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
