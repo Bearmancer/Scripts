@@ -5,7 +5,11 @@ using System.Text;
 using CSharpScripts.Services.Read.Ocr;
 using UglyToad.PdfPig;
 
-internal sealed class LocalPdfExtractor(string filePath, CancellationToken ct = default)
+internal sealed class LocalPdfExtractor(
+	string filePath,
+	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
+	CancellationToken ct = default
+)
 {
 	public async Task<ArticleContent> ExtractAsync()
 	{
@@ -39,6 +43,22 @@ internal sealed class LocalPdfExtractor(string filePath, CancellationToken ct = 
 
 	private async Task<string> OcrWithFallbackAsync(byte[] pdfBytes)
 	{
+		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(azureDocumentIntelligence))
+		{
+			try
+			{
+				return await AzureDocumentIntelligenceOcrProvider
+					.CreateConfigured(azureDocumentIntelligence)
+					.OcrPdfAsync(pdfBytes, ct);
+			}
+			catch (Exception ex) when (ex is not OperationCanceledException)
+			{
+				UI.Warn(
+					$"Azure Document Intelligence failed ({ex.GetType().Name}: {ex.Message}). Attempting Google Vision fallback..."
+				);
+			}
+		}
+
 		GoogleVisionOcrProvider primary = new();
 		try
 		{

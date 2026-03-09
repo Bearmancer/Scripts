@@ -9,6 +9,20 @@ internal sealed class SmokeTests
 {
 	[Test]
 	public void Smoke_TestInfrastructure_Passes() => true.Should().BeTrue();
+
+	[Test]
+	public void WhenReadSourceIsSupportedImageThenItIsRecognizedAsLocalImage()
+	{
+		CLI.Read.ReadCommand.IsImage("disc-page.jpg").Should().BeTrue();
+		CLI.Read.ReadCommand.IsImage("disc-page.jpeg").Should().BeTrue();
+		CLI.Read.ReadCommand.IsImage("disc-page.png").Should().BeTrue();
+	}
+
+	[Test]
+	public void WhenReadSourceIsNotSupportedImageThenItIsRejected()
+	{
+		CLI.Read.ReadCommand.IsImage("disc-page.webp").Should().BeFalse();
+	}
 }
 
 [NotInParallel]
@@ -175,6 +189,54 @@ internal sealed class SecretsTests
 		Action act = () => _ = Core.Auth.Secrets.GoogleClientId;
 
 		act.Should().Throw<InvalidOperationException>().WithMessage("*GOOGLE_CLIENT_ID*");
+	}
+
+	[Test]
+	public void WhenAzureDocumentIntelligenceModelUnsetThenDefaultModelIsLayout()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID", null);
+
+		Core.Auth.Secrets.AzureDocumentIntelligenceModelId.Should().Be("prebuilt-layout");
+	}
+
+	[Test]
+	public void WhenAzureDocumentIntelligenceEndpointUnsetThenHardcodedDefaultIsUsed()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+
+		Core.Auth.Secrets.AzureDocumentIntelligenceEndpoint.Should().Be(
+			"https://document-intelligence-lance.cognitiveservices.azure.com/"
+		);
+	}
+
+	[Test]
+	public void WhenAzureDocumentIntelligenceOptionsAreProvidedThenEnvironmentVariablesAreNotRequired()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_KEY", null);
+
+		Services.Read.Ocr.AzureDocumentIntelligenceOcrProvider.IsConfigured(
+			new Services.Read.Ocr.AzureDocumentIntelligenceOptions(
+				"https://example.cognitiveservices.azure.com/",
+				"test-key",
+				null
+			)
+		)
+			.Should()
+			.BeTrue();
+	}
+
+	[Test]
+	public void WhenOnlyAzureDocumentIntelligenceApiKeyIsProvidedThenHardcodedEndpointStillWorks()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+
+		Action act = () =>
+			_ = Services.Read.Ocr.AzureDocumentIntelligenceOcrProvider.CreateConfigured(
+				new Services.Read.Ocr.AzureDocumentIntelligenceOptions(null, "test-key", null)
+			);
+
+		act.Should().NotThrow();
 	}
 }
 

@@ -5,7 +5,11 @@ using System.Net;
 using System.Text;
 using CSharpScripts.Services.Read.Ocr;
 
-internal sealed partial class LocalEpubExtractor(string filePath, CancellationToken ct = default)
+internal sealed partial class LocalEpubExtractor(
+	string filePath,
+	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
+	CancellationToken ct = default
+)
 {
 	[GeneratedRegex(@"\d+")]
 	private static partial Regex DigitGroups();
@@ -27,7 +31,6 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 		List<(string Name, byte[] Bytes)> images = ExtractImages(filePath);
 		UI.Info($"Found {images.Count} page images.");
 
-		var provider = new DocumentAiOcrProvider(Secrets.GoogleDocumentAiProcessorName);
 		List<string> allBodyBlocks = [];
 
 		for (var i = 0; i < images.Count; i++)
@@ -35,9 +38,14 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 			ct.ThrowIfCancellationRequested();
 			var name = images[i].Name;
 			var bytes = images[i].Bytes;
-			UI.Info($"[{i + 1}/{images.Count}] Document AI: {name} ({bytes.Length:N0} bytes)...");
-
-			DocumentPageResult result = await provider.OcrImageAsync(bytes, ct);
+			var mimeType = GetMimeType(name);
+			DocumentPageResult result = await OcrImageWithFallbackAsync(
+				i + 1,
+				images.Count,
+				name,
+				bytes,
+				mimeType
+			);
 			UI.Ok(
 				$"  → {result.BodyBlocks.Count} blocks, {result.SkippedHeadersFooters} headers/footers stripped"
 			);
@@ -54,6 +62,38 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 			BodyHtml = bodyHtml,
 			SourceUrl = new Uri($"file:///{Path.GetFullPath(filePath).Replace('\\', '/')}"),
 		};
+	}
+
+	private async Task<DocumentPageResult> OcrImageWithFallbackAsync(
+		int pageNumber,
+		int totalPages,
+		string name,
+		byte[] bytes,
+		string mimeType
+	)
+	{
+		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(azureDocumentIntelligence))
+		{
+			try
+			{
+				UI.Info(
+					$"[{pageNumber}/{totalPages}] Azure Document Intelligence: {name} ({bytes.Length:N0} bytes)..."
+				);
+				return await AzureDocumentIntelligenceOcrProvider
+					.CreateConfigured(azureDocumentIntelligence)
+					.OcrImageAsync(bytes, mimeType, ct);
+			}
+			catch (Exception ex) when (ex is not OperationCanceledException)
+			{
+				UI.Warn(
+					$"Azure Document Intelligence failed ({ex.GetType().Name}: {ex.Message}). Attempting Google Document AI fallback..."
+				);
+			}
+		}
+
+		UI.Info($"[{pageNumber}/{totalPages}] Google Document AI: {name} ({bytes.Length:N0} bytes)...");
+		return await new DocumentAiOcrProvider(Secrets.GoogleDocumentAiProcessorName)
+			.OcrImageAsync(bytes, mimeType, ct);
 	}
 
 	private static List<(string Name, byte[] Bytes)> ExtractImages(string epubPath)
@@ -83,6 +123,14 @@ internal sealed partial class LocalEpubExtractor(string filePath, CancellationTo
 			return false;
 		return !fullName.Contains("cover", OrdinalIgnoreCase);
 	}
+
+	private static string GetMimeType(string fileName) =>
+		Path.GetExtension(fileName).ToLowerInvariant() switch
+		{
+			".png" => "image/png",
+			".jpg" or ".jpeg" => "image/jpeg",
+			_ => "application/octet-stream",
+		};
 
 	private static int CompareNatural(string a, string b)
 	{
