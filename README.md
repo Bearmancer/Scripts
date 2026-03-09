@@ -18,7 +18,7 @@ For multilingual, layout-heavy booklet scans, Azure Document Intelligence is the
 
 ## Secrets and local usage
 
-For the OCR/translation environment variables used by the `read` workflow and related local runs, GitHub Actions secrets are **write-only** once saved. GitHub encrypts them for workflow use, but you **cannot recover the original plaintext value from GitHub later**. Keep your own copy in a password manager or local secret store.
+For the OCR/translation environment variables used by the `read` workflow and related local runs, GitHub Actions secrets are encrypted for workflow use, but you **cannot view or recover the original plaintext value in the GitHub UI after saving it**. Workflows can still access the secret at runtime; keep your own copy in a password manager or local secret store.
 
 Typical local setup:
 

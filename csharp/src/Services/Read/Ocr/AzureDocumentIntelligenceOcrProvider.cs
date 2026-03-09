@@ -49,7 +49,7 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 	public async Task<DocumentPageResult> OcrImageAsync(
 		byte[] imageBytes,
-		string _,
+		string mimeType,
 		CancellationToken ct = default
 	)
 	{
