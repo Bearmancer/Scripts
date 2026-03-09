@@ -2,6 +2,9 @@ namespace CSharpScripts.Core.Auth;
 
 internal static class Secrets
 {
+	private const string DefaultAzureDocumentIntelligenceEndpoint =
+		"https://document-intelligence-lance.cognitiveservices.azure.com/";
+
 	public static string GoogleClientId => GetRequired("GOOGLE_CLIENT_ID");
 	public static string GoogleClientSecret => GetRequired("GOOGLE_CLIENT_SECRET");
 
@@ -23,8 +26,9 @@ internal static class Secrets
 	public static string AzureTranslatorRegion =>
 		GetEnvironmentVariable("AZURE_TRANSLATOR_REGION") ?? "global";
 
-	public static string? AzureDocumentIntelligenceEndpoint =>
-		GetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT");
+	public static string AzureDocumentIntelligenceEndpoint =>
+		GetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
+		?? DefaultAzureDocumentIntelligenceEndpoint;
 
 	public static string? AzureDocumentIntelligenceKey =>
 		GetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_KEY");

@@ -186,6 +186,16 @@ internal sealed class SecretsTests
 	}
 
 	[Test]
+	public void WhenAzureDocumentIntelligenceEndpointUnsetThenHardcodedDefaultIsUsed()
+	{
+		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
+
+		Core.Auth.Secrets.AzureDocumentIntelligenceEndpoint.Should().Be(
+			"https://document-intelligence-lance.cognitiveservices.azure.com/"
+		);
+	}
+
+	[Test]
 	public void WhenAzureDocumentIntelligenceOptionsAreProvidedThenEnvironmentVariablesAreNotRequired()
 	{
 		Environment.SetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT", null);
