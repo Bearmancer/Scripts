@@ -9,6 +9,20 @@ internal sealed class SmokeTests
 {
 	[Test]
 	public void Smoke_TestInfrastructure_Passes() => true.Should().BeTrue();
+
+	[Test]
+	public void WhenReadSourceIsSupportedImageThenItIsRecognizedAsLocalImage()
+	{
+		CLI.Read.ReadCommand.IsImage("disc-page.jpg").Should().BeTrue();
+		CLI.Read.ReadCommand.IsImage("disc-page.jpeg").Should().BeTrue();
+		CLI.Read.ReadCommand.IsImage("disc-page.png").Should().BeTrue();
+	}
+
+	[Test]
+	public void WhenReadSourceIsNotSupportedImageThenItIsRejected()
+	{
+		CLI.Read.ReadCommand.IsImage("disc-page.webp").Should().BeFalse();
+	}
 }
 
 [NotInParallel]

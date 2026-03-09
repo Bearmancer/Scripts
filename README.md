@@ -42,7 +42,7 @@ You can then run:
 tools read .\booklet.pdf --azure-docintel-endpoint "https://<resource-name>.cognitiveservices.azure.com/" --azure-docintel-key "<key-1-or-key-2>"
 ```
 
-The `tools read` command prefers **Azure Document Intelligence** for local scanned PDFs and EPUB page images whenever either the command-line options or these environment variables are set:
+The `tools read` command prefers **Azure Document Intelligence** for local scanned PDFs, standalone page images, and EPUB page images whenever either the command-line options or these environment variables are set:
 
 - `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT`
 - `AZURE_DOCUMENT_INTELLIGENCE_KEY`
@@ -135,8 +135,8 @@ The repository already ignores `.env`, so you can also mirror the same values lo
 
 Recommended sequence for large classical disc/booklet sets:
 
-1. Scan or assemble pages into PDF/EPUB page images.
-2. Run `tools read <file.pdf>` or `tools read <file.epub>` to extract searchable text and produce EPUB output.
+1. Scan or assemble pages into PDF/EPUB page images, or keep the page scans as standalone `.jpg`, `.jpeg`, or `.png` files.
+2. Run `tools read <file.pdf>`, `tools read <file.epub>`, or `tools read <file.jpg>` to extract searchable text and produce EPUB output.
 3. Review OCR output for multilingual titles and performer credits.
 4. Normalize work-level metadata into `TrackInfo`/`WorkSummary` records.
 5. Export merged work rows with CSV fields including work, composer, orchestra, conductor, soloists, venue, year, and merged duration.

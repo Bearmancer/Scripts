@@ -7,7 +7,7 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 	internal sealed class Settings : CommandSettings
 	{
 		[CommandArgument(0, "<source>")]
-		[Description("URL of the article or path to a local PDF/EPUB file")]
+		[Description("URL of the article or path to a local PDF/EPUB/image file")]
 		public required string Source { get; init; }
 
 		[CommandArgument(1, "[output]")]
@@ -59,10 +59,7 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 				);
 
 				// Detect local file path first
-				if (
-					File.Exists(settings.Source)
-					&& settings.Source.EndsWith(".pdf", OrdinalIgnoreCase)
-				)
+				if (File.Exists(settings.Source) && IsPdf(settings.Source))
 				{
 					UI.Info("Local PDF detected — using LocalPdfExtractor.");
 					content = await new LocalPdfExtractor(
@@ -71,13 +68,19 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 						cancellationToken
 					).ExtractAsync();
 				}
-				else if (
-					File.Exists(settings.Source)
-					&& settings.Source.EndsWith(".epub", OrdinalIgnoreCase)
-				)
+				else if (File.Exists(settings.Source) && IsEpub(settings.Source))
 				{
 					UI.Info("Local EPUB detected — using LocalEpubExtractor + OCR.");
 					content = await new LocalEpubExtractor(
+						settings.Source,
+						azureDocumentIntelligence,
+						cancellationToken
+					).ExtractAsync();
+				}
+				else if (File.Exists(settings.Source) && IsImage(settings.Source))
+				{
+					UI.Info("Local image detected — using LocalImageExtractor + OCR.");
+					content = await new LocalImageExtractor(
 						settings.Source,
 						azureDocumentIntelligence,
 						cancellationToken
@@ -103,7 +106,7 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 				else
 				{
 					throw new ArgumentException(
-						$"Source must be a valid URL or an existing .pdf/.epub file path: {settings.Source}",
+						$"Source must be a valid URL or an existing .pdf/.epub/.jpg/.jpeg/.png file path: {settings.Source}",
 						nameof(settings)
 					);
 				}
@@ -134,4 +137,18 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 			}
 		);
 	}
+
+	internal static bool IsPdf(string path) =>
+		!string.IsNullOrEmpty(path) && path.EndsWith(".pdf", OrdinalIgnoreCase);
+
+	internal static bool IsEpub(string path) =>
+		!string.IsNullOrEmpty(path) && path.EndsWith(".epub", OrdinalIgnoreCase);
+
+	internal static bool IsImage(string path) =>
+		!string.IsNullOrEmpty(path)
+		&& (
+			path.EndsWith(".jpg", OrdinalIgnoreCase)
+			|| path.EndsWith(".jpeg", OrdinalIgnoreCase)
+			|| path.EndsWith(".png", OrdinalIgnoreCase)
+		);
 }
