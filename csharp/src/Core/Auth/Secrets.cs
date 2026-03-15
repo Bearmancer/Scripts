@@ -23,6 +23,12 @@ internal static class Secrets
 	public static string AzureTranslatorRegion =>
 		GetEnvironmentVariable("AZURE_TRANSLATOR_REGION") ?? "global";
 
+	public static string AzureDocumentIntelligenceKey =>
+		GetRequired("AZURE_DOCUMENT_INTELLIGENCE_KEY");
+
+	public static string AzureDocumentIntelligenceEndpoint =>
+		"https://document-intelligence-lance.cognitiveservices.azure.com/";
+
 	private static string GetRequired(string name) =>
 		GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"{name} is not set");
 }

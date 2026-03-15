@@ -71,12 +71,10 @@ class TestModuleStructure:
 
     def test_no_circular_imports(self) -> None:
         """Import all modules in sequence, verify no ImportError."""
-        # Clear any cached imports
         modules_to_clear = [m for m in sys.modules if m.startswith("toolkit.")]
         for module in modules_to_clear:
             del sys.modules[module]
 
-        # Import in dependency order - should not raise ImportError
         import toolkit.types
         import toolkit.exceptions
         import toolkit.utils
@@ -86,7 +84,6 @@ class TestModuleStructure:
         import toolkit.audio
         import toolkit.cli
 
-        # Verify key symbols are accessible (and use all imports)
         assert hasattr(toolkit.types, "AudioTier")
         assert hasattr(toolkit.types, "AudioFormat")
         assert hasattr(toolkit.utils, "run_command")
@@ -106,16 +103,13 @@ class TestAudioFormatUsage:
         import inspect
         from typing import Literal
 
-        # Check get_flac_tiers signature
         sig = inspect.signature(audio.get_flac_tiers)
         fmt_param = sig.parameters.get("fmt")
         assert fmt_param is not None
-        # Check that it's a Literal type with the correct values
         annotation = fmt_param.annotation
         assert get_origin(annotation) is Literal
         assert set(get_args(annotation)) == {"16bit", "cd", "all", "24-bit", "mp3"}
 
-        # Check process_sacd_directory signature
         sig = inspect.signature(audio.process_sacd_directory)
         fmt_param = sig.parameters.get("fmt")
         assert fmt_param is not None

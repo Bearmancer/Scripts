@@ -41,7 +41,7 @@ internal sealed class StandardExtractor
 		    return false;
 		}
 		""";
-	private const string DefaultBpcRelativePath = "../bpc-ext";
+	private const string BpcExtDirName = "bpc-ext";
 
 	private const string ScrollScript = """
 		async () => {
@@ -68,10 +68,33 @@ internal sealed class StandardExtractor
 	{
 		ArgumentNullException.ThrowIfNull(url);
 		Url = url;
-		ExtensionPath = Path.GetFullPath(bpcPath ?? DefaultBpcRelativePath);
+		ExtensionPath = bpcPath is not null
+			? Path.GetFullPath(bpcPath)
+			: FindBpcExtension()
+				?? throw new DirectoryNotFoundException(
+					$"BPC extension directory '{BpcExtDirName}' not found in any ancestor of {AppContext.BaseDirectory}"
+				);
 		if (!Directory.Exists(ExtensionPath))
 			throw new DirectoryNotFoundException($"BPC extension not found at {ExtensionPath}");
 		Ct = ct;
+	}
+
+	/// <summary>
+	/// Walks up from <see cref="AppContext.BaseDirectory"/> (the build output folder)
+	/// until it finds a sibling directory named <c>bpc-ext</c>, so the path resolves
+	/// correctly regardless of the shell's working directory.
+	/// </summary>
+	private static string? FindBpcExtension()
+	{
+		var dir = new DirectoryInfo(AppContext.BaseDirectory);
+		while (dir is not null)
+		{
+			var candidate = Path.Combine(dir.FullName, BpcExtDirName);
+			if (Directory.Exists(candidate))
+				return candidate;
+			dir = dir.Parent;
+		}
+		return null;
 	}
 
 	public async Task<ArticleContent> ExtractAsync()

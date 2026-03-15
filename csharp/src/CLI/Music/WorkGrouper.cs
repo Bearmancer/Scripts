@@ -40,6 +40,14 @@ internal static class WorkGrouper
 				.Aggregate(TimeSpan.Zero, (sum, t) => sum + t.Duration!.Value);
 
 			List<string> soloists = [.. currentGroup.SelectMany(t => t.Soloists).Distinct()];
+			List<string> recordingVenues =
+			[
+				.. currentGroup
+					.Select(t => t.RecordingVenue)
+					.Where(static venue => !IsNullOrWhiteSpace(venue))
+					.Cast<string>()
+					.Distinct(),
+			];
 
 			var displayWork = first.WorkName ?? first.Title;
 
@@ -54,6 +62,7 @@ internal static class WorkGrouper
 					Conductor: first.Conductor,
 					Orchestra: first.Orchestra,
 					Soloists: soloists,
+					RecordingVenues: recordingVenues,
 					TotalDuration: totalDuration
 				)
 			);

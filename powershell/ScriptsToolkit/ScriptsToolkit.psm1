@@ -12,6 +12,7 @@ $Script:RepositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $Script:CSharpRoot = Join-Path $Script:RepositoryRoot 'csharp'
 $Script:CSharpPublish = Join-Path $Script:CSharpRoot 'publish'
 $Script:ToolsExe = Join-Path $Script:CSharpPublish 'tools.exe'
+$Script:PythonRoot = Join-Path $Script:RepositoryRoot 'python'
 $Script:PythonCli = Join-Path $Script:RepositoryRoot 'python' 'toolkit' 'cli.py'
 $Script:LogDirectory = Join-Path $Script:RepositoryRoot 'logs'
 $Script:SyncTime = [TimeSpan]'09:00'
@@ -181,7 +182,7 @@ function Invoke-Toolkit {
     [CmdletBinding()]
     param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
 
-    & python $Script:PythonCli @Arguments
+    & uv run --directory $Script:PythonRoot toolkit @Arguments
 }
 
 function Convert-Audio {

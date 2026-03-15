@@ -29,6 +29,9 @@ FLAC_48: list[AudioTier] = [
     {"sample_rate": 48000, "bit_depth": 16},
 ]
 
+SACD_MASTER_SAMPLE_FMT = "s32"
+SACD_MASTER_SAMPLE_RATE = 88200
+
 
 def prepare_directory(directory: Path) -> Path:
     """Sanitize filenames and normalize disc folder names."""
@@ -117,25 +120,37 @@ def calculate_image_size(path: Path) -> None:
 
 
 def process_sacd_directory(directory: Path, fmt: AudioFormat = "all") -> None:
-    """Extract and convert all SACD ISO files in a directory."""
-    iso_files = list(directory.rglob("*.iso"))
-    output_dirs: list[tuple[Path, int]] = []
+    """Extract SACD ISOs, build a high-resolution master, then final deliverables."""
+    iso_files = sorted(directory.rglob("*.iso"))
+    output_dirs: list[Path] = []
+
+    if not iso_files:
+        logger.warning("No SACD ISO files found")
+        return
 
     for disc_number, iso in enumerate(tqdm(iso_files, desc="SACD ISOs", unit="disc", position=0), 1):
         try:
             dirs = convert_iso_to_dff_and_cue(iso, directory, disc_number)
-            output_dirs.extend((folder, disc_number) for folder in dirs)
+            output_dirs.extend(dirs)
         except subprocess.CalledProcessError as e:
             logger.error(f"ISO extraction failed for {iso.name} (exit {e.returncode})")
             if e.stderr:
                 logger.error(f"stderr: {e.stderr[:500]}")
             raise ConversionError(f"ISO extraction failed for {iso.name}", iso, e.cmd) from e
 
-    sample_fmt, sample_rate = get_dff_target_params(fmt)
-    
-    for folder, disc_num in tqdm(output_dirs, desc="Converting DFF", unit="disc", position=0, leave=True):
+    if not output_dirs:
+        logger.warning("No DFF/CUE extraction output was detected")
+        return
+
+    # Preserve fidelity: always create SACD masters at 88.2 kHz before final delivery formats.
+    for folder in tqdm(output_dirs, desc="Converting DFF", unit="disc", position=0, leave=True):
         try:
-            convert_dff_to_flac(folder, sample_fmt, sample_rate, position=1)
+            convert_dff_to_flac(
+                folder,
+                SACD_MASTER_SAMPLE_FMT,
+                SACD_MASTER_SAMPLE_RATE,
+                position=1,
+            )
         except subprocess.CalledProcessError as e:
             logger.error(f"DFF conversion failed in {folder} (exit {e.returncode})")
             if e.stderr:
@@ -145,19 +160,20 @@ def process_sacd_directory(directory: Path, fmt: AudioFormat = "all") -> None:
             logger.error(f"File not found in {folder}: {e}")
             raise
 
-    if fmt in ("all", "24-bit") and output_dirs:
-        parent_folders = {folder for folder, _ in output_dirs}
-        for parent_folder in parent_folders:
-            convert_audio(parent_folder.parent, fmt)
+    channel_roots = sorted({folder.parent for folder in output_dirs}, key=str)
+    if fmt != "24-bit":
+        for channel_root in channel_roots:
+            convert_audio(channel_root, fmt)
 
 
 def convert_iso_to_dff_and_cue(
     iso_path: Path, base_dir: Path, disc_number: int
 ) -> list[Path]:
     """Extract stereo and/or multichannel audio from SACD ISO."""
-    probe_result = run_command(
+    probe_stdout, probe_stderr = run_command(
         ["sacd_extract", "-P", "-i", str(iso_path)], cwd=str(base_dir)
-    )[0]
+    )
+    probe_result = f"{probe_stdout}\n{probe_stderr}"
 
     channel_configs = [
         ("Speaker config: (Stereo|2)", "Stereo", ["-2", "-e", "-c", "-C"]),
@@ -171,12 +187,12 @@ def convert_iso_to_dff_and_cue(
     out_dirs: list[Path] = []
 
     for pattern, suffix, cmd in channel_configs:
-        if re.search(pattern, probe_result):
+        if re.search(pattern, probe_result, flags=re.IGNORECASE):
             channel_dir = base_dir.parent / f"{base_dir.name} [{suffix}]"
             channel_dir.mkdir(exist_ok=True, parents=True)
 
             output_disc_dir = channel_dir / f"Disc {disc_number:02d}"
-            old_dirs = set(Path(channel_dir).glob("*/"))
+            old_dirs = {p for p in channel_dir.iterdir() if p.is_dir()}
 
             try:
                 run_command(
@@ -189,16 +205,26 @@ def convert_iso_to_dff_and_cue(
                 raise
             logger.info(f"{suffix} audio extracted from {iso_path.name}")
 
-            new_dirs = set(Path(channel_dir).glob("*/"))
-            new_dir = next(iter(new_dirs - old_dirs), None)
+            new_dirs = {p for p in channel_dir.iterdir() if p.is_dir()}
+            created_dirs = sorted(
+                new_dirs - old_dirs,
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+            new_dir = created_dirs[0] if created_dirs else None
 
             if new_dir:
                 if output_disc_dir.exists():
                     shutil.rmtree(output_disc_dir)
                 new_dir.rename(output_disc_dir)
                 out_dirs.append(output_disc_dir)
+            elif output_disc_dir.exists():
+                logger.info(f"Reusing existing extraction directory for {iso_path.name} [{suffix}]")
+                out_dirs.append(output_disc_dir)
             else:
-                logger.warning(f"sacd_extract produced no new directory for {iso_path.name} [{suffix}] — disc skipped")
+                logger.warning(
+                    f"sacd_extract produced no new directory for {iso_path.name} [{suffix}] - disc skipped"
+                )
 
     return out_dirs
 
@@ -272,7 +298,7 @@ def convert_audio(directory: Path, fmt: AudioFormat = "all") -> None:
         None,
     )
     if metadata_pair is None:
-        logger.error("No FLAC files with valid audio metadata found — skipping conversion")
+        logger.error("No FLAC files with valid audio metadata found - skipping conversion")
         return
     bd, sr = metadata_pair
 
@@ -327,6 +353,9 @@ def downsample_flac(source: Path, dest: Path, tier: AudioTier) -> None:
         str(dest),
         "rate", "-v", "-L", str(sample_rate),
     ]
+    if bit_depth == 16:
+        cmd.extend(["dither", "-s"])
+
     try:
         run_command(cmd)
     except subprocess.CalledProcessError as e:

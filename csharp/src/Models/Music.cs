@@ -68,6 +68,7 @@ internal sealed record WorkSummary(
 	string? Conductor,
 	string? Orchestra,
 	List<string> Soloists,
+	List<string> RecordingVenues,
 	TimeSpan TotalDuration
 )
 {

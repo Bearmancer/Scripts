@@ -112,7 +112,6 @@ class TestT65TypeImports:
 
     def test_audio_tier_is_typed_dict_with_correct_keys(self) -> None:
         """Verify AudioTier TypedDict has sample_rate and bit_depth keys."""
-        # AudioTier is a TypedDict, so we can check its __annotations__
         assert hasattr(AudioTier, "__annotations__")
         annotations = AudioTier.__annotations__
 

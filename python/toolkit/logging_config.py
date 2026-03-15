@@ -131,7 +131,7 @@ def configure_logging(service_name: str = "toolkit") -> logging.Logger:
     logger.setLevel(logging.DEBUG)
 
     if not logger.handlers:
-        console = Console()
+        console = Console(width=200, highlight=False)
         console_handler = RichHandler(
             console=console,
             show_time=True,

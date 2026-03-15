@@ -60,9 +60,7 @@ def test_calculate_gain_no_peaks_raises_conversion_error(mock_ffmpeg: Mock) -> N
     """calculate_gain raises ConversionError when no peak levels detected."""
     dff_file = Path("/test/audio.dff")
 
-    # Mock file existence
     with patch.object(Path, "exists", return_value=True):
-        # Mock ffmpeg chain to return empty stderr with no peak info
         mock_stream = MagicMock()
         mock_ffmpeg.input.return_value = mock_stream
         mock_stream.audio.filter.return_value = mock_stream
@@ -85,12 +83,9 @@ def test_calculate_gain_ffmpeg_error_raises_conversion_error(
 
     dff_file = Path("/test/audio.dff")
 
-    # Mock file existence
     with patch.object(Path, "exists", return_value=True):
-        # Set up mock to preserve ffmpeg.Error class
         mock_ffmpeg.Error = ffmpeg.Error
 
-        # Mock ffmpeg to raise ffmpeg.Error
         mock_stream = MagicMock()
         mock_ffmpeg.input.return_value = mock_stream
         mock_stream.audio.filter.return_value = mock_stream
@@ -113,7 +108,6 @@ def test_downsample_sox_failure_raises_conversion_error(mock_run_command: Mock) 
     dest = Path("/test/dest.flac")
     tier: AudioTier = {"sample_rate": 44100, "bit_depth": 16}
 
-    # Mock run_command to raise CalledProcessError
     original_error = subprocess.CalledProcessError(
         returncode=1,
         cmd=["sox", "-S", str(source)],
@@ -142,12 +136,9 @@ def test_convert_to_mp3_ffmpeg_failure_raises_conversion_error(
 
     mock_create_output.return_value = Path("/test/audio/MP3")
 
-    # Set up mock to preserve ffmpeg.Error class
     mock_ffmpeg.Error = ffmpeg.Error
 
-    # Mock glob to return a flac file
     with patch.object(Path, "rglob", return_value=[flac_file]):
-        # Mock ffmpeg chain to raise Error with proper stderr
         mock_stream = MagicMock()
         mock_ffmpeg.input.return_value = mock_stream
         mock_stream.output.return_value = mock_stream
@@ -171,7 +162,6 @@ def test_make_torrents_failure_raises_file_operation_error(
     """make_torrents raises FileOperationError on torrent creation failure."""
     folder = Path("/test/album")
 
-    # Mock Dropbox info.json path and content
     mock_dropbox_info = MagicMock()
     mock_dropbox_info.exists.return_value = True
     mock_dropbox_info.read_text.return_value = '{"personal": {"path": "/home/dropbox"}}'
@@ -179,21 +169,18 @@ def test_make_torrents_failure_raises_file_operation_error(
     mock_path_cls.home.return_value = Path("/home")
     mock_path_cls.return_value = folder
 
-    # Mock Path constructor to return the mock for Dropbox path
     def path_side_effect(arg: str) -> Path | MagicMock:
         if "Dropbox" in str(arg) and "info.json" in str(arg):
             return mock_dropbox_info
         return Path(arg)
 
     with patch("toolkit.filesystem.Path", side_effect=path_side_effect):
-        # Need to patch the actual Path operations in make_torrents
         with (
             patch("toolkit.filesystem.Path.home") as mock_home,
             patch("toolkit.filesystem.rename_file_red") as mock_rename,
         ):
             mock_home.return_value = Path("/home")
 
-            # Mock dropbox info path exists and content
             dropbox_info_path = Path("/home/AppData/Local/Dropbox/info.json")
             with (
                 patch.object(
@@ -205,7 +192,6 @@ def test_make_torrents_failure_raises_file_operation_error(
                     return_value='{"personal": {"path": "/home/dropbox"}}',
                 ),
             ):
-                # Mock create_torrent to raise OSError
                 original_error = OSError("Torrent creation failed")
                 mock_create_torrent.side_effect = original_error
 

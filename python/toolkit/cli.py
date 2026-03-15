@@ -30,18 +30,21 @@ def audio_convert(
     format: Annotated[AudioFormat, Parameter(name=["f", "format"])] = "16bit",
 ) -> None:
     """Convert audio files to various formats or extract SACD ISOs.
-    
+
     Auto-detects mode (convert vs extract) based on directory contents if not specified.
     Processes all audio files in the target directory.
-    
+
     Args:
         directory: Target directory to process. Defaults to current directory.
-        mode: Processing mode: 'convert' for audio conversion, 'extract' for SACD ISO extraction.
-            Auto-detected if omitted.
-        format: Output format. Options: '16bit' (16-bit at source sample rate), 'cd' (16-bit/44.1 kHz),
-            'all' (all tiers + MP3), '24-bit' (24-bit tiers only), 'mp3' (MP3 only). Defaults to '16bit'.
+        mode: Processing mode: 'convert' or 'extract' (auto-detected if omitted).
+        format: Output format: '16bit', 'cd', 'all', '24-bit', 'mp3'. Defaults to '16bit'.
     """
-    from toolkit.audio import convert_audio, detect_audio_mode, prepare_directory, process_sacd_directory
+    from toolkit.audio import (
+        convert_audio,
+        detect_audio_mode,
+        prepare_directory,
+        process_sacd_directory,
+    )
 
     resolved = (directory or Path(".")).resolve()
     if not resolved.exists():
@@ -68,10 +71,10 @@ def audio_rename(
     directory: Annotated[Path | None, Parameter(name=["d", "directory"])] = None,
 ) -> None:
     """Rename files with excessively long paths to shorter versions.
-    
+
     Recursively processes the directory to shorten file paths that exceed Windows path limits
     or are otherwise problematic. Defaults to current directory.
-    
+
     Args:
         directory: Target directory to process. Defaults to current directory.
     """
@@ -85,10 +88,10 @@ def audio_art_report(
     directory: Annotated[Path | None, Parameter(name=["d", "directory"])] = None,
 ) -> None:
     """Report embedded artwork sizes in FLAC files.
-    
+
     Scans all FLAC files in the directory and reports the dimensions and file size
     of embedded cover art. Useful for identifying oversized artwork. Defaults to current directory.
-    
+
     Args:
         directory: Target directory containing FLAC files. Defaults to current directory.
     """
@@ -103,10 +106,10 @@ def video_remux(
     skip_mediainfo: bool = False,
 ) -> None:
     """Remux DVD/Blu-ray discs to MKV format.
-    
+
     Processes disc structures and creates lossless MKV files. Generates MediaInfo reports
     for each output file unless disabled.
-    
+
     Args:
         path: Source directory containing disc structure. Defaults to current directory.
         skip_mediainfo: If True, skips generating MediaInfo reports after remuxing.
@@ -121,10 +124,9 @@ def video_compress(
     directory: Annotated[Path | None, Parameter(name=["d", "directory"])] = None,
 ) -> None:
     """Batch compress MKV files using HandBrake.
-    
-    Processes all MKV files in the directory using HandBrake for size reduction
-    while maintaining quality. Defaults to current directory.
-    
+
+    Processes all MKV files in the directory using HandBrake for size reduction while maintaining quality.
+
     Args:
         directory: Target directory containing MKV files. Defaults to current directory.
     """
@@ -138,10 +140,9 @@ def video_chapters(
     path: Annotated[Path | None, Parameter(name=["p", "path"])] = None,
 ) -> None:
     """Extract chapters from video files.
-    
-    Accepts either a single video file or a directory. If a directory is provided,
-    recursively processes all video files within. Outputs chapter information for each file.
-    
+
+    Accepts either a file or directory; recursively processes all video files. Outputs chapter information for each file.
+
     Args:
         path: Video file path or directory to process. Defaults to current directory.
     """
@@ -161,10 +162,9 @@ def video_resolutions(
     path: Annotated[Path | None, Parameter(name=["p", "path"])] = None,
 ) -> None:
     """Print resolution information for video files.
-    
-    Accepts either a single video file or a directory. If a directory is provided,
-    recursively processes all video files within. Displays resolution details for each file.
-    
+
+    Accepts either a file or directory; recursively processes all video files. Displays resolution details for each file.
+
     Args:
         path: Video file path or directory to process. Defaults to current directory.
     """
@@ -183,15 +183,14 @@ def video_resolutions(
 def video_gif(
     input: Annotated[Path, Parameter(name=["i", "input"])],
     start: Annotated[str, Parameter(name=["s", "start"])] = "00:00",
-    duration: Annotated[int, Parameter(name=["d", "duration"])] = 10,  # seconds
+    duration: Annotated[int, Parameter(name=["d", "duration"])] = 10,
     max_size: Annotated[int, Parameter(name=["m", "max-size"])] = 300,
     output: Annotated[Path | None, Parameter(name=["o", "output"])] = None,
 ) -> None:
     """Create optimized GIF from video file.
-    
-    Automatically adjusts quality parameters to meet the specified size limit.
-    Uses two-pass palette generation for optimal color reproduction.
-    
+
+    Automatically adjusts quality parameters to meet the specified size limit using two-pass palette generation.
+
     Args:
         input: Source video file path.
         start: Starting timestamp in mm:ss format. Defaults to '00:00'.
@@ -215,10 +214,9 @@ def video_thumbnails(
     path: Annotated[Path, Parameter(name=["p", "path"])],
 ) -> None:
     """Extract thumbnail grid and full-size images from video.
-    
-    Generates a grid of thumbnails at regular intervals throughout the video,
-    plus individual full-resolution frames. Useful for video previews and analysis.
-    
+
+    Generates a grid of thumbnails at regular intervals, plus individual full-resolution frames.
+
     Args:
         path: Source video file to process.
     """
@@ -234,7 +232,7 @@ def filesystem_tree(
     include_files: Annotated[bool, Parameter(name=["f", "include-files"])] = False,
 ) -> None:
     """List directory tree with sizes.
-    
+
     Args:
         directory: Target directory to analyze. Defaults to current directory.
         sort: Sort order, either 'size' (largest first) or 'name' (alphabetical). Defaults to 'size'.
@@ -257,14 +255,12 @@ def filesystem_torrents(
     include_subdirectories: bool = False,
 ) -> None:
     """Create RED and OPS torrents for directory.
-    
+
     Generates .torrent files for both Redacted (RED) and Orpheus (OPS) trackers.
-    Useful for music release preparation.
-    
+
     Args:
         directory: Target directory containing release content. Defaults to current directory.
-        include_subdirectories: If True, creates separate torrents for each subdirectory.
-            If False, creates a single torrent for the directory itself.
+        include_subdirectories: If True, creates separate torrents for each subdirectory; otherwise one torrent for the directory.
     """
     from toolkit.filesystem import make_torrents
 
@@ -294,7 +290,6 @@ def pristine_download(
     Downloads the specified release codes, or every configured release if no
     codes are given.  Codes are Pristine catalogue numbers, e.g. PASC552.
 
-    The browser opens visibly by default so you can log in on first run.
     Use --headless (or PRISTINE_HEADLESS=1) once your session is saved.
 
     Examples::
@@ -304,25 +299,35 @@ def pristine_download(
         toolkit pristine download --out-dir /data/Media/Pristine
 
     Args:
-        codes: One or more release codes to download. Omit to download all
-            configured releases (Toscanini, General, Stokowski).
-        out_dir: Destination directory. Defaults to the PRISTINE_OUT_DIR
-            environment variable, or the hardcoded My Drive path.
-        headless: Run the browser headlessly.  Overrides PRISTINE_HEADLESS.
-            Has no effect once the module is already imported — set the env
-            var before invoking if calling programmatically.
+        codes: Release codes to download. Omit for all configured releases.
+        out_dir: Output directory. Defaults to PRISTINE_OUT_DIR env var.
+        headless: Run headlessly. Overrides PRISTINE_HEADLESS.
     """
     import os
 
     if headless:
         os.environ["PRISTINE_HEADLESS"] = "1"
 
-    from toolkit.pristine import download_all, download_codes
+    from toolkit.pristine import download_codes
 
-    if codes:
-        download_codes(codes, out_dir=out_dir)
-    else:
-        download_all(out_dir=out_dir)
+    download_codes(codes, out_dir=out_dir)
+
+
+@pristine_app.command(name="login")
+def pristine_login() -> None:
+    """Save a Pristine Classical login session for automated downloads.
+
+    Opens a visible browser window. Log in with your Pristine account — the
+    session is saved automatically once login is detected. Run this once; re-run
+    only when the session expires.
+
+    Examples::
+
+        toolkit pristine login
+    """
+    from toolkit.pristine import login
+
+    login()
 
 
 def main() -> None:

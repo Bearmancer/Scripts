@@ -84,7 +84,6 @@ class TestT13DownsampleFlacNoTempCollision:
         assert "dest" in params, "downsample_flac missing dest parameter"
         assert "tier" in params, "downsample_flac missing tier parameter"
 
-        # Verify parameter order
         param_names = list(params.keys())
         assert param_names[:3] == ["source", "dest", "tier"], (
             f"Expected parameters [source, dest, tier] but got {param_names[:3]}"
@@ -94,7 +93,6 @@ class TestT13DownsampleFlacNoTempCollision:
         """Verify downsample_flac source code does not contain hardcoded temp file names."""
         source_code = inspect.getsource(audio.downsample_flac)
 
-        # The bug was using hardcoded "a.flac" and "b.flac" temp files
         assert '"a.flac"' not in source_code, "downsample_flac contains hardcoded 'a.flac'"
         assert "'a.flac'" not in source_code, "downsample_flac contains hardcoded 'a.flac'"
         assert '"b.flac"' not in source_code, "downsample_flac contains hardcoded 'b.flac'"
@@ -109,16 +107,13 @@ class TestT14SanitizeNameReturnsCorrectPath:
         test_dir = tmp_path / "test_album"
         test_dir.mkdir()
 
-        # Create a file with unicode characters
         unicode_file = test_dir / "Café_♫_test.txt"
         unicode_file.write_text("test content")
 
         result = audio.prepare_directory(test_dir)
 
-        # Should return the directory path
         assert result == test_dir, "prepare_directory should return the directory path"
 
-        # File should be renamed (unicode characters replaced)
         files = list(test_dir.glob("*.txt"))
         assert len(files) == 1, "Should have exactly one file"
         assert files[0].name != "Café_♫_test.txt", "File should be sanitized"
@@ -131,23 +126,19 @@ class TestT14SanitizeNameReturnsCorrectPath:
         test_dir = tmp_path / "test_album"
         test_dir.mkdir()
 
-        # Create a file with clean ASCII name
         clean_file = test_dir / "track01.flac"
         clean_file.write_text("test content")
         original_mtime = clean_file.stat().st_mtime
 
         result = audio.prepare_directory(test_dir)
 
-        # Should return the directory path
         assert result == test_dir, "prepare_directory should return the directory path"
 
-        # File should still exist with same name
         assert clean_file.exists(), "Clean filename should remain unchanged"
         files = list(test_dir.glob("*.flac"))
         assert len(files) == 1, "Should have exactly one file"
         assert files[0].name == "track01.flac", "Clean filename should not be renamed"
 
-        # Modification time should be unchanged (file was not renamed)
         assert clean_file.stat().st_mtime == original_mtime, (
             "File should not be modified if name is already clean"
         )
@@ -157,7 +148,6 @@ class TestT14SanitizeNameReturnsCorrectPath:
         test_dir = tmp_path / "test_album"
         test_dir.mkdir()
 
-        # Create disc folders with various formats
         disc1 = test_dir / "Disc1"
         disc2 = test_dir / "CD 2"
         disc1.mkdir()
@@ -167,7 +157,6 @@ class TestT14SanitizeNameReturnsCorrectPath:
 
         assert result == test_dir, "prepare_directory should return the directory path"
 
-        # Disc folders should be normalized
         folders = sorted([f.name for f in test_dir.iterdir() if f.is_dir()])
         assert "Disc 01" in folders, "Disc1 should be normalized to 'Disc 01'"
         assert "Disc 02" in folders, "CD 2 should be normalized to 'Disc 02'"
@@ -179,24 +168,19 @@ class TestT15GetFlacTiersHandlesAllFormats:
     @pytest.mark.parametrize(
         ("sample_rate", "bit_depth", "fmt", "expected"),
         [
-            # 16bit format - should return exactly one 16-bit tier
             (192000, 24, "16bit", [{"sample_rate": 48000, "bit_depth": 16}]),
             (176400, 24, "16bit", [{"sample_rate": 44100, "bit_depth": 16}]),
 
-            # cd format - should return CD quality if source allows downsampling to it
-            (192000, 24, "cd", []),  # 48k family, CD (44.1k) not in tier list
-            (176400, 24, "cd", [{"sample_rate": 44100, "bit_depth": 16}]),  # 44.1k family, CD available
-            (88200, 16, "cd", [{"sample_rate": 44100, "bit_depth": 16}]),   # 44.1k family, CD available
+            (192000, 24, "cd", []),
+            (176400, 24, "cd", [{"sample_rate": 44100, "bit_depth": 16}]),
+            (88200, 16, "cd", [{"sample_rate": 44100, "bit_depth": 16}]),
 
-            # all format - should return all applicable tiers below source
             (192000, 24, "all", [{"sample_rate": 96000, "bit_depth": 24}, {"sample_rate": 48000, "bit_depth": 16}]),
             (176400, 24, "all", [{"sample_rate": 88200, "bit_depth": 24}, {"sample_rate": 44100, "bit_depth": 16}]),
 
-            # 24-bit format - should return only 24-bit tiers below source
             (192000, 24, "24-bit", [{"sample_rate": 96000, "bit_depth": 24}]),
             (176400, 24, "24-bit", [{"sample_rate": 88200, "bit_depth": 24}]),
 
-            # mp3 format - should return empty list (no FLAC conversion)
             (192000, 24, "mp3", []),
             (176400, 24, "mp3", []),
         ],
@@ -229,12 +213,10 @@ class TestT15GetFlacTiersHandlesAllFormats:
 
     def test_get_flac_tiers_cd_returns_44100_16_or_empty(self) -> None:
         """Verify 'cd' format returns [(44100, 16)] or empty list."""
-        # 44.1k family - CD should be available
         result_44 = audio.get_flac_tiers(176400, 24, "cd")
         expected = [{"sample_rate": 44100, "bit_depth": 16}]
         assert result_44 == expected, "CD format should return [(44100, 16)] for 44.1k family"
 
-        # 48k family - CD (44100) is not in 48k tier list
         result_48 = audio.get_flac_tiers(192000, 24, "cd")
         assert result_48 == [], (
             "CD format returns empty list for 48k family (44100 not in FLAC_48)"
@@ -254,7 +236,6 @@ class TestT15GetFlacTiersHandlesAllFormats:
         result = audio.get_flac_tiers(192000, 24, "all")
 
         assert len(result) > 1, "'all' format should return multiple tiers for 192/24 source"
-        # Should include both 24-bit and 16-bit tiers below source
         bit_depths = [tier["bit_depth"] for tier in result]
         assert 24 in bit_depths, "Should include 24-bit tiers"
         assert 16 in bit_depths, "Should include 16-bit tiers"

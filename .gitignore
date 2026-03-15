@@ -5,6 +5,7 @@
 
 # dotenv files
 .env
+/Key
 
 # User-specific files
 *.rsuser
@@ -499,3 +500,7 @@ playwright-downloads/
 
 # AI agent planning artifacts in project subdirectories
 **/.copilot/
+
+# Browser profile data (large binaries)
+profiles/
+python/profiles/

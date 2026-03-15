@@ -3,7 +3,7 @@ namespace CSharpScripts.Services.Read.Ocr;
 using Google.Cloud.DocumentAI.V1;
 using Google.Protobuf;
 
-internal sealed partial class DocumentAiOcrProvider
+internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvider
 {
 	private const float HeaderThreshold = 0.06f;
 	private const float FooterThreshold = 0.94f;
@@ -16,8 +16,9 @@ internal sealed partial class DocumentAiOcrProvider
 		ProcessorName = processorName;
 	}
 
-	internal async Task<DocumentPageResult> OcrImageAsync(
+	public async Task<DocumentPageResult> OcrImageAsync(
 		byte[] imageBytes,
+		string mimeType,
 		CancellationToken ct = default
 	)
 	{
@@ -31,7 +32,7 @@ internal sealed partial class DocumentAiOcrProvider
 			RawDocument = new RawDocument
 			{
 				Content = ByteString.CopyFrom(imageBytes),
-				MimeType = "image/jpeg",
+				MimeType = mimeType,
 			},
 		};
 
