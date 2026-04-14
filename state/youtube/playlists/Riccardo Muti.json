@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "Title": "Antonin Dvorak - Symphony n. 8 op. 88 - Riccardo Muti & Filarmonica della Scala",
     "Description": "Registrazione live dal Teatro alla Scala di Milano (12/06/1994)\n\nAntonin Dvorak\nSINFONIA N. 8 in sol maggiore op. 88 \"Inglese\"\n\nDirettore d'orchestra: Riccardo Muti\n\nFilarmonica della Scala",
@@ -46,14 +46,6 @@
     "ChannelName": "Classical Radio Archive UK",
     "VideoId": "MQ9uD5YnhXw",
     "ChannelId": "UCBXYsUfK3mUBKPwS7W8eivw"
-  },
-  {
-    "Title": "Beethoven Symphony No. 4 (Ricardo Muti & Chicago Symphony Orchestra, May 2022)",
-    "Description": "",
-    "Duration": "00:50:47",
-    "ChannelName": "Sadanori Kobinata",
-    "VideoId": "50JiiGQbnU8",
-    "ChannelId": "UCpu7WR7x5Q80Vqu1vMBssxQ"
   },
   {
     "Title": "Beethoven: Piano Concerto No. 1, Op. 15 / Radu Lupu; Riccardo Muti: VPO (1979.8.12 Salzburg)",
@@ -182,6 +174,14 @@
     "ChannelName": "Hector's Rare Recordings ",
     "VideoId": "LVyZhPAGDsI",
     "ChannelId": "UCM2DYvur7nXxDTPi48unGDA"
+  },
+  {
+    "Title": "Liszt Piano Concerto No 2: Campanella, Muti Philadelphia Orchestra 1984",
+    "Description": "Michele Campanella is the featured piano soloist in a Philadelphia Orchestra performance of Franz Liszt’s Concerto for Piano and Orchestra No. 2 in A major, S.125 in September or October of 1984. Riccardo Muti conducts. This is a recording of a live performance broadcast on the radio and recorded to tape. No date was written on the tape box (other than 1984) so looking up Philadelphia Orchestra performances I see multiple possible dates in late September or early October of 1984. \n\nThis performance does not appear to be on record or on YouTube so I’m happy to have apparently surfaced a lost recording. \n\nTechnical Info:\nRealistic 44-758A, quarter track stereo\n7” reel\n3 3/4 IPS\nThere were some pretty loud scratchy radio crackling noises early in the performance that I managed to mostly remove, but some quiet ones are still there. There is tape degradation apparent in the first minute or so of the recording but it goes away pretty quickly and the rest sounds pretty great, especially for being recorded at the slower speed of 3 3/4 inches per second.",
+    "Duration": "00:22:14",
+    "ChannelName": "Marchant 3M Tape Archiving Project",
+    "VideoId": "dCkOV0KjF78",
+    "ChannelId": "UCavYu1LjM9nUHVc7EdFm0yA"
   },
   {
     "Title": "Liszt: \"Preludes\", Riccardo Muti / Wiener Philharmoniker, 2012 live repaired",
@@ -393,7 +393,7 @@
   },
   {
     "Title": "Respighi - Pines of Rome (Chicago Symphony Orchestra)",
-    "Description": "Riccardo Muti\nChicago Symphony Orchestra\nLive at Orchestra Hall, April 2019",
+    "Description": "Ottorino Respighi - Pines of Rome\n\nRiccardo Muti, Conductor\nLive at Orchestra Hall, April 2019",
     "Duration": "00:23:30",
     "ChannelName": "Orchestra Recordings",
     "VideoId": "qGw9zZgKfKg",
@@ -670,13 +670,5 @@
     "ChannelName": "KIM",
     "VideoId": "lJMR6oHlh7Y",
     "ChannelId": "UCJsO6sVNrsUw2cV4J1vcyHg"
-  },
-  {
-    "Title": "Liszt Piano Concerto No 2: Campanella, Muti Philadelphia Orchestra 1984",
-    "Description": "Michele Campanella is the featured piano soloist in a Philadelphia Orchestra performance of Franz Liszt’s Concerto for Piano and Orchestra No. 2 in A major, S.125 in September or October of 1984. Riccardo Muti conducts. This is a recording of a live performance broadcast on the radio and recorded to tape. No date was written on the tape box (other than 1984) so looking up Philadelphia Orchestra performances I see multiple possible dates in late September or early October of 1984. \n\nThis performance does not appear to be on record or on YouTube so I’m happy to have apparently surfaced a lost recording. \n\nTechnical Info:\nRealistic 44-758A, quarter track stereo\n7” reel\n3 3/4 IPS\nThere were some pretty loud scratchy radio crackling noises early in the performance that I managed to mostly remove, but some quiet ones are still there. There is tape degradation apparent in the first minute or so of the recording but it goes away pretty quickly and the rest sounds pretty great, especially for being recorded at the slower speed of 3 3/4 inches per second.",
-    "Duration": "00:22:14",
-    "ChannelName": "Marchant 3M Tape Archiving Project",
-    "VideoId": "dCkOV0KjF78",
-    "ChannelId": "UCavYu1LjM9nUHVc7EdFm0yA"
   }
 ]

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net11.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<!-- Note: analyzer suppressions removed per request; resolve analyzer issues in code instead of suppressing -->
+		<IsTestProject>true</IsTestProject>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<EnableMicrosoftTestingExtensions>true</EnableMicrosoftTestingExtensions>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="*" />
+		<PackageReference Include="TUnit" Version="*" />
+		<PackageReference Include="NSubstitute" Version="*" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CSharpScripts.csproj" />
+	</ItemGroup>
+</Project>

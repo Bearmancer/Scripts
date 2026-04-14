@@ -1,233 +1,360 @@
+using System.Security.Cryptography;
+
 namespace CSharpScripts.Services.Mail;
 
-public sealed class MailTmException(string message, Exception? inner = null)
-	: Exception(message, inner);
-
-public sealed class MailTmService : IDisposableMailService
+internal sealed class MailTmException : Exception
 {
-	#region Configuration
+	internal MailTmException() { }
 
-	private const string BASE_URL = "https://api.mail.tm";
+	internal MailTmException(string message)
+		: base(message: message) { }
 
-	private const string PASSWORD_CHARS =
+	internal MailTmException(string message, Exception? inner)
+		: base(message: message, innerException: inner) { }
+}
+
+internal sealed class MailTmService : ITempMailService
+{
+	private const string BaseUrl = "https://api.mail.tm";
+
+	private const string PasswordChars =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+
+	private string? _credentialAddress;
+	private string? _credentialPassword;
 
 	private string? AuthToken;
 	private string? CurrentAccountId;
 
-	public MailTmService()
+	private MailTmService()
 	{
-		Client = new RestClient(BASE_URL);
-		Console.Info("MailTmService initialized with centralized resiliency");
+		Client = new RestClient(baseUrl: BaseUrl);
+		Log.Debug("MailTmService initialized for new mailbox");
+	}
+
+	private MailTmService(string address, string password)
+	{
+		Client = new RestClient(baseUrl: BaseUrl);
+		_credentialAddress = address;
+		_credentialPassword = password;
+		Log.Debug("MailTmService initialized for existing mailbox {Address}", address);
 	}
 
 	internal RestClient Client { get; }
 
-	#endregion
+	public string ProviderName => "mail.tm";
 
-	#region Account Management
-
-	public async Task<MailTmAccount> CreateAccountAsync()
+	public async Task<TempMailbox> CreateMailboxAsync(CancellationToken ct = default)
 	{
-		Console.Starting("Creating mail.tm account");
-
-		var domain = await GetAvailableDomainAsync();
-		var username = $"test_{DateTime.UtcNow.Ticks}";
-		var address = $"{username}@{domain}";
-		var password = GenerateSecurePassword();
-
-		return await Resilience.ExecuteAsync(
-			"MailTm.CreateAccount",
-			async () =>
-			{
-				RestRequest request = new("/accounts", Method.Post);
-				request.AddJsonBody(new { address, password });
-
-				RestResponse<MailTmAccount> response = await Client.ExecuteAsync<MailTmAccount>(
-					request
-				);
-
-				if (!response.IsSuccessful || response.Data is null)
-					throw new MailTmException(
-						$"Failed to create account: {response.StatusCode} - {response.Content}"
-					);
-
-				CurrentAccountId = response.Data.Id;
-
-				await AuthenticateAsync(address, password);
-
-				Console.Complete($"Account created: {address}");
-				Console.KeyValue("Account ID", response.Data.Id);
-
-				return response.Data;
-			}
+		MailTmAccount account = await CreateInternalAccountAsync(ct);
+		return new TempMailbox(
+			Id: account.Id,
+			Address: account.Address,
+			Provider: ProviderName,
+			account.CreatedAt.ToUniversalTime()
 		);
 	}
 
-	private async Task<string> GetAvailableDomainAsync()
+	public async Task<IReadOnlyList<TempEmail>> CheckInboxAsync(
+		string mailboxId,
+		CancellationToken ct = default
+	)
 	{
-		RestRequest request = new("/domains");
-		RestResponse response = await Client.ExecuteAsync(request);
+		if (IsNullOrEmpty(value: AuthToken))
+		{
+			if (
+				IsNullOrEmpty(value: _credentialAddress)
+				|| IsNullOrEmpty(value: _credentialPassword)
+			)
+			{
+				throw new MailTmException(
+					message: "No credentials available. Create a mailbox or provide credentials."
+				);
+			}
+			await AuthenticateAsync(address: _credentialAddress, password: _credentialPassword, ct);
+		}
 
-		if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
+		CurrentAccountId ??= mailboxId;
+		List<MailTmMessage> messages = await GetInboxInternalAsync(ct);
+		return messages.ConvertAll(MapToTempEmail);
+	}
+
+	public async Task DeleteMailboxAsync(string mailboxId, CancellationToken ct = default)
+	{
+		if (IsNullOrEmpty(value: AuthToken))
+		{
+			if (
+				IsNullOrEmpty(value: _credentialAddress)
+				|| IsNullOrEmpty(value: _credentialPassword)
+			)
+			{
+				throw new MailTmException(
+					message: "No credentials available. Create a mailbox or provide credentials."
+				);
+			}
+			await AuthenticateAsync(address: _credentialAddress, password: _credentialPassword, ct);
+		}
+
+		CurrentAccountId = mailboxId;
+		await DeleteInternalAccountAsync(ct);
+	}
+
+	public async Task<TempEmail?> GetEmailAsync(
+		string mailboxId,
+		string emailId,
+		CancellationToken ct = default
+	)
+	{
+		if (IsNullOrEmpty(value: AuthToken))
+		{
+			if (
+				IsNullOrEmpty(value: _credentialAddress)
+				|| IsNullOrEmpty(value: _credentialPassword)
+			)
+			{
+				throw new MailTmException(
+					message: "No credentials available. Create a mailbox or provide credentials."
+				);
+			}
+			await AuthenticateAsync(address: _credentialAddress, password: _credentialPassword, ct);
+		}
+
+		MailTmMessage msg = await ReadMessageInternalAsync(messageId: emailId, ct);
+		return MapToTempEmail(m: msg);
+	}
+
+	internal static MailTmService Create() => new();
+
+	internal static MailTmService CreateForExisting(string address, string password) =>
+		new(address: address, password: password);
+
+	private async Task<MailTmAccount> CreateInternalAccountAsync(CancellationToken ct = default)
+	{
+		Log.Debug("CreateInternalAccountAsync entry");
+		Log.Information("Starting Creating mail.tm account");
+
+		var domain = await GetAvailableDomainAsync(ct);
+		var username = $"user{DateTime.UtcNow.Ticks % 100000000}";
+		var address = $"{username}@{domain}";
+		var password = GenerateSecurePassword();
+		_credentialAddress = address;
+		_credentialPassword = password;
+
+		return await Resilience.ExecuteAsync(
+			operation: "MailTm.CreateAccount",
+			async () =>
+			{
+				RestRequest request = new(resource: "/accounts", method: Method.Post);
+				RestRequestExtensions.AddJsonBody(request, new { address, password });
+
+				RestResponse<MailTmAccount> response =
+					await RestClientExtensions.ExecuteAsync<MailTmAccount>(
+						Client,
+						request: request,
+						ct
+					);
+
+				if (!response.IsSuccessful || response.Data is null)
+				{
+					throw new MailTmException(
+						$"Failed to create account: {response.StatusCode} - {response.Content}"
+					);
+				}
+
+				CurrentAccountId = response.Data.Id;
+
+				await AuthenticateAsync(address: address, password: password, ct);
+
+				Log.Information("Complete Account created: {Address}", address);
+				Log.Information("MailTmAccountId {Id}", response.Data.Id);
+				return response.Data;
+			},
+			ct
+		);
+	}
+
+	private async Task<string> GetAvailableDomainAsync(CancellationToken ct = default)
+	{
+		RestRequest request = new(resource: "/domains");
+		RestResponse response = await Client.ExecuteAsync(request: request, ct);
+
+		if (!response.IsSuccessful || IsNullOrEmpty(value: response.Content))
 			throw new MailTmException($"Failed to get domains: {response.StatusCode}");
 
-		using var doc = JsonDocument.Parse(response.Content);
+		using var doc = JsonDocument.Parse(json: response.Content);
 		JsonElement root = doc.RootElement;
 
 		JsonElement domains =
 			root.ValueKind == JsonValueKind.Array ? root
-			: root.TryGetProperty("hydra:member", out JsonElement members) ? members
+			: root.TryGetProperty(propertyName: "hydra:member", out JsonElement members) ? members
 			: root;
 
 		if (domains.ValueKind == JsonValueKind.Array && domains.GetArrayLength() > 0)
 		{
-			var domain = domains[0].GetProperty("domain").GetString();
-			if (!IsNullOrEmpty(domain))
+			var domain = domains[index: 0].GetProperty(propertyName: "domain").GetString();
+			if (!IsNullOrEmpty(value: domain))
 				return domain;
 		}
 
-		throw new MailTmException("No available domains found");
+		throw new MailTmException(message: "No available domains found");
 	}
 
-	private async Task AuthenticateAsync(string address, string password)
+	private async Task AuthenticateAsync(
+		string address,
+		string password,
+		CancellationToken ct = default
+	)
 	{
-		Console.Debug($"Authenticating: {address}");
+		Log.Debug("Authenticating: {Address}", address);
 
-		RestRequest request = new("/token", Method.Post);
-		request.AddJsonBody(new { address, password });
+		RestRequest request = new(resource: "/token", method: Method.Post);
+		RestRequestExtensions.AddJsonBody(request, new { address, password });
 
-		RestResponse<TokenResponse> response = await Client.ExecuteAsync<TokenResponse>(
-			request
-		);
+		RestResponse<MailTmTokenResponse> response =
+			await RestClientExtensions.ExecuteAsync<MailTmTokenResponse>(
+				Client,
+				request: request,
+				ct
+			);
 
-		if (!response.IsSuccessful || IsNullOrEmpty(response.Data?.Token))
+		if (!response.IsSuccessful || IsNullOrEmpty(value: response.Data?.Token))
 			throw new MailTmException($"Authentication failed: {response.StatusCode}");
 
 		AuthToken = response.Data.Token;
-		Console.Debug("Authentication successful");
+		CurrentAccountId ??= response.Data.Id;
+		Log.Debug("Authentication successful");
 	}
 
-	#endregion
-
-	#region Inbox Operations
-
-	public async Task<List<MailTmMessage>> GetInboxAsync()
+	private async Task<List<MailTmMessage>> GetInboxInternalAsync(CancellationToken ct = default)
 	{
-		if (IsNullOrEmpty(AuthToken))
-			throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
-
-		Console.Starting("Fetching inbox");
+		Log.Debug("GetInboxInternalAsync entry");
+		Log.Information("Starting Fetching inbox");
 
 		return await Resilience.ExecuteAsync(
-			"MailTm.GetInbox",
+			operation: "MailTm.GetInbox",
 			async () =>
 			{
-				RestRequest request = new("/messages");
-				request.AddHeader("Authorization", $"Bearer {AuthToken}");
+				RestRequest request = new(resource: "/messages");
+				RestRequestExtensions.AddHeader(
+					request,
+					name: "Authorization",
+					$"Bearer {AuthToken}"
+				);
 
-				RestResponse response = await Client.ExecuteAsync(request);
+				RestResponse response = await Client.ExecuteAsync(request: request, ct);
 
-				if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
+				if (!response.IsSuccessful || IsNullOrEmpty(value: response.Content))
 					throw new MailTmException($"Failed to fetch inbox: {response.StatusCode}");
 
-				using var doc = JsonDocument.Parse(response.Content);
+				using var doc = JsonDocument.Parse(json: response.Content);
 				JsonElement root = doc.RootElement;
 				List<MailTmMessage> messages = [];
 
 				JsonElement messageArray =
 					root.ValueKind == JsonValueKind.Array ? root
-					: root.TryGetProperty("hydra:member", out JsonElement members)
+					: root.TryGetProperty(propertyName: "hydra:member", out JsonElement members)
 						? members
-					: throw new MailTmException("Unexpected inbox response format");
+					: throw new MailTmException(message: "Unexpected inbox response format");
 
 				foreach (JsonElement elem in messageArray.EnumerateArray())
-					messages.Add(ParseMessage(elem));
+					messages.Add(ParseMessage(elem: elem));
 
-				Console.Complete($"Found {messages.Count} messages");
+				Log.Information("Complete Found {Count} messages", messages.Count);
 				return messages;
-			}
+			},
+			ct
 		);
 	}
 
-	public async Task<MailTmMessage> ReadMessageAsync(string messageId)
+	private async Task<MailTmMessage> ReadMessageInternalAsync(
+		string messageId,
+		CancellationToken ct = default
+	)
 	{
-		if (IsNullOrEmpty(AuthToken))
-			throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
-
-		Console.Starting($"Reading message: {messageId}");
+		Log.Debug("ReadMessageInternalAsync entry {MessageId}", messageId);
+		Log.Information("Starting Reading message: {MessageId}", messageId);
 
 		return await Resilience.ExecuteAsync(
-			"MailTm.ReadMessage",
+			operation: "MailTm.ReadMessage",
 			async () =>
 			{
 				RestRequest request = new($"/messages/{messageId}");
-				request.AddHeader("Authorization", $"Bearer {AuthToken}");
+				RestRequestExtensions.AddHeader(
+					request,
+					name: "Authorization",
+					$"Bearer {AuthToken}"
+				);
 
-				RestResponse response = await Client.ExecuteAsync(request);
+				RestResponse response = await Client.ExecuteAsync(request: request, ct);
 
-				if (!response.IsSuccessful || IsNullOrEmpty(response.Content))
+				if (!response.IsSuccessful || IsNullOrEmpty(value: response.Content))
+				{
 					throw new MailTmException(
 						$"Failed to read message: {response.StatusCode} - {response.ErrorMessage ?? response.Content}"
 					);
+				}
 
-				using var doc = JsonDocument.Parse(response.Content);
+				using var doc = JsonDocument.Parse(json: response.Content);
 				JsonElement root = doc.RootElement;
 
-				MailTmMessage message = new()
+				return new MailTmMessage
 				{
-					Id = root.GetProperty("id").GetString() ?? "",
-					AccountId = root.TryGetProperty("accountId", out JsonElement aid)
+					Id = root.GetProperty(propertyName: "id").GetString() ?? "",
+					AccountId = root.TryGetProperty(propertyName: "accountId", out JsonElement aid)
 						? aid.GetString() ?? ""
 						: "",
-					Subject = root.TryGetProperty("subject", out JsonElement subj)
+					Subject = root.TryGetProperty(propertyName: "subject", out JsonElement subj)
 						? subj.GetString() ?? ""
 						: "",
-					From = root.TryGetProperty("from", out JsonElement from)
+					From = root.TryGetProperty(propertyName: "from", out JsonElement from)
 						? new MailTmAddress
 						{
-							Address = from.GetProperty("address").GetString() ?? "",
-							Name = from.TryGetProperty("name", out JsonElement n)
+							Address = from.GetProperty(propertyName: "address").GetString() ?? "",
+							Name = from.TryGetProperty(propertyName: "name", out JsonElement n)
 								? n.GetString()
 								: null,
 						}
 						: null,
-					Text = root.TryGetProperty("text", out JsonElement txt)
+					Text = root.TryGetProperty(propertyName: "text", out JsonElement txt)
 						? txt.GetString()
 						: null,
 					Html =
-						root.TryGetProperty("html", out JsonElement htm)
+						root.TryGetProperty(propertyName: "html", out JsonElement htm)
 						&& htm.ValueKind != JsonValueKind.Null
-							? htm.EnumerateArray().FirstOrDefault().GetString()
+							? Enumerable.FirstOrDefault(htm.EnumerateArray()).GetString()
 							: null,
 					CreatedAt =
-						root.TryGetProperty("createdAt", out JsonElement ca)
+						root.TryGetProperty(propertyName: "createdAt", out JsonElement ca)
 						&& DateTime.TryParse(ca.GetString(), out DateTime dt)
 							? dt
 							: DateTime.MinValue,
 				};
-
-				Console.Complete("Message loaded");
-				return message;
-			}
+			},
+			ct
 		);
 	}
 
-	public async Task<bool> DeleteAccountAsync()
+	private async Task DeleteInternalAccountAsync(CancellationToken ct = default)
 	{
-		if (IsNullOrEmpty(AuthToken) || IsNullOrEmpty(CurrentAccountId))
-			throw new MailTmException("Not authenticated. Call CreateAccountAsync first.");
+		Log.Debug("DeleteInternalAccountAsync entry");
 
-		Console.Starting("Deleting account");
+		if (IsNullOrEmpty(value: CurrentAccountId))
+			throw new MailTmException(message: "Account ID not set.");
 
-		return await Resilience.ExecuteAsync(
-			"MailTm.DeleteAccount",
+		Log.Information("Starting Deleting account {Id}", CurrentAccountId);
+
+		await Resilience.ExecuteAsync(
+			operation: "MailTm.DeleteAccount",
 			async () =>
 			{
-				RestRequest request = new($"/accounts/{CurrentAccountId}", Method.Delete);
-				request.AddHeader("Authorization", $"Bearer {AuthToken}");
+				RestRequest request = new($"/accounts/{CurrentAccountId}", method: Method.Delete);
+				RestRequestExtensions.AddHeader(
+					request,
+					name: "Authorization",
+					$"Bearer {AuthToken}"
+				);
 
-				RestResponse response = await Client.ExecuteAsync(request);
+				RestResponse response = await Client.ExecuteAsync(request: request, ct);
 
 				if (!response.IsSuccessful)
 					throw new MailTmException($"Failed to delete account: {response.StatusCode}");
@@ -235,180 +362,150 @@ public sealed class MailTmService : IDisposableMailService
 				AuthToken = null;
 				CurrentAccountId = null;
 
-				Console.Complete("Account deleted");
-				return true;
-			}
+				Log.Information("Complete Account deleted");
+			},
+			ct
 		);
 	}
-
-	#endregion
-
-	#region Private Helpers
 
 	private static MailTmMessage ParseMessage(JsonElement elem) =>
 		new()
 		{
-			Id = elem.GetProperty("id").GetString() ?? "",
-			AccountId = elem.TryGetProperty("accountId", out JsonElement aid)
+			Id = elem.GetProperty(propertyName: "id").GetString() ?? "",
+			AccountId = elem.TryGetProperty(propertyName: "accountId", out JsonElement aid)
 				? aid.GetString() ?? ""
 				: "",
-			Subject = elem.TryGetProperty("subject", out JsonElement subj)
+			Subject = elem.TryGetProperty(propertyName: "subject", out JsonElement subj)
 				? subj.GetString() ?? ""
 				: "",
-			From = elem.TryGetProperty("from", out JsonElement from)
+			From = elem.TryGetProperty(propertyName: "from", out JsonElement from)
 				? new MailTmAddress
 				{
-					Address = from.GetProperty("address").GetString() ?? "",
-					Name = from.TryGetProperty("name", out JsonElement n)
+					Address = from.GetProperty(propertyName: "address").GetString() ?? "",
+					Name = from.TryGetProperty(propertyName: "name", out JsonElement n)
 						? n.GetString()
 						: null,
 				}
 				: null,
 			CreatedAt =
-				elem.TryGetProperty("createdAt", out JsonElement ca)
+				elem.TryGetProperty(propertyName: "createdAt", out JsonElement ca)
 				&& DateTime.TryParse(ca.GetString(), out DateTime dt)
 					? dt
 					: DateTime.MinValue,
 		};
 
-	private static string GenerateSecurePassword(int length = 20) =>
-		new([
-			.. Enumerable
-				.Range(0, length)
-				.Select(_ => PASSWORD_CHARS[Random.Shared.Next(PASSWORD_CHARS.Length)]),
-		]);
+	internal Dictionary<string, string> GetCredentials() =>
+		new()
+		{
+			[key: "address"] = _credentialAddress ?? "",
+			[key: "password"] = _credentialPassword ?? "",
+		};
 
-	#endregion
-
-	#region Interface Implementation
-
-	async Task<MailAccount> IDisposableMailService.CreateAccountAsync()
-	{
-		MailTmAccount account = await CreateAccountAsync();
-		return new MailAccount(Address: account.Address, CreatedAt: DateTime.UtcNow);
-	}
-
-	async Task<List<MailMessage>> IDisposableMailService.GetInboxAsync()
-	{
-		List<MailTmMessage> messages = await GetInboxAsync();
-		return
-		[
-			.. messages.Select(m => new MailMessage(
-				Id: m.Id,
-				m.From?.Address ?? "unknown",
-				Subject: m.Subject,
-				m.Text ?? m.Html ?? "",
-				m.CreatedAt.ToUniversalTime(),
-				IsRead: m.IsRead
-			)),
-		];
-	}
-
-	async Task<MailMessage> IDisposableMailService.ReadMessageAsync(string messageId)
-	{
-		MailTmMessage m = await ReadMessageAsync(messageId);
-		return new MailMessage(
+	private static TempEmail MapToTempEmail(MailTmMessage m) =>
+		new(
 			Id: m.Id,
 			m.From?.Address ?? "unknown",
 			Subject: m.Subject,
 			m.Text ?? m.Html ?? "",
 			m.CreatedAt.ToUniversalTime(),
-			IsRead: m.IsRead
+			m.Text is null && m.Html is { }
 		);
-	}
 
-	async Task IDisposableMailService.ForgetSessionAsync() => await DeleteAccountAsync();
-
-	#endregion
+	private static string GenerateSecurePassword(int length = 20) =>
+		string.Create(
+			length,
+			PasswordChars,
+			static (span, chars) =>
+			{
+				for (var i = 0; i < span.Length; i++)
+					span[i] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+			}
+		);
 }
 
-#region DTO Records
-
-public record MailTmAccount
+internal record MailTmAccount
 {
-	[JsonPropertyName("id")]
+	[JsonPropertyName(name: "id")]
 	public required string Id { get; init; }
 
-	[JsonPropertyName("address")]
+	[JsonPropertyName(name: "address")]
 	public required string Address { get; init; }
 
-	[JsonPropertyName("quota")]
+	[JsonPropertyName(name: "quota")]
 	public int Quota { get; init; }
 
-	[JsonPropertyName("used")]
+	[JsonPropertyName(name: "used")]
 	public int Used { get; init; }
 
-	[JsonPropertyName("isDisabled")]
+	[JsonPropertyName(name: "isDisabled")]
 	public bool IsDisabled { get; init; }
 
-	[JsonPropertyName("isDeleted")]
+	[JsonPropertyName(name: "isDeleted")]
 	public bool IsDeleted { get; init; }
 
-	[JsonPropertyName("createdAt")]
+	[JsonPropertyName(name: "createdAt")]
 	public DateTime CreatedAt { get; init; }
 
-	[JsonPropertyName("updatedAt")]
+	[JsonPropertyName(name: "updatedAt")]
 	public DateTime UpdatedAt { get; init; }
 }
 
-public record TokenResponse
+internal record MailTmTokenResponse
 {
-	[JsonPropertyName("token")]
+	[JsonPropertyName(name: "token")]
 	public required string Token { get; init; }
 
-	[JsonPropertyName("id")]
+	[JsonPropertyName(name: "id")]
 	public required string Id { get; init; }
 }
 
-public record MailTmAddress
+internal record MailTmAddress
 {
-	[JsonPropertyName("address")]
+	[JsonPropertyName(name: "address")]
 	public required string Address { get; init; }
 
-	[JsonPropertyName("name")]
+	[JsonPropertyName(name: "name")]
 	public string? Name { get; init; }
 }
 
-public record MailTmMessage
+internal record MailTmMessage
 {
-	[JsonPropertyName("id")]
+	[JsonPropertyName(name: "id")]
 	public required string Id { get; init; }
 
-	[JsonPropertyName("accountId")]
+	[JsonPropertyName(name: "accountId")]
 	public required string AccountId { get; init; }
 
-	[JsonPropertyName("msgid")]
+	[JsonPropertyName(name: "msgid")]
 	public string? MsgId { get; init; }
 
-	[JsonPropertyName("from")]
+	[JsonPropertyName(name: "from")]
 	public MailTmAddress? From { get; init; }
 
-	[JsonPropertyName("to")]
+	[JsonPropertyName(name: "to")]
 	public MailTmAddress[]? To { get; init; }
 
-	[JsonPropertyName("cc")]
+	[JsonPropertyName(name: "cc")]
 	public MailTmAddress[]? Cc { get; init; }
 
-	[JsonPropertyName("subject")]
+	[JsonPropertyName(name: "subject")]
 	public required string Subject { get; init; }
 
-	[JsonPropertyName("text")]
+	[JsonPropertyName(name: "text")]
 	public string? Text { get; init; }
 
-	[JsonPropertyName("html")]
+	[JsonPropertyName(name: "html")]
 	public string? Html { get; init; }
 
-	[JsonPropertyName("createdAt")]
+	[JsonPropertyName(name: "createdAt")]
 	public DateTime CreatedAt { get; init; }
 
-	[JsonPropertyName("updatedAt")]
+	[JsonPropertyName(name: "updatedAt")]
 	public DateTime UpdatedAt { get; init; }
 
-	[JsonPropertyName("isRead")]
+	[JsonPropertyName(name: "isRead")]
 	public bool IsRead { get; init; }
 
-	[JsonPropertyName("isDeleted")]
+	[JsonPropertyName(name: "isDeleted")]
 	public bool IsDeleted { get; init; }
 }
-
-#endregion

@@ -1,12 +1,12 @@
 namespace CSharpScripts.Models;
 
-public enum MusicSource
+internal enum MusicSource
 {
 	Discogs,
 	MusicBrainz,
 }
 
-public record ReleaseInfo(
+internal sealed record ReleaseInfo(
 	MusicSource Source,
 	string Id,
 	string Title,
@@ -20,9 +20,9 @@ public record ReleaseInfo(
 	TimeSpan? TotalDuration
 );
 
-public record ReleaseData(ReleaseInfo Info, List<TrackInfo> Tracks);
+internal sealed record ReleaseData(ReleaseInfo Info, List<TrackInfo> Tracks);
 
-public record TrackInfo(
+internal sealed record TrackInfo(
 	int DiscNumber,
 	int TrackNumber,
 	string Title,
@@ -42,23 +42,23 @@ public record TrackInfo(
 	{
 		List<string> missing = [];
 
-		if (IsNullOrWhiteSpace(value: Composer))
-			missing.Add(item: "Composer");
+		if (IsNullOrWhiteSpace(Composer))
+			missing.Add("Composer");
 
-		if (IsNullOrWhiteSpace(value: WorkName) && IsNullOrWhiteSpace(value: Title))
-			missing.Add(item: "Work/Title");
+		if (IsNullOrWhiteSpace(WorkName) && IsNullOrWhiteSpace(Title))
+			missing.Add("Work/Title");
 
 		if (Duration is null || Duration.Value == TimeSpan.Zero)
-			missing.Add(item: "Duration");
+			missing.Add("Duration");
 
 		if (RecordingYear is null)
-			missing.Add(item: "Recording Year");
+			missing.Add("Recording Year");
 
 		return missing;
 	}
 }
 
-public record WorkSummary(
+internal sealed record WorkSummary(
 	int Disc,
 	int FirstTrack,
 	int LastTrack,
@@ -68,6 +68,7 @@ public record WorkSummary(
 	string? Conductor,
 	string? Orchestra,
 	List<string> Soloists,
+	List<string> RecordingVenues,
 	TimeSpan TotalDuration
 )
 {
@@ -78,14 +79,14 @@ public record WorkSummary(
 		Years.Count switch
 		{
 			0 => "",
-			1 => Years[index: 0].ToString(),
+			1 => Years[0].ToString(),
 			_ when Years.Max() - Years.Min() <= 2 && Years.Count == Years.Max() - Years.Min() + 1 =>
 				$"{Years.Min()}-{Years.Max() % 100:D2}",
-			_ => Join(separator: ", ", Years.Distinct().OrderBy(y => y)),
+			_ => Join(", ", Years.Distinct().OrderBy(y => y)),
 		};
 }
 
-public record SearchResult(
+internal sealed record SearchResult(
 	MusicSource Source,
 	string Id,
 	string Title,

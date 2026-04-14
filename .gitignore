@@ -1,29 +1,47 @@
-# Build outputs
+# .NET build
+bin/
+obj/
 [Bb]in/
 [Oo]bj/
+[Dd]ebug/
+[Rr]elease/
 publish/
-*.dll
-*.exe
-*.pdb
+*.user
+*.suo
+*.rsuser
 
-# Legacy solution format - use .slnx instead
-*.sln
+# .NET tools
+.vs/
+TestResults/
+global.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
 
 # Python
 __pycache__/
+*.pyc
+.venv/
+python/.venv/
 
-# IDE/Editor
-.idea/
-.vs/
-*.suo
-*.user
+# PowerShell
+profiles/
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 
-# Temp/logs
+# Env
+.env
+.env.*
+/Key
+
+# Logs
+*.log
+
+# Misc
 *.tmp
-
-# Project-specific
-.fake
+*.bak
+*.orig

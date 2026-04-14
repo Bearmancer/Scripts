@@ -1,6 +1,6 @@
 namespace CSharpScripts.Models;
 
-public record YouTubeVideo(
+internal sealed record YouTubeVideo(
 	string Title,
 	string Description,
 	TimeSpan Duration,
@@ -12,9 +12,43 @@ public record YouTubeVideo(
 	internal string VideoUrl => $"https://www.youtube.com/watch?v={VideoId}";
 	internal string ChannelUrl => $"https://www.youtube.com/channel/{ChannelId}";
 	internal string FormattedDuration => Duration.ToString(@"hh\:mm\:ss");
+
+	public string? DetectedLanguage { get; init; }
+	public string? TranslatedTitle { get; init; }
+	public string? TranslatedDescription { get; init; }
+	public DateTime? TranslatedAt { get; init; }
+
+	public string DisplayTitle => TranslatedTitle ?? Title;
+	public string DisplayDescription => TranslatedDescription ?? Description;
+
+	public bool NeedsTranslation =>
+		DetectedLanguage is { }
+		&& !DetectedLanguage.EqualsIgnoreCase("eng")
+		&& TranslatedTitle is null;
+
+	public YouTubeVideo WithTranslation(
+		string translatedTitle,
+		string translatedDescription,
+		string detectedLanguage
+	) =>
+		this with
+		{
+			DetectedLanguage = detectedLanguage,
+			TranslatedTitle = translatedTitle,
+			TranslatedDescription = translatedDescription,
+			TranslatedAt = DateTime.UtcNow,
+		};
+
+	public YouTubeVideo WithoutTranslation() =>
+		this with
+		{
+			TranslatedTitle = null,
+			TranslatedDescription = null,
+			TranslatedAt = null,
+		};
 }
 
-public record YouTubePlaylist(
+internal sealed record YouTubePlaylist(
 	string Id,
 	string Title,
 	int VideoCount,
@@ -22,7 +56,7 @@ public record YouTubePlaylist(
 	string? ETag = null
 );
 
-public record PlaylistSnapshot(
+internal sealed record PlaylistSnapshot(
 	string PlaylistId,
 	string Title,
 	List<string> VideoIds,
@@ -31,43 +65,29 @@ public record PlaylistSnapshot(
 	string? ETag = null
 );
 
-public record YouTubeFetchState
+internal sealed record YouTubeFetchState
 {
-	public string? SpreadsheetId { get; set; }
-	public Dictionary<string, PlaylistSnapshot> PlaylistSnapshots { get; set; } = [];
-	public List<YouTubePlaylist>? CachedPlaylists { get; set; }
-	public int VideoIdFetchIndex { get; set; }
-	public string? CurrentPlaylistId { get; set; }
-	public int CurrentPlaylistVideosFetched { get; set; }
-	public DateTime LastUpdated { get; set; } = DateTime.Now;
-	public DateTime LastChecked { get; set; } = DateTime.Now;
-	public bool FetchComplete { get; set; }
-
-	internal void UpdatePlaylistProgress(string playlistId, int videosFetched)
-	{
-		CurrentPlaylistId = playlistId;
-		CurrentPlaylistVideosFetched = videosFetched;
-		LastUpdated = DateTime.Now;
-	}
-
-	internal void ClearCurrentProgress()
-	{
-		CurrentPlaylistId = null;
-		CurrentPlaylistVideosFetched = 0;
-		LastUpdated = DateTime.Now;
-	}
+	public string? SpreadsheetId { get; init; }
+	public Dictionary<string, PlaylistSnapshot> PlaylistSnapshots { get; init; } = [];
+	public List<YouTubePlaylist>? CachedPlaylists { get; init; }
+	public int VideoIdFetchIndex { get; init; }
+	public string? CurrentPlaylistId { get; init; }
+	public int CurrentPlaylistVideosFetched { get; init; }
+	public DateTime LastUpdated { get; init; } = DateTime.UtcNow;
+	public DateTime LastChecked { get; init; } = DateTime.UtcNow;
+	public bool FetchComplete { get; init; }
 }
 
-public readonly record struct PlaylistSummary(
+internal readonly record struct PlaylistSummary(
 	string Id,
 	string Title,
 	int VideoCount,
 	string? ETag
 );
 
-public record PlaylistRename(string PlaylistId, string OldTitle, string NewTitle);
+internal sealed record PlaylistRename(string PlaylistId, string OldTitle, string NewTitle);
 
-public record PlaylistChanges(
+internal sealed record PlaylistChanges(
 	List<string> NewPlaylistIds,
 	List<string> DeletedPlaylistIds,
 	List<string> ModifiedPlaylistIds
@@ -77,7 +97,7 @@ public record PlaylistChanges(
 		NewPlaylistIds.Count > 0 || DeletedPlaylistIds.Count > 0 || ModifiedPlaylistIds.Count > 0;
 }
 
-public record OptimizedChanges(
+internal sealed record OptimizedChanges(
 	List<string> NewIds,
 	List<string> DeletedIds,
 	List<string> ModifiedIds,

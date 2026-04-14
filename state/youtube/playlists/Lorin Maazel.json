@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "Title": "beethoven  symphony no.3 in e-flat major, op.55 ( l. maazel )",
     "Description": "beethoven  symphony no.3 in e-flat major, op.55 \n\ni.   allegro con brio ( 0:00 - )\nii.  marcia funebre ( 15:17 - )\niii. scherzo ( 32:20 - )\niv. allegro molto ( 38:27 - )\n\n( live recording.  apr 20, 1983  nhk hall, tokyo )\n\n\n\n*. source : fkm cd-r (modified)\n*. l. maazel         vienna philharmonic",
@@ -1478,5 +1478,37 @@
     "ChannelName": "uchukyoku1",
     "VideoId": "HRGyBQHLfaU",
     "ChannelId": "UC4VZ4Oy41Zd80GZFrtrjdiw"
+  },
+  {
+    "Title": "SCHUMANN, R.: Cello Concerto　J. Du Pré / L. Maazel 1968 live in Philadelphia",
+    "Description": "SCHUMANN, R.: Cello Concerto\n1st movement   00:00\n2nd   12:20\n3rd    18:06\nCello) Jacqueline Du Pré \nLorin Maazel / Philadelphia Orchestra\n2/1968 Philadelphia, Academy of Music live recording\nシューマン：チェロ協奏曲\nチェロ）ジャクリーヌ・デュ＝プレ\nロリン・マゼール指揮　フィラデルフィア管弦楽団\n1968年2月　フィラデルフィア、アカデミー・オブ・ミュージック　ライブ録音\n※デュ＝プレがデビュー以来エルガーと共に看板としてきたシューマン。マゼールとの一期一会の共演記録。バレンボイムとの正規盤録音はこのアメリカ公演からイギリスに帰国した直後に行われました。",
+    "Duration": "00:26:42",
+    "ChannelName": "Isappin",
+    "VideoId": "DTPeO5Gsg_M",
+    "ChannelId": "UC_W-zQQHNRLW1QHWQAF9B_A"
+  },
+  {
+    "Title": "Beethoven: Symphony No.3 'Eroica'    L. Maazel / BPO 1999 live",
+    "Description": "Beethoven: Symphony No.3 'Eroica'\n1st movement   00:00\n2nd    15:17\n3rd     32:53\n4th     38:22\nLorin Maazel / Berlin philharmonic orchestra\n17/4/1999 Berlin, Philharmony Hall live recoeding\nベートーヴェン：交響曲第3番「英雄」\nロリン・マゼール指揮　ベルリン・フィルハーモニー管弦楽団\n1999年4月17日　ベルリン、フィルハーモニーホール　ライブ録音\n※有力視されていた1989年のベルリン・フィル音楽監督選に敗れたマゼールは、その後のベルリン・フィルとの契約を全てキャンセルしました。雪解けはその10年後、この公演はその復帰を歓迎する熱気に満ちた未曾有の名演を残したと思います。",
+    "Duration": "00:51:42",
+    "ChannelName": "Isappin",
+    "VideoId": "n4OLJg78nsE",
+    "ChannelId": "UC_W-zQQHNRLW1QHWQAF9B_A"
+  },
+  {
+    "Title": "Mahler: Symphony No.5     L. Maazel / VPO 1983 live in Tokyo",
+    "Description": "Mahler: Symphony no.5\n1st movement   00:00\n2nd   13:30\n3rd    28:00\n4th    45:20\n5th    53:04\nLorin Maazel / Vienna Philharmonic orchestra\n21/4/1983 Tokyo, NHK Hall live recording\nマーラー：交響曲第5番\nロリン・マゼール指揮　ウィーン・フィルハーモニー管弦楽団\n1983年4月21日　東京、ＮＨＫホール　ライブ録音\n※ウィーン・フィルが日本で披露した最初のマーラー。この公演の実現が日本における本格的なマーラー・ブームのきっかけとなったと言われています。",
+    "Duration": "01:11:22",
+    "ChannelName": "Isappin",
+    "VideoId": "e8hUi9VXKvo",
+    "ChannelId": "UC_W-zQQHNRLW1QHWQAF9B_A"
+  },
+  {
+    "Title": "VPO Beethoven live in Japan 1983   L. Maazel (broadcast recording)",
+    "Description": "1 Beethoven: Leonore overture No.3   00:00\n2 Beethoven: Symphony no.3 'Eroica'\n1st movement   13:52\n2nd   29:07\n3rd    46:10\n4th    52:17\nLorin Maazel / Vienna Philharmonic orchestra\n20/4/1983 Tokyo, NHK Hall live broadcast recording\nベートーヴェン：レオノーレ序曲第3番、交響曲第3番「英雄」\nロリン・マゼール指揮　ウィーン・フィルハーモニー管弦楽団\n1983年4月20日　東京・NHKホール　ライブ放送録音\n※ウィーン国立歌劇場監督時代のマゼールですが、ＶＰＯとベートーヴェンは録音しませんでした（5番がありますが1980年来日時の特別なライブ収録）。彼が最も得意としていた「英雄」のＶＰＯとの唯一の記録。なお放送上最初に置かれた「レオノーレ」は当日のアンコールでした。",
+    "Duration": "01:04:57",
+    "ChannelName": "Isappin",
+    "VideoId": "XO5lhaKIRaI",
+    "ChannelId": "UC_W-zQQHNRLW1QHWQAF9B_A"
   }
 ]

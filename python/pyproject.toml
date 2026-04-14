@@ -2,59 +2,48 @@
 name = "toolkit"
 version = "1.0.0"
 description = "Personal toolkit for audio, video, and file operations"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "argcomplete",
+    "chardet",
+    "playwright",
+    "cyclopts",
+    "deflacue",
+    "ffmpeg-python",
+    "google-auth",
+    "gspread",
+    "pathvalidate",
+    "pyperclip",
+    "Pillow",
+    "py3createtorrent",
+    "pylast",
+    "requests",
     "rich",
-    "httpx",
-    "mutagen",
+    "tqdm",
+    "unidecode",
 ]
 
 [project.scripts]
 toolkit = "toolkit.cli:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "types-Pillow",
+    "types-tqdm",
+]
+
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.basedpyright]
-include = ["toolkit"]
-typeCheckingMode = "strict"
-pythonPlatform = "All"
+[tool.hatch.build.targets.wheel]
+packages = ["toolkit"]
 
-# Suppress errors from untyped third-party libraries
-reportMissingTypeStubs = false
-reportUnknownMemberType = false
-reportUnknownVariableType = false
-reportUnknownArgumentType = false
-reportUnknownParameterType = false
-reportUnknownLambdaType = false
-reportMissingImports = false
-reportMissingModuleSource = false
+[tool.uv]
+default-groups = ["dev"]
 
-reportImportCycles = "error"
-reportPropertyTypeMismatch = "error"
-reportFunctionMemberAccess = "error"
-reportPrivateUsage = "error"
-reportTypeCommentUsage = "error"
-reportIncompatibleMethodOverride = "error"
-reportIncompatibleVariableOverride = "error"
-reportInconsistentConstructor = "error"
-reportOverlappingOverload = "error"
-reportUninitializedInstanceVariable = "error"
-reportCallInDefaultInitializer = "error"
-reportUnnecessaryIsInstance = "error"
-reportUnnecessaryCast = "error"
-reportUnnecessaryComparison = "error"
-reportUnnecessaryContains = "error"
-reportAssertAlwaysTrue = "error"
-reportSelfClsParameterName = "error"
-reportImplicitStringConcatenation = "error"
-reportInvalidStubStatement = "error"
-reportIncompleteStub = "error"
-reportUnsupportedDunderAll = "error"
-reportUnusedImport = "error"
-reportDuplicateImport = "error"
-reportUndefinedVariable = "error"
-reportArgumentType = "error"
-reportAttributeAccessIssue = "error"
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+tmp_path_retention_policy = "none"
+addopts = "--basetemp=.pytest_tmp"

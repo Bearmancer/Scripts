@@ -1,25 +1,58 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<AnalysisLevel>latest-recommended</AnalysisLevel>
 		<PackageId>CSharpScripts</PackageId>
-		<AssemblyName>scripts</AssemblyName>
+		<AssemblyName>tools</AssemblyName>
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 	</PropertyGroup>
 	<ItemGroup>
+		<InternalsVisibleTo Include="CSharpScripts.Tests" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Tests/**" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AngleSharp" Version="*" />
+		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
+		<PackageReference Include="Azure.Identity" Version="*" />
+		<PackageReference Include="Azure.AI.Translation.Text" Version="*" />
 		<PackageReference Include="CsvHelper" Version="*" />
 		<PackageReference Include="Google.Apis" Version="*" />
 		<PackageReference Include="Google.Apis.Auth" Version="*" />
 		<PackageReference Include="Google.Apis.Drive.v3" Version="*" />
 		<PackageReference Include="Google.Apis.Sheets.v4" Version="*" />
 		<PackageReference Include="Google.Apis.YouTube.v3" Version="*" />
+		<PackageReference Include="Google.Cloud.DocumentAI.V1" Version="*" />
+		<PackageReference Include="Google.Cloud.Vision.V1" Version="*" />
 		<PackageReference Include="Hqub.Last.fm" Version="*" />
 		<PackageReference Include="MetaBrainz.MusicBrainz" Version="*" />
+		<PackageReference Include="Microsoft.Playwright" Version="*" />
+		<PackageReference Include="NTextCat" Version="*" />
 		<PackageReference Include="ParkSquare.Discogs" Version="*" />
+		<PackageReference Include="PdfPig" Version="*" />
 		<PackageReference Include="Polly" Version="*" />
+		<PackageReference Include="Polly.RateLimiting" Version="8.6.5" />
 		<PackageReference Include="RestSharp" Version="*" />
+		<PackageReference Include="Riok.Mapperly" Version="*" />
+		<PackageReference Include="Serilog" Version="*" />
+		<PackageReference Include="Serilog.Enrichers.Process" Version="*" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="*" />
+		<PackageReference Include="Serilog.Formatting.Compact" Version="*" />
+		<PackageReference Include="Serilog.Sinks.File" Version="*" />
+		<PackageReference Include="SmartReader" Version="*" />
 		<PackageReference Include="Spectre.Console" Version="*" />
 		<PackageReference Include="Spectre.Console.Cli" Version="*" />
+		<PackageReference Include="System.Threading.RateLimiting" Version="10.0.3" />
 	</ItemGroup>
+	<Target Name="CopyNTextCatProfile" AfterTargets="Build">
+		<ItemGroup>
+			<NTextCatFiles Include="$(NuGetPackageRoot)ntextcat\**\content\*.xml" />
+		</ItemGroup>
+		<Copy
+			SourceFiles="@(NTextCatFiles)"
+			DestinationFolder="$(OutputPath)"
+			SkipUnchangedFiles="true"
+		/>
+	</Target>
 </Project>

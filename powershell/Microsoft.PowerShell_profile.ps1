@@ -1,12 +1,14 @@
 Set-StrictMode -Version Latest
 
-[Console]::InputEncoding = [Console]::OutputEncoding = $Global:OutputEncoding = [System.Text.Encoding]::UTF8
-$env:PYTHONIOENCODING = 'utf-8'
-$env:PYTHONWARNINGS = 'ignore'
-
-carapace _carapace | Out-String | Invoke-Expression
-
-Import-Module $PSScriptRoot\ScriptsToolkit\ScriptsToolkit.psd1
-
-Import-Module PSCompletions
-Set-PSReadLineOption -PredictionViewStyle ListView
+function Write-Log {
+    param([string]$Message, [string]$Level = 'INFO')
+    $ts   = Get-Date -Format 'HH:mm'
+    $color = switch ($Level) {
+        'INFO'  { 'Cyan'   }
+        'OK'    { 'Green'  }
+        'WARN'  { 'Yellow' }
+        'ERROR' { 'Red'    }
+        default { 'White'  }
+    }
+    Write-Host "[$ts] $Message" -ForegroundColor $color
+}

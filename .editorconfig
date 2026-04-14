@@ -1,3 +1,5 @@
+root = true
+
 [*]
 indent_style = tab
 indent_size = 4
@@ -13,13 +15,9 @@ dotnet_analyzer_diagnostic.severity = warning
 csharp_style_var_for_built_in_types = true:warning
 csharp_style_var_when_type_is_apparent = true:warning
 csharp_style_var_elsewhere = false:warning
-
-# Modern null operators
-csharp_style_coalesce_expression = true:warning
-csharp_style_conditional_delegate_call = true:warning
-csharp_style_null_propagation = true:warning
-csharp_style_prefer_null_check_over_type_check = true:warning
-csharp_style_throw_expression = true:warning
+resharper_suggest_var_or_type_built_in_types_highlighting = none
+resharper_suggest_var_or_type_simple_types_highlighting = none
+resharper_suggest_var_or_type_elsewhere_highlighting = none
 
 # Modern language features
 csharp_prefer_simple_default_expression = true:warning
@@ -77,6 +75,7 @@ dotnet_style_prefer_simplified_interpolation = true:warning
 csharp_using_directive_placement = outside_namespace:none
 
 # Suppressions
+dotnet_diagnostic.CA0007.severity = none
 dotnet_diagnostic.CA1303.severity = none
 dotnet_diagnostic.CA1304.severity = none
 dotnet_diagnostic.CA1305.severity = none
@@ -105,7 +104,8 @@ dotnet_naming_rule.private_members_with_underscore.severity = none
 dotnet_naming_rule.private_members_with_underscore.symbols = value
 dotnet_naming_rule.private_members_with_underscore.style = value
 dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.CA1707.severity = none
 
-# Prefer .slnx over legacy .sln - hide .sln from file explorers
+# Hide legacy .sln in favor of .slnx (modern solution format)
 [*.sln]
 generated_code = true

@@ -1,45 +1,56 @@
+using System.Xml;
+
 namespace CSharpScripts.Services.Sync.YouTube;
 
-public class YouTubeService : IDisposable
+internal sealed class YouTubeService : IDisposable
 {
-	#region Configuration
-
 	private const int MaxResultsPerPage = 50;
 
-	private const string PLAYLIST_FIELDS =
+	private const string PlaylistFields =
 		"nextPageToken,items(id,snippet/title,contentDetails/itemCount,etag)";
 
-	private const string PLAYLIST_ITEM_FIELDS = "nextPageToken,items/contentDetails/videoId";
+	private const string PlaylistItemFields = "nextPageToken,items/contentDetails/videoId";
 
-	private const string VIDEO_FIELDS =
+	private const string VideoFields =
 		"items(id,snippet(title,description,channelTitle,channelId),contentDetails/duration)";
 
-	private readonly YouTubeServiceApi service = new(GoogleCredentials.Initializer);
+	private readonly YouTubeServiceApi Service;
+
+	private YouTubeService(YouTubeServiceApi service) => Service = service;
 
 	public void Dispose()
 	{
-		service.Dispose();
+		Service.Dispose();
 		GC.SuppressFinalize(this);
 	}
 
-	#endregion
-
-	#region Playlist Summaries
+	public static async Task<YouTubeService> CreateAsync(CancellationToken ct = default)
+	{
+		BaseClientService.Initializer initializer = await GoogleAuth.GetInitializerAsync(ct);
+		return new YouTubeService(new YouTubeServiceApi(initializer: initializer));
+	}
 
 	internal async Task<List<PlaylistSummary>> GetPlaylistSummariesAsync(CancellationToken ct)
 	{
+		Log.Debug("GetPlaylistSummariesAsync entry");
 		List<Playlist> items = await FetchAllPlaylistItemsAsync(ct);
-		return
+		List<PlaylistSummary> result =
 		[
-			.. items
-				.Select(item => new PlaylistSummary(
-					item.Id,
-					item.Snippet?.Title ?? "Untitled",
-					(int)(item.ContentDetails?.ItemCount ?? 0),
-					item.ETag
-				))
-				.OrderBy(s => s.Title),
+			.. Enumerable.OrderBy(
+				Enumerable.Select(
+					items,
+					item => new PlaylistSummary(
+						Id: item.Id,
+						item.Snippet?.Title ?? "Untitled",
+						(int)(item.ContentDetails?.ItemCount ?? 0),
+						ETag: item.ETag
+					)
+				),
+				s => s.Title
+			),
 		];
+		Log.Debug("GetPlaylistSummariesAsync exit {Count}", result.Count);
+		return result;
 	}
 
 	internal async Task<PlaylistSummary?> GetPlaylistSummaryAsync(
@@ -47,31 +58,34 @@ public class YouTubeService : IDisposable
 		CancellationToken ct
 	)
 	{
+		Log.Debug("GetPlaylistSummaryAsync entry {PlaylistId}", playlistId);
 		ct.ThrowIfCancellationRequested();
 
 		PlaylistListResponse response = await Resilience.ExecuteAsync(
-			"YouTube.Playlists.List",
+			operation: "YouTube.Playlists.List",
 			async () =>
 			{
-				PlaylistsResource.ListRequest request = service.Playlists.List(
-					"snippet,contentDetails"
+				PlaylistsResource.ListRequest request = Service.Playlists.List(
+					part: "snippet,contentDetails"
 				);
 				request.Id = playlistId;
-				request.Fields = PLAYLIST_FIELDS;
+				request.Fields = PlaylistFields;
 				return await request.ExecuteAsync(ct);
 			},
 			ct
 		);
 
 		Playlist? item = response.Items?.FirstOrDefault();
-		return item is null
+		PlaylistSummary? result = item is null
 			? null
 			: new PlaylistSummary(
-				item.Id,
+				Id: item.Id,
 				item.Snippet?.Title ?? "Untitled",
 				(int)(item.ContentDetails?.ItemCount ?? 0),
-				item.ETag
+				ETag: item.ETag
 			);
+		Log.Debug("GetPlaylistSummaryAsync exit {Found}", result is not null);
+		return result;
 	}
 
 	internal async Task<List<string>> GetPlaylistVideoIdsAsync(
@@ -79,24 +93,27 @@ public class YouTubeService : IDisposable
 		CancellationToken ct
 	)
 	{
+		Log.Debug("GetPlaylistVideoIdsAsync entry {PlaylistId}", playlistId);
 		List<string> videoIds = [];
 		string? pageToken = null;
+		var pageCount = 0;
 
 		do
 		{
 			ct.ThrowIfCancellationRequested();
+			pageCount++;
 
 			PlaylistItemListResponse response = await Resilience.ExecuteAsync(
-				"YouTube.PlaylistItems.List",
+				operation: "YouTube.PlaylistItems.List",
 				async () =>
 				{
-					PlaylistItemsResource.ListRequest request = service.PlaylistItems.List(
-						"contentDetails"
+					PlaylistItemsResource.ListRequest request = Service.PlaylistItems.List(
+						part: "contentDetails"
 					);
 					request.PlaylistId = playlistId;
 					request.MaxResults = MaxResultsPerPage;
 					request.PageToken = pageToken;
-					request.Fields = PLAYLIST_ITEM_FIELDS;
+					request.Fields = PlaylistItemFields;
 					return await request.ExecuteAsync(ct);
 				},
 				ct
@@ -104,62 +121,76 @@ public class YouTubeService : IDisposable
 
 			ct.ThrowIfCancellationRequested();
 
-			videoIds.AddRange(
-				response
-					.Items?.Select(i => i.ContentDetails?.VideoId)
-					.Where(id => !IsNullOrEmpty(id))
-					.Cast<string>()
-					?? []
-			);
+			IList<PlaylistItem>? items = response.Items;
+			if (items is not null)
+			{
+				foreach (PlaylistItem? item in items)
+				{
+					var videoId = item.ContentDetails?.VideoId;
+					if (!IsNullOrEmpty(value: videoId))
+						videoIds.Add(videoId);
+				}
+			}
 
 			pageToken = response.NextPageToken;
-		} while (!IsNullOrEmpty(pageToken));
+		} while (!IsNullOrEmpty(value: pageToken));
 
+		Log.Debug(
+			"GetPlaylistVideoIdsAsync exit {Count} videoIds across {Pages} pages",
+			videoIds.Count,
+			pageCount
+		);
 		return videoIds;
 	}
 
-	#endregion
-
-	#region Playlist Fetching
-
 	internal async Task<List<YouTubePlaylist>> GetPlaylistMetadataAsync(CancellationToken ct)
 	{
-		Console.Info("Fetching playlist metadata...");
+		Log.Debug("GetPlaylistMetadataAsync entry");
+		Log.Information("Fetching playlist metadata...");
 		List<Playlist> items = await FetchAllPlaylistItemsAsync(ct);
-		return
+		List<YouTubePlaylist> result =
 		[
-			.. items
-				.Select(item => new YouTubePlaylist(
-					item.Id,
-					item.Snippet?.Title ?? "Untitled",
-					(int)(item.ContentDetails?.ItemCount ?? 0),
-					[],
-					item.ETag
-				))
-				.OrderBy(p => p.Title),
+			.. Enumerable.OrderBy(
+				Enumerable.Select(
+					items,
+					item => new YouTubePlaylist(
+						Id: item.Id,
+						item.Snippet?.Title ?? "Untitled",
+						(int)(item.ContentDetails?.ItemCount ?? 0),
+						[],
+						ETag: item.ETag
+					)
+				),
+				p => p.Title
+			),
 		];
+		Log.Debug("GetPlaylistMetadataAsync exit {Count}", result.Count);
+		return result;
 	}
 
 	private async Task<List<Playlist>> FetchAllPlaylistItemsAsync(CancellationToken ct)
 	{
+		Log.Debug("FetchAllPlaylistItemsAsync entry");
 		List<Playlist> items = [];
 		string? pageToken = null;
+		var pageCount = 0;
 
 		do
 		{
 			ct.ThrowIfCancellationRequested();
+			pageCount++;
 
 			PlaylistListResponse response = await Resilience.ExecuteAsync(
-				"YouTube.Playlists.List",
+				operation: "YouTube.Playlists.List",
 				async () =>
 				{
-					PlaylistsResource.ListRequest request = service.Playlists.List(
-						"snippet,contentDetails"
+					PlaylistsResource.ListRequest request = Service.Playlists.List(
+						part: "snippet,contentDetails"
 					);
 					request.Mine = true;
 					request.MaxResults = MaxResultsPerPage;
 					request.PageToken = pageToken;
-					request.Fields = PLAYLIST_FIELDS;
+					request.Fields = PlaylistFields;
 					return await request.ExecuteAsync(ct);
 				},
 				ct
@@ -169,49 +200,56 @@ public class YouTubeService : IDisposable
 
 			items.AddRange(response.Items ?? []);
 			pageToken = response.NextPageToken;
-		} while (!IsNullOrEmpty(pageToken));
+		} while (!IsNullOrEmpty(value: pageToken));
 
+		Log.Debug(
+			"FetchAllPlaylistItemsAsync exit {Count} items across {Pages} pages",
+			items.Count,
+			pageCount
+		);
 		return items;
 	}
 
 	internal async Task<List<YouTubePlaylist>> GetAllPlaylistsAsync(CancellationToken ct)
 	{
-		Console.Info("Fetching playlists...");
+		Log.Debug("GetAllPlaylistsAsync entry");
+		Log.Information("Fetching playlists...");
 
 		List<Playlist> items = await FetchAllPlaylistItemsAsync(ct);
 		List<YouTubePlaylist> playlists =
 		[
-			.. items
-				.Select(item => new YouTubePlaylist(
-					item.Id,
-					item.Snippet?.Title ?? "Untitled",
-					(int)(item.ContentDetails?.ItemCount ?? 0),
-					[],
-					item.ETag
-				))
-				.OrderBy(p => p.Title),
+			.. Enumerable.OrderBy(
+				Enumerable.Select(
+					items,
+					item => new YouTubePlaylist(
+						Id: item.Id,
+						item.Snippet?.Title ?? "Untitled",
+						(int)(item.ContentDetails?.ItemCount ?? 0),
+						[],
+						ETag: item.ETag
+					)
+				),
+				p => p.Title
+			),
 		];
 
-		Console.Info("Found {0} playlists, fetching video IDs...", playlists.Count);
+		Log.Information("Found {0} playlists, fetching video IDs...", playlists.Count);
 
-		for (var i = 0; i < playlists.Count; i++)
+		var playlistCount = playlists.Count;
+		for (var i = 0; i < playlistCount; i++)
 		{
 			ct.ThrowIfCancellationRequested();
 
-			YouTubePlaylist playlist = playlists[i];
-			List<string> videoIds = await GetPlaylistVideoIdsAsync(playlist.Id, ct);
-			playlists[i] = playlist with { VideoIds = videoIds };
+			YouTubePlaylist playlist = playlists[index: i];
+			List<string> videoIds = await GetPlaylistVideoIdsAsync(playlistId: playlist.Id, ct);
+			playlists[index: i] = playlist with { VideoIds = videoIds };
 
-			Console.Progress("Playlist IDs: {0}/{1}", i + 1, playlists.Count);
+			Log.Debug("YouTubePlaylistIdFetch {Current} {Total}", i + 1, playlistCount);
 		}
 
-		Console.NewLine();
+		Log.Debug("GetAllPlaylistsAsync exit {Count}", playlists.Count);
 		return playlists;
 	}
-
-	#endregion
-
-	#region Video Details
 
 	internal async Task<List<YouTubeVideo>> GetVideoDetailsForIdsAsync(
 		List<string> videoIds,
@@ -219,21 +257,33 @@ public class YouTubeService : IDisposable
 		CancellationToken ct
 	)
 	{
+		Log.Debug("GetVideoDetailsForIdsAsync entry {Count} videoIds", videoIds.Count);
 		List<YouTubeVideo> videos = [];
-		List<string[]> batches = [.. videoIds.Chunk(MaxResultsPerPage)];
+		var videoIdCount = videoIds.Count;
+		var batchCount = 0;
 
-		foreach (var batch in batches)
+		for (var i = 0; i < videoIdCount; i += MaxResultsPerPage)
 		{
 			ct.ThrowIfCancellationRequested();
 
-			List<YouTubeVideo> batchVideos = await GetVideoDetailsAsync([.. batch], ct);
+			List<string> batchIds = videoIds.GetRange(
+				i,
+				Math.Min(MaxResultsPerPage, videoIdCount - i)
+			);
+			List<YouTubeVideo> batchVideos = await GetVideoDetailsAsync(batchIds, ct);
 
 			ct.ThrowIfCancellationRequested();
 
-			videos.AddRange(batchVideos);
-			await onBatchComplete(batchVideos);
+			videos.AddRange(collection: batchVideos);
+			await onBatchComplete(arg: batchVideos);
+			batchCount++;
 		}
 
+		Log.Debug(
+			"GetVideoDetailsForIdsAsync exit {Count} videos in {Batches} batches",
+			videos.Count,
+			batchCount
+		);
 		return videos;
 	}
 
@@ -242,33 +292,44 @@ public class YouTubeService : IDisposable
 		CancellationToken ct
 	)
 	{
+		Log.Debug("GetVideoDetailsAsync entry {Count}", videoIds.Count);
 		VideoListResponse response = await Resilience.ExecuteAsync(
-			"YouTube.Videos.List",
+			operation: "YouTube.Videos.List",
 			async () =>
 			{
-				VideosResource.ListRequest request = service.Videos.List("snippet,contentDetails");
-				request.Id = Join(",", videoIds);
-				request.Fields = VIDEO_FIELDS;
+				VideosResource.ListRequest request = Service.Videos.List(
+					part: "snippet,contentDetails"
+				);
+				request.Id = Join(separator: ",", values: videoIds);
+				request.Fields = VideoFields;
 				return await request.ExecuteAsync(ct);
 			},
 			ct
 		);
 
-		return
-		[
-			.. (response.Items ?? []).Select(item => new YouTubeVideo(
-				item.Snippet?.Title ?? "Untitled",
-				item.Snippet?.Description ?? "",
-				ParseDuration(item.ContentDetails?.Duration),
-				item.Snippet?.ChannelTitle ?? "",
-				item.Id,
-				item.Snippet?.ChannelId ?? ""
-			)),
-		];
+		IList<global::Google.Apis.YouTube.v3.Data.Video>? items = response.Items;
+		List<YouTubeVideo> result = [];
+		result.EnsureCapacity(items?.Count ?? 0);
+		if (items is not null)
+		{
+			foreach (global::Google.Apis.YouTube.v3.Data.Video? item in items)
+			{
+				result.Add(
+					new YouTubeVideo(
+						item.Snippet?.Title ?? "Untitled",
+						item.Snippet?.Description ?? "",
+						ParseDuration(isoDuration: item.ContentDetails?.Duration),
+						item.Snippet?.ChannelTitle ?? "",
+						VideoId: item.Id,
+						item.Snippet?.ChannelId ?? ""
+					)
+				);
+			}
+		}
+		Log.Debug("GetVideoDetailsAsync exit {Count}", result.Count);
+		return result;
 	}
 
 	private static TimeSpan ParseDuration(string? isoDuration) =>
-		IsNullOrEmpty(isoDuration) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(isoDuration);
-
-	#endregion
+		IsNullOrEmpty(value: isoDuration) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(s: isoDuration);
 }

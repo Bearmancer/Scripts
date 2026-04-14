@@ -1,6 +1,6 @@
-[
+﻿[
   {
-    "Title": "1980年\u3000E.スヴェトラーノフ＆USSR国立響\u3000ガーシュイン「パリのアメリカ人」",
+    "Title": "1980年　E.スヴェトラーノフ＆USSR国立響　ガーシュイン「パリのアメリカ人」",
     "Description": "昔LPで出ていた演奏の映像ですね\nまぁ怪演の類ですね。。。\n当時のソヴィエトでは「なうでやんぐ」な演奏だったのかもしれません",
     "Duration": "00:25:41",
     "ChannelName": "Bar MUSICA",
@@ -8,7 +8,7 @@
     "ChannelId": "UC4D-AuG4DugdaXPNzL6sAeQ"
   },
   {
-    "Title": "1982年\u3000E.スヴェトラーノフ＆USSR国立響\u3000リスト\u3000交響詩「前奏曲」",
+    "Title": "1982年　E.スヴェトラーノフ＆USSR国立響　リスト　交響詩「前奏曲」",
     "Description": "収録中に何かのスイッチを入れたり切ったりしているかのような音の悪さです\n修正は私にはこれが限度です\n演奏はさすが御大！\n豪快な演奏です",
     "Duration": "00:17:13",
     "ChannelName": "Bar MUSICA",
@@ -46,5 +46,13 @@
     "ChannelName": "Sonorum Concentus Haydn & Schubert",
     "VideoId": "jAkVMTaXKRw",
     "ChannelId": "UCI7nogKUZ-uaslb37FDs1KQ"
+  },
+  {
+    "Title": "Beethoven – Sinfonie Nr. 7 | François-Xavier Roth | SWR Symphonieorchester",
+    "Description": "Ludwig van Beethovens Sinfonie Nr. 7, aufgeführt vom SWR Symphonieorchester unter der Leitung von François-Xavier Roth. Live aufgenommen am 28. November 2025 in der Stuttgarter Liederhalle. \n\nLudwig van Beethoven - Sinfonie Nr. 7 A-Dur op. 92 \n\n00:00 Poco sostenuto – Vivace\n14:54 Allegretto\n22:44 Presto\n31:55 Allegro con brio\n\nMitwirkende: \nSWR Symphonieorchester\nDirigent: François-Xavier Roth\n\n► ARD Klassik Mediathek: https://ard-klassik.de \n► Web: http://swr.li/web-concerts \n► Facebook: https://www.facebook.com/ardklassik \n► Instagram: https://www.instagram.com/ardklassik \n\nImpressum: https://www.swr.de/impressum \n\nKommentare sind willkommen – aber bitte unter Beachtung unserer Netiquette: https://www.ard.de/die-ard/netiquette-100/ \n\nDatenschutz: https://www.swr.de/datenschutz",
+    "Duration": "00:40:47",
+    "ChannelName": "ARD Klassik",
+    "VideoId": "pJY28BJ8jVI",
+    "ChannelId": "UCgSO-M9hotp-0h7LYNp2oOg"
   }
 ]

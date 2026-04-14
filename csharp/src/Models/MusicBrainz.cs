@@ -1,8 +1,8 @@
 namespace CSharpScripts.Models;
 
-internal record WorkDetails(string? Composer, string? ParentWorkName);
+internal sealed record WorkDetails(string? Composer, string? ParentWorkName);
 
-internal record MusicBrainzArtist(
+internal sealed record MusicBrainzArtist(
 	Guid Id,
 	string Name,
 	string? SortName,
@@ -22,7 +22,7 @@ internal record MusicBrainzArtist(
 	int? RatingVotes
 );
 
-internal record MusicBrainzRecording(
+internal sealed record MusicBrainzRecording(
 	Guid Id,
 	string Title,
 	string? Artist,
@@ -46,7 +46,7 @@ internal record MusicBrainzRecording(
 	DateOnly? RecordingDate = null
 );
 
-internal record MusicBrainzTrack(
+internal sealed record MusicBrainzTrack(
 	Guid Id,
 	string Title,
 	int Position,
@@ -56,7 +56,7 @@ internal record MusicBrainzTrack(
 	string? ArtistCredit
 );
 
-internal record MusicBrainzMedium(
+internal sealed record MusicBrainzMedium(
 	int Position,
 	string? Format,
 	string? Title,
@@ -64,7 +64,7 @@ internal record MusicBrainzMedium(
 	List<MusicBrainzTrack> Tracks
 );
 
-internal record MusicBrainzRelease(
+internal sealed record MusicBrainzRelease(
 	Guid Id,
 	string Title,
 	string? Artist,
@@ -88,10 +88,11 @@ internal record MusicBrainzRelease(
 	string? Annotation
 )
 {
-	public List<MusicBrainzTrack> Tracks => [.. Media.SelectMany(m => m.Tracks)];
+	public List<MusicBrainzTrack> Tracks =>
+		field ??= [.. Enumerable.SelectMany(Media, m => m.Tracks)];
 }
 
-internal record MusicBrainzReleaseGroup(
+internal sealed record MusicBrainzReleaseGroup(
 	Guid Id,
 	string Title,
 	string? Artist,
@@ -108,13 +109,25 @@ internal record MusicBrainzReleaseGroup(
 	string? Annotation
 );
 
-internal record MusicBrainzLabel(Guid? Id, string? Name, string? CatalogNumber);
+internal sealed record MusicBrainzLabel(Guid? Id, string? Name, string? CatalogNumber);
 
-internal record MusicBrainzCredit(string Name, string Role, Guid? ArtistId, string? Attributes);
+internal sealed record MusicBrainzCredit(
+	string Name,
+	string Role,
+	Guid? ArtistId,
+	string? Attributes
+);
 
-internal record MusicBrainzEnrichmentState(
+internal sealed record MusicBrainzEnrichmentState(
 	string ReleaseId,
 	int TotalTracks,
 	List<TrackInfo> EnrichedTracks,
 	DateTime LastUpdated
+);
+
+internal sealed record ReleaseCredits(
+	string? Conductor,
+	string? Orchestra,
+	List<string> Soloists,
+	string? Composer
 );

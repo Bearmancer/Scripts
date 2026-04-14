@@ -1,58 +1,71 @@
 namespace CSharpScripts.Services.Music;
 
-public static class MusicExporter
+internal static class MusicExporter
 {
 	public static string ExportWorksToCSV(string releaseTitle, List<WorkSummary> works)
 	{
-		CreateDirectory(Paths.ExportsDirectory);
+		Directory.CreateDirectory(path: Paths.ExportsDirectory);
 
-		var sanitizedTitle = SanitizeFileName(releaseTitle);
-		var path = Combine(Paths.ExportsDirectory, $"{sanitizedTitle}_works.csv");
+		var sanitizedTitle = releaseTitle.SanitizeFileName(maxLength: 100);
+		var path = Path.Combine(path1: Paths.ExportsDirectory, $"{sanitizedTitle}_works.csv");
 
-		using StreamWriter writer = new(path, append: false);
+		using StreamWriter writer = new(path: path, append: false);
 		using CsvWriter csv = new(
-			writer,
-			new CsvConfiguration(CultureInfo.InvariantCulture)
+			writer: writer,
+			new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = true,
 			}
 		);
 
-		csv.WriteField("Disc");
-		csv.WriteField("TrackStart");
-		csv.WriteField("TrackEnd");
-		csv.WriteField("Work");
-		csv.WriteField("Composer");
-		csv.WriteField("Conductor");
-		csv.WriteField("Orchestra");
-		csv.WriteField("Year");
-		csv.WriteField("Movements");
+		csv.WriteField(field: "Disc");
+		csv.WriteField(field: "TrackStart");
+		csv.WriteField(field: "TrackEnd");
+		csv.WriteField(field: "Work");
+		csv.WriteField(field: "Composer");
+		csv.WriteField(field: "Orchestra");
+		csv.WriteField(field: "Conductor");
+		csv.WriteField(field: "Soloists");
+		csv.WriteField(field: "Venue");
+		csv.WriteField(field: "Year");
+		csv.WriteField(field: "Duration");
+		csv.WriteField(field: "Movements");
 		csv.NextRecord();
 
 		foreach (WorkSummary work in works)
 		{
-			csv.WriteField(work.Disc);
-			csv.WriteField(work.FirstTrack);
-			csv.WriteField(work.LastTrack);
-			csv.WriteField(work.Work);
-			csv.WriteField(work.Composer);
-			csv.WriteField(work.Conductor);
-			csv.WriteField(work.Orchestra);
-			csv.WriteField(work.YearDisplay);
+			csv.WriteField(field: work.Disc);
+			csv.WriteField(field: work.FirstTrack);
+			csv.WriteField(field: work.LastTrack);
+			csv.WriteField(field: work.Work);
+			csv.WriteField(field: work.Composer);
+			csv.WriteField(field: work.Orchestra);
+			csv.WriteField(field: work.Conductor);
+			csv.WriteField(Join(separator: "; ", values: work.Soloists));
+			csv.WriteField(Join(separator: "; ", values: work.RecordingVenues));
+			csv.WriteField(field: work.YearDisplay);
+			csv.WriteField(
+				work.TotalDuration > TimeSpan.Zero
+					? work.TotalDuration.ToString(format: @"hh\:mm\:ss")
+					: ""
+			);
 			csv.WriteField(work.LastTrack - work.FirstTrack + 1);
 			csv.NextRecord();
 		}
 
-		Console.Info("Exported {0} works to {1}", works.Count, GetFileName(path));
+		Log.Information("Exported {0} works to {1}", works.Count, Path.GetFileName(path: path));
 		return path;
 	}
 
-	public static string ExportToSheets(ReleaseData release)
+	public static async Task<string> ExportToSheetsAsync(
+		ReleaseData release,
+		CancellationToken ct = default
+	)
 	{
-		GoogleSheetsService sheets = new();
+		GoogleSheetsService sheets = await GoogleSheetsService.CreateAsync(ct);
 
-		var spreadsheetId = sheets.CreateSpreadsheet(release.Info.Title);
-		Console.Info("Created Google Sheet: {0}", release.Info.Title);
+		var spreadsheetId = await sheets.CreateSpreadsheetAsync(title: release.Info.Title, ct);
+		Log.Information("Created Google Sheet: {0}", release.Info.Title);
 
 		List<object> headers =
 		[
@@ -69,11 +82,11 @@ public static class MusicExporter
 			"Label",
 		];
 
-		sheets.WriteRecords(
-			spreadsheetId,
-			"Sheet1",
-			headers,
-			release.Tracks,
+		await sheets.WriteRecordsAsync(
+			spreadsheetId: spreadsheetId,
+			sheetName: "Sheet1",
+			headers: headers,
+			records: release.Tracks,
 			t =>
 				[
 					t.DiscNumber,
@@ -84,22 +97,17 @@ public static class MusicExporter
 					t.Conductor ?? "",
 					t.Orchestra ?? "",
 					release.Info.Year?.ToString() ?? "",
-					t.Duration is { } d && d > TimeSpan.Zero ? d.ToString(@"m\:ss") : "",
+					t.Duration is { } d && d > TimeSpan.Zero ? d.ToString(format: @"m\:ss") : "",
 					release.Info.Title,
 					release.Info.Label ?? "",
-				]
+				],
+			ct
 		);
 
-		var url = GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId);
-		Console.Link(url, "View spreadsheet");
+		var url = GoogleSheetsService.GetSpreadsheetUrl(spreadsheetId: spreadsheetId);
+		Log.Information("MusicSheetUrl {Url}", url);
 
 		sheets.Dispose();
 		return url;
 	}
-
-	private static string SanitizeFileName(string name) =>
-		GetInvalidFileNameChars()
-			.Aggregate(name, (current, c) => current.Replace(c, '_'))
-			.Trim()
-			.TrimEnd('.')[..Math.Min(name.Length, 100)];
 }
