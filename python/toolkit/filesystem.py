@@ -25,7 +25,7 @@ def list_directories(path: Path, sort_order: str = "0", indent: int = 0) -> None
     """List directories with sizes, sorted by size or name."""
     indentation = "  " * indent
     folder_size = get_folder_size(path)
-    output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
+    output = f"{indentation}{path.name} ({folder_size / (1024**2):.2f} MB)"
     print(output)
 
     entries = [
@@ -47,7 +47,7 @@ def list_files_and_directories(
     """List files and directories with sizes."""
     indentation = "  " * indent
     folder_size = get_folder_size(path)
-    output = f"{indentation}{path.name} ({folder_size / (1024 ** 2):.2f} MB)"
+    output = f"{indentation}{path.name} ({folder_size / (1024**2):.2f} MB)"
     print(output)
 
     entries = list(path.iterdir())
@@ -143,7 +143,16 @@ def make_torrents(folder: Path) -> None:
     try:
         create_torrent(
             path=str(folder),
-            trackers=["https://flacsfor.me/250f870ba861cefb73003d29826af739/announce"],
+            trackers=[
+                os.getenv(
+                    "TRACKER_OPS_ANNOUNCE",
+                    "https://home.opsfet.ch/7a0917ca5bbdc282de7f2eed00a69e2b/announce",
+                ),
+                os.getenv(
+                    "TRACKER_FLACS_ANNOUNCE",
+                    "https://flacsfor.me/250f870ba861cefb73003d29826af739/announce",
+                ),
+            ],
             private=True,
             source="RED",
             output=str(dropbox / "Lance" / f"{folder.name} - RED.torrent"),

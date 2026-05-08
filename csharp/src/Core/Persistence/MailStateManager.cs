@@ -3,9 +3,9 @@ namespace CSharpScripts.Core;
 internal static class MailStateManager
 {
 	private static readonly string StateFilePath = Path.Combine(
-		Paths.StateDirectory,
-		"mail",
-		"active.json"
+		path1: Paths.StateDirectory,
+		path2: "mail",
+		path3: "active.json"
 	);
 
 	private static readonly JsonSerializerOptions JsonOptions = StateManager.JsonIndented;
@@ -19,13 +19,17 @@ internal static class MailStateManager
 
 		try
 		{
-			var json = await File.ReadAllTextAsync(StateFilePath, ct);
+			var json = await File.ReadAllTextAsync(path: StateFilePath, cancellationToken: ct);
 			return JsonSerializer.Deserialize<ActiveMailbox>(json: json, options: JsonOptions);
 		}
 		catch (JsonException ex)
 		{
-			Log.Warning("Mail state file corrupted: {Message}", ex.Message);
-			return null;
+			Log.Error(
+				ex: ex,
+				messageTemplate: "Could not load MailStateManager: {Message}",
+				ex.Message
+			);
+			return new MailState();
 		}
 	}
 
@@ -38,10 +42,14 @@ internal static class MailStateManager
 
 		var json = JsonSerializer.Serialize(value: mailbox, options: JsonOptions);
 		var tempPath = StateFilePath + $".{Guid.NewGuid()}.tmp";
-		await File.WriteAllTextAsync(tempPath, contents: json, ct);
+		await File.WriteAllTextAsync(path: tempPath, contents: json, cancellationToken: ct);
 		File.Move(sourceFileName: tempPath, destFileName: StateFilePath, overwrite: true);
 
-		Log.Debug("Mail state saved: {Address} ({Provider})", mailbox.Address, mailbox.Provider);
+		Log.Debug(
+			messageTemplate: "Mail state saved: {Address} ({Provider})",
+			mailbox.Address,
+			mailbox.Provider
+		);
 	}
 
 	internal static void Delete()
@@ -49,6 +57,6 @@ internal static class MailStateManager
 		if (File.Exists(path: StateFilePath))
 			File.Delete(path: StateFilePath);
 
-		Log.Debug("Mail state file deleted");
+		Log.Debug(messageTemplate: "Mail state file deleted");
 	}
 }

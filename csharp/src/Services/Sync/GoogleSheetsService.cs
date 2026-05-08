@@ -881,13 +881,15 @@ internal sealed class GoogleSheetsService : IDisposable
 			return 0;
 
 		var rowsToDelete = 0;
-		foreach (IList<object>? row in response.Values)
+		// PERFORMANCE: Optimize foreach to for loop
+		for (var i = 0; i < response.Values.Count; i++)
 		{
+			var row = response.Values[i];
 			if (row is null || row.Count == 0)
 				break;
 
 			DateTime? rowDate = null;
-			var rawValue = row[index: 0];
+			var rawValue = row[0];
 
 			if (rawValue is double or int or long or float or decimal)
 				rowDate = DateTime.FromOADate(Convert.ToDouble(value: rawValue));
@@ -1336,11 +1338,13 @@ internal sealed class GoogleSheetsService : IDisposable
 			alreadyExported
 		);
 
-		foreach (Sheet sheet in toExport)
+		// PERFORMANCE: Optimize foreach to for loop
+		for (var i = 0; i < toExport.Count; i++)
 		{
 			if (ct.IsCancellationRequested)
 				break;
 
+			var sheet = toExport[i];
 			var sheetTitle = sheet.Properties?.Title ?? "";
 			var sheetId = sheet.Properties!.SheetId;
 			var safeFileName = SheetNameHelper.Sanitize(name: sheetTitle);

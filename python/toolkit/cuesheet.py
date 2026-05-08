@@ -43,7 +43,9 @@ def parse_cue_file(cuefile_path: Path) -> Any:
         parser = CueParser.from_file(cuefile_path, encoding=cue_encoding)
         return parser.run()
     except UnicodeDecodeError as e:
-        logger.error(f"Cannot decode {cuefile_path.name} with {e.encoding}: {e.reason} at bytes {e.start}-{e.end}")
+        logger.error(
+            f"Cannot decode {cuefile_path.name} with {e.encoding}: {e.reason} at bytes {e.start}-{e.end}"
+        )
         raise
     except ValueError as e:
         logger.error(f"Malformed CUE file {cuefile_path.name}: {e}")
@@ -98,14 +100,23 @@ def calculate_track_durations(
 
 
 def process_tracks(
-    tracks: list[TrackInfo], cue_file: Path, volume_adjustment: float = 0.0, sample_fmt: str = "s32", sample_rate: int = 88200, position: int = 0
+    tracks: list[TrackInfo],
+    cue_file: Path,
+    volume_adjustment: float = 0.0,
+    sample_fmt: str = "s32",
+    sample_rate: int = 88200,
+    position: int = 0,
 ) -> None:
     """Extract individual FLAC files from CUE sheet with volume adjustment."""
     track_count = len(tracks)
     cue_directory = cue_file.parent
 
     for track in tqdm(
-        tracks, total=track_count, desc=f"Converting {cue_file.parent.name}", position=position, leave=False
+        tracks,
+        total=track_count,
+        desc=f"Converting {cue_file.parent.name}",
+        position=position,
+        leave=False,
     ):
         output_path = cue_directory / "temp.flac"
         try:
@@ -143,18 +154,38 @@ def process_tracks(
                 .run()
             )
         except ffmpeg.Error as e:
-            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
-            logger.error(f"ffmpeg failed on track {track.track_num} '{track.title}': {stderr[-300:]}")
-            raise ConversionError(f"ffmpeg failed on track {track.track_num} '{track.title}'", output_path) from e
+            stderr = (
+                e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
+            )
+            logger.error(
+                f"ffmpeg failed on track {track.track_num} '{track.title}': {stderr[-300:]}"
+            )
+            raise ConversionError(
+                f"ffmpeg failed on track {track.track_num} '{track.title}'", output_path
+            ) from e
         except OSError as e:
-            logger.error(f"I/O error on track {track.track_num} '{track.title}': {e.strerror} [{e.errno}]")
-            raise ConversionError(f"I/O error on track {track.track_num} '{track.title}'", output_path) from e
+            logger.error(
+                f"I/O error on track {track.track_num} '{track.title}': {e.strerror} [{e.errno}]"
+            )
+            raise ConversionError(
+                f"I/O error on track {track.track_num} '{track.title}'", output_path
+            ) from e
         except ValueError as e:
-            logger.error(f"Invalid value on track {track.track_num} '{track.title}': {e}")
-            raise ConversionError(f"Invalid value on track {track.track_num} '{track.title}'", output_path) from e
+            logger.error(
+                f"Invalid value on track {track.track_num} '{track.title}': {e}"
+            )
+            raise ConversionError(
+                f"Invalid value on track {track.track_num} '{track.title}'", output_path
+            ) from e
 
 
-def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0, sample_fmt: str = "s32", sample_rate: int = 88200, position: int = 0) -> None:
+def process_cue_file(
+    cue_file: Path,
+    volume_adjustment: float = 0.0,
+    sample_fmt: str = "s32",
+    sample_rate: int = 88200,
+    position: int = 0,
+) -> None:
     """Process a CUE file: parse, extract tracks, and convert to FLAC."""
     cue_file = Path(cue_file).absolute()
 
@@ -164,4 +195,6 @@ def process_cue_file(cue_file: Path, volume_adjustment: float = 0.0, sample_fmt:
     cue_data = parse_cue_file(cue_file)
     tracks = extract_track_data(cue_data)
     tracks = calculate_track_durations(tracks, cue_file)
-    process_tracks(tracks, cue_file, volume_adjustment, sample_fmt, sample_rate, position)
+    process_tracks(
+        tracks, cue_file, volume_adjustment, sample_fmt, sample_rate, position
+    )

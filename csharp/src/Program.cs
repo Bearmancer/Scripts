@@ -4,6 +4,7 @@ using CSharpScripts.CLI.Mail;
 using CSharpScripts.CLI.Music;
 using CSharpScripts.CLI.Read;
 using CSharpScripts.CLI.Sync;
+using Npgsql;
 
 namespace CSharpScripts;
 
@@ -11,6 +12,7 @@ internal static class Program
 {
 	private static volatile bool Cancelled;
 	public static CancellationTokenSource Cts { get; } = new();
+	private static ServiceProvider? _serviceProvider;
 
 	public static int Main(string[] args)
 	{
@@ -29,7 +31,12 @@ internal static class Program
 				}
 			};
 
-			CommandApp app = new();
+			var services = new ServiceCollection();
+			ConfigureServices(services);
+			_serviceProvider = services.BuildServiceProvider();
+
+			var registrar = new SpectreTypeRegistrar(_serviceProvider);
+			CommandApp app = new(registrar);
 
 			app.Configure(config =>
 			{

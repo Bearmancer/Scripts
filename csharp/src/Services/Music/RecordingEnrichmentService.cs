@@ -124,28 +124,28 @@ internal static class RecordingEnrichmentService
 					catch (HttpRequestException ex)
 					{
 						Log.Warning(
-							messageTemplate: "Transient music metadata lookup failure for {Composer} - {Work}: {Message}",
+							ex,
+							"Transient music metadata lookup failure for {Composer} - {Work}",
 							record.Composer,
-							record.Work,
-							ex.Message
+							record.Work
 						);
 					}
 					catch (TimeoutException ex)
 					{
 						Log.Warning(
-							messageTemplate: "Timed out while looking up music metadata for {Composer} - {Work}: {Message}",
+							ex,
+							"Timed out while looking up music metadata for {Composer} - {Work}",
 							record.Composer,
-							record.Work,
-							ex.Message
+							record.Work
 						);
 					}
 					catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
 					{
 						Log.Warning(
-							messageTemplate: "Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}: {Message}",
+							ex,
+							"Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}",
 							record.Composer,
-							record.Work,
-							ex.Message
+							record.Work
 						);
 					}
 				}

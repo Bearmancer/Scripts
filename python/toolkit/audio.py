@@ -88,7 +88,13 @@ def create_output_directory(directory: Path, suffix: str) -> Path:
 
 def calculate_image_size(path: Path) -> None:
 	"""Report FLAC files with embedded artwork larger than 1MB."""
-	exif_tool = r"C:\Users\Lance\Desktop\exiftool-12.96_64\exiftool.exe"
+# SECURITY: Extracted hardcoded path to environment variable
+exif_tool = os.getenv("EXIFTOOL_PATH", "")
+if not exif_tool:
+    raise ValueError(
+        "EXIFTOOL_PATH environment variable not set. "
+        "Please configure the path to the exiftool executable."
+    )
 	problematic_files: list[Path] = []
 
 	for flac_file in path.glob("*.flac"):
@@ -495,7 +501,7 @@ def get_dff_target_params(fmt: AudioFormat) -> tuple[str, int]:
 
 
 def detect_audio_mode(directory: Path) -> str:
-	"""Auto-detect processing mode: 'extract' for SACD ISOs, 'convert' for FLAC."""
-	if list(directory.rglob("*.iso")):
-		return "extract"
-	return "convert"
+    """Auto-detect processing mode: 'extract' for SACD ISOs, 'convert' for FLAC."""
+    if any(directory.rglob("*.iso")):
+        return "extract"
+    return "convert"

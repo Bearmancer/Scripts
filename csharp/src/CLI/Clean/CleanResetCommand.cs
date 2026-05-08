@@ -153,40 +153,43 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 		Log.Warning("ResetBuildArtifacts_DeferredCleanup {BinDir} {ObjDir}", binDir, objDir);
 
 		var csprojDir = Path.Combine(Paths.ProjectRoot, "csharp");
-		var script = $$"""
+		var script = """
 			Start-Sleep -Seconds 2
-			if (Test-Path '{{binDir}}') { Remove-Item -Recurse -Force '{{binDir}}' }
-			if (Test-Path '{{objDir}}') { Remove-Item -Recurse -Force '{{objDir}}' }
-			Set-Location '{{csprojDir}}'
+			if (Test-Path $args[0]) { Remove-Item -Recurse -Force $args[0] }
+			if (Test-Path $args[1]) { Remove-Item -Recurse -Force $args[1] }
+			Set-Location $args[2]
 			dotnet build
 			""";
 
-		var arguments = $"-Command \"{script.Replace("\"", "\\\"")}\"";
-
+		// SECURITY: Use ArgumentList to prevent command injection via path characters
 		try
 		{
-			Process.Start(
-				new ProcessStartInfo
-				{
-					FileName = "pwsh",
-					Arguments = arguments,
-					UseShellExecute = true,
-					CreateNoWindow = false,
-				}
-			);
+			var pwsh = new ProcessStartInfo("pwsh")
+			{
+				UseShellExecute = false,
+				CreateNoWindow = false,
+			};
+			pwsh.ArgumentList.Add("-Command");
+			pwsh.ArgumentList.Add(script);
+			pwsh.ArgumentList.Add(binDir);
+			pwsh.ArgumentList.Add(objDir);
+			pwsh.ArgumentList.Add(csprojDir);
+			Process.Start(pwsh);
 		}
 		catch (Win32Exception)
 		{
 			Log.Warning("pwsh not found, falling back to powershell.exe");
-			Process.Start(
-				new ProcessStartInfo
-				{
-					FileName = "powershell.exe",
-					Arguments = arguments,
-					UseShellExecute = true,
-					CreateNoWindow = false,
-				}
-			);
+			var ps5 = new ProcessStartInfo("powershell.exe")
+			{
+				UseShellExecute = false,
+				CreateNoWindow = false,
+			};
+			ps5.ArgumentList.Add("-Command");
+			ps5.ArgumentList.Add(script);
+			ps5.ArgumentList.Add(binDir);
+			ps5.ArgumentList.Add(objDir);
+			ps5.ArgumentList.Add(csprojDir);
+			Process.Start(ps5);
 		}
 
 		UI.Ok("  Cleanup scheduled - will run after this process exits");

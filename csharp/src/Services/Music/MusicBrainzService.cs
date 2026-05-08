@@ -112,7 +112,7 @@ internal sealed class MusicBrainzService(
 		var dir = GetEntityDumpDirectory(entity: entity, id: id);
 		Directory.CreateDirectory(path: dir);
 
-		var tracePath = Path.Combine(path1: dir, path2: "http.log");
+		var tracePath = Path.Combine(path1: dir, path2: "http.jsonl");
 		using TextWriterTraceListener listener = new(fileName: tracePath);
 
 		lock (TraceLock)

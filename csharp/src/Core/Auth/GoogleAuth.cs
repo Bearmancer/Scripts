@@ -75,11 +75,11 @@ internal static class GoogleAuth
 			}
 			catch (TokenResponseException ex)
 			{
-				Log.Error("Failed to refresh Google token: {Message}", ex.Message);
+				Log.Error(ex, "Failed to refresh Google token: {Message}", ex.Message);
 			}
 			catch (HttpRequestException ex)
 			{
-				Log.Error("Failed to refresh Google token: {Message}", ex.Message);
+				Log.Error(ex, "Failed to refresh Google token: {Message}", ex.Message);
 			}
 
 			Log.Warning("Token refresh failed, re-authenticating...");

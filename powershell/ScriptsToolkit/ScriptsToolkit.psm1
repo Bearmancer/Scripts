@@ -1,11 +1,17 @@
 # ScriptsToolkit Module File
 
-class WhisperLanguageCompleter : System.Management.Automation.IValidateSetValuesGenerator {
-    [string[]] GetValidValues() { return $Script:WhisperLanguages }
+class WhisperLanguageCompleter: System.Management.Automation.IValidateSetValuesGenerator {
+	[string[]]
+	GetValidValues() {
+		return $Script:WhisperLanguages
+	}
 }
 
-class WhisperModelCompleter : System.Management.Automation.IValidateSetValuesGenerator {
-    [string[]] GetValidValues() { return $Script:WhisperModels }
+class WhisperModelCompleter: System.Management.Automation.IValidateSetValuesGenerator {
+	[string[]]
+	GetValidValues() {
+		return $Script:WhisperModels
+	}
 }
 
 $Script:RepositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -21,7 +27,7 @@ $Script:SyncTime = [TimeSpan]'09:00'
 
 #region CLI Wrappers
 function Invoke-Tools {
-    <#
+	<#
     .SYNOPSIS
     Invoke the C# CLI for sync, music metadata, and utilities.
 
@@ -45,21 +51,21 @@ function Invoke-Tools {
     Invoke-Tools --help
     Shows available CLI commands.
     #>
-    [Alias('tools')]
-    [CmdletBinding()]
-    param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
+	[Alias('tools')]
+	[CmdletBinding()]
+	param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
 
-    if (Test-Path $Script:ToolsExe) {
-        & $Script:ToolsExe @Arguments
-    }
-    else {
-        Write-Log "tools.exe not found. Run 'regall' to compile. Falling back to dotnet run..." 'WARN'
-        dotnet run --project $Script:CSharpRoot -- @Arguments
-    }
+	if (Test-Path $Script:ToolsExe) {
+		& $Script:ToolsExe @Arguments
+	}
+	else {
+		Write-Log "tools.exe not found. Run 'regall' to compile. Falling back to dotnet run..." 'WARN'
+		dotnet run --project $Script:CSharpRoot -- @Arguments
+	}
 }
 
 function Sync-YouTube {
-    <#
+	<#
     .SYNOPSIS
     Sync YouTube playlists to Google Sheets.
 
@@ -75,15 +81,15 @@ function Sync-YouTube {
     syncyt --dry-run
     Preview sync without making changes.
     #>
-    [Alias('syncyt')]
-    [CmdletBinding()]
-    param()
+	[Alias('syncyt')]
+	[CmdletBinding()]
+	param()
 
-    Invoke-Tools sync yt @args
+	Invoke-Tools sync yt @args
 }
 
 function Sync-LastFm {
-    <#
+	<#
     .SYNOPSIS
     Sync Last.fm scrobbles to Google Sheets.
 
@@ -108,32 +114,32 @@ function Sync-LastFm {
     Sync-LastFm -Date 01/12/2024
     Re-sync scrobbles from December 1, 2024.
     #>
-    [Alias('music')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Position = 0, ValueFromPipeline)]
-        [string]$Date
-    )
+	[Alias('music')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Position = 0, ValueFromPipeline)]
+		[string]$Date
+	)
 
-    $cliArgs = @('sync', 'lastfm')
+	$cliArgs = @('sync', 'lastfm')
 
-    if ($Date) {
-        try {
-            $dateObj = [datetime]::ParseExact($Date, 'dd/MM/yyyy', [System.Globalization.CultureInfo]::InvariantCulture)
-            $formattedDate = $dateObj.ToString('yyyy/MM/dd', [System.Globalization.CultureInfo]::InvariantCulture)
-            $cliArgs += '--since', $formattedDate
-        }
-        catch {
-            Write-Log "Invalid date format. Expected dd/MM/yyyy (e.g., 20/01/2026). Received: '$Date'" 'ERROR'
-            Wait-OnError "Invalid date format. Expected dd/MM/yyyy (e.g., 20/01/2026). Received: '$Date'"
-            return
-        }
-    }
-    Invoke-Tools @cliArgs @args
+	if ($Date) {
+		try {
+			$dateObj = [datetime]::ParseExact($Date, 'dd/MM/yyyy', [System.Globalization.CultureInfo]::InvariantCulture)
+			$formattedDate = $dateObj.ToString('yyyy/MM/dd', [System.Globalization.CultureInfo]::InvariantCulture)
+			$cliArgs += '--since', $formattedDate
+		}
+		catch {
+			Write-Log "Invalid date format. Expected dd/MM/yyyy (e.g., 20/01/2026). Received: '$Date'" 'ERROR'
+			Wait-OnError "Invalid date format. Expected dd/MM/yyyy (e.g., 20/01/2026). Received: '$Date'"
+			return
+		}
+	}
+	Invoke-Tools @cliArgs @args
 }
 
 function Sync-All {
-    <#
+	<#
     .SYNOPSIS
     Sync both YouTube playlists and Last.fm scrobbles.
 
@@ -149,19 +155,19 @@ function Sync-All {
     sync
     Same as above using the 'sync' alias.
     #>
-    [Alias('sync')]
-    [CmdletBinding()]
-    param()
+	[Alias('sync')]
+	[CmdletBinding()]
+	param()
 
-    $cliArgs = @('sync', 'all')
+	$cliArgs = @('sync', 'all')
 
-    Invoke-Tools @cliArgs @args
+	Invoke-Tools @cliArgs @args
 }
 #endregion CLI Wrappers
 
 #region Python Toolkit Wrappers
 function Invoke-Toolkit {
-    <#
+	<#
     .SYNOPSIS
     Invoke the Python toolkit CLI for audio, video, and filesystem operations.
 
@@ -180,14 +186,14 @@ function Invoke-Toolkit {
     Invoke-Toolkit video remux -p C:\Disc
     Remuxes a disc to MKV.
     #>
-    [CmdletBinding()]
-    param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
+	[CmdletBinding()]
+	param([Parameter(ValueFromRemainingArguments)][string[]]$Arguments)
 
-    & uv run --directory $Script:PythonRoot toolkit @Arguments
+	& uv run --directory $Script:PythonRoot toolkit @Arguments
 }
 
 function Convert-Audio {
-    <#
+	<#
     .SYNOPSIS
     Convert audio files to various formats or extract SACD ISOs.
 
@@ -211,25 +217,25 @@ function Convert-Audio {
     sacd -Directory C:\SACD -Mode extract
     Extracts SACD ISO files.
     #>
-    [Alias('sacd')]
-    [CmdletBinding()]
-    param(
-        [Alias('d')]
-        [System.IO.DirectoryInfo]$Directory = (Get-Item .),
+	[Alias('sacd')]
+	[CmdletBinding()]
+	param(
+		[Alias('d')]
+		[System.IO.DirectoryInfo]$Directory = (Get-Item .),
 
-        [Alias('m')]
-        [ValidateSet('convert', 'extract')]
-        [string]$Mode = 'convert',
+		[Alias('m')]
+		[ValidateSet('convert', 'extract')]
+		[string]$Mode = 'convert',
 
-        [Alias('f')]
-        [string]$Format = 'all'
-    )
+		[Alias('f')]
+		[string]$Format = 'all'
+	)
 
-    Invoke-Toolkit audio convert -d $Directory.FullName -m $Mode -f $Format
+	Invoke-Toolkit audio convert -d $Directory.FullName -m $Mode -f $Format
 }
 
 function Rename-AudioRed {
-    <#
+	<#
     .SYNOPSIS
     Rename files with excessively long paths for RED compatibility.
 
@@ -243,18 +249,18 @@ function Rename-AudioRed {
     Rename-AudioRed -Directory C:\Music\LongAlbumName
     Renames files with long paths.
     #>
-    [Alias('renred')]
-    [CmdletBinding()]
-    param(
-        [Alias('d')]
-        [System.IO.DirectoryInfo]$Directory = (Get-Item .)
-    )
+	[Alias('renred')]
+	[CmdletBinding()]
+	param(
+		[Alias('d')]
+		[System.IO.DirectoryInfo]$Directory = (Get-Item .)
+	)
 
-    Invoke-Toolkit audio rename -d $Directory.FullName
+	Invoke-Toolkit audio rename -d $Directory.FullName
 }
 
 function Get-AudioArtReport {
-    <#
+	<#
     .SYNOPSIS
     Report embedded artwork sizes in FLAC files.
 
@@ -268,18 +274,18 @@ function Get-AudioArtReport {
     Get-AudioArtReport -Directory C:\Music\Album
     Reports artwork sizes in the specified directory.
     #>
-    [Alias('artreport')]
-    [CmdletBinding()]
-    param(
-        [Alias('d')]
-        [System.IO.DirectoryInfo]$Directory = (Get-Item .)
-    )
+	[Alias('artreport')]
+	[CmdletBinding()]
+	param(
+		[Alias('d')]
+		[System.IO.DirectoryInfo]$Directory = (Get-Item .)
+	)
 
-    Invoke-Toolkit audio art-report -d $Directory.FullName
+	Invoke-Toolkit audio art-report -d $Directory.FullName
 }
 
 function Invoke-Remux {
-    <#
+	<#
     .SYNOPSIS
     Remux DVD/Blu-ray discs to MKV.
 
@@ -300,22 +306,24 @@ function Invoke-Remux {
     remux
     Remuxes disc in current directory.
     #>
-    [Alias('remux')]
-    [CmdletBinding()]
-    param(
-        [Alias('p')]
-        [System.IO.DirectoryInfo]$Path = (Get-Item .),
+	[Alias('remux')]
+	[CmdletBinding()]
+	param(
+		[Alias('p')]
+		[System.IO.DirectoryInfo]$Path = (Get-Item .),
 
-        [switch]$SkipMediaInfo
-    )
+		[switch]$SkipMediaInfo
+	)
 
-    $tkArgs = @('video', 'remux', '-p', $Path.FullName)
-    if ($SkipMediaInfo) { $tkArgs += '--skip-mediainfo' }
-    Invoke-Toolkit @tkArgs
+	$tkArgs = @('video', 'remux', '-p', $Path.FullName)
+	if ($SkipMediaInfo) {
+		$tkArgs += '--skip-mediainfo'
+	}
+	Invoke-Toolkit @tkArgs
 }
 
 function Compress-Video {
-    <#
+	<#
     .SYNOPSIS
     Batch compress MKV files using HandBrake.
 
@@ -329,18 +337,18 @@ function Compress-Video {
     Compress-Video -Directory C:\Videos
     Compresses all MKV files in the directory.
     #>
-    [Alias('hb')]
-    [CmdletBinding()]
-    param(
-        [Alias('d')]
-        [System.IO.DirectoryInfo]$Directory = (Get-Item .)
-    )
+	[Alias('hb')]
+	[CmdletBinding()]
+	param(
+		[Alias('d')]
+		[System.IO.DirectoryInfo]$Directory = (Get-Item .)
+	)
 
-    Invoke-Toolkit video compress -d $Directory.FullName
+	Invoke-Toolkit video compress -d $Directory.FullName
 }
 
 function Get-VideoChapters {
-    <#
+	<#
     .SYNOPSIS
     Extract chapters from video files.
 
@@ -354,17 +362,17 @@ function Get-VideoChapters {
     Get-VideoChapters -Path C:\Videos\movie.mkv
     Extracts chapters from the video file.
     #>
-    [CmdletBinding()]
-    param(
-        [Alias('p')]
-        [string]$Path = '.'
-    )
+	[CmdletBinding()]
+	param(
+		[Alias('p')]
+		[string]$Path = '.'
+	)
 
-    Invoke-Toolkit video chapters -p $Path
+	Invoke-Toolkit video chapters -p $Path
 }
 
 function Get-VideoResolutions {
-    <#
+	<#
     .SYNOPSIS
     Print resolution information for video files.
 
@@ -378,17 +386,17 @@ function Get-VideoResolutions {
     Get-VideoResolutions -Path C:\Videos
     Prints resolution info for all videos in the directory.
     #>
-    [CmdletBinding()]
-    param(
-        [Alias('p')]
-        [string]$Path = '.'
-    )
+	[CmdletBinding()]
+	param(
+		[Alias('p')]
+		[string]$Path = '.'
+	)
 
-    Invoke-Toolkit video resolutions -p $Path
+	Invoke-Toolkit video resolutions -p $Path
 }
 
 function New-Gif {
-    <#
+	<#
     .SYNOPSIS
     Create optimized GIF from video file.
 
@@ -414,31 +422,31 @@ function New-Gif {
     New-Gif -InputFile movie.mkv -Start 1:23 -Duration 10
     Creates a 10-second GIF starting at 1:23.
     #>
-    [Alias('gif')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        [Alias('i')]
-        [string]$InputFile,
+	[Alias('gif')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[Alias('i')]
+		[string]$InputFile,
 
-        [Alias('s')]
-        [string]$Start = '00:00',
+		[Alias('s')]
+		[string]$Start = '00:00',
 
-        [Alias('d')]
-        [int]$Duration = 30,
+		[Alias('d')]
+		[int]$Duration = 30,
 
-        [Alias('m')]
-        [int]$MaxSize = 300,
+		[Alias('m')]
+		[int]$MaxSize = 300,
 
-        [Alias('o')]
-        [string]$OutputDirectory = [System.IO.Path]::Combine([System.Environment]::GetFolderPath('Desktop'))
-    )
+		[Alias('o')]
+		[string]$OutputDirectory = [System.IO.Path]::Combine([System.Environment]::GetFolderPath('Desktop'))
+	)
 
-    Invoke-Toolkit video gif -i $InputFile -s $Start -d $Duration -m $MaxSize -o $OutputDirectory
+	Invoke-Toolkit video gif -i $InputFile -s $Start -d $Duration -m $MaxSize -o $OutputDirectory
 }
 
 function Get-VideoThumbnails {
-    <#
+	<#
     .SYNOPSIS
     Extract thumbnail grid and full-size images from video.
 
@@ -452,18 +460,18 @@ function Get-VideoThumbnails {
     Get-VideoThumbnails -Path movie.mkv
     Extracts thumbnails from the video.
     #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)]
-        [Alias('p')]
-        [string]$Path
-    )
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)]
+		[Alias('p')]
+		[string]$Path
+	)
 
-    Invoke-Toolkit video thumbnails -p $Path
+	Invoke-Toolkit video thumbnails -p $Path
 }
 
 function New-Torrent {
-    <#
+	<#
     .SYNOPSIS
     Create RED and OPS torrents for a directory.
 
@@ -484,25 +492,27 @@ function New-Torrent {
     mktor -IncludeSubdirectories
     Creates torrents for each subdirectory.
     #>
-    [Alias('mktor')]
-    [CmdletBinding()]
-    param(
-        [Alias('d')]
-        [System.IO.DirectoryInfo]$Directory = (Get-Item .),
+	[Alias('mktor')]
+	[CmdletBinding()]
+	param(
+		[Alias('d')]
+		[System.IO.DirectoryInfo]$Directory = (Get-Item .),
 
-        [switch]$IncludeSubdirectories
-    )
+		[switch]$IncludeSubdirectories
+	)
 
-    $tkArgs = @('filesystem', 'torrents', '-d', $Directory.FullName)
-    if ($IncludeSubdirectories) { $tkArgs += '--include-subdirectories' }
-    Invoke-Toolkit @tkArgs
+	$tkArgs = @('filesystem', 'torrents', '-d', $Directory.FullName)
+	if ($IncludeSubdirectories) {
+		$tkArgs += '--include-subdirectories'
+	}
+	Invoke-Toolkit @tkArgs
 }
 
 #endregion Python Toolkit Wrappers
 
 #region Whisper Transcription
 function Invoke-Whisper {
-    <#
+	<#
     .SYNOPSIS
     Transcribe audio/video files using whisper-ctranslate2.
 
@@ -542,82 +552,111 @@ function Invoke-Whisper {
     Invoke-Whisper interview.mp3 -Translate
     Transcribes and translates to English.
     #>
-    [Alias('whisper')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('FilePath', 'FullName', 'Path')]
-        [string]$InputPath,
+	[Alias('whisper')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+		[Alias('FilePath', 'FullName', 'Path')]
+		[string]$InputPath,
 
-        [Alias('l')]
-        [ValidateSet([WhisperLanguageCompleter])]
-        [string]$Language,
+		[Alias('l')]
+		[ValidateSet([WhisperLanguageCompleter])]
+		[string]$Language,
 
-        [Alias('m')]
-        [ValidateSet([WhisperModelCompleter])]
-        [string]$Model = 'medium',
+		[Alias('m')]
+		[ValidateSet([WhisperModelCompleter])]
+		[string]$Model = 'medium',
 
-        [Alias('t')]
-        [switch]$Translate,
+		[Alias('t')]
+		[switch]$Translate,
 
-        [Alias('q')]
-        [switch]$Quiet,
+		[Alias('q')]
+		[switch]$Quiet,
 
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]$ExtraArgs
-    )
+		[Parameter(ValueFromRemainingArguments)]
+		[string[]]$ExtraArgs
+	)
 
-    begin {
-        Assert-CommandExists 'whisper-ctranslate2'
-        $toProcess = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
-        $skipped = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
-    }
+	begin {
+		Assert-CommandExists 'whisper-ctranslate2'
+		$toProcess = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+		$skipped = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+	}
 
-    process {
-        $item = Get-Item $InputPath
-        $files = if ($item.PSIsContainer) { Get-MediaFiles $item } else { @($item) }
+	process {
+		$item = Get-Item $InputPath
+		$files = if ($item.PSIsContainer) {
+			Get-MediaFiles $item
+		}
+		else {
+			@($item)
+		}
 
-        foreach ($file in $files) {
-            if (Test-SrtExists $file.FullName) { $skipped.Add($file) }
-            else { $toProcess.Add($file) }
-        }
-    }
+		foreach ($file in $files) {
+			if (Test-SrtExists $file.FullName) {
+				$skipped.Add($file)
+			}
+			else {
+				$toProcess.Add($file)
+			}
+		}
+	}
 
-    end {
-        if ($skipped.Count -gt 0) {
-            Write-Log "Skipped $($skipped.Count) (SRT exists)"
-        }
+	end {
+		if ($skipped.Count -gt 0) {
+			Write-Log "Skipped $( $skipped.Count ) (SRT exists)"
+		}
 
-        if ($toProcess.Count -eq 0) {
-            Write-Log "Nothing to transcribe"
-            return
-        }
+		if ($toProcess.Count -eq 0) {
+			Write-Log 'Nothing to transcribe'
+			return
+		}
 
-        $langDisplay = if ($Language) { $Language } else { 'auto' }
-        Write-Log "Transcribing $($toProcess.Count) file(s) | Model: $Model | Language: $langDisplay"
+		$langDisplay = if ($Language) {
+			$Language
+		}
+		else {
+			'auto'
+		}
+		Write-Log "Transcribing $( $toProcess.Count ) file(s) | Model: $Model | Language: $langDisplay"
 
-        $i = 0
-        foreach ($file in $toProcess) {
-            $i++
-            Write-Log "[$i/$($toProcess.Count)] $($file.Name)"
+		$i = 0
+		foreach ($file in $toProcess) {
+			$i++
+			Write-Log "[$i/$( $toProcess.Count )] $( $file.Name )"
 
-            $whisperArgs = @('--model', $Model, '--output_format', 'srt', '--verbose', $(if ($Quiet) { 'False' } else { 'True' }))
-            if ($Language) { $whisperArgs += '--language', $Language }
-            if ($Translate) { $whisperArgs += '--task', 'translate' }
-            if ($ExtraArgs) { $whisperArgs += $ExtraArgs }
-            $whisperArgs += $file.FullName
+			$whisperArgs = @('--model', $Model, '--output_format', 'srt', '--verbose', $( if ($Quiet) {
+				'False'
+			}
+			else {
+				'True'
+			} ))
+			if ($Language) {
+				$whisperArgs += '--language', $Language
+			}
+			if ($Translate) {
+				$whisperArgs += '--task', 'translate'
+			}
+			if ($ExtraArgs) {
+				$whisperArgs += $ExtraArgs
+			}
+			$whisperArgs += $file.FullName
 
-            $env:PYTHONWARNINGS = 'ignore::DeprecationWarning,ignore::UserWarning'
-            try { & whisper-ctranslate2 @whisperArgs }
-            finally { $env:PYTHONWARNINGS = $null }
-        }
+			$env:PYTHONWARNINGS = 'ignore::DeprecationWarning,ignore::UserWarning'
+			try {
+				& whisper-ctranslate2 @whisperArgs
+			}
+			finally {
+				$env:PYTHONWARNINGS = $null
+			}
+		}
 
-        Write-Log "Completed $i file(s)"
-    }
+		Write-Log "Completed $i file(s)"
+	}
 }
 
 function Invoke-WhisperJapanese {
-    <#
+	<#
     .SYNOPSIS
     Transcribe Japanese audio/video content.
 
@@ -645,30 +684,30 @@ function Invoke-WhisperJapanese {
     wpj video.mp4 -Translate
     Transcribes Japanese and translates to English using 'wpj' alias.
     #>
-    [Alias('wpj')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('FilePath', 'FullName', 'Path')]
-        [string]$InputPath,
+	[Alias('wpj')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+		[Alias('FilePath', 'FullName', 'Path')]
+		[string]$InputPath,
 
-        [Alias('t')]
-        [switch]$Translate,
+		[Alias('t')]
+		[switch]$Translate,
 
-        [Alias('q')]
-        [switch]$Quiet,
+		[Alias('q')]
+		[switch]$Quiet,
 
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]$ExtraArgs
-    )
+		[Parameter(ValueFromRemainingArguments)]
+		[string[]]$ExtraArgs
+	)
 
-    process {
-        Invoke-Whisper $InputPath -Language ja -Translate:$Translate -Quiet:$Quiet @ExtraArgs
-    }
+	process {
+		Invoke-Whisper $InputPath -Language ja -Translate:$Translate -Quiet:$Quiet @ExtraArgs
+	}
 }
 
 function Invoke-WhisperEnglish {
-    <#
+	<#
     .SYNOPSIS
     Transcribe English audio/video using the fast distilled model.
 
@@ -693,29 +732,29 @@ function Invoke-WhisperEnglish {
     whisp lecture.mp4
     Transcribes using the 'whisp' alias.
     #>
-    [Alias('whisp')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [Alias('FilePath', 'FullName', 'Path')]
-        [string]$InputPath,
+	[Alias('whisp')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+		[Alias('FilePath', 'FullName', 'Path')]
+		[string]$InputPath,
 
-        [Alias('q')]
-        [switch]$Quiet,
+		[Alias('q')]
+		[switch]$Quiet,
 
-        [Parameter(ValueFromRemainingArguments)]
-        [string[]]$ExtraArgs
-    )
+		[Parameter(ValueFromRemainingArguments)]
+		[string[]]$ExtraArgs
+	)
 
-    process {
-        Invoke-Whisper $InputPath -Language en -Model 'distil-large-v3.5' -Quiet:$Quiet @ExtraArgs
-    }
+	process {
+		Invoke-Whisper $InputPath -Language en -Model 'distil-large-v3.5' -Quiet:$Quiet @ExtraArgs
+	}
 }
 #endregion Whisper Transcription
 
 #region YouTube
 function Save-YouTubeDownload {
-    <#
+	<#
     .SYNOPSIS
     Download YouTube videos and optionally transcribe them.
 
@@ -744,37 +783,45 @@ function Save-YouTubeDownload {
     Save-YouTubeDownload $url1, $url2 -Translate
     Downloads multiple videos and translates non-English audio.
     #>
-    [Alias('ytdl')]
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, Position = 0)]
-        [string[]]$Urls,
+	[Alias('ytdl')]
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory, Position = 0)]
+		[string[]]$Urls,
 
-        [Alias('n')]
-        [switch]$NoTranscribe,
+		[Alias('n')]
+		[switch]$NoTranscribe,
 
-        [Alias('t')]
-        [switch]$Translate
-    )
+		[Alias('t')]
+		[switch]$Translate
+	)
 
-    foreach ($url in $Urls) {
-        Write-Log "Downloading: $url"
+	foreach ($url in $Urls) {
+		Write-Log "Downloading: $url"
 
-        $filePath = & yt-dlp --print filename $url --windows-filenames -o '%(title)s.%(ext)s'
-        if (Test-Path $filePath) { Remove-Item $filePath -Force }
-        & yt-dlp $url --windows-filenames -o '%(title)s.%(ext)s'
+		$filePath = & yt-dlp --print filename $url --windows-filenames -o '%(title)s.%(ext)s'
+		if (Test-Path $filePath) {
+			Remove-Item $filePath -Force
+		}
+		& yt-dlp $url --windows-filenames -o '%(title)s.%(ext)s'
 
-        if ($NoTranscribe -or -not (Test-Path $filePath)) { continue }
+		if ($NoTranscribe -or -not (Test-Path $filePath)) {
+			continue
+		}
 
-        if ($Translate) { Invoke-Whisper $filePath -Translate }
-        else { Invoke-Whisper $filePath -Language en -Model 'distil-large-v3.5' }
-    }
+		if ($Translate) {
+			Invoke-Whisper $filePath -Translate
+		}
+		else {
+			Invoke-Whisper $filePath -Language en -Model 'distil-large-v3.5'
+		}
+	}
 }
 #endregion YouTube
 
 #region Scheduled Tasks
 function Register-LastFmSyncTask {
-    <#
+	<#
     .SYNOPSIS
     Register Last.fm sync scheduled task.
 
@@ -786,15 +833,15 @@ function Register-LastFmSyncTask {
     Register-LastFmSyncTask
     Registers Last.fm sync at 09:00 AM.
     #>
-    [Alias('reglfm')]
-    [CmdletBinding()]
-    param()
+	[Alias('reglfm')]
+	[CmdletBinding()]
+	param()
 
-    Register-SyncTaskInternal -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime $Script:SyncTime -Description "Sync Last.fm scrobbles ($Script:SyncTime daily)"
+	Register-SyncTaskInternal -TaskName 'LastFmSync' -Command 'sync lastfm' -DailyTime $Script:SyncTime -Description "Sync Last.fm scrobbles ($Script:SyncTime daily)"
 }
 
 function Register-YouTubeSyncTask {
-    <#
+	<#
     .SYNOPSIS
     Register YouTube sync scheduled task.
 
@@ -806,16 +853,16 @@ function Register-YouTubeSyncTask {
     Register-YouTubeSyncTask
     Registers YouTube sync at 09:00 AM.
     #>
-    [Alias('regyt')]
-    [CmdletBinding()]
-    param()
+	[Alias('regyt')]
+	[CmdletBinding()]
+	param()
 
-    Register-SyncTaskInternal -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime $Script:SyncTime -Description "Sync YouTube playlists ($Script:SyncTime daily)"
+	Register-SyncTaskInternal -TaskName 'YouTubeSync' -Command 'sync yt' -DailyTime $Script:SyncTime -Description "Sync YouTube playlists ($Script:SyncTime daily)"
 }
 
 
 function Register-AllSyncTasks {
-    <#
+	<#
     .SYNOPSIS
     Compile tools.exe and register all sync scheduled tasks.
 
@@ -826,18 +873,18 @@ function Register-AllSyncTasks {
 
     Tasks use StartWhenAvailable to catch up missed runs.
     #>
-    [Alias('regall')]
-    [CmdletBinding()]
-    param()
+	[Alias('regall')]
+	[CmdletBinding()]
+	param()
 
-    Assert-NetworkAvailable
-    Build-Tools
-    Register-LastFmSyncTask
-    Register-YouTubeSyncTask
+	Assert-NetworkAvailable
+	Build-Tools
+	Register-LastFmSyncTask
+	Register-YouTubeSyncTask
 }
 
 function Build-Tools {
-    <#
+	<#
     .SYNOPSIS
     Compile the C# project to tools.exe.
 
@@ -848,59 +895,62 @@ function Build-Tools {
     Build-Tools
     Compiles the C# project.
     #>
-    [CmdletBinding()]
-    param()
+	[CmdletBinding()]
+	param()
 
-    Write-Log "Compiling tools.exe..."
-    $result = dotnet publish $Script:CSharpRoot -c Release -r win-x64 -o $Script:CSharpPublish 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Wait-OnError "Compilation failed: $result"
-    }
-    Write-Log "Compiled: $Script:ToolsExe"
+	Write-Log 'Compiling tools.exe...'
+	$result = dotnet publish $Script:CSharpRoot -c Release -r win-x64 -o $Script:CSharpPublish 2>&1
+	if ($LASTEXITCODE -ne 0) {
+		Wait-OnError "Compilation failed: $result"
+	}
+	Write-Log "Compiled: $Script:ToolsExe"
 }
 
 function Unregister-AllSyncTasks {
-    <#
+	<#
     .SYNOPSIS
     Unregister all sync scheduled tasks.
 
     .DESCRIPTION
     Removes LastFmSync and YouTubeSync scheduled tasks.
     #>
-    [Alias('unreg')]
-    [CmdletBinding()]
-    param()
+	[Alias('unreg')]
+	[CmdletBinding()]
+	param()
 
-    @('LastFmSync', 'YouTubeSync') | ForEach-Object {
-        $task = Get-ScheduledTask -TaskName $_ -ErrorAction Ignore
-        if ($task) {
-            Unregister-ScheduledTask -TaskName $_ -Confirm:$false
-            Write-Log "Removed: $_"
-        }
-    }
+	@('LastFmSync', 'YouTubeSync') | ForEach-Object {
+		$task = Get-ScheduledTask -TaskName $_ -ErrorAction Ignore
+		if ($task) {
+			Unregister-ScheduledTask -TaskName $_ -Confirm:$false
+			Write-Log "Removed: $_"
+		}
+	}
 }
 
 function Register-SyncTaskInternal {
-    <#
+	<#
     .SYNOPSIS
     Internal helper to register or update a sync scheduled task.
     #>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory)][string]$TaskName,
-        [Parameter(Mandatory)][string]$Command,
-        [Parameter(Mandatory)][TimeSpan]$DailyTime,
-        [Parameter(Mandatory)][string]$Description
-    )
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)][string]$TaskName,
+		[Parameter(Mandatory)][string]$Command,
+		[Parameter(Mandatory)][TimeSpan]$DailyTime,
+		[Parameter(Mandatory)][string]$Description
+	)
 
-    if (-not (Test-Path $Script:ToolsExe)) {
-        Wait-OnError "tools.exe not found: $Script:ToolsExe. Run Build-Tools or regall first."
-    }
+	if (-not (Test-Path $Script:ToolsExe)) {
+		Wait-OnError "tools.exe not found: $Script:ToolsExe. Run Build-Tools or regall first."
+	}
 
-    $taskScript = @"
+	# SECURITY: Quote $Command to prevent command injection via argument injection
+	# Pass command as a single safe argument rather than interpolated unquoted text
+	$taskScript = @"
 `$ErrorActionPreference = 'Continue'
 try {
-    & '$Script:ToolsExe' $Command
+    `$cmdArgs = @('$Command')
+    & '$Script:ToolsExe' `$cmdArgs
     if (`$LASTEXITCODE -ne 0) {
         Write-Log "Sync failed with exit code: `$LASTEXITCODE"
     }
@@ -909,32 +959,34 @@ catch {
     Write-Log "ERROR: `$_"
 }
 "@
-    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($taskScript))
-    $pwsh = (Get-Command pwsh).Source
+	$encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($taskScript))
+	$pwsh = (Get-Command pwsh).Source
 
-    $action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -EncodedCommand $encoded" -WorkingDirectory $Script:RepositoryRoot
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+	$action = New-ScheduledTaskAction -Execute $pwsh -Argument "-NoProfile -EncodedCommand $encoded" -WorkingDirectory $Script:RepositoryRoot
+	$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RunOnlyIfNetworkAvailable -WakeToRun -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
 
-    $start = [datetime]::Today.Add($DailyTime)
-    if ($start -le (Get-Date)) { $start = $start.AddDays(1) }
+	$start = [datetime]::Today.Add($DailyTime)
+	if ($start -le (Get-Date)) {
+		$start = $start.AddDays(1)
+	}
 
-    $dailyTrigger = New-ScheduledTaskTrigger -Daily -At $start
+	$dailyTrigger = New-ScheduledTaskTrigger -Daily -At $start
 
-    $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
-    if ($existing) {
-        Set-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings | Out-Null
-        Write-Log "Updated: $TaskName (Daily: $($start.ToString('HH:mm')))"
-    }
-    else {
-        Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings -Description $Description | Out-Null
-        Write-Log "Registered: $TaskName (Daily: $($start.ToString('HH:mm')))"
-    }
+	$existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
+	if ($existing) {
+		Set-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings | Out-Null
+		Write-Log "Updated: $TaskName (Daily: $($start.ToString('HH:mm') ))"
+	}
+	else {
+		Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $dailyTrigger -Settings $settings -Description $Description | Out-Null
+		Write-Log "Registered: $TaskName (Daily: $($start.ToString('HH:mm') ))"
+	}
 }
 #endregion Scheduled Tasks
 
 #region Log Files
 function Get-SyncLog {
-    <#
+	<#
     .SYNOPSIS
     View sync session logs.
 
@@ -989,315 +1041,461 @@ function Get-SyncLog {
     .LINK
     Get-YouTubePlaylistLog
     #>
-    [Alias('viewlog')]
-    [CmdletBinding()]
-    param(
-        [Alias('r')]
-        [switch]$Raw,
+	[Alias('viewlog')]
+	[CmdletBinding()]
+	param(
+		[Alias('r')]
+		[switch]$Raw,
 
-        [ValidateSet('yt', 'lfm', 'music', 'all')]
-        [string]$Service = 'all',
+		[ValidateSet('yt', 'lfm', 'music', 'all')]
+		[string]$Service = 'all',
 
-        [Alias('n')]
-        [int]$Size = 10,
+		[Alias('n')]
+		[int]$Size = 10,
 
-        [string]$Session,
+		[string]$Session,
 
-        [switch]$Errors,
+		[switch]$Errors,
 
-        [switch]$Asc,
+		[switch]$Asc,
 
-        [Alias('v')]
-        [switch]$Full
-    )
+		[Alias('v')]
+		[switch]$Full
+	)
 
-    $view = if ($Raw -or $Errors) { 'Raw' } else { 'Runs' }
+	$view = if ($Raw -or $Errors) {
+		'Raw'
+	}
+	else {
+		'Runs'
+	}
 
-    $serviceMap = @{ 'yt' = 'youtube'; 'lfm' = 'lastfm'; 'music' = 'music'; 'all' = 'all' }
-    $mappedService = $serviceMap[$Service]
+	$serviceMap = @{ 'yt' = 'youtube'; 'lfm' = 'lastfm'; 'music' = 'music'; 'all' = 'all' }
+	$mappedService = $serviceMap[$Service]
 
-    $logFiles = @{
-        youtube = Join-Path $Script:LogDirectory 'youtube.jsonl'
-        lastfm  = Join-Path $Script:LogDirectory 'lastfm.jsonl'
-        music   = Join-Path $Script:LogDirectory 'music.jsonl'
-    }
-    $services = if ($mappedService -eq 'all') { @('youtube', 'lastfm', 'music') } else { @($mappedService) }
+	$logFiles = @{
+		youtube = Join-Path $Script:LogDirectory 'youtube.jsonl'
+		lastfm = Join-Path $Script:LogDirectory 'lastfm.jsonl'
+		music = Join-Path $Script:LogDirectory 'music.jsonl'
+	}
+	$services = if ($mappedService -eq 'all') {
+		@('youtube', 'lastfm', 'music')
+	}
+	else {
+		@($mappedService)
+	}
 
-    $allEntries = Get-SyncLogEntriesFromFiles $services $logFiles
+	$allEntries = Get-SyncLogEntriesFromFiles $services $logFiles
 
-    if (-not $allEntries) {
-        Write-Log "No log entries found"
-        return
-    }
+	if (-not $allEntries) {
+		Write-Log 'No log entries found'
+		return
+	}
 
-    if ($Session) {
-        $allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$Session*" })
-    }
+	if ($Session) {
+		$allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$Session*" })
+	}
 
-    $allEntries = Add-SyncLogParsedTimestamp $allEntries
+	$allEntries = Add-SyncLogParsedTimestamp $allEntries
 
-    if ($Errors) {
-        $allEntries = @($allEntries | Where-Object { $_.Level -eq 'Error' })
-    }
+	if ($Errors) {
+		$allEntries = @($allEntries | Where-Object { $_.Level -eq 'Error' })
+	}
 
-    $descending = -not $Asc
+	$descending = -not $Asc
 
-    switch ($view) {
-        'Raw' {
-            $sorted = Select-SyncLogRows -Items $allEntries -Size $Size -Descending:$descending -SortProperty 'ParsedTimestamp'
-            $output = ConvertTo-SyncLogEntryOutput $sorted
-            $props = if ($Full) { @('Timestamp', 'Session', 'Service', 'Level', 'Event', 'Details') } else { @('Timestamp', 'Service', 'Level', 'Event', 'Details') }
-            $output | Format-Table -Property $props -AutoSize -Wrap | Out-Host -Paging
-        }
-        default {
-            $sessions = ConvertTo-SyncLogSessionOutput $allEntries
-            if (-not $sessions) {
-                Write-Log "No sessions found"
-                return
-            }
-            $display = Select-SyncLogRows -Items $sessions -Size $Size -Descending:$descending -SortProperty '_Sort'
-            $props = if ($Full) { @('Timestamp', 'Session', 'Service', 'Duration', 'Events', 'Status', 'Summary') } else { @('Timestamp', 'Service', 'Status', 'Summary') }
-            $display | Format-Table -Property $props -AutoSize -Wrap
-        }
-    }
+	switch ($view) {
+		'Raw' {
+			$sorted = Select-SyncLogRows -Items $allEntries -Size $Size -Descending:$descending -SortProperty 'ParsedTimestamp'
+			$output = ConvertTo-SyncLogEntryOutput $sorted
+			$props = if ($Full) {
+				@('Timestamp', 'Session', 'Service', 'Level', 'Event', 'Details')
+			}
+			else {
+				@('Timestamp', 'Service', 'Level', 'Event', 'Details')
+			}
+			$output | Format-Table -Property $props -AutoSize -Wrap | Out-Host -Paging
+		}
+		default {
+			$sessions = ConvertTo-SyncLogSessionOutput $allEntries
+			if (-not $sessions) {
+				Write-Log 'No sessions found'
+				return
+			}
+			$display = Select-SyncLogRows -Items $sessions -Size $Size -Descending:$descending -SortProperty '_Sort'
+			$props = if ($Full) {
+				@('Timestamp', 'Session', 'Service', 'Duration', 'Events', 'Status', 'Summary')
+			}
+			else {
+				@('Timestamp', 'Service', 'Status', 'Summary')
+			}
+			$display | Format-Table -Property $props -AutoSize -Wrap
+		}
+	}
 }
 
 #region SyncLog Helpers
 function ConvertTo-NormalizedLogEntry {
-    param($Entry, [string]$ServiceName)
+	param($Entry, [string]$ServiceName)
 
-    if ($Entry.'@t') {
-        $eventName = ($Entry.'@mt' -split '\s')[0]
-        $level = if ($Entry.'@l') { $Entry.'@l' } else { 'Information' }
-        $levelMap = @{ 'Verbose' = 'Debug'; 'Debug' = 'Debug'; 'Information' = 'Info'; 'Warning' = 'Warning'; 'Error' = 'Error'; 'Fatal' = 'Fatal' }
-        $displayLevel = if ($levelMap[$level]) { $levelMap[$level] } else { $level }
+	if ($Entry.'@t') {
+		$eventName = ($Entry.'@mt' -split '\s')[0]
+		$level = if ($Entry.'@l') {
+			$Entry.'@l'
+		}
+		else {
+			'Information'
+		}
+		$levelMap = @{ 'Verbose' = 'Debug'; 'Debug' = 'Debug'; 'Information' = 'Info'; 'Warning' = 'Warning'; 'Error' = 'Error'; 'Fatal' = 'Fatal' }
+		$displayLevel = if ($levelMap[$level]) {
+			$levelMap[$level]
+		}
+		else {
+			$level
+		}
 
-        $dataProps = @{}
-        foreach ($prop in $Entry.PSObject.Properties) {
-            if ($prop.Name -notmatch '^@' -and $prop.Name -ne 'Service') {
-                $dataProps[$prop.Name] = $prop.Value
-            }
-        }
+		$dataProps = @{ }
+		foreach ($prop in $Entry.PSObject.Properties) {
+			if ($prop.Name -notmatch '^@' -and $prop.Name -ne 'Service') {
+				$dataProps[$prop.Name] = $prop.Value
+			}
+		}
 
-        $normalized = [PSCustomObject]@{
-            Timestamp = $Entry.'@t'
-            Level     = $displayLevel
-            Event     = $eventName
-            SessionId = $Entry.SessionId
-            Data      = [PSCustomObject]$dataProps
-            Service   = $ServiceName
-        }
-        $normalized
-    }
-    else {
-        $Entry | Add-Member -NotePropertyName 'Service' -NotePropertyValue $ServiceName -Force -PassThru
-    }
+		$normalized = [PSCustomObject]@{
+			Timestamp = $Entry.'@t'
+			Level = $displayLevel
+			Event = $eventName
+			SessionId = $Entry.SessionId
+			Data = [PSCustomObject]$dataProps
+			Service = $ServiceName
+		}
+		$normalized
+	}
+	else {
+		$Entry | Add-Member -NotePropertyName 'Service' -NotePropertyValue $ServiceName -Force -PassThru
+	}
 }
 
 function Get-SyncLogEntriesFromFiles {
-    param(
-        [string[]]$Services,
-        [hashtable]$LogFiles
-    )
+	param(
+		[string[]]$Services,
+		[hashtable]$LogFiles
+	)
 
-    foreach ($svc in $Services) {
-        $path = $LogFiles[$svc]
-        if (Test-Path $path) {
-            Get-Content $path | ForEach-Object {
-                $raw = $_ | ConvertFrom-Json
-                ConvertTo-NormalizedLogEntry -Entry $raw -ServiceName $svc
-            }
-        }
-    }
+	foreach ($svc in $Services) {
+		$path = $LogFiles[$svc]
+		if (Test-Path $path) {
+			Get-Content $path | ForEach-Object {
+				$raw = $_ | ConvertFrom-Json
+				ConvertTo-NormalizedLogEntry -Entry $raw -ServiceName $svc
+			}
+		}
+	}
 }
 
 function Add-SyncLogParsedTimestamp {
-    param([object[]]$Entries)
+	param([object[]]$Entries)
 
-    $Entries | Where-Object { $_.SessionId -and $_.Timestamp } | ForEach-Object {
-        $parsed = $null
-        $ts = $_.Timestamp
+	$Entries | Where-Object { $_.SessionId -and $_.Timestamp } | ForEach-Object {
+		$parsed = $null
+		$ts = $_.Timestamp
 
-        if ($ts -is [datetime]) {
-            $parsed = $ts
-        }
-        elseif ($ts -match 'T.*Z$') {
-            $parsed = try { [datetime]::Parse($ts, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::RoundtripKind) } catch { $null }
-        }
+		if ($ts -is [datetime]) {
+			$parsed = $ts
+		}
+		elseif ($ts -match 'T.*Z$') {
+			$parsed = try {
+				[datetime]::Parse($ts, [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::RoundtripKind)
+			}
+			catch {
+				$null
+			}
+		}
 
-        if (-not $parsed) {
-            $parsed = try { [datetime]::ParseExact($ts, $Script:DATETIME_FORMAT, [System.Globalization.CultureInfo]::InvariantCulture) } catch { try { [datetime]$ts } catch { $null } }
-        }
+		if (-not $parsed) {
+			$parsed = try {
+				[datetime]::ParseExact($ts, $Script:DATETIME_FORMAT, [System.Globalization.CultureInfo]::InvariantCulture)
+			}
+			catch {
+				try {
+					[datetime]$ts
+				}
+				catch {
+					$null
+				}
+			}
+		}
 
-        if ($parsed) {
-            if ($parsed.Kind -eq [System.DateTimeKind]::Utc) {
-                $parsed = $parsed.ToLocalTime()
-            }
-            $_ | Add-Member -NotePropertyName 'ParsedTimestamp' -NotePropertyValue $parsed -Force -PassThru
-        }
-    } | Where-Object ParsedTimestamp
+		if ($parsed) {
+			if ($parsed.Kind -eq [System.DateTimeKind]::Utc) {
+				$parsed = $parsed.ToLocalTime()
+			}
+			$_ | Add-Member -NotePropertyName 'ParsedTimestamp' -NotePropertyValue $parsed -Force -PassThru
+		}
+	} | Where-Object ParsedTimestamp
 }
 
 function Get-SyncLogEntryDetails {
-    param($Entry)
+	param($Entry)
 
-    $entryData = $Entry.Data
-    if (-not $entryData) { return '' }
+	$entryData = $Entry.Data
+	if (-not $entryData) {
+		return ''
+	}
 
-    $parts = $entryData.PSObject.Properties | Where-Object { $_.Name -notin 'Service', 'ProcessId' } | ForEach-Object {
-        $val = if ($_.Value -is [array]) { $_.Value -join ', ' } else { $_.Value }
-        "$($_.Name): $val"
-    }
+	$parts = $entryData.PSObject.Properties | Where-Object { $_.Name -notin 'Service', 'ProcessId' } | ForEach-Object {
+		$val = if ($_.Value -is [array]) {
+			$_.Value -join ', '
+		}
+		else {
+			$_.Value
+		}
+		"$( $_.Name ): $val"
+	}
 
-    $parts -join "`n"
+	$parts -join "`n"
 }
 
 function ConvertTo-SyncLogEntryOutput {
-    param([object[]]$Entries)
+	param([object[]]$Entries)
 
-    $svcMap = @{ 'youtube' = 'YouTube'; 'lastfm' = 'LastFM' }
-    $Entries | ForEach-Object {
-        [PSCustomObject]@{
-            Timestamp = $_.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
-            Session   = $_.SessionId?.Substring(0, 8) ?? ''
-            Service   = $svcMap[$_.Service] ?? $_.Service
-            Level     = $_.Level
-            Event     = $_.Event
-            Details   = Get-SyncLogEntryDetails $_
-        }
-    }
+	$svcMap = @{ 'youtube' = 'YouTube'; 'lastfm' = 'LastFM' }
+	$Entries | ForEach-Object {
+		[PSCustomObject]@{
+			Timestamp = $_.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
+			Session = $_.SessionId?.Substring(0, 8) ?? ''
+			Service = $svcMap[$_.Service] ?? $_.Service
+			Level = $_.Level
+			Event = $_.Event
+			Details = Get-SyncLogEntryDetails $_
+		}
+	}
 }
 
 function Format-YouTubePlaylistSimple {
-    <#
+	<#
     .SYNOPSIS
     Simple compact view of YouTube playlist changes with per-playlist tables.
     #>
-    param([object[]]$Entries)
+	param([object[]]$Entries)
 
-    foreach ($entry in $Entries) {
-        $data = $entry.Data
-        $timestamp = $entry.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
-        $playlist = $data.Title
-        $added = if ($data.Added) { $data.Added } elseif ($entry.Event -eq 'PlaylistCreated' -and $data.Videos) { $data.Videos } else { 0 }
-        $removed = if ($data.Removed) { $data.Removed } else { 0 }
+	foreach ($entry in $Entries) {
+		$data = $entry.Data
+		$timestamp = $entry.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
+		$playlist = $data.Title
+		$added = if ($data.Added) {
+			$data.Added
+		}
+		elseif ($entry.Event -eq 'PlaylistCreated' -and $data.Videos) {
+			$data.Videos
+		}
+		else {
+			0
+		}
+		$removed = if ($data.Removed) {
+			$data.Removed
+		}
+		else {
+			0
+		}
 
-        Write-Log "Playlist: $playlist ($timestamp) [+$added/-$removed]"
+		Write-Log "Playlist: $playlist ($timestamp) [+$added/-$removed]"
 
-        if ($data.AddedVideos -and $data.AddedVideos.Count -gt 0) {
-            foreach ($video in $data.AddedVideos) {
-                Write-Log "  + $video" 'OK'
-            }
-        }
+		if ($data.AddedVideos -and $data.AddedVideos.Count -gt 0) {
+			foreach ($video in $data.AddedVideos) {
+				Write-Log "  + $video" 'OK'
+			}
+		}
 
-        if ($data.RemovedVideos -and $data.RemovedVideos.Count -gt 0) {
-            foreach ($video in $data.RemovedVideos) {
-                Write-Log "  - $video" 'ERROR'
-            }
-        }
-    }
+		if ($data.RemovedVideos -and $data.RemovedVideos.Count -gt 0) {
+			foreach ($video in $data.RemovedVideos) {
+				Write-Log "  - $video" 'ERROR'
+			}
+		}
+	}
 }
 
 function Format-YouTubePlaylistDetailed {
-    <#
+	<#
     .SYNOPSIS
     Detailed view of YouTube playlist changes with session IDs and full video lists.
     #>
-    param([object[]]$Entries)
+	param([object[]]$Entries)
 
-    foreach ($entry in $Entries) {
-        $data = $entry.Data
-        $timestamp = $entry.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
-        $playlist = $data.Title
-        $added = if ($data.Added) { $data.Added } elseif ($entry.Event -eq 'PlaylistCreated' -and $data.Videos) { $data.Videos } else { 0 }
-        $removed = if ($data.Removed) { $data.Removed } else { 0 }
-        $session = $entry.SessionId.Substring(0, 8)
+	foreach ($entry in $Entries) {
+		$data = $entry.Data
+		$timestamp = $entry.ParsedTimestamp.ToString('yyyy\/MM\/dd HH:mm')
+		$playlist = $data.Title
+		$added = if ($data.Added) {
+			$data.Added
+		}
+		elseif ($entry.Event -eq 'PlaylistCreated' -and $data.Videos) {
+			$data.Videos
+		}
+		else {
+			0
+		}
+		$removed = if ($data.Removed) {
+			$data.Removed
+		}
+		else {
+			0
+		}
+		$session = $entry.SessionId.Substring(0, 8)
 
-        Write-Log "Session: $session | Playlist: $playlist ($timestamp) [+$added/-$removed]"
+		Write-Log "Session: $session | Playlist: $playlist ($timestamp) [+$added/-$removed]"
 
-        if ($data.AddedVideos) {
-            foreach ($video in $data.AddedVideos) {
-                Write-Log "        + $video" 'OK'
-            }
-        }
+		if ($data.AddedVideos) {
+			foreach ($video in $data.AddedVideos) {
+				Write-Log "        + $video" 'OK'
+			}
+		}
 
-        if ($data.RemovedVideos) {
-            foreach ($video in $data.RemovedVideos) {
-                Write-Log "        - $video" 'ERROR'
-            }
-        }
-    }
+		if ($data.RemovedVideos) {
+			foreach ($video in $data.RemovedVideos) {
+				Write-Log "        - $video" 'ERROR'
+			}
+		}
+	}
 }
 
 function ConvertTo-SyncLogSessionOutput {
-    param([object[]]$Entries)
+	param([object[]]$Entries)
 
-    $Entries | Group-Object SessionId | ForEach-Object {
-        $group = @($_.Group | Sort-Object ParsedTimestamp)
-        $first = $group[0]
-        if (-not $first -or -not $first.SessionId) { return }
+	$Entries | Group-Object SessionId | ForEach-Object {
+	$group = @($_.Group | Sort-Object ParsedTimestamp)
+	$first = $group[0]
+	if (-not $first -or -not $first.SessionId) {
+	return
+	}
 
-        $startTime = $first.ParsedTimestamp
-        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endEvent')]
-        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endData')]
-        $endEvent = @($group | Where-Object { $_.Event -eq 'SessionEnd' })[0]
-        $endData = if ($endEvent) { $endEvent.Data } else { $null }
-        $endTime = if ($endEvent) { $endEvent.ParsedTimestamp } else { $null }
-        $summary = if ($endData) { $endData.Summary } else { '-' }
+	$startTime = $first.ParsedTimestamp
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endEvent')]
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'endData')]
+	$endEvent = @($group | Where-Object {
+	$_.Event -eq 'SessionEnd'
+	})[0]
+	$endData = if ($endEvent) {
+	$endEvent.Data
+	}
+	else {
+	$null
+	}
+	$endTime = if ($endEvent) {
+	$endEvent.ParsedTimestamp
+	}
+	else {
+	$null
+	}
+	$summary = if ($endData) {
+	$endData.Summary
+	}
+	else {
+	'-'
+	}
 
-        $hasError = [bool]($group | Where-Object { $_.Level -eq 'Error' })
-        $interrupted = [bool]($group | Where-Object { $_.Event -eq 'SessionInterrupted' })
-        $crashed = [bool]($group | Where-Object { $_.Event -eq 'SessionCrashed' })
-        $endStatus = if ($endData) { $endData.Status } else { $null }
+	$hasError = [bool]($group | Where-Object {
+	$_.Level -eq 'Error'
+	})
+	$interrupted = [bool]($group | Where-Object {
+	$_.Event -eq 'SessionInterrupted'
+	})
+	$crashed = [bool]($group | Where-Object {
+	$_.Event -eq 'SessionCrashed'
+	})
+	$endStatus = if ($endData) {
+	$endData.Status
+	}
+	else {
+	$null
+	}
 
-        $status = switch ($true) {
-            { -not $endTime -and ((Get-Date) - $startTime).TotalHours -lt 2 } { 'Running'; break }
-            { -not $endTime } { 'Crashed'; break }
-            { $crashed } { 'Crashed'; break }
-            { $interrupted } { 'Interrupted'; break }
-            { $hasError } { 'Failed'; break }
-            { $endStatus } { $endStatus; break }
-            default { 'Completed' }
-        }
+	$status = switch ($true) {
+	{
+	-not $endTime -and ((Get-Date) - $startTime).TotalHours -lt 2
+	} {
+	'Running'; break
+	}
+	{
+	-not $endTime
+	} {
+	'Crashed'; break
+	}
+	{
+	$crashed
+	} {
+	'Crashed'; break
+	}
+	{
+	$interrupted
+	} {
+	'Interrupted'; break
+	}
+	{
+	$hasError
+	} {
+	'Failed'; break
+	}
+	{
+	$endStatus
+	} {
+	$endStatus; break
+	}
+	default {
+	'Completed'
+	}
+	}
 
-        $dur = if ($endTime) { $endTime - $startTime } else { $null }
-        $durStr = if ($dur) { '{0:mm\:ss}' -f $dur } else { '-' }
-        $svcMap = @{ 'youtube' = 'YouTube'; 'lastfm' = 'LastFM' }
+	$dur = if ($endTime) {
+	$endTime - $startTime
+	}
+	else {
+	$null
+	}
+	$durStr = if ($dur) {
+	'{0:mm\:ss}' -f $dur
+	}
+	else {
+	'-'
+	}
+	$svcMap = @{
+	'youtube' = 'YouTube'; 'lastfm' = 'LastFM'
+	}
 
-        [PSCustomObject]@{
-            Timestamp = $startTime.ToString('yyyy\/MM\/dd HH:mm')
-            Session   = $first.SessionId.Substring(0, 8)
-            Service   = $svcMap[$first.Service] ?? $first.Service
-            Duration  = $durStr
-            Events    = $group.Count
-            Status    = $status
-            Summary   = $summary
-            _Sort     = $startTime
-        }
-    }
+	[PSCustomObject]@{
+	Timestamp = $startTime.ToString('yyyy\/MM\/dd HH:mm')
+	Session = $first.SessionId.Substring(0, 8)
+	Service = $svcMap[$first.Service] ?? $first.Service
+	Duration = $durStr
+	Events = $group.Count
+	Status = $status
+	Summary = $summary
+	_Sort = $startTime
+	}
+	}
 }
 
 function Select-SyncLogRows {
-    param(
-        [object[]]$Items,
-        [int]$Size,
-        [switch]$Descending,
-        [string]$SortProperty
-    )
+	param(
+		[object[]]$Items,
+		[int]$Size,
+		[switch]$Descending,
+		[string]$SortProperty
+	)
 
-    $selected = $Items | Sort-Object -Property $SortProperty -Descending | Select-Object -First $Size
+	$selected = $Items | Sort-Object -Property $SortProperty -Descending | Select-Object -First $Size
 
-    if ($Descending) {
-        $selected
-    }
-    else {
-        $selected | Sort-Object -Property $SortProperty
-    }
+	if ($Descending) {
+		$selected
+	}
+	else {
+		$selected | Sort-Object -Property $SortProperty
+	}
 }
 #endregion SyncLog Helpers
 
 function Get-SyncStatus {
-    <#
+	<#
     .SYNOPSIS
     Quick health check for sync services.
 
@@ -1312,50 +1510,75 @@ function Get-SyncStatus {
     syncstatus
     Same as above using the alias.
     #>
-    [Alias('syncstatus')]
-    [CmdletBinding()]
-    param()
+	[Alias('syncstatus')]
+	[CmdletBinding()]
+	param()
 
-    $logFiles = @{
-        youtube = Join-Path $Script:LogDirectory 'youtube.jsonl'
-        lastfm  = Join-Path $Script:LogDirectory 'lastfm.jsonl'
-    }
+	$logFiles = @{
+		youtube = Join-Path $Script:LogDirectory 'youtube.jsonl'
+		lastfm = Join-Path $Script:LogDirectory 'lastfm.jsonl'
+	}
 
-    $results = foreach ($svc in @('youtube', 'lastfm')) {
-        $path = $logFiles[$svc]
-        if (-not (Test-Path $path)) {
-            [PSCustomObject]@{ Service = $svc; LastSync = '-'; Status = 'No logs'; Age = '-' }
-            continue
-        }
+	$results = foreach ($svc in @('youtube', 'lastfm')) {
+		$path = $logFiles[$svc]
+		if (-not (Test-Path $path)) {
+			[PSCustomObject]@{ Service = $svc; LastSync = '-'; Status = 'No logs'; Age = '-' }
+			continue
+		}
 
-        $entries = Get-Content $path | ForEach-Object { $_ | ConvertFrom-Json }
-        $sessions = $entries | Where-Object { $_.Event -eq 'SessionEnd' -or $_.Event -eq 'SessionInterrupted' } |
-        Sort-Object { try { [datetime]::ParseExact($_.Timestamp, $Script:DATETIME_FORMAT, $null) } catch { [datetime]$_.Timestamp } } -Descending |
-        Select-Object -First 1
+		$entries = Get-Content $path | ForEach-Object { $_ | ConvertFrom-Json }
+		$sessions = $entries | Where-Object { $_.Event -eq 'SessionEnd' -or $_.Event -eq 'SessionInterrupted' } |
+			Sort-Object {
+				try {
+					[datetime]::ParseExact($_.Timestamp, $Script:DATETIME_FORMAT, $null)
+				}
+				catch {
+					[datetime]$_.Timestamp
+				}
+			} -Descending |
+			Select-Object -First 1
 
-        if (-not $sessions) {
-            [PSCustomObject]@{ Service = $svc; LastSync = '-'; Status = 'No completed sessions'; Age = '-' }
-            continue
-        }
+		if (-not $sessions) {
+			[PSCustomObject]@{ Service = $svc; LastSync = '-'; Status = 'No completed sessions'; Age = '-' }
+			continue
+		}
 
-        $ts = try { [datetime]::ParseExact($sessions.Timestamp, $Script:DATETIME_FORMAT, $null) } catch { [datetime]$sessions.Timestamp }
-        $age = (Get-Date) - $ts
-        $ageStr = if ($age.TotalDays -ge 1) { "$([int]$age.TotalDays)d ago" } elseif ($age.TotalHours -ge 1) { "$([int]$age.TotalHours)h ago" } else { "$([int]$age.TotalMinutes)m ago" }
-        $status = if ($sessions.Data.Status) { $sessions.Data.Status } else { 'Unknown' }
+		$ts = try {
+			[datetime]::ParseExact($sessions.Timestamp, $Script:DATETIME_FORMAT, $null)
+		}
+		catch {
+			[datetime]$sessions.Timestamp
+		}
+		$age = (Get-Date) - $ts
+		$ageStr = if ($age.TotalDays -ge 1) {
+			"$( [int]$age.TotalDays )d ago"
+		}
+		elseif ($age.TotalHours -ge 1) {
+			"$( [int]$age.TotalHours )h ago"
+		}
+		else {
+			"$( [int]$age.TotalMinutes )m ago"
+		}
+		$status = if ($sessions.Data.Status) {
+			$sessions.Data.Status
+		}
+		else {
+			'Unknown'
+		}
 
-        [PSCustomObject]@{
-            Service  = $svc
-            LastSync = $ts.ToString('yyyy\/MM\/dd HH:mm')
-            Status   = $status
-            Age      = $ageStr
-        }
-    }
+		[PSCustomObject]@{
+			Service = $svc
+			LastSync = $ts.ToString('yyyy\/MM\/dd HH:mm')
+			Status = $status
+			Age = $ageStr
+		}
+	}
 
-    $results | Format-Table -AutoSize
+	$results | Format-Table -AutoSize
 }
 
 function Get-YouTubePlaylistLog {
-    <#
+	<#
     .SYNOPSIS
     View YouTube playlist changes.
 
@@ -1399,62 +1622,62 @@ function Get-YouTubePlaylistLog {
     .LINK
     Get-SyncLog
     #>
-    [Alias('ytlog')]
-    [CmdletBinding()]
-    param(
-        [Alias('n')]
-        [int]$Size = 10,
+	[Alias('ytlog')]
+	[CmdletBinding()]
+	param(
+		[Alias('n')]
+		[int]$Size = 10,
 
-        [string]$Session,
+		[string]$Session,
 
-        [switch]$Changes,
+		[switch]$Changes,
 
-        [switch]$Asc,
+		[switch]$Asc,
 
-        [Alias('v')]
-        [switch]$Full
-    )
+		[Alias('v')]
+		[switch]$Full
+	)
 
-    $logPath = Join-Path $Script:LogDirectory 'youtube.jsonl'
-    if (-not (Test-Path $logPath)) {
-        Write-Log "No YouTube log found"
-        return
-    }
+	$logPath = Join-Path $Script:LogDirectory 'youtube.jsonl'
+	if (-not (Test-Path $logPath)) {
+		Write-Log 'No YouTube log found'
+		return
+	}
 
-    $allEntries = Get-Content $logPath | ForEach-Object {
-        $raw = $_ | ConvertFrom-Json
-        ConvertTo-NormalizedLogEntry -Entry $raw -ServiceName 'youtube'
-    }
+	$allEntries = Get-Content $logPath | ForEach-Object {
+		$raw = $_ | ConvertFrom-Json
+		ConvertTo-NormalizedLogEntry -Entry $raw -ServiceName 'youtube'
+	}
 
-    if ($Session) {
-        $allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$Session*" })
-    }
+	if ($Session) {
+		$allEntries = @($allEntries | Where-Object { $_.SessionId -and $_.SessionId -like "$Session*" })
+	}
 
-    $allEntries = Add-SyncLogParsedTimestamp $allEntries
+	$allEntries = Add-SyncLogParsedTimestamp $allEntries
 
-    $playlistEntries = @($allEntries | Where-Object { $_.Event -eq 'PlaylistUpdated' -or $_.Event -eq 'PlaylistCreated' })
-    if ($Changes) {
-        $playlistEntries = @($playlistEntries | Where-Object { $_.Data.Added -gt 0 -or $_.Data.Removed -gt 0 })
-    }
+	$playlistEntries = @($allEntries | Where-Object { $_.Event -eq 'PlaylistUpdated' -or $_.Event -eq 'PlaylistCreated' })
+	if ($Changes) {
+		$playlistEntries = @($playlistEntries | Where-Object { $_.Data.Added -gt 0 -or $_.Data.Removed -gt 0 })
+	}
 
-    if (-not $playlistEntries) {
-        Write-Log "No playlist entries found"
-        return
-    }
+	if (-not $playlistEntries) {
+		Write-Log 'No playlist entries found'
+		return
+	}
 
-    $descending = -not $Asc
-    $sorted = Select-SyncLogRows -Items $playlistEntries -Size $Size -Descending:$descending -SortProperty 'ParsedTimestamp'
+	$descending = -not $Asc
+	$sorted = Select-SyncLogRows -Items $playlistEntries -Size $Size -Descending:$descending -SortProperty 'ParsedTimestamp'
 
-    if ($Full) {
-        Format-YouTubePlaylistDetailed $sorted
-    }
-    else {
-        Format-YouTubePlaylistSimple $sorted
-    }
+	if ($Full) {
+		Format-YouTubePlaylistDetailed $sorted
+	}
+	else {
+		Format-YouTubePlaylistSimple $sorted
+	}
 }
 
 function Invoke-Propolis {
-    <#
+	<#
     .SYNOPSIS
     Optimize images using Propolis.
 
@@ -1473,15 +1696,15 @@ function Invoke-Propolis {
     propolis C:\Photos\Vacation
     Optimizes images in the specified directory.
     #>
-    [Alias('propolis')]
-    [CmdletBinding()]
-    param([System.IO.DirectoryInfo]$Directory = (Get-Item .))
+	[Alias('propolis')]
+	[CmdletBinding()]
+	param([System.IO.DirectoryInfo]$Directory = (Get-Item .))
 
-    & "$env:LOCALAPPDATA\Personal\Propolis\propolis_windows.exe" --no-specs $Directory.FullName
+	& "$env:LOCALAPPDATA\Personal\Propolis\propolis_windows.exe" --no-specs $Directory.FullName
 }
 
 function Get-ToolkitCommand {
-    <#
+	<#
     .SYNOPSIS
     List all available ScriptsToolkit commands and their aliases.
 
@@ -1497,18 +1720,27 @@ function Get-ToolkitCommand {
     stk
     Same as above using the alias.
     #>
-    [Alias('stk')]
-    [CmdletBinding()]
-    param()
+	[Alias('stk')]
+	[CmdletBinding()]
+	param()
 
-    $module = Get-Module ScriptsToolkit
-    $module.ExportedFunctions.Keys | Sort-Object | ForEach-Object {
-        $func = $_
-        $aliases = ($module.ExportedAliases.Values | Where-Object { $_.Definition -eq $func }).Name -join ', '
-        $help = Get-Help $func -ErrorAction Ignore
-        $synopsis = if ($help.Synopsis) { $help.Synopsis.Trim() } else { '' }
-        [PSCustomObject]@{ Alias = $aliases; Function = $func; Description = $synopsis }
-    } | Format-Table -AutoSize
+	$module = Get-Module ScriptsToolkit
+	$module.ExportedFunctions.Keys | Sort-Object | ForEach-Object {
+	$func = $_
+	$aliases = ($module.ExportedAliases.Values | Where-Object {
+	$_.Definition -eq $func
+	}).Name -join ', '
+	$help = Get-Help $func -ErrorAction Ignore
+	$synopsis = if ($help.Synopsis) {
+	$help.Synopsis.Trim()
+	}
+	else {
+	''
+	}
+	[PSCustomObject]@{
+	Alias = $aliases; Function = $func; Description = $synopsis
+	}
+	} | Format-Table -AutoSize
 }
 
 

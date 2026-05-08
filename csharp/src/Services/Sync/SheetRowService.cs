@@ -61,8 +61,9 @@ internal class SheetRowService(SpreadsheetsResource Spreadsheets)
 
 		var range = $"{sheetName}!A:A";
 		var values = new List<IList<object>>(rows.Count);
-		foreach (List<object> row in rows)
-			values.Add(row);
+		// PERFORMANCE: Optimize foreach to for loop
+		for (var i = 0; i < rows.Count; i++)
+			values.Add(rows[i]);
 
 		var body = new ValueRange { Values = values };
 
@@ -227,20 +228,21 @@ internal class SheetRowService(SpreadsheetsResource Spreadsheets)
 		CancellationToken ct
 	)
 	{
-		var rows = new List<List<object>>(scrobbles.Count + 1);
-		rows.Add(new List<object> { "Track", "Artist", "Album", "Played At" });
-		foreach (Scrobble scrobble in scrobbles)
-		{
-			rows.Add(
-				new List<object>
-				{
-					scrobble.TrackName,
-					scrobble.ArtistName,
-					scrobble.AlbumName,
-					scrobble.PlayedAt?.ToString(format: "yyyy-MM-dd HH:mm:ss") ?? Empty,
-				}
-			);
-		}
+		List<List<object>> rows =
+		[
+			["Track", "Artist", "Album", "Played At"],
+			.. Enumerable.Select(
+				scrobbles,
+				s =>
+					(List<object>)
+						[
+							s.TrackName,
+							s.ArtistName,
+							s.AlbumName,
+							s.PlayedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? Empty,
+						]
+			),
+		];
 
 		await WriteRowsAsync(spreadsheetId: spreadsheetId, sheetName: sheetName, rows: rows, ct);
 	}
@@ -335,10 +337,10 @@ internal class SheetRowService(SpreadsheetsResource Spreadsheets)
 
 		List<Sheet> sheets = [.. Enumerable.OrderBy(metadata.Sheets, s => s.Properties?.Title)];
 
-		foreach (Sheet sheet in sheets)
+		for (var i = 0; i < sheets.Count; i++)
 		{
-			var sheetTitle = sheet.Properties?.Title;
-			var sheetId = sheet.Properties?.SheetId;
+			var sheetTitle = sheets[i].Properties?.Title;
+			var sheetId = sheets[i].Properties?.SheetId;
 
 			if (sheetTitle == null || sheetId == null)
 				continue;
@@ -356,9 +358,12 @@ internal class SheetRowService(SpreadsheetsResource Spreadsheets)
 			var csvPath = Path.Combine(path1: outputDirectory, $"{sheetTitle}.csv");
 
 			await using StreamWriter writer = new(path: csvPath);
-			foreach (IList<object> row in values.Values)
+			for (var r = 0; r < values.Values.Count; r++)
 			{
-				var csvLine = Join(separator: ",", Enumerable.Select(row, cell => $"\"{cell}\""));
+				var csvLine = Join(
+					separator: ",",
+					Enumerable.Select(values.Values[r], cell => $"\"{cell}\"")
+				);
 				await writer.WriteLineAsync(value: csvLine);
 			}
 		}

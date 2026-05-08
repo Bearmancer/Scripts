@@ -24,6 +24,7 @@ import gspread.exceptions
 import pylast
 from google.auth.transport.requests import Request
 
+from toolkit.exceptions import ConfigurationError
 from toolkit.logging_config import get_logger
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -34,9 +35,19 @@ CREDS_FILE = (
     / "Google Sheets Credentials.json"
 )
 TOKEN_FILE = Path.home() / "Services" / "last.fm Scrobble Updater" / "token.json"
-SHEET_ID = "1scv0dBa7iGx0hQTqmMwvzceoZlyiRSjswz80FCO1cco"
+# SECURITY: Read from environment variables instead of hardcoded values
+SHEET_ID = os.getenv("SHEET_ID", "")
+if not SHEET_ID:
+    raise ConfigurationError(
+        "SHEET_ID environment variable not set. "
+        "This is a non-sensitive config value (Google Sheets ID) and can be safely stored in .env."
+    )
+
 SHEET_NAME = "last.fm scrobbles"
-LASTFM_USERNAME = "kanishknishar"
+
+LASTFM_USERNAME = os.getenv("LASTFM_USERNAME", "")
+if not LASTFM_USERNAME:
+    raise ConfigurationError("LASTFM_USERNAME environment variable not set.")
 
 
 def _get_api_key() -> str:
@@ -111,26 +122,17 @@ def get_last_scrobble_timestamp(sheet: gspread.Worksheet) -> datetime:
 
 def prepare_track_data(tracks: list[pylast.PlayedTrack]) -> list[list[str]]:
     """Convert track objects to row data for the sheet."""
-    values: list[list[str]] = []
-    for track in tracks:
-        timestamp = track.timestamp
-        if timestamp is None:
-            continue
-        timestamp_str = datetime.fromtimestamp(int(timestamp)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-        title: str = str(track.track.title) if track.track.title else ""
-        album: str = str(track.album) if track.album else ""
-        artist_name: str = str(track.track.artist.name) if track.track.artist else ""
-        values.append(
-            [
-                timestamp_str,
-                title,
-                album,
-                artist_name,
-            ]
-        )
-    return values
+    # PERFORMANCE: List comprehension instead of manual append loop
+    return [
+        [
+            datetime.fromtimestamp(int(track.timestamp)).strftime("%Y-%m-%d %H:%M:%S"),
+            str(track.track.title) if track.track.title else "",
+            str(track.album) if track.album else "",
+            str(track.track.artist.name) if track.track.artist else "",
+        ]
+        for track in tracks
+        if track.timestamp is not None
+    ]
 
 
 def update_scrobbles() -> None:

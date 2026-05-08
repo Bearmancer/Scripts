@@ -37,12 +37,7 @@ internal sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
 				state.Id,
 				cancellationToken
 			);
-			var newEmails = new List<TempEmail>(emails.Count);
-			foreach (TempEmail email in emails)
-			{
-				if (seenIds.Add(email.Id))
-					newEmails.Add(email);
-			}
+			var newEmails = emails.Where(email => seenIds.Add(email.Id)).ToList();
 
 			if (newEmails.Count > 0)
 			{

@@ -32,55 +32,26 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 		}
 		catch (HttpRequestException ex)
 		{
+			Log.Error(ex, "HttpRequestException {Summary}", FormatException(ex));
 			UI.Exception(ex: ex);
-			if (ex.StackTrace is { } st)
-			{
-				var nl = st.AsSpan().IndexOf('\n');
-				Log.Debug(
-					"HttpRequestException_Stack {FirstLine}",
-					(nl >= 0 ? st[..nl] : st).Trim()
-				);
-			}
-			Log.Error(
-				ex: ex,
-				messageTemplate: "HttpRequestException {Summary}",
-				FormatException(ex)
-			);
 			return 1;
 		}
 		catch (InvalidOperationException ex)
 		{
+			Log.Error(ex, "InvalidOperationException {Summary}", FormatException(ex));
 			UI.Exception(ex: ex);
-			if (ex.StackTrace is { } st)
-			{
-				var nl = st.AsSpan().IndexOf('\n');
-				Log.Debug(
-					"InvalidOperationException_Stack {FirstLine}",
-					(nl >= 0 ? st[..nl] : st).Trim()
-				);
-			}
-			Log.Error(
-				ex: ex,
-				messageTemplate: "InvalidOperationException {Summary}",
-				FormatException(ex)
-			);
 			return 1;
 		}
 		catch (IOException ex)
 		{
+			Log.Error(ex, "IOException {Summary}", FormatException(ex));
 			UI.Exception(ex: ex);
-			if (ex.StackTrace is { } st)
-			{
-				var nl = st.AsSpan().IndexOf('\n');
-				Log.Debug("IOException_Stack {FirstLine}", (nl >= 0 ? st[..nl] : st).Trim());
-			}
-			Log.Error(ex: ex, messageTemplate: "IOException {Summary}", FormatException(ex));
 			return 1;
 		}
 #pragma warning disable CA1031
 		catch (Exception ex)
 		{
-			Log.Fatal(ex: ex, messageTemplate: "Command failed with unhandled exception");
+			Log.Fatal(ex, "Command failed with unhandled exception");
 			UI.Exception(ex: ex);
 			return 1;
 		}

@@ -1,8 +1,0 @@
-<Solution>
-	<Folder Name="/csharp/">
-		<Project Path="csharp/CSharpScripts.csproj" />
-	</Folder>
-	<Folder Name="/csharp/Tests/">
-		<Project Path="csharp/Tests/CSharpScripts.Tests.csproj" />
-	</Folder>
-</Solution>

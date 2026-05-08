@@ -305,7 +305,6 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 		CancellationToken ct = default
 	)
 	{
-		Log.Debug("SearchFirstAsync entry {Artist} {Release}", artist, release);
 		List<DiscogsSearchResult> results = await SearchAdvancedAsync(
 			artist: artist,
 			release: release,
@@ -316,9 +315,7 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 			maxResults: 1,
 			ct
 		);
-		DiscogsSearchResult? result = results.Count > 0 ? results[index: 0] : null;
-		Log.Debug("SearchFirstAsync exit {Found}", result is not null);
-		return result;
+		return results is [var first, ..] ? first : null;
 	}
 
 	internal async Task<DiscogsRelease?> GetReleaseAsync(
@@ -439,9 +436,9 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 		{
 			return await Resilience.ExecuteMusicApiAsync(service: "Discogs", action: action, ct);
 		}
-		catch (Exception ex)
+		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Error("Discogs", ex.Message);
+			Log.Error(ex, "Discogs API error: {Message}", ex.Message);
 			throw;
 		}
 	}

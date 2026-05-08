@@ -271,7 +271,8 @@ internal sealed class MusicScoringService
 							enrichedTracks: enrichedTracks
 						);
 						UI.Suppress = false;
-						UI.Error(message: "Error: {0}", ex.Message);
+						Log.Error(ex, "HTTP error during track enrichment");
+						UI.Error(message: "Network Error: {0}", ex.Message);
 						cancelled = true;
 						break;
 					}
@@ -283,7 +284,8 @@ internal sealed class MusicScoringService
 							enrichedTracks: enrichedTracks
 						);
 						UI.Suppress = false;
-						UI.Error(message: "Error: {0}", ex.Message);
+						Log.Error(ex, "Validation error during track enrichment");
+						UI.Error(message: "Validation Error: {0}", ex.Message);
 						cancelled = true;
 						break;
 					}

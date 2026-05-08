@@ -130,7 +130,7 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 			}
 			catch (HttpRequestException ex)
 			{
-				Log.Debug("Translation HTTP error: {0}", ex.Message);
+				Log.Error(ex, "Translation HTTP error: {Message}", ex.Message);
 				if (attempt < MaxRetries)
 					await Task.Delay(500 * attempt, ct);
 			}

@@ -53,7 +53,7 @@ internal static class StateManager
 			}
 			catch (JsonException ex)
 			{
-				Log.Warning("JSON corruption detected in {Path}: {Message}", path, ex.Message);
+				Log.Warning(ex, "JSON corruption detected in {Path}", path);
 				var corruptedPath = path + ".corrupted";
 				lock (StateLock)
 					File.Move(sourceFileName: path, destFileName: corruptedPath, overwrite: true);
@@ -80,26 +80,26 @@ internal static class StateManager
 	)
 		where T : class, new()
 	{
-		var newPath = GetPath(fileName: fileName);
-		Log.Debug("Migrating state file: {0} → {1}", legacyPath, newPath);
+		var newPath = GetPath(fileName);
+		Log.Debug("Migrating state file: {LegacyPath} → {NewPath}", legacyPath, newPath);
 		try
 		{
 			var json = await File.ReadAllTextAsync(legacyPath, ct);
-			T? data = JsonSerializer.Deserialize<T>(json: json, options: JsonCompact) ?? new T();
+			T? data = JsonSerializer.Deserialize<T>(json, JsonCompact) ?? new T();
 
-			await SaveStateAsync(fileName: fileName, state: data, ct);
+			await SaveStateAsync(fileName, data, ct);
 
 			lock (StateLock)
-				File.Delete(path: legacyPath);
+				File.Delete(legacyPath);
 
 			return data;
 		}
 		catch (JsonException ex)
 		{
-			Log.Warning("JSON corruption in legacy file {0}: {1}", legacyPath, ex.Message);
+			Log.Warning(ex, "JSON corruption in legacy file {LegacyPath}", legacyPath);
 			var corruptedPath = legacyPath + ".corrupted";
 			lock (StateLock)
-				File.Move(sourceFileName: legacyPath, destFileName: corruptedPath, overwrite: true);
+				File.Move(legacyPath, corruptedPath, true);
 			return new T();
 		}
 	}

@@ -43,10 +43,11 @@ internal sealed class LastFmService(string apiKey, string username)
 			if (fetchAfter is not null)
 			{
 				var freshScrobbles = new List<Scrobble>(batch.Count);
-				foreach (Scrobble scrobble in batch)
+				// PERFORMANCE: Optimize foreach on List to for loop
+				for (var i = 0; i < batch.Count; i++)
 				{
-					if (scrobble.PlayedAt > fetchAfter)
-						freshScrobbles.Add(scrobble);
+					if (batch[i].PlayedAt > fetchAfter)
+						freshScrobbles.Add(batch[i]);
 				}
 
 				if (freshScrobbles.Count == 0)
@@ -119,10 +120,11 @@ internal sealed class LastFmService(string apiKey, string username)
 		HashSet<DateTime?> existingTimes = [];
 		existingTimes.UnionWith(Enumerable.Select(existing, s => s.PlayedAt));
 		var merged = new List<Scrobble>(existing.Count + newOnes.Count);
-		foreach (Scrobble scrobble in newOnes)
+		// PERFORMANCE: Optimize foreach on List to for loop
+		for (var i = 0; i < newOnes.Count; i++)
 		{
-			if (!existingTimes.Contains(item: scrobble.PlayedAt))
-				merged.Add(scrobble);
+			if (!existingTimes.Contains(item: newOnes[i].PlayedAt))
+				merged.Add(newOnes[i]);
 		}
 
 		merged.AddRange(existing);
@@ -144,9 +146,11 @@ internal sealed class LastFmService(string apiKey, string username)
 			return null;
 		}
 
-		var result = new List<Scrobble>();
-		foreach (Track track in response)
+		var result = new List<Scrobble>(response.Count);
+		// PERFORMANCE: Optimize foreach to for loop on indexable collection
+		for (var i = 0; i < response.Count; i++)
 		{
+			var track = response[i];
 			result.Add(
 				new Scrobble(
 					track.Name

@@ -1,4 +1,5 @@
 import io
+import os
 import random
 import subprocess
 import textwrap
@@ -9,6 +10,7 @@ import ffmpeg
 import pyperclip
 from PIL import Image, ImageDraw, ImageFont
 
+from toolkit.exceptions import ConfigurationError
 from toolkit.logging_config import get_logger
 from toolkit.utils import run_command
 
@@ -22,10 +24,15 @@ class VideoInfo(TypedDict):
 
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi", ".webm"]
-HANDBRAKE_PATH = (
-    r"C:\Users\Lance\AppData\Local\Personal\HandBrakeCLI 1.8.0\HandBrakeCLI.exe"
-)
-MAKEMKV_PATH = r"C:\Program Files (x86)\MakeMKV\makemkvcon64.exe"
+
+# SECURITY: Extracted hardcoded paths to environment variables
+HANDBRAKE_PATH = os.getenv("HANDBRAKE_PATH", "")
+if not HANDBRAKE_PATH:
+    raise ConfigurationError("HANDBRAKE_PATH environment variable not set.")
+
+MAKEMKV_PATH = os.getenv("MAKEMKV_PATH", "")
+if not MAKEMKV_PATH:
+    raise ConfigurationError("MAKEMKV_PATH environment variable not set.")
 
 
 def extract_chapters(video_files: list[Path]) -> None:
@@ -34,7 +41,9 @@ def extract_chapters(video_files: list[Path]) -> None:
         try:
             probe = ffmpeg.probe(str(video_file), show_chapters=None)
         except ffmpeg.Error as e:
-            stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
+            stderr = (
+                e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
+            )
             logger.error(f"ffprobe failed on {video_file.name}: {stderr[-300:]}")
             continue
         chapters = probe.get("chapters", [])
@@ -55,15 +64,27 @@ def extract_chapters(video_files: list[Path]) -> None:
             try:
                 (
                     ffmpeg.input(
-                        str(video_file), ss=chapter["start_time"], to=chapter["end_time"]
+                        str(video_file),
+                        ss=chapter["start_time"],
+                        to=chapter["end_time"],
                     )
-                    .output(str(output_file_name), c="copy", avoid_negative_ts="make_zero")
+                    .output(
+                        str(output_file_name), c="copy", avoid_negative_ts="make_zero"
+                    )
                     .run(quiet=True)
                 )
-                logger.info(f"Extracted chapter {formatted_index} from {video_file.name}")
+                logger.info(
+                    f"Extracted chapter {formatted_index} from {video_file.name}"
+                )
             except ffmpeg.Error as e:
-                stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
-                logger.error(f"Chapter {formatted_index} extraction failed from {video_file.name}: {stderr[-300:]}")
+                stderr = (
+                    e.stderr.decode("utf-8", errors="replace")
+                    if e.stderr
+                    else "no stderr"
+                )
+                logger.error(
+                    f"Chapter {formatted_index} extraction failed from {video_file.name}: {stderr[-300:]}"
+                )
                 continue
 
 
@@ -90,7 +111,9 @@ def batch_compression(path: Path) -> None:
                 file.unlink()
                 logger.info(f"Converted: {file.name}")
             else:
-                logger.error(f"HandBrake failed for {file.name} (exit {result.returncode})")
+                logger.error(
+                    f"HandBrake failed for {file.name} (exit {result.returncode})"
+                )
                 if result.stderr:
                     logger.error(f"stderr: {result.stderr[-300:]}")
         except subprocess.CalledProcessError:
@@ -144,7 +167,9 @@ def get_mediainfo(video_path: Path) -> None:
 
     try:
         result = subprocess.run(
-            ["mediainfo", "--Output=TXT", str(video_path)], capture_output=True, text=True
+            ["mediainfo", "--Output=TXT", str(video_path)],
+            capture_output=True,
+            text=True,
         ).stdout
         cleaned_result = result.replace("Lance\\", "")
 
@@ -182,9 +207,7 @@ def print_video_resolution(video_files: list[Path]) -> None:
 def get_video_resolution(filepath: Path) -> dict[str, int] | None:
     """Get video resolution using ffprobe."""
     probe = ffmpeg.probe(str(filepath))
-    video_streams = [
-        s for s in probe["streams"] if s["codec_type"] == "video"
-    ]
+    video_streams = [s for s in probe["streams"] if s["codec_type"] == "video"]
 
     if not video_streams:
         return None
@@ -343,7 +366,9 @@ def extract_frame(
         return add_timestamp(img, timestamp)
     except ffmpeg.Error as e:
         stderr = e.stderr.decode("utf-8", errors="replace") if e.stderr else "no stderr"
-        logger.error(f"Frame extraction failed at t={timestamp:.1f}s on {video_path.name}: {stderr[-200:]}")
+        logger.error(
+            f"Frame extraction failed at t={timestamp:.1f}s on {video_path.name}: {stderr[-200:]}"
+        )
         raise
 
 

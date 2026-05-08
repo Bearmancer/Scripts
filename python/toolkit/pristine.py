@@ -16,10 +16,13 @@ logger = get_logger("pristine")
 
 HEADLESS: bool = os.getenv("PRISTINE_HEADLESS", "0") == "1"
 
-BASE_OUT_DIR: str = os.getenv(
-    "PRISTINE_OUT_DIR",
-    r"C:\Users\Lance\My Drive\Sir Fapsalot\Pristine Classical",
-)
+# SECURITY: Extracted hardcoded path to environment variable
+BASE_OUT_DIR: str = os.getenv("PRISTINE_BASE_OUT_DIR", "")
+if not BASE_OUT_DIR:
+    raise ValueError(
+        "PRISTINE_BASE_OUT_DIR environment variable not set. "
+        "Please configure the base output directory for Pristine downloads."
+    )
 
 TOSCANINI_BEETHOVEN = [
     "PASC552",
@@ -93,7 +96,9 @@ _WIN_ILLEGAL_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 _TRAILING_DOTS_SPACES = re.compile(r"[\s.]+$")
 _AUDIO_URL_RE = re.compile(r"\.(flac|mp3|wav|aac|ogg)(\?|$)", re.IGNORECASE)
 
-_TIMESTAMP_PREFIX_RE = re.compile(r"^\s*\d{1,2}:\d{2}(?::\d{2})?\s*[-\u2013\u2014:.)]*\s*")
+_TIMESTAMP_PREFIX_RE = re.compile(
+    r"^\s*\d{1,2}:\d{2}(?::\d{2})?\s*[-\u2013\u2014:.)]*\s*"
+)
 _MOVEMENT_PREFIX_RE = re.compile(
     r"""
     ^\s*(?:
@@ -105,12 +110,34 @@ _MOVEMENT_PREFIX_RE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 _WORD_TO_INT: dict[str, int] = {
-    "first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5,
-    "sixth": 6, "seventh": 7, "eighth": 8, "ninth": 9, "tenth": 10,
+    "first": 1,
+    "second": 2,
+    "third": 3,
+    "fourth": 4,
+    "fifth": 5,
+    "sixth": 6,
+    "seventh": 7,
+    "eighth": 8,
+    "ninth": 9,
+    "tenth": 10,
 }
 _ROMAN_NUMERALS = [
-    "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-    "XI", "XII", "XIII", "XIV", "XV",
+    "",
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "VI",
+    "VII",
+    "VIII",
+    "IX",
+    "X",
+    "XI",
+    "XII",
+    "XIII",
+    "XIV",
+    "XV",
 ]
 
 
@@ -131,7 +158,7 @@ def _normalize_track_title(title: str) -> str:
     m = _MOVEMENT_PREFIX_RE.match(text)
     if not m:
         return text
-    remainder = text[m.end():].strip()
+    remainder = text[m.end() :].strip()
     if m.group("ord"):
         num = int(m.group("ord"))
     elif m.group("roman"):
@@ -240,12 +267,17 @@ def _download_file(
                     delay = _DL_RETRY_BASE_S * (2 ** (attempt - 1))
                     logger.warning(
                         "Download attempt %d/%d failed (%s) — retrying in %ds",
-                        attempt, _DL_MAX_ATTEMPTS, exc, delay,
+                        attempt,
+                        _DL_MAX_ATTEMPTS,
+                        exc,
+                        delay,
                     )
                     time.sleep(delay)
         logger.warning(
             "Failed to download %s after %d attempts: %s",
-            os.path.basename(dest), _DL_MAX_ATTEMPTS, last_exc,
+            os.path.basename(dest),
+            _DL_MAX_ATTEMPTS,
+            last_exc,
         )
         return False
     except Exception as exc:
@@ -566,7 +598,9 @@ def _start_playback(page: Page) -> None:
             page,
             "return document.querySelectorAll('.pp-tracklist__item__playnow').length",
         )
-        logger.debug("tracklist items=%s  playnow buttons=%s", item_count, playnow_count)
+        logger.debug(
+            "tracklist items=%s  playnow buttons=%s", item_count, playnow_count
+        )
     except Exception as exc:
         logger.debug("tracklist count probe failed: %s", exc)
     clicked = False
@@ -643,10 +677,7 @@ def _parse_tracklist(page: Page) -> list[str]:
 def _debug_screenshot(page: Page, label: str) -> None:
     try:
         out_dir = os.path.join(
-            os.getenv(
-                "PRISTINE_OUT_DIR",
-                r"C:\Users\Lance\Dev\Scripts\python\.tmp\pristine-live",
-            ),
+            os.getenv("PRISTINE_DEBUG_DIR", ".tmp/pristine-live"),
             "debug",
         )
         os.makedirs(out_dir, exist_ok=True)
@@ -844,13 +875,17 @@ def _download_single_album(context: BrowserContext, code: str, out_dir: str) -> 
                         raw_title_track,
                         track_num,
                     )
-                    logger.info("Duplicate title '%s' — all tracks complete.", raw_title_track)
+                    logger.info(
+                        "Duplicate title '%s' — all tracks complete.", raw_title_track
+                    )
                     break
                 seen_titles.add(raw_title_track)
                 normalized_title = _normalize_track_title(raw_title_track)
                 safe_title = _sanitize_path_component(normalized_title.title())
                 ext = ".flac" if ".flac" in src else ".mp3"
-                track_dest = os.path.join(album_out, f"{track_num:02d}. {safe_title}{ext}")
+                track_dest = os.path.join(
+                    album_out, f"{track_num:02d}. {safe_title}{ext}"
+                )
                 logger.info("[%02d] %s%s", track_num, safe_title, ext)
                 file_id = src.rsplit("/", 1)[-1].split("?")[0] if "/" in src else src
                 logger.debug("New src: id=%s", file_id)
@@ -907,19 +942,27 @@ def _download_single_album(context: BrowserContext, code: str, out_dir: str) -> 
                         logger.debug("stall-retry playnow failed: %s", exc)
                 time.sleep(POLL_SLEEP)
         downloaded_count = len(seen_titles)
-        missing_on_disk: list[str] = []
-        for title in seen_titles:
-            normalized = _normalize_track_title(title)
-            safe_check = _sanitize_path_component(normalized.title())
-            has_file = any(
-                os.path.exists(os.path.join(album_out, f"{track_num:02d}. {safe_check}{ext}"))
+        # PERFORMANCE: List comprehension instead of manual append loop
+        missing_on_disk: list[str] = [
+            title
+            for title in seen_titles
+            if not any(
+                os.path.exists(
+                    os.path.join(
+                        album_out,
+                        f"{track_num:02d}. {_sanitize_path_component(_normalize_track_title(title).title())}{ext}",
+                    )
+                )
                 and os.path.getsize(
-                    os.path.join(album_out, f"{track_num:02d}. {safe_check}{ext}")
-                ) > 0
+                    os.path.join(
+                        album_out,
+                        f"{track_num:02d}. {_sanitize_path_component(_normalize_track_title(title).title())}{ext}",
+                    )
+                )
+                > 0
                 for ext in (".flac", ".mp3")
             )
-            if not has_file:
-                missing_on_disk.append(title)
+        ]
         if missing_on_disk:
             logger.warning(
                 "%d track(s) missing from disk after download:", len(missing_on_disk)
