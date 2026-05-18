@@ -47,3 +47,5 @@ internal static class TempMailServiceFactory
 			: throw new ArgumentException($"Unknown provider: {mailbox.Provider}");
 	}
 }
+
+

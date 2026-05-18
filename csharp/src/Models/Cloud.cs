@@ -8,3 +8,5 @@ internal record AzureUsageReport(
 );
 
 internal record ServiceUsage(string ServiceName, string Meter, decimal Cost, string Currency);
+
+

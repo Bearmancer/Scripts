@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Clean;
+﻿namespace CSharpScripts.CLI.Clean;
 
 internal sealed class CleanCacheCommand : Command<CleanCacheCommand.Settings>
 {
@@ -54,3 +54,5 @@ internal sealed class CleanCacheCommand : Command<CleanCacheCommand.Settings>
 		public string Service { get; init; } = "all";
 	}
 }
+
+

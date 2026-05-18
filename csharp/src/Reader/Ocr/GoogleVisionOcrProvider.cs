@@ -1,4 +1,4 @@
-// (removed pragma warning disables; will refactor code to satisfy analyzers)
+﻿// (removed pragma warning disables; will refactor code to satisfy analyzers)
 
 using System.Text;
 using Google.Cloud.Vision.V1;
@@ -77,3 +77,5 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 		return (totalPages, chunks);
 	}
 }
+
+

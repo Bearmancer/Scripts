@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Sync;
+﻿namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Settings>
 {
@@ -60,3 +60,5 @@ internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Set
 		public string? Since { get; init; }
 	}
 }
+
+

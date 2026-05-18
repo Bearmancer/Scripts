@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 namespace CSharpScripts.Services.Mail;
 
-internal sealed class MailTmException : Exception
+public sealed class MailTmException : Exception
 {
 	internal MailTmException() { }
 
@@ -509,3 +509,6 @@ internal record MailTmMessage
 	[JsonPropertyName(name: "isDeleted")]
 	public bool IsDeleted { get; init; }
 }
+
+
+

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read.Validation;
+﻿namespace CSharpScripts.Services.Read.Validation;
 
 internal static class CalibreClient
 {
@@ -47,3 +47,5 @@ internal static class CalibreClient
 		}
 	}
 }
+
+

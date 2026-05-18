@@ -2,7 +2,7 @@ using System.Net;
 
 namespace CSharpScripts.Services.Mail;
 
-internal sealed class SecMailException : Exception
+public sealed class SecMailException : Exception
 {
 	internal SecMailException() { }
 
@@ -205,3 +205,6 @@ internal sealed class SecMailService : ITempMailService
 		_domain = mailboxId[(atIndex + 1)..];
 	}
 }
+
+
+

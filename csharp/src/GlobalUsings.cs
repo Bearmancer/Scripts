@@ -1,5 +1,4 @@
 global using System.Collections.Frozen;
-global using System.ComponentModel;
 global using System.Diagnostics;
 global using static System.Environment;
 global using System.Globalization;
@@ -11,27 +10,12 @@ global using System.Text.RegularExpressions;
 global using CSharpScripts.Core;
 global using CSharpScripts.Core.Auth;
 global using CSharpScripts.Data;
-global using CSharpScripts.Services;
 global using Microsoft.EntityFrameworkCore;
-global using Microsoft.Extensions.DependencyInjection;
 global using CSharpScripts.Models;
-global using CSharpScripts.Orchestrators;
 global using CSharpScripts.Services.Language;
-global using CSharpScripts.Services.Mail;
-global using CSharpScripts.Services.Music;
-global using CSharpScripts.Services.Read;
-global using CSharpScripts.Services.Sync.Google;
-global using CSharpScripts.Services.Sync.LastFm;
-global using CSharpScripts.Services.Sync.YouTube;
 global using CsvHelper;
 global using CsvHelper.Configuration;
-global using Google.Apis.Drive.v3;
-global using Google.Apis.Services;
-global using Google.Apis.Sheets.v4;
-global using Google.Apis.Sheets.v4.Data;
-global using Google.Apis.YouTube.v3.Data;
 global using MetaBrainz.MusicBrainz.Interfaces.Entities;
-global using ParkSquare.Discogs.Dto;
 global using RestSharp;
 global using Serilog;
 global using Serilog.Events;
@@ -39,15 +23,12 @@ global using Spectre.Console;
 global using Spectre.Console.Cli;
 global using Spectre.Console.Rendering;
 global using DiscogsVideoDto = ParkSquare.Discogs.Dto.Video;
-global using FileList = Google.Apis.Drive.v3.Data.FileList;
 global using Log = CSharpScripts.Core.Log;
-global using PlaylistItemsResource = Google.Apis.YouTube.v3.PlaylistItemsResource;
-global using PlaylistsResource = Google.Apis.YouTube.v3.PlaylistsResource;
-global using Scrobble = CSharpScripts.Models.Scrobble;
 global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;
 global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;
-global using VideosResource = Google.Apis.YouTube.v3.VideosResource;
-global using YouTubeService = CSharpScripts.Services.Sync.YouTube.YouTubeService;
-global using YouTubeServiceApi = Google.Apis.YouTube.v3.YouTubeService;
+
+
+
+

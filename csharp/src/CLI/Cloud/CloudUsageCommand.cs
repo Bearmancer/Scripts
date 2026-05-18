@@ -1,4 +1,4 @@
-using Azure.Identity;
+﻿using Azure.Identity;
 using CSharpScripts.Services.Cloud;
 
 namespace CSharpScripts.CLI.Cloud;
@@ -103,3 +103,5 @@ internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Set
 
 	internal sealed class Settings : CommandSettings { }
 }
+
+

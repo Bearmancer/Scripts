@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Sync;
+﻿namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 {
@@ -76,3 +76,4 @@ internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 		public bool Verbose { get; init; }
 	}
 }
+

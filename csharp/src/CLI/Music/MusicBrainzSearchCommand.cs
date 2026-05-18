@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Music;
+﻿namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicBrainzSearchCommand : BaseAsyncCommand<MusicBrainzSearchCommand.Settings>
 {
@@ -57,3 +57,5 @@ internal sealed class MusicBrainzSearchCommand : BaseAsyncCommand<MusicBrainzSea
 		}
 	}
 }
+
+

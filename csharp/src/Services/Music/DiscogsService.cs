@@ -1,3 +1,4 @@
+using ParkSquare.Discogs.Dto;
 using ParkSquare.Discogs;
 
 namespace CSharpScripts.Services.Music;
@@ -457,3 +458,5 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 	)
 		where TKey : notnull => ExecuteAsync(action: action, ct);
 }
+
+

@@ -40,3 +40,5 @@ internal static class SheetNameHelper
 			? $"'{name.Replace("'", "''")}'"
 			: name;
 }
+
+

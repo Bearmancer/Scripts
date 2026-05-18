@@ -2,7 +2,7 @@ using System.Web;
 
 namespace CSharpScripts.Services.Mail;
 
-internal sealed class GuerrillaMailException : Exception
+public sealed class GuerrillaMailException : Exception
 {
 	internal GuerrillaMailException() { }
 
@@ -234,3 +234,6 @@ internal sealed class GuerrillaMailService : ITempMailService
 	internal Dictionary<string, string> GetCredentials() =>
 		new() { [key: "sidToken"] = _sidToken ?? "", [key: "seq"] = _seq.ToString() };
 }
+
+
+

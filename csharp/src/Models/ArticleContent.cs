@@ -13,3 +13,5 @@ internal sealed record ArticleContent
 	public Dictionary<string, byte[]> Images { get; init; } = [];
 	public byte[]? OriginalPdf { get; init; }
 }
+
+

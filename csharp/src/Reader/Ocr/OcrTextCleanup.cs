@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read.Ocr;
+﻿namespace CSharpScripts.Services.Read.Ocr;
 
 internal static partial class OcrTextCleanup
 {
@@ -15,3 +15,5 @@ internal static partial class OcrTextCleanup
 	[GeneratedRegex(@"\s*\n\s*")]
 	private static partial Regex InlineNewlineRegex();
 }
+
+

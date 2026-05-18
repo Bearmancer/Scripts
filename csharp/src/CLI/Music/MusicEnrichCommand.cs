@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Music;
+﻿namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.Settings>
 {
@@ -263,3 +263,5 @@ internal record EnrichOutputRow(
 	string? Rating,
 	string? Comment
 );
+
+

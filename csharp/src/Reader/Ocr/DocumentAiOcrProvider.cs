@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Google.Cloud.DocumentAI.V1;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
@@ -114,3 +114,5 @@ internal sealed record DocumentPageResult(
 	IReadOnlyList<string> BodyBlocks,
 	int SkippedHeadersFooters
 );
+
+

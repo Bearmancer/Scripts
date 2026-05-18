@@ -1,4 +1,4 @@
-using CSharpScripts.CLI.Clean;
+﻿using CSharpScripts.CLI.Clean;
 using CSharpScripts.CLI.Cloud;
 using CSharpScripts.CLI.Mail;
 using CSharpScripts.CLI.Music;
@@ -32,7 +32,7 @@ internal static class Program
 			};
 
 			var services = new ServiceCollection();
-			ConfigureServices(services);
+			// ConfigureServices(services);
 			_serviceProvider = services.BuildServiceProvider();
 
 			var registrar = new SpectreTypeRegistrar(_serviceProvider);
@@ -179,3 +179,7 @@ internal static class Program
 		}
 	}
 }
+
+
+
+

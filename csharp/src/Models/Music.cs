@@ -103,3 +103,5 @@ internal sealed record SearchResult(
 	List<string>? Genres = null,
 	List<string>? Styles = null
 );
+
+

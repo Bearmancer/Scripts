@@ -107,3 +107,5 @@ internal sealed record OptimizedChanges(
 	internal bool HasAnyChanges =>
 		NewIds.Count > 0 || DeletedIds.Count > 0 || ModifiedIds.Count > 0 || Renamed.Count > 0;
 }
+
+

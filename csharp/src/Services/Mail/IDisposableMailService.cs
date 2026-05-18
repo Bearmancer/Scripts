@@ -18,3 +18,5 @@ internal interface ITempMailService
 		CancellationToken ct = default
 	);
 }
+
+

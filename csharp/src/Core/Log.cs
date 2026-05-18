@@ -217,3 +217,4 @@ file sealed class SessionScope(ServiceType service, IDisposable logScope, Action
 		onDispose();
 	}
 }
+

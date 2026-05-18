@@ -1,27 +1,21 @@
-namespace CSharpScripts.Orchestrators;
+﻿namespace CSharpScripts.Orchestrators;
 
 internal sealed class ScrobbleSyncOrchestrator : IDisposable
 {
-	private readonly SpreadsheetBootstrapper Bootstrapper;
 	private readonly CancellationToken Ct;
 	private readonly DateTime? ForceFromDate;
 	private readonly LastFmService LastFmService;
-	private readonly GoogleSheetsService SheetsService;
 
 	private FetchState State;
 
 	private ScrobbleSyncOrchestrator(
 		LastFmService lastFmService,
-		GoogleSheetsService sheetsService,
-		SpreadsheetBootstrapper bootstrapper,
 		FetchState state,
 		DateTime? forceFromDate,
 		CancellationToken ct
 	)
 	{
 		LastFmService = lastFmService;
-		SheetsService = sheetsService;
-		Bootstrapper = bootstrapper;
 		State = state;
 		ForceFromDate = forceFromDate;
 		Ct = ct;
@@ -29,7 +23,6 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 
 	public void Dispose()
 	{
-		SheetsService?.Dispose();
 		GC.SuppressFinalize(this);
 	}
 
@@ -39,16 +32,12 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 	)
 	{
 		LastFmService lastFmService = new(Secrets.LastFmApiKey, "kanishknishar");
-		GoogleSheetsService sheetsService = await GoogleSheetsService.CreateAsync(ct);
-		SpreadsheetBootstrapper bootstrapper = new(sheetsService);
 		FetchState state = await StateManager.LoadStateAsync<FetchState>(
 			StateManager.LastFmSyncFile,
 			ct
 		);
 		return new ScrobbleSyncOrchestrator(
 			lastFmService,
-			sheetsService,
-			bootstrapper,
 			state,
 			forceFromDate,
 			ct
@@ -58,15 +47,14 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 	internal async Task ExecuteAsync()
 	{
 		UI.Info("Starting Last.fm sync...");
-		var spreadsheetId = await GetOrCreateSpreadsheetAsync();
 
 		var deletedCount = 0;
 		if (ForceFromDate.HasValue)
-			deletedCount = await ExecuteForceResyncAsync(spreadsheetId);
+			deletedCount = await ExecuteForceResyncAsync();
 		else if (!State.FetchComplete && State.LastPage > 0)
 			await ExecuteResumeFetchAsync();
 		else
-			await ExecuteIncrementalSyncAsync(spreadsheetId);
+			await ExecuteIncrementalSyncAsync();
 
 		if (Ct.IsCancellationRequested)
 		{
@@ -88,45 +76,17 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 			Log.Information("SyncComplete {Detail}", "No changes detected");
 			return;
 		}
-
-		List<Scrobble> newScrobbles = await SheetsService.GetNewScrobblesAsync(
-			spreadsheetId,
-			scrobbles,
-			Ct
-		);
-
-		if (newScrobbles.Count == 0)
-		{
-			UI.Ok("Sheet is up to date");
-			Log.Information("SyncComplete {Detail}", "No new scrobbles");
-			return;
-		}
-
-		await WriteToSheetsAsync(newScrobbles, spreadsheetId);
-
-		if (ForceFromDate.HasValue)
-		{
-			var added = newScrobbles.Count;
-			var net = added - deletedCount;
-			UI.Info("Deleted: {0} | Added: {1} | Net: {2}", deletedCount, added, net);
-			Log.Information(
-				"ForceResync_Summary {Deleted} {Added} {Net}",
-				deletedCount,
-				added,
-				net
-			);
-		}
+        
+        // TODO: Database saving logic will go here
+        UI.Ok("Fetched {0} scrobbles ready for DB.", scrobbles.Count);
 	}
 
-	private async Task<int> ExecuteForceResyncAsync(string spreadsheetId)
+	private async Task<int> ExecuteForceResyncAsync()
 	{
 		UI.Info("Force resync from {0}", DateTimeExtensions.ToDisplayDate(ForceFromDate!.Value));
-		var deleted = await SheetsService.DeleteScrobblesOnOrAfterAsync(
-			spreadsheetId,
-			ForceFromDate.Value,
-			Ct
-		);
-		State = StateTransitions.Reset(spreadsheetId);
+        // TODO: DB delete logic will go here
+		var deleted = 0; 
+		State = StateTransitions.Reset(""); // Empty spreadsheet ID for now
 		await SaveStateAsync();
 		LastFmService.DeleteScrobblesCache();
 		await FetchScrobblesAsync(ForceFromDate.Value.AddSeconds(-1));
@@ -143,7 +103,7 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		await FetchScrobblesAsync(null);
 	}
 
-	private async Task ExecuteIncrementalSyncAsync(string spreadsheetId)
+	private async Task ExecuteIncrementalSyncAsync()
 	{
 		List<Scrobble> cachedScrobbles = await LastFmService.LoadScrobblesAsync();
 
@@ -162,15 +122,13 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		}
 		else
 		{
-			DateTime? latestInSheet = await SheetsService.GetLatestScrobbleTimeAsync(
-				spreadsheetId,
-				Ct
-			);
+            // TODO: Query DB for latest scrobble
+			DateTime? latestInDb = null;
 
-			if (latestInSheet is { })
+			if (latestInDb is { })
 			{
-				UI.Info("Latest in sheet: {0}", DateTimeExtensions.ToDisplay(latestInSheet.Value));
-				await FetchScrobblesAsync(latestInSheet);
+				UI.Info("Latest in db: {0}", DateTimeExtensions.ToDisplay(latestInDb.Value));
+				await FetchScrobblesAsync(latestInDb);
 			}
 			else
 			{
@@ -220,41 +178,10 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 			UI.Warn("Stopped at page {0} ({1} scrobbles)", State.LastPage, State.TotalFetched);
 	}
 
-	private async Task WriteToSheetsAsync(List<Scrobble> scrobbles, string spreadsheetId)
-	{
-		if (Ct.IsCancellationRequested)
-		{
-			Log.Warning("WriteInterrupted {Detail}", "Interrupted before writing to sheets");
-			return;
-		}
-
-		scrobbles.Sort(
-			(a, b) => b.PlayedAt.GetValueOrDefault().CompareTo(a.PlayedAt.GetValueOrDefault())
-		);
-
-		await SheetsService.EnsureSheetExistsAsync(spreadsheetId, Ct);
-		await SheetsService.WriteScrobblesAsync(spreadsheetId, scrobbles, Ct);
-
-		UI.Ok("Wrote {0} scrobbles.", scrobbles.Count);
-		Log.Information("SyncComplete {Detail}", $"Wrote {scrobbles.Count} scrobbles to sheet");
-	}
-
-	private async Task<string> GetOrCreateSpreadsheetAsync() =>
-		await Bootstrapper.GetOrCreateAsync(
-			State.SpreadsheetId,
-			Secrets.LastFmSpreadsheetId,
-			"Last.fm Scrobbles",
-			async id =>
-			{
-				State = StateTransitions.WithSpreadsheetId(State, id);
-				await SaveStateAsync();
-			},
-			Ct
-		);
-
 	private void SaveState() =>
 		_ = StateManager.SaveStateAsync(StateManager.LastFmSyncFile, State, Ct);
 
 	internal Task SaveStateAsync() =>
 		StateManager.SaveStateAsync(StateManager.LastFmSyncFile, State, Ct);
 }
+

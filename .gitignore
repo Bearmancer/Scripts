@@ -1,47 +1,101 @@
-# .NET build
-bin/
-obj/
+# ============================================================
+# Secrets & credentials (NEVER commit)
+# ============================================================
+*.env
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.truststore
+credentials.*
+secret.*
+secrets.*
+*.token
+*.retired
+*.retired.*
+"go_scripts/Google AI Studio API Key.txt"
+"python_scripts/deepl_api_key.txt"
+
+# ============================================================
+# Local state / data
+# ============================================================
+/state/
+.playwright/
+
+# ============================================================
+# .NET
+# ============================================================
 [Bb]in/
 [Oo]bj/
-[Dd]ebug/
-[Rr]elease/
-publish/
 *.user
 *.suo
-*.rsuser
-
-# .NET tools
 .vs/
+*.nupkg
+*.snupkg
+[Pp]ackages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/CompiledModels/
 TestResults/
-global.json
+*.trx
+*.coverage
+*.coveragexml
 
-# IDE
-.idea/
-.vscode/
-*.swp
-
+# ============================================================
 # Python
+# ============================================================
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+.Python
 .venv/
-python/.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.uv/
+python/.uv/
 
+# ============================================================
+# Logs
+# ============================================================
+*.log
+
+# ============================================================
 # PowerShell
-profiles/
+# ============================================================
+*.pssproj
 
-# OS
+# ============================================================
+# Editors / OS noise
+# ============================================================
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+*.swp
+*~
 .DS_Store
 Thumbs.db
 
-# Env
-.env
-.env.*
-/Key
+# ============================================================
+# Git worktrees (linked worktrees, not the main repo)
+# ============================================================
+.worktrees/
 
-# Logs
-*.log
-
+# ============================================================
 # Misc
+# ============================================================
 *.tmp
 *.bak
 *.orig

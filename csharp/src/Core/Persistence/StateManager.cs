@@ -51,9 +51,9 @@ internal static class StateManager
 				var json = await File.ReadAllTextAsync(path, ct);
 				return JsonSerializer.Deserialize<T>(json: json, options: JsonCompact) ?? new T();
 			}
-			catch (JsonException ex)
+			catch (JsonException)
 			{
-				Log.Warning(ex, "JSON corruption detected in {Path}", path);
+				Log.Warning("JSON corruption detected in {Path}", path);
 				var corruptedPath = path + ".corrupted";
 				lock (StateLock)
 					File.Move(sourceFileName: path, destFileName: corruptedPath, overwrite: true);
@@ -94,9 +94,9 @@ internal static class StateManager
 
 			return data;
 		}
-		catch (JsonException ex)
+		catch (JsonException)
 		{
-			Log.Warning(ex, "JSON corruption in legacy file {LegacyPath}", legacyPath);
+			Log.Warning("JSON corruption in legacy file {LegacyPath}", legacyPath);
 			var corruptedPath = legacyPath + ".corrupted";
 			lock (StateLock)
 				File.Move(legacyPath, corruptedPath, true);
@@ -357,3 +357,8 @@ internal static class StateManager
 	private static string GetReleasePath(string releaseId) =>
 		Path.Combine(path1: ReleaseCachePath, $"{releaseId.SanitizeFileName()}.json");
 }
+
+
+
+
+

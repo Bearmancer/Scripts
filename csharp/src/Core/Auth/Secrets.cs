@@ -36,3 +36,5 @@ internal static class Secrets
 	private static string GetRequired(string name) =>
 		GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"{name} is not set");
 }
+
+

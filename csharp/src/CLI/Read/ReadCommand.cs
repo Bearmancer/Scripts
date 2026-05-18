@@ -1,4 +1,4 @@
-using CSharpScripts.Services.Read.Ocr;
+﻿using CSharpScripts.Services.Read.Ocr;
 using CSharpScripts.Services.Read.Validation;
 
 namespace CSharpScripts.CLI.Read;
@@ -164,3 +164,5 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 		public string? AzureDocumentIntelligenceModel { get; init; }
 	}
 }
+
+

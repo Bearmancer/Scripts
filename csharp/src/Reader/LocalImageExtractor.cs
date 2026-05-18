@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using CSharpScripts.Services.Read.Ocr;
 
@@ -100,3 +100,5 @@ internal sealed partial class LocalImageExtractor(
 		return sb.ToString();
 	}
 }
+
+

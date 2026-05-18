@@ -121,29 +121,23 @@ internal static class RecordingEnrichmentService
 					{
 						await t();
 					}
-					catch (HttpRequestException ex)
+					catch (HttpRequestException)
 					{
-						Log.Warning(
-							ex,
-							"Transient music metadata lookup failure for {Composer} - {Work}",
+						Log.Warning("Transient music metadata lookup failure for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
 					}
-					catch (TimeoutException ex)
+					catch (TimeoutException)
 					{
-						Log.Warning(
-							ex,
-							"Timed out while looking up music metadata for {Composer} - {Work}",
+						Log.Warning("Timed out while looking up music metadata for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
 					}
-					catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+					catch (TaskCanceledException) when (!ct.IsCancellationRequested)
 					{
-						Log.Warning(
-							ex,
-							"Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}",
+						Log.Warning("Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
@@ -373,3 +367,8 @@ internal sealed class SuggestionSet
 }
 
 internal record RecordingWithSuggestions(RecordingInput Original, SuggestionSet Suggestions);
+
+
+
+
+

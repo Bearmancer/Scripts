@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read.Ocr;
+﻿namespace CSharpScripts.Services.Read.Ocr;
 
 internal interface IOcrProvider
 {
@@ -13,3 +13,5 @@ internal interface IStructuredImageOcrProvider
 		CancellationToken ct = default
 	);
 }
+
+

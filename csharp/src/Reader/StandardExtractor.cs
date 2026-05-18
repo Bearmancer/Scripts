@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
@@ -308,3 +308,5 @@ internal sealed class StandardExtractor
 			_ => "jpg",
 		};
 }
+
+

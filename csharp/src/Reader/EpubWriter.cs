@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Net;
 using System.Text;
 
@@ -281,3 +281,5 @@ internal static partial class EpubWriter
 		stream.Write(data);
 	}
 }
+
+

@@ -89,3 +89,5 @@ internal static class StringExtensions
 		) => value.IndexOf(substring, comparisonType);
 	}
 }
+
+

@@ -179,3 +179,5 @@ internal sealed record DiscogsSearchResult(
 	List<string>? Styles,
 	List<string>? Barcodes
 );
+
+

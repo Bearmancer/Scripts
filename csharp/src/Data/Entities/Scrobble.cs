@@ -1,11 +1,12 @@
+#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 namespace CSharpScripts.Data.Entities;
 
 internal sealed record Scrobble
 {
-    public long Id { get; set; }
-    public Guid TrackId { get; set; }
-    public DateTimeOffset Timestamp { get; set; }
-    public string Platform { get; set; } = string.Empty;
+	public long Id { get; init; }
+	public int TrackId { get; init; }
+	public DateTimeOffset ScrobbledAt { get; init; }
+	public string Platform { get; init; } = null!;
 
-    public Track Track { get; set; } = null!;
+	public Track Track { get; init; } = null!;
 }

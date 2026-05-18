@@ -101,8 +101,8 @@ dotnet_diagnostic.SYSLIB1045.severity = none
 
 # Naming style rules - disabled (using TitleCase for fields, SCREAMING_SNAKE for constants)
 dotnet_naming_rule.private_members_with_underscore.severity = none
-dotnet_naming_rule.private_members_with_underscore.symbols = value
-dotnet_naming_rule.private_members_with_underscore.style = value
+dotnet_naming_rule.private_members_with_underscore.symbols = none
+dotnet_naming_rule.private_members_with_underscore.style = none
 dotnet_diagnostic.IDE1006.severity = none
 dotnet_diagnostic.CA1707.severity = none
 

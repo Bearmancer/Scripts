@@ -1,3 +1,4 @@
+using ParkSquare.Discogs.Dto;
 using Riok.Mapperly.Abstractions;
 using Version = ParkSquare.Discogs.Dto.Version;
 
@@ -239,3 +240,6 @@ internal static partial class DiscogsMapper
 		RegexOptions.Compiled
 	);
 }
+
+
+

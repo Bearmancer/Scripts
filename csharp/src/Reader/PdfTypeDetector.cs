@@ -1,4 +1,4 @@
-using UglyToad.PdfPig;
+﻿using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
 namespace CSharpScripts.Services.Read;
@@ -35,3 +35,5 @@ internal static class PdfTypeDetector
 		return isScanned;
 	}
 }
+
+

@@ -1,25 +1,15 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:latest
-    container_name: scripts-postgres
-    environment:
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_PASSWORD: ${PG_PASSWORD}
-      POSTGRES_DB: lance
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-    driver: local
+    db:
+        image: postgres:16
+        container_name: personal_db
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: personal
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./state/postgres-data:/var/lib/postgresql/data
+            - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql

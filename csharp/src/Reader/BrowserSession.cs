@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 
 namespace CSharpScripts.Services.Read;
 
@@ -60,3 +60,5 @@ internal sealed class BrowserSession : IAsyncDisposable
 	public async Task<IPage> GetOrCreatePageAsync() =>
 		Browser.Pages.Count > 0 ? Browser.Pages[0] : await Browser.NewPageAsync();
 }
+
+

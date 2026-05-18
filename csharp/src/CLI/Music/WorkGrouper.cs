@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Music;
+﻿namespace CSharpScripts.CLI.Music;
 
 internal static class WorkGrouper
 {
@@ -132,3 +132,5 @@ internal static class WorkGrouper
 		}
 	}
 }
+
+

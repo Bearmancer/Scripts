@@ -1,4 +1,4 @@
-using Azure;
+﻿using Azure;
 using Azure.AI.DocumentIntelligence;
 
 namespace CSharpScripts.Services.Read.Ocr;
@@ -189,3 +189,5 @@ internal sealed record AzureDocumentIntelligenceOptions(
 	string? ApiKey,
 	string? ModelId
 );
+
+

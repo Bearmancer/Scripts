@@ -1,4 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+
 <Solution>
-	<Project Path="CSharpScripts.csproj"/>
+	<Folder Name="/src/" />
+	<Folder Name="/src/Tests/">
+		<Project Path="src/Tests/CSharpScripts.Tests.csproj" />
+	</Folder>
+	<Project Path="CSharpScripts.csproj" />
 </Solution>

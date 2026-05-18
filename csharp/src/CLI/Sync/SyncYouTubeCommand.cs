@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Sync;
+﻿namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncYouTubeCommand : BaseAsyncCommand<SyncYouTubeCommand.Settings>
 {
@@ -37,3 +37,5 @@ internal sealed class SyncYouTubeCommand : BaseAsyncCommand<SyncYouTubeCommand.S
 		public bool PreviewTranslations { get; init; }
 	}
 }
+
+

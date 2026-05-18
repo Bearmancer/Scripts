@@ -1,4 +1,4 @@
-using AngleSharp.Html.Dom;
+﻿using AngleSharp.Html.Dom;
 using SmartReader;
 
 namespace CSharpScripts.Services.Read;
@@ -132,3 +132,5 @@ internal static partial class WebExtractionQualityAnalyzer
 		};
 	}
 }
+
+

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read;
+﻿namespace CSharpScripts.Services.Read;
 
 internal enum WebExtractionQuality
 {
@@ -6,3 +6,5 @@ internal enum WebExtractionQuality
 	Ready,
 	Incomplete,
 }
+
+

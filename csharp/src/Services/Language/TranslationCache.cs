@@ -117,3 +117,6 @@ internal static class TranslationCache
 		return Convert.ToHexString(inArray: hash)[..16];
 	}
 }
+
+
+

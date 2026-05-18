@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Net;
 using System.Text;
 using CSharpScripts.Services.Read.Ocr;
@@ -178,3 +178,5 @@ internal sealed partial class LocalEpubExtractor(
 		return sb.ToString();
 	}
 }
+
+

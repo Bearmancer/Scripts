@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace CSharpScripts.Services.Read.Validation;
 
@@ -64,3 +64,5 @@ internal static class EpubValidator
 }
 
 internal sealed record EpubValidationResult(bool Skipped, bool Passed, string Output);
+
+

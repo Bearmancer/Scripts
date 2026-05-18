@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read;
+﻿namespace CSharpScripts.Services.Read;
 
 internal enum PdfContentQuality
 {
@@ -8,3 +8,5 @@ internal enum PdfContentQuality
 	Good,
 	Excellent,
 }
+
+

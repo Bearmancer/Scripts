@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI.Music;
+﻿namespace CSharpScripts.CLI.Music;
 
 internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupCommand.Settings>
 {
@@ -60,3 +60,5 @@ internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupComma
 		}
 	}
 }
+
+

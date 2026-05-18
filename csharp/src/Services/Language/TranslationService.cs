@@ -73,3 +73,5 @@ internal record LibreTranslateResponse(
 );
 
 internal record TranslationResult(string Translation, string DetectedLanguage);
+
+

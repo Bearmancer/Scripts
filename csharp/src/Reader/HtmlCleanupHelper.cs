@@ -1,4 +1,4 @@
-using AngleSharp.Dom;
+﻿using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
@@ -78,3 +78,5 @@ internal static partial class HtmlCleanupHelper
 		return cleaned.Trim();
 	}
 }
+
+

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read;
+﻿namespace CSharpScripts.Services.Read;
 
 internal static partial class ArticleStructureDetector
 {
@@ -17,3 +17,5 @@ internal static partial class ArticleStructureDetector
 	[GeneratedRegex(@"^\d+[\.\)]\s")]
 	private static partial Regex FootnotePattern();
 }
+
+

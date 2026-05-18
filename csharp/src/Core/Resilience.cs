@@ -1,3 +1,4 @@
+#pragma warning disable CA2000
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
@@ -254,7 +255,7 @@ internal static class Resilience
 	) => ExecuteAsync($"Music.{service}", action, ct);
 }
 
-internal sealed class DailyQuotaExceededException : Exception
+public sealed class DailyQuotaExceededException : Exception
 {
 	internal DailyQuotaExceededException()
 		: base(message: "Daily quota exceeded") => Service = "";
@@ -271,3 +272,8 @@ internal sealed class DailyQuotaExceededException : Exception
 
 	internal string Service { get; }
 }
+
+
+
+
+

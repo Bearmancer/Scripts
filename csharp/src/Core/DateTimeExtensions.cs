@@ -15,3 +15,5 @@ internal static class DateTimeExtensions
 				.ToString(format: "yyyy/MM/dd", provider: CultureInfo.InvariantCulture);
 	}
 }
+
+

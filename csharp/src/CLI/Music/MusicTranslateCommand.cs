@@ -1,4 +1,4 @@
-using System.Dynamic;
+﻿using System.Dynamic;
 
 namespace CSharpScripts.CLI.Music;
 
@@ -405,3 +405,5 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 		public string? OutputFile { get; init; }
 	}
 }
+
+

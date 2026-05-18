@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
@@ -294,3 +294,5 @@ internal sealed class JstorExtractor
 		return body.ToString();
 	}
 }
+
+

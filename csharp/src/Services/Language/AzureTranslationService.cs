@@ -73,3 +73,5 @@ internal static class AzureTranslationService
 		return results;
 	}
 }
+
+

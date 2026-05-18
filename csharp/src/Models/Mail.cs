@@ -29,3 +29,5 @@ internal record ActiveMailbox(
 	DateTime CreatedAt,
 	Dictionary<string, string>? Auth = null
 );
+
+

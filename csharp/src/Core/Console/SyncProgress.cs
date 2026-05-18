@@ -157,3 +157,5 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 		: ts.TotalMinutes >= 1 ? $"{(int)ts.TotalMinutes}m {ts.Seconds}s"
 		: $"{ts.Seconds}s";
 }
+
+

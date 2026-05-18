@@ -1,3 +1,4 @@
+using Scrobble = CSharpScripts.Models.Scrobble;
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
 
@@ -150,7 +151,7 @@ internal sealed class LastFmService(string apiKey, string username)
 		// PERFORMANCE: Optimize foreach to for loop on indexable collection
 		for (var i = 0; i < response.Count; i++)
 		{
-			var track = response[i];
+			Track track = response[i];
 			result.Add(
 				new Scrobble(
 					track.Name
@@ -176,3 +177,7 @@ internal sealed class LastFmService(string apiKey, string username)
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
 }
+
+
+
+

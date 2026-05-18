@@ -94,3 +94,5 @@ internal static class GenreDetector
 		return Enumerable.MaxBy(counts, kv => kv.Value).Key;
 	}
 }
+
+

@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+﻿namespace CSharpScripts.CLI;
 
 internal static class DateFormatter
 {
@@ -14,3 +14,5 @@ internal static class DateFormatter
 	internal static string FormatForCli(System.DateOnly? dt) =>
 		dt.HasValue ? FormatForCli(dt.Value) : string.Empty;
 }
+
+

@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+﻿namespace CSharpScripts.CLI;
 
 internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 	where TSettings : CommandSettings
@@ -63,3 +63,4 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 			? $"{ex.GetType().Name}: {ex.Message} (Inner: {inner.Message})"
 			: $"{ex.GetType().Name}: {ex.Message}";
 }
+
