@@ -1,6 +1,6 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 using CSharpScripts.Data.Entities;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CSharpScripts.Data.Configuration;
 
@@ -8,11 +8,12 @@ internal sealed class ExecutionLogConfiguration : IEntityTypeConfiguration<Execu
 {
 	public void Configure(EntityTypeBuilder<ExecutionLog> b)
 	{
-		b.ToTable("execution_logs");
-		b.HasKey(e => e.Id);
-		b.Property(e => e.Id).ValueGeneratedOnAdd();
-		b.Property(e => e.Timestamp).HasColumnType("timestamptz").HasDefaultValueSql("CURRENT_TIMESTAMP");
-		b.Property(e => e.Payload).HasColumnType("jsonb");
+		b.ToTable(name: "execution_logs");
+		b.HasKey(static e => e.Id);
+		b.Property(static e => e.Id).ValueGeneratedOnAdd();
+		b.Property(static e => e.Timestamp)
+			.HasColumnType(typeName: "timestamptz")
+			.HasDefaultValueSql(sql: "CURRENT_TIMESTAMP");
+		b.Property(static e => e.Payload).HasColumnType(typeName: "jsonb");
 	}
 }
-

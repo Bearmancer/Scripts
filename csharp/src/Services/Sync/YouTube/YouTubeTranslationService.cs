@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Sync.YouTube;
+﻿namespace CSharpScripts.Services.Sync.YouTube;
 
 internal static class YouTubeTranslationService
 {
@@ -7,13 +7,13 @@ internal static class YouTubeTranslationService
 		CancellationToken ct
 	)
 	{
-		if (!Enumerable.Any(videos, v => v.NeedsTranslation))
+		if (!videos.Any(static v => v.NeedsTranslation))
 			return videos;
 
 		return await TranslationService.WithContainerAsync(
 			async token =>
 			{
-				var result = new List<YouTubeVideo>(videos.Count);
+				List<YouTubeVideo> result = [with(capacity: videos.Count)];
 
 				foreach (YouTubeVideo video in videos)
 				{
@@ -59,40 +59,28 @@ internal static class YouTubeTranslationService
 
 	internal static void ShowTranslationPreview(List<YouTubeVideo> videos)
 	{
-		List<YouTubeVideo> translated = [.. videos.Where(v => v.TranslatedTitle is { })];
+		List<YouTubeVideo> translated = [.. videos.Where(static v => v.TranslatedTitle is { })];
 		if (translated.Count == 0)
 		{
-			UI.Info(message: "No translations available");
+			Ui.Info(message: "No translations available");
 			return;
 		}
 
-		SpectreTable table = TableExtensions.AddColumn(
-			TableExtensions.AddColumn(
-				TableExtensions.AddColumn(
-					HasTableBorderExtensions.Border(
-						new SpectreTable(),
-						border: TableBorder.Rounded
-					),
-					column: "Original Title"
-				),
-				column: "Translated Title"
-			),
-			column: "Language"
+		SpectreTable table = new SpectreTable().Border(border: TableBorder.Rounded
+		).AddColumn(column: "Original Title"
+		).AddColumn(column: "Translated Title"
+		).AddColumn(column: "Language"
 		);
 
 		foreach (YouTubeVideo video in translated)
 		{
-			TableExtensions.AddRow(
-				table,
-				Markup.Escape(text: video.Title),
+			table.AddRow(Markup.Escape(text: video.Title),
 				Markup.Escape(video.TranslatedTitle ?? "-"),
 				Markup.Escape(video.DetectedLanguage ?? "-")
 			);
 		}
 
 		AnsiConsole.Write(renderable: table);
-		UI.Info(message: "{0} of {1} videos translated", translated.Count, videos.Count);
+		Ui.Info(message: "{0} of {1} videos translated", translated.Count, videos.Count);
 	}
 }
-
-

@@ -19,7 +19,8 @@
 
 Run:
 ```powershell
-$env:PGCONNSTR = "Host=localhost;Database=personal;Username=postgres;Password=password"
+# Source credentials from .env (or set $env:PGCONNSTR manually)
+Get-Content .env | ForEach-Object { if ($_ -match '^PGCONNSTR=(.+)$') { $env:PGCONNSTR = $matches[1] } }
 dotnet ef migrations add AddCanonicalMediaSchema --project "C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj"
 ```
 
@@ -144,7 +145,8 @@ git commit -m "feat: add GIN trigram, BRIN and normalized uniqueness indexes"
 
 Run:
 ```powershell
-$env:PGCONNSTR = "Host=localhost;Database=personal;Username=postgres;Password=password"
+# Source credentials from .env
+Get-Content .env | ForEach-Object { if ($_ -match '^PGCONNSTR=(.+)$') { $env:PGCONNSTR = $matches[1] } }
 dotnet ef database update --project "C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj"
 ```
 
@@ -155,7 +157,7 @@ Create `.kilo/tests/VerifyMigrationApplied.ps1`:
 $ErrorActionPreference = 'Stop'
 # Verify using pg_dump or connection querying the catalog
 # Check pg_indexes table for our new custom indexes
-$conn = "Host=localhost;Database=personal;Username=postgres;Password=password"
+$conn = $env:PGCONNSTR
 # Since we might not have psql installed or configured, write a short C# script or query pg_indexes using dotnet
 ```
 (Alternatively, run the test suite to ensure the database can run all migrations cleanly).

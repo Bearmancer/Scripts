@@ -2,16 +2,16 @@ namespace CSharpScripts.Core;
 
 internal static class DateFormat
 {
-	public const string TIME = "HH:mm:ss";
-	public const string DATE = "yyyy/MM/dd";
-	public const string DATE_TIME = "yyyy/MM/dd HH:mm:ss";
+	public const string Time = "HH:mm:ss";
+	public const string Date = "yyyy/MM/dd";
+	public const string DateTime = "yyyy/MM/dd HH:mm:ss";
 
-	public static string Now => DateTime.Now.ToString(format: TIME);
-	public static string NowFull => DateTime.Now.ToString(format: DATE_TIME);
-	public static string Today => DateTime.Now.ToString(format: DATE);
+	public static string Now => System.DateTimeOffset.Now.ToString(format: Time);
+	public static string NowFull => System.DateTimeOffset.Now.ToString(format: DateTime);
+	public static string Today => System.DateTimeOffset.Now.ToString(format: Date);
 }
 
-internal static class UI
+internal static class Ui
 {
 	public static bool Suppress { get; set; }
 
@@ -194,7 +194,7 @@ internal static class UI
 		$"[link={Markup.Escape(text: url)}]{Markup.Escape(text ?? "")}[/]";
 
 	public static string Combine(params string?[] parts) =>
-		Join(separator: " ", Enumerable.Where(parts, static p => !IsNullOrEmpty(value: p)));
+		Join(separator: " ", parts.Where(static p => !IsNullOrEmpty(value: p)));
 
 	public static string WideProgressBar(double percent, int width = 40)
 	{
@@ -210,7 +210,7 @@ internal static class UI
 			>= 75 => "green",
 			>= 50 => "yellow",
 			>= 25 => "blue",
-			_ => "cyan",
+			_ => "cyan"
 		};
 
 	public static string TaskTitle(string title) => Colored(color: "cyan", text: title);
@@ -247,16 +247,14 @@ internal static class UI
 		bool hideCompleted = false
 	)
 	{
-		SpectreProgress progress = ProgressExtensions.HideCompleted(
-			ProgressExtensions.AutoClear(AnsiConsole.Progress(), enabled: autoClear),
-			enabled: hideCompleted
+		SpectreProgress progress = AnsiConsole.Progress().AutoClear(enabled: autoClear).HideCompleted(enabled: hideCompleted
 		);
 
 		List<ProgressColumn> columns =
 		[
 			new FixedWidthDescriptionColumn(width: descriptionWidth),
 			new ProgressBarColumn(),
-			new PercentageColumn(),
+			new PercentageColumn()
 		];
 
 		if (showRemaining)
@@ -264,7 +262,7 @@ internal static class UI
 
 		columns.Add(new SpinnerColumn());
 
-		return ProgressExtensions.Columns(progress, [.. columns]);
+		return progress.Columns([.. columns]);
 	}
 
 	public static SpectreProgress CreateMinimalProgress(
@@ -272,9 +270,7 @@ internal static class UI
 		Spinner? spinner = null
 	)
 	{
-		return ProgressExtensions.Columns(
-			ProgressExtensions.AutoClear(AnsiConsole.Progress(), enabled: autoClear),
-			new TaskDescriptionColumn(),
+		return AnsiConsole.Progress().AutoClear(enabled: autoClear).Columns(new TaskDescriptionColumn(),
 			new ProgressBarColumn(),
 			new PercentageColumn(),
 			new SpinnerColumn(spinner ?? Spinner.Known.Dots)
@@ -305,7 +301,7 @@ internal static class UI
 	{
 		try
 		{
-			object?[] safeArgs = [.. Enumerable.Select(args, static a => a ?? "null")];
+			object?[] safeArgs = [.. args.Select(static a => a ?? "null")];
 			return string.Format(format: message, args: safeArgs);
 		}
 		catch (FormatException)
@@ -337,9 +333,7 @@ internal static class UI
 
 	public static void TranslationSummary(Dictionary<string, int> languageCounts)
 	{
-		IEnumerable<string> parts = Enumerable.Select(
-			Enumerable.OrderByDescending(languageCounts, kv => kv.Value),
-			kv => $"{kv.Key.ToUpperInvariant()}: {kv.Value}"
+		IEnumerable<string> parts = languageCounts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.ToUpperInvariant()}: {kv.Value}"
 		);
 		Info(message: "Languages: {0}", Join(separator: ", ", values: parts));
 	}
@@ -380,7 +374,7 @@ internal static class UI
 
 file sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
 {
-	public Justify Alignment { get; } = Justify.Left;
+	public static Justify Alignment => Justify.Left;
 
 	public override int? GetColumnWidth(RenderOptions options) => width;
 
@@ -390,12 +384,8 @@ file sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
 			task.Description?.Replace(oldValue: "\n", newValue: " ")
 				.Replace(oldValue: "\r", newValue: "")
 				.Trim()
-			?? Empty;
-		return HasJustificationExtensions.Justify(
-			OverflowableExtensions.Overflow(new Markup(text: text), overflow: Overflow.Ellipsis),
-			alignment: Alignment
+			?? "";
+		return new Markup(text: text).Overflow(overflow: Overflow.Ellipsis).Justify(alignment: Alignment
 		);
 	}
 }
-
-

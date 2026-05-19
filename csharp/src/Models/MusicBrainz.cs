@@ -89,7 +89,7 @@ internal sealed record MusicBrainzRelease(
 )
 {
 	public List<MusicBrainzTrack> Tracks =>
-		field ??= [.. Enumerable.SelectMany(Media, m => m.Tracks)];
+		field ??= [.. Media.SelectMany(m => m.Tracks)];
 }
 
 internal sealed record MusicBrainzReleaseGroup(
@@ -131,5 +131,3 @@ internal sealed record ReleaseCredits(
 	List<string> Soloists,
 	string? Composer
 );
-
-

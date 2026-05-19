@@ -17,8 +17,8 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 		}
 		catch (DailyQuotaExceededException ex)
 		{
-			UI.Exception(ex: ex);
-			UI.Error(
+			Ui.Exception(ex: ex);
+			Ui.Error(
 				message: "Try again tomorrow or request quota increase from Google Cloud Console."
 			);
 			Log.Error(ex: ex, messageTemplate: "DailyQuotaExceeded {Message}", ex.Message);
@@ -26,33 +26,33 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 		}
 		catch (OperationCanceledException)
 		{
-			UI.Warn(message: "Operation cancelled by user");
-			Log.Warning("OperationCancelled {Reason}", "Ctrl+C");
+			Ui.Warn(message: "Operation cancelled by user");
+			Log.Warning(messageTemplate: "OperationCancelled {Reason}", "Ctrl+C");
 			return 130;
 		}
 		catch (HttpRequestException ex)
 		{
-			Log.Error(ex, "HttpRequestException {Summary}", FormatException(ex));
-			UI.Exception(ex: ex);
+			Log.Error(ex: ex, messageTemplate: "HttpRequestException {Summary}", FormatException(ex: ex));
+			Ui.Exception(ex: ex);
 			return 1;
 		}
 		catch (InvalidOperationException ex)
 		{
-			Log.Error(ex, "InvalidOperationException {Summary}", FormatException(ex));
-			UI.Exception(ex: ex);
+			Log.Error(ex: ex, messageTemplate: "InvalidOperationException {Summary}", FormatException(ex: ex));
+			Ui.Exception(ex: ex);
 			return 1;
 		}
 		catch (IOException ex)
 		{
-			Log.Error(ex, "IOException {Summary}", FormatException(ex));
-			UI.Exception(ex: ex);
+			Log.Error(ex: ex, messageTemplate: "IOException {Summary}", FormatException(ex: ex));
+			Ui.Exception(ex: ex);
 			return 1;
 		}
 #pragma warning disable CA1031
 		catch (Exception ex)
 		{
-			Log.Fatal(ex, "Command failed with unhandled exception");
-			UI.Exception(ex: ex);
+			Log.Fatal(ex: ex, messageTemplate: "Command failed with unhandled exception");
+			Ui.Exception(ex: ex);
 			return 1;
 		}
 #pragma warning restore CA1031
@@ -63,4 +63,3 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 			? $"{ex.GetType().Name}: {ex.Message} (Inner: {inner.Message})"
 			: $"{ex.GetType().Name}: {ex.Message}";
 }
-

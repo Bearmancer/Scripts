@@ -1,8 +1,11 @@
-﻿namespace CSharpScripts.CLI.Sync;
+﻿using System.ComponentModel;
+using CSharpScripts.Orchestrators;
+
+namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -21,18 +24,18 @@ internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Set
 				)
 			)
 			{
-				UI.Error(message: "Invalid date format. Use yyyy/MM/dd (e.g. 2024/01/01)");
+				Ui.Error(message: "Invalid date format. Use yyyy/MM/dd (e.g. 2024/01/01)");
 				return 1;
 			}
 
 			sinceDate = parsed;
-			UI.Warn(
+			Ui.Warn(
 				message: "Will delete existing data on/after {0} and re-sync",
-				DateTimeExtensions.ToDisplayDate(sinceDate.Value)
+				sinceDate.Value.ToDisplayDate()
 			);
 			Log.Information(
-				"SyncLastFm_SinceDate {SinceDate}",
-				DateTimeExtensions.ToDisplayDate(sinceDate.Value)
+				messageTemplate: "SyncLastFm_SinceDate {SinceDate}",
+				sinceDate.Value.ToDisplayDate()
 			);
 		}
 
@@ -60,5 +63,3 @@ internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Set
 		public string? Since { get; init; }
 	}
 }
-
-

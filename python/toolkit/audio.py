@@ -10,9 +10,10 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 from toolkit.cuesheet import process_cue_file
-from toolkit.exceptions import ConversionError, FileOperationError
+from toolkit.exceptions import ConversionError
 from toolkit.logging_config import get_logger
-from toolkit.types import AudioFormat, AudioTier
+from toolkit.types import AudioFormat
+from toolkit.types import AudioTier
 from toolkit.utils import run_command
 
 logger = get_logger("audio")
@@ -88,13 +89,14 @@ def create_output_directory(directory: Path, suffix: str) -> Path:
 
 def calculate_image_size(path: Path) -> None:
 	"""Report FLAC files with embedded artwork larger than 1MB."""
-# SECURITY: Extracted hardcoded path to environment variable
+
+
 exif_tool = os.getenv("EXIFTOOL_PATH", "")
 if not exif_tool:
-    raise ValueError(
-        "EXIFTOOL_PATH environment variable not set. "
-        "Please configure the path to the exiftool executable."
-    )
+	raise ValueError(
+		"EXIFTOOL_PATH environment variable not set. "
+		"Please configure the path to the exiftool executable."
+	)
 	problematic_files: list[Path] = []
 
 	for flac_file in path.glob("*.flac"):
@@ -501,7 +503,7 @@ def get_dff_target_params(fmt: AudioFormat) -> tuple[str, int]:
 
 
 def detect_audio_mode(directory: Path) -> str:
-    """Auto-detect processing mode: 'extract' for SACD ISOs, 'convert' for FLAC."""
-    if any(directory.rglob("*.iso")):
-        return "extract"
-    return "convert"
+	"""Auto-detect processing mode: 'extract' for SACD ISOs, 'convert' for FLAC."""
+	if any(directory.rglob("*.iso")):
+		return "extract"
+	return "convert"

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Models;
+﻿namespace CSharpScripts.Models;
 
 internal sealed record DiscogsArtist(
 	int Id,
@@ -42,11 +42,10 @@ internal sealed record DiscogsRelease(
 )
 {
 	public List<DiscogsCredit> Credits =>
-		field ??= [
-			.. Enumerable.Select(
-				Enumerable.Where(ExtraArtists, a => !IsNullOrEmpty(a.Role)),
-				a => new DiscogsCredit(a.Name, a.Role ?? "", a.Tracks)
-			),
+		field ??=
+		[
+			.. ExtraArtists.Where(static a => !IsNullOrEmpty(value: a.Role)).Select(static a => new DiscogsCredit(Name: a.Name, a.Role ?? "", Tracks: a.Tracks)
+			)
 		];
 }
 
@@ -179,5 +178,3 @@ internal sealed record DiscogsSearchResult(
 	List<string>? Styles,
 	List<string>? Barcodes
 );
-
-

@@ -5,7 +5,7 @@ using Google.Protobuf.Collections;
 
 namespace CSharpScripts.Services.Read.Ocr;
 
-internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvider
+internal sealed class DocumentAiOcrProvider : IStructuredImageOcrProvider
 {
 	private const float HeaderThreshold = 0.06f;
 	private const float FooterThreshold = 0.94f;
@@ -18,7 +18,7 @@ internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvide
 
 	internal DocumentAiOcrProvider(string processorName)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(processorName);
+		ArgumentException.ThrowIfNullOrWhiteSpace(argument: processorName);
 		ProcessorName = processorName;
 	}
 
@@ -35,39 +35,39 @@ internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvide
 			Name = ProcessorName,
 			RawDocument = new RawDocument
 			{
-				Content = ByteString.CopyFrom(imageBytes),
-				MimeType = mimeType,
-			},
+				Content = ByteString.CopyFrom(bytes: imageBytes),
+				MimeType = mimeType
+			}
 		};
 
-		ProcessResponse response = await client.ProcessDocumentAsync(request, ct);
-		return ExtractStructured(response.Document);
+		ProcessResponse response = await client.ProcessDocumentAsync(request: request, cancellationToken: ct);
+		return ExtractStructured(document: response.Document);
 	}
 
 	private static DocumentPageResult ExtractStructured(Document document)
 	{
-		var bodyBlocks = new List<string>(document.Pages.Count * 4);
+		List<string> bodyBlocks = new(document.Pages.Count * 4);
 		var skippedCount = 0;
 
 		foreach (Document.Types.Page page in document.Pages)
 		{
 			foreach (Document.Types.Page.Types.Block block in page.Blocks)
 			{
-				var text = GetBlockText(document, block.Layout.TextAnchor);
-				if (IsNullOrWhiteSpace(text))
+				var text = GetBlockText(document: document, anchor: block.Layout.TextAnchor);
+				if (IsNullOrWhiteSpace(value: text))
 					continue;
 
-				if (IsHeaderOrFooter(block.Layout.BoundingPoly))
+				if (IsHeaderOrFooter(poly: block.Layout.BoundingPoly))
 				{
 					skippedCount++;
 					continue;
 				}
 
-				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(text));
+				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(raw: text));
 			}
 		}
 
-		return new DocumentPageResult(bodyBlocks, skippedCount);
+		return new DocumentPageResult(BodyBlocks: bodyBlocks, SkippedHeadersFooters: skippedCount);
 	}
 
 	private static bool IsHeaderOrFooter(BoundingPoly poly)
@@ -76,11 +76,11 @@ internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvide
 		if (vertices.Count == 0)
 			return false;
 
-		var minY = vertices[0].Y;
-		var maxY = vertices[0].Y;
+		var minY = vertices[index: 0].Y;
+		var maxY = vertices[index: 0].Y;
 		for (var i = 1; i < vertices.Count; i++)
 		{
-			var y = vertices[i].Y;
+			var y = vertices[index: i].Y;
 			if (y < minY)
 				minY = y;
 
@@ -94,17 +94,17 @@ internal sealed partial class DocumentAiOcrProvider : IStructuredImageOcrProvide
 	private static string GetBlockText(Document document, Document.Types.TextAnchor? anchor)
 	{
 		if (anchor is null || anchor.TextSegments.Count == 0)
-			return Empty;
+			return "";
 
 		var text = document.Text;
 		var textLength = text.Length;
-		StringBuilder sb = new(256);
+		StringBuilder sb = new(capacity: 256);
 		foreach (Document.Types.TextAnchor.Types.TextSegment segment in anchor.TextSegments)
 		{
 			var start = (int)segment.StartIndex;
 			var end = (int)segment.EndIndex;
 			if (end > start && end <= textLength)
-				sb.Append(text.AsSpan(start, end - start));
+				sb.Append(text.AsSpan(start: start, end - start));
 		}
 		return sb.ToString();
 	}
@@ -114,5 +114,3 @@ internal sealed record DocumentPageResult(
 	IReadOnlyList<string> BodyBlocks,
 	int SkippedHeadersFooters
 );
-
-

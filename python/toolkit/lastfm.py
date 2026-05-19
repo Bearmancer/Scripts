@@ -35,7 +35,6 @@ CREDS_FILE = (
 	/ "Google Sheets Credentials.json"
 )
 TOKEN_FILE = Path.home() / "Services" / "last.fm Scrobble Updater" / "token.json"
-# SECURITY: Read from environment variables instead of hardcoded values
 SHEET_ID = os.getenv("SHEET_ID", "")
 if not SHEET_ID:
 	raise ConfigurationError(
@@ -122,7 +121,6 @@ def get_last_scrobble_timestamp(sheet: gspread.Worksheet) -> datetime:
 
 def prepare_track_data(tracks: list[pylast.PlayedTrack]) -> list[list[str]]:
 	"""Convert track objects to row data for the sheet."""
-	# PERFORMANCE: List comprehension instead of manual append loop
 	return [
 		[
 			datetime.fromtimestamp(int(track.timestamp)).strftime("%Y-%m-%d %H:%M:%S"),

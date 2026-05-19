@@ -1,3 +1,5 @@
 ﻿namespace CSharpScripts.CLI.Music;
-internal sealed class MusicSearchCommand { }
 
+internal sealed class MusicSearchCommand
+{
+}

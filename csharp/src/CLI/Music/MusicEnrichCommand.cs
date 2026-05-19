@@ -1,4 +1,7 @@
-﻿namespace CSharpScripts.CLI.Music;
+﻿using System.ComponentModel;
+using CSharpScripts.Services.Music;
+
+namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.Settings>
 {
@@ -9,53 +12,49 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 
 	private static string ResolveInputFile(string? requestedInput)
 	{
-		if (!IsNullOrEmpty(requestedInput))
+		if (!IsNullOrEmpty(value: requestedInput))
 			return requestedInput;
 
-		var files = Directory.GetFiles(".", "*.csv");
+		var files = Directory.GetFiles(path: ".", searchPattern: "*.csv");
 
 		if (files.Length == 1)
 		{
-			UI.Info("Auto-detected input file for {0}: {1}", EnrichSuggestCommand, files[0]);
+			Ui.Info(message: "Auto-detected input file for {0}: {1}", EnrichSuggestCommand, files[0]);
 			return files[0];
 		}
 
 		if (files.Length > 1)
 		{
 			return AnsiConsole.Prompt(
-				SelectionPromptExtensions.AddChoices(
-					SelectionPromptExtensions.Title(
-						new SelectionPrompt<string>(),
-						"Select input file:"
-					),
-					files
+				new SelectionPrompt<string>().Title(title: "Select input file:"
+				).AddChoices(choices: files
 				)
 			);
 		}
 
-		UI.Error("No input file specified and no CSV files found in current directory.");
-		throw new InvalidOperationException("No input file found");
+		Ui.Error(message: "No input file specified and no CSV files found in current directory.");
+		throw new InvalidOperationException(message: "No input file found");
 	}
 
 	private static string DetermineOutputPath(string inputFile, string? explicitOutput) =>
 		explicitOutput
 		?? Path.Combine(
-			Path.GetDirectoryName(inputFile) ?? ".",
-			Path.GetFileNameWithoutExtension(inputFile) + "-enriched.csv"
+			Path.GetDirectoryName(path: inputFile) ?? ".",
+			Path.GetFileNameWithoutExtension(path: inputFile) + "-enriched.csv"
 		);
 
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
 	)
 	{
 		return await ExecuteWithErrorHandlingAsync(
-			ServiceType.Music,
+			service: ServiceType.Music,
 			async () =>
 			{
-				UI.Info(
-					"{0} routes through {1}; use {2} to stream exports, {3} for previews, and {4} for unified searches.",
+				Ui.Info(
+					message: "{0} routes through {1}; use {2} to stream exports, {3} for previews, and {4} for unified searches.",
 					EnrichSuggestCommand,
 					nameof(RecordingEnrichmentService),
 					EnrichExportCommand,
@@ -63,51 +62,51 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 					MusicSearchUnifiedCommand
 				);
 
-				var inputFile = ResolveInputFile(settings.InputFile);
+				var inputFile = ResolveInputFile(requestedInput: settings.InputFile);
 
-				if (!File.Exists(inputFile))
+				if (!File.Exists(path: inputFile))
 				{
-					UI.Error("File not found: {0}", inputFile);
-					throw new FileNotFoundException("Input file not found", inputFile);
+					Ui.Error(message: "File not found: {0}", inputFile);
+					throw new FileNotFoundException(message: "Input file not found", fileName: inputFile);
 				}
 
 				var discogsToken = Secrets.DiscogsToken;
-				if (IsNullOrEmpty(discogsToken))
-					UI.Warn("DISCOGS_USER_TOKEN not set - Discogs fallback disabled");
+				if (IsNullOrEmpty(value: discogsToken))
+					Ui.Warn(message: "DISCOGS_USER_TOKEN not set - Discogs fallback disabled");
 
-				List<RecordingInput> records = RecordingEnrichmentService.ReadRecordings(inputFile);
-				UI.Info(
-					"{0} loaded {1} recordings from {2}",
+				List<RecordingInput> records = RecordingEnrichmentService.ReadRecordings(filePath: inputFile);
+				Ui.Info(
+					message: "{0} loaded {1} recordings from {2}",
 					EnrichSuggestCommand,
 					records.Count,
-					Path.GetFileName(inputFile)
+					Path.GetFileName(path: inputFile)
 				);
 
-				MusicGenreCategory genre = GenreDetector.DetectFromRecordings(records);
-				UI.Info("Detected genre category: {0}", genre);
+				MusicGenreCategory genre = GenreDetector.DetectFromRecordings(records: records);
+				Ui.Info(message: "Detected genre category: {0}", genre);
 
 				List<RecordingWithSuggestions> results = [];
 				MusicBrainzService mbService = new();
-				using DiscogsService? discogsService = IsNullOrEmpty(discogsToken)
+				using DiscogsService? discogsService = IsNullOrEmpty(value: discogsToken)
 					? null
-					: new DiscogsService(discogsToken);
+					: new DiscogsService(token: discogsToken);
 
-				var output = DetermineOutputPath(inputFile, settings.OutputFile);
+				var output = DetermineOutputPath(inputFile: inputFile, explicitOutput: settings.OutputFile);
 
-				using StreamWriter writer = new(output);
+				using StreamWriter writer = new(path: output);
 				writer.AutoFlush = true;
 				using CsvWriter csv = new(
-					writer,
-					new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = "," }
+					writer: writer,
+					new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture) { Delimiter = "," }
 				);
 
 				csv.Context.RegisterClassMap<EnrichOutputRowMap>();
 				csv.WriteHeader<EnrichOutputRow>();
 				await csv.NextRecordAsync();
 
-				UI.NewLine();
-				UI.Info("Writing results in real-time to {0}", output);
-				var enrichTimer = Stopwatch.StartNew();
+				Ui.NewLine();
+				Ui.Info(message: "Writing results in real-time to {0}", output);
+				Stopwatch enrichTimer = Stopwatch.StartNew();
 
 				await UI.CreateStandardProgress(60, true, false, false)
 					.StartAsync(async ctx =>
@@ -122,10 +121,10 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 							if (cancellationToken.IsCancellationRequested)
 								break;
 
-							var workName = !IsNullOrEmpty(record.Work)
+							var workName = !IsNullOrEmpty(value: record.Work)
 								? record.Work
 								: "(Unknown Work)";
-							var composer = !IsNullOrEmpty(record.Composer)
+							var composer = !IsNullOrEmpty(value: record.Composer)
 								? record.Composer
 								: "(Unknown Composer)";
 							task.Description = UI.TaskDescription(
@@ -136,10 +135,10 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 
 							SuggestionSet suggestions =
 								await RecordingEnrichmentService.SearchForSuggestionsAsync(
-									record,
-									mbService,
-									discogsService,
-									cancellationToken
+									record: record,
+									mbService: mbService,
+									discogsService: discogsService,
+									ct: cancellationToken
 								);
 
 							if (suggestions.HasAny())
@@ -150,57 +149,55 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 									workName.Length > 40 ? workName[..37] + "..." : workName;
 
 								List<string> found = [];
-								if (!IsNullOrEmpty(best.Label))
-									found.Add($"Label: [cyan]{Markup.Escape(best.Label)}[/]");
-								if (!IsNullOrEmpty(best.CatalogNumber))
-								{
-									found.Add($"Cat: [cyan]{Markup.Escape(best.CatalogNumber)}[/]");
-								}
-								if (!IsNullOrEmpty(best.Year))
+								if (!IsNullOrEmpty(value: best.Label))
+									found.Add($"Label: [cyan]{Markup.Escape(text: best.Label)}[/]");
+								if (!IsNullOrEmpty(value: best.CatalogNumber))
+									found.Add($"Cat: [cyan]{Markup.Escape(text: best.CatalogNumber)}[/]");
+								if (!IsNullOrEmpty(value: best.Year))
 									found.Add($"Year: [cyan]{best.Year}[/]");
 
 								AnsiConsole.MarkupLine(
-									$"[green]✓[/] [dim]{elapsed:mm\\:ss}[/] [bold]{Markup.Escape(shortWork)}[/] → {Join(" │ ", found)} [dim]({best.Source})[/]"
+									$"[green]✓[/] [dim]{elapsed:mm\\:ss}[/] [bold]{Markup.Escape(text: shortWork)}[/] → {Join(separator: " │ ", values: found)} [dim]({best.Source})[/]"
 								);
 							}
 
 							SuggestionBundle? bestSugg = suggestions.GetBest();
 
-							var effectiveLabel = !IsNullOrEmpty(record.Label)
+							var effectiveLabel = !IsNullOrEmpty(value: record.Label)
 								? record.Label
 								: bestSugg?.Label;
 
-							var outputRow = new EnrichOutputRow(
-								record.Composer,
-								record.Work,
-								record.Orchestra,
-								record.Conductor,
-								record.Performers,
-								effectiveLabel,
+							EnrichOutputRow outputRow = new(
+								Composer: record.Composer,
+								Work: record.Work,
+								Orchestra: record.Orchestra,
+								Conductor: record.Conductor,
+								Performers: record.Performers,
+								Label: effectiveLabel,
 								bestSugg?.Label ?? "",
 								bestSugg?.Confidence.ToString() ?? "",
-								record.Year,
+								Year: record.Year,
 								bestSugg?.Year ?? "",
 								bestSugg?.Confidence.ToString() ?? "",
-								record.CatalogNumber,
+								CatalogNumber: record.CatalogNumber,
 								bestSugg?.CatalogNumber ?? "",
 								bestSugg?.Confidence.ToString() ?? "",
-								record.Rating,
-								record.Comment
+								Rating: record.Rating,
+								Comment: record.Comment
 							);
-							csv.WriteRecord(outputRow);
+							csv.WriteRecord(record: outputRow);
 							await csv.NextRecordAsync();
 
-							await writer.FlushAsync(cancellationToken);
+							await writer.FlushAsync(cancellationToken: cancellationToken);
 
-							results.Add(new RecordingWithSuggestions(record, suggestions));
-							task.Increment(1);
+							results.Add(new RecordingWithSuggestions(Original: record, Suggestions: suggestions));
+							task.Increment(value: 1);
 						}
 					});
 
 				MusicOutputFormatter.DisplayFillResults(results, genre);
-				UI.Complete(
-					"Completed {0}! Results available in {1}; use {2} to stream exports or {3} to rerun unified searches.",
+				Ui.Complete(
+					message: "Completed {0}! Results available in {1}; use {2} to stream exports or {3} to rerun unified searches.",
 					EnrichSuggestCommand,
 					output,
 					EnrichExportCommand,
@@ -212,12 +209,12 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 
 	internal sealed class Settings : CommandSettings
 	{
-		[CommandOption("-i|--input")]
-		[Description("Input CSV file with recording data")]
+		[CommandOption(template: "-i|--input")]
+		[Description(description: "Input CSV file with recording data")]
 		public string? InputFile { get; init; }
 
-		[CommandOption("-o|--output")]
-		[Description("Output CSV file path (optional)")]
+		[CommandOption(template: "-o|--output")]
+		[Description(description: "Output CSV file path (optional)")]
 		public string? OutputFile { get; init; }
 	}
 }
@@ -263,5 +260,3 @@ internal record EnrichOutputRow(
 	string? Rating,
 	string? Comment
 );
-
-

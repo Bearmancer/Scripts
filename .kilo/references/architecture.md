@@ -5,11 +5,11 @@
 > For system overview context see: `prompt/execution-prompt.md`. For task order: `plans/cpm.md`.
 
 Modernization of the scrobble/music/planner ecosystem by replacing Fibery (online-only, high latency,
-semantic-dependent) with a hybrid **Local PostgreSQL + Neon (Cloud)** architecture.
+semantic-dependent) with a hybrid **Local PostgreSQL 18 + Neon (Cloud)** architecture.
 
 ```
 Old Pipeline: API → .NET Object → JSON → CSV → Google Sheets
-New Pipeline: API → .NET Service → Local PostgreSQL → Neon (logical replication)
+New Pipeline: API → .NET 10 Service → Local PostgreSQL 18 ($PGCONNSTR) → Neon (logical replication)
 ```
 
 ---
@@ -19,50 +19,50 @@ New Pipeline: API → .NET Service → Local PostgreSQL → Neon (logical replic
 ### Music Domain
 
 **`artists`**
-| Column     | Type  | Constraints             |
+| Column | Type | Constraints |
 | ---------- | ----- | ----------------------- |
-| `id`       | UUID  | PK                      |
-| `name`     | TEXT  | Indexed                 |
-| `mbid`     | TEXT  | Unique — MusicBrainz ID |
-| `metadata` | JSONB | Extensible attributes   |
+| `id`       | UUID | PK |
+| `name`     | TEXT | Indexed |
+| `mbid`     | TEXT | Unique — MusicBrainz ID |
+| `metadata` | JSONB | Extensible attributes |
 
 **`albums`**
-| Column         | Type | Constraints  |
+| Column | Type | Constraints |
 | -------------- | ---- | ------------ |
-| `id`           | UUID | PK           |
+| `id`           | UUID | PK |
 | `artist_id`    | UUID | FK → artists |
-| `title`        | TEXT | Indexed      |
-| `release_date` | DATE |              |
-| `mbid`         | TEXT | Unique       |
+| `title`        | TEXT | Indexed |
+| `release_date` | DATE | |
+| `mbid`         | TEXT | Unique |
 
 **`tracks`**
-| Column      | Type | Constraints  |
+| Column | Type | Constraints |
 | ----------- | ---- | ------------ |
-| `id`        | UUID | PK           |
-| `album_id`  | UUID | FK → albums  |
+| `id`        | UUID | PK |
+| `album_id`  | UUID | FK → albums |
 | `artist_id` | UUID | FK → artists |
-| `title`     | TEXT | Indexed      |
-| `duration`  | INT  | Seconds      |
-| `mbid`      | TEXT | Unique       |
+| `title`     | TEXT | Indexed |
+| `duration`  | INT | Seconds |
+| `mbid`      | TEXT | Unique |
 
 **`scrobbles`**
-| Column      | Type        | Constraints                  |
+| Column | Type | Constraints |
 | ----------- | ----------- | ---------------------------- |
-| `id`        | BIGINT      | PK                           |
-| `track_id`  | UUID        | FK → tracks                  |
-| `timestamp` | TIMESTAMPTZ | Indexed                      |
-| `platform`  | ENUM        | `lastfm`, `youtube`, `other` |
+| `id`        | BIGINT | PK |
+| `track_id`  | UUID | FK → tracks |
+| `timestamp` | TIMESTAMPTZ | Indexed |
+| `platform`  | ENUM | `lastfm`, `youtube`, `other` |
 
 ### Management Domain
 
 **`execution_logs`**
-| Column       | Type        | Constraints            |
+| Column | Type | Constraints |
 | ------------ | ----------- | ---------------------- |
-| `id`         | SERIAL      | PK                     |
-| `timestamp`  | TIMESTAMPTZ |                        |
-| `session_id` | TEXT        |                        |
-| `payload`    | JSONB       | Full execution context |
-| `exit_code`  | INT         |                        |
+| `id`         | SERIAL | PK |
+| `timestamp`  | TIMESTAMPTZ | |
+| `session_id` | TEXT | |
+| `payload`    | JSONB | Full execution context |
+| `exit_code`  | INT | |
 
 ---
 
@@ -96,10 +96,11 @@ context7, pgEdge PostgreSQL) are available as Docker containers.
 
 ---
 
-## 5. EF Core Patterns (8 → 11) — PostgreSQL-Compatible Features
+## 5. EF Core Patterns (8 → 10) — PostgreSQL-Compatible Features
 
-All features listed below are compatible with PostgreSQL via Npgsql. SQL Server-only features are documented with
-their PostgreSQL equivalent. The project uses `Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.1 with EF Core 10.0.7 LTS.
+All features listed below are compatible with PostgreSQL 18 via Npgsql 10. SQL Server-only features are documented
+with their PostgreSQL equivalent. The project uses `Npgsql.EntityFrameworkCore.PostgreSQL` 10.x with EF Core 10 LTS.
+Connection string via `$PGCONNSTR` (see `.env`)
 
 ### EF Core 8: Foundation (LTS until Nov 2026)
 

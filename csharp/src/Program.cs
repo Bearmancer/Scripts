@@ -1,22 +1,21 @@
-﻿using CSharpScripts.CLI.Clean;
+using CSharpScripts.CLI.Clean;
 using CSharpScripts.CLI.Cloud;
-using CSharpScripts.CLI.Mail;
 using CSharpScripts.CLI.Music;
 using CSharpScripts.CLI.Read;
 using CSharpScripts.CLI.Sync;
-using Npgsql;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CSharpScripts;
 
 internal static class Program
 {
 	private static volatile bool Cancelled;
+	private static ServiceProvider? ServiceProvider;
 	public static CancellationTokenSource Cts { get; } = new();
-	private static ServiceProvider? _serviceProvider;
 
 	public static int Main(string[] args)
 	{
-		Serilog.Log.Logger = Log.BuildAppLogger("app.jsonl");
+		Serilog.Log.Logger = Log.BuildAppLogger(filename: "app.jsonl");
 
 		try
 		{
@@ -27,115 +26,101 @@ internal static class Program
 				{
 					Cancelled = true;
 					Cts.Cancel();
-					UI.Warn(message: "Cancellation requested, stopping gracefully...");
+					Ui.Warn(message: "Cancellation requested, stopping gracefully...");
 				}
 			};
 
-			var services = new ServiceCollection();
-			// ConfigureServices(services);
-			_serviceProvider = services.BuildServiceProvider();
+			ServiceCollection services = new();
+			ServiceProvider = services.BuildServiceProvider();
 
-			var registrar = new SpectreTypeRegistrar(_serviceProvider);
-			CommandApp app = new(registrar);
+			SpectreTypeRegistrar registrar = new(serviceProvider: ServiceProvider);
+			CommandApp app = new(registrar: registrar);
 
 			app.Configure(config =>
 			{
-				config.SetApplicationName("tools");
+				config.SetApplicationName(name: "tools");
 
 				config.AddBranch(
-					"sync",
+					name: "sync",
 					sync =>
 					{
-						sync.SetDescription("Sync data from various services");
-						sync.AddCommand<SyncAllCommand>("all")
-							.WithDescription("Sync YouTube and Last.fm");
-						sync.AddCommand<SyncYouTubeCommand>("yt")
-							.WithDescription("Sync YouTube playlists");
-						sync.AddCommand<SyncLastFmCommand>("lastfm")
-							.WithDescription("Sync Last.fm scrobbles");
-						sync.AddCommand<HistoryCommand>("history")
-							.WithDescription("Show sync history");
+						sync.SetDescription(description: "Sync data from various services");
+						sync.AddCommand<SyncAllCommand>(name: "all")
+							.WithDescription(description: "Sync YouTube and Last.fm");
+						sync.AddCommand<SyncYouTubeCommand>(name: "yt")
+							.WithDescription(description: "Sync YouTube playlists");
+						sync.AddCommand<SyncLastFmCommand>(name: "lastfm")
+							.WithDescription(description: "Sync Last.fm scrobbles");
+						sync.AddCommand<HistoryCommand>(name: "history")
+							.WithDescription(description: "Show sync history");
 					}
 				);
 
 				config.AddBranch(
-					"clean",
+					name: "clean",
 					clean =>
 					{
-						clean.SetDescription("Clean local state");
+						clean.SetDescription(description: "Clean local state");
 						clean
-							.AddCommand<CleanCacheCommand>("cache")
-							.WithDescription("Clean local cache files");
+							.AddCommand<CleanCacheCommand>(name: "cache")
+							.WithDescription(description: "Clean local cache files");
 						clean
-							.AddCommand<CleanResetCommand>("reset")
-							.WithDescription("Reset all state and spreadsheets");
+							.AddCommand<CleanResetCommand>(name: "reset")
+							.WithDescription(description: "Reset all state and spreadsheets");
 					}
 				);
 
 				config.AddBranch(
-					"music",
+					name: "music",
 					music =>
 					{
-						music.SetDescription("Music metadata commands");
+						music.SetDescription(description: "Music metadata commands");
 						music
-							.AddCommand<MusicSearchCommand>("search")
-							.WithDescription("Search for a music release");
+							.AddCommand<MusicSearchCommand>(name: "search")
+							.WithDescription(description: "Search for a music release");
 						music
-							.AddCommand<MusicEnrichCommand>("enrich")
+							.AddCommand<MusicEnrichCommand>(name: "enrich")
 							.WithDescription(
-								"Enrich CSV with missing metadata from MusicBrainz and Discogs"
+								description: "Enrich CSV with missing metadata from MusicBrainz and Discogs"
 							);
 						music
-							.AddCommand<MusicNotesCommand>("notes")
-							.WithDescription("Parse and display Discogs release notes by ID");
+							.AddCommand<MusicNotesCommand>(name: "notes")
+							.WithDescription(description: "Parse and display Discogs release notes by ID");
 						music
-							.AddCommand<MusicTranslateCommand>("translate")
+							.AddCommand<MusicTranslateCommand>(name: "translate")
 							.WithDescription(
-								"Translate non-English titles in a CSV using Azure Translator"
+								description: "Translate non-English titles in a CSV using Azure Translator"
 							);
 						music.AddBranch(
-							"lookup",
+							name: "lookup",
 							lookup =>
 							{
-								lookup.SetDescription("Lookup a release by ID");
+								lookup.SetDescription(description: "Lookup a release by ID");
 								lookup
-									.AddCommand<DiscogsLookupCommand>("discogs")
-									.WithDescription("Lookup a Discogs release by ID");
+									.AddCommand<DiscogsLookupCommand>(name: "discogs")
+									.WithDescription(description: "Lookup a Discogs release by ID");
 								lookup
-									.AddCommand<MusicBrainzLookupCommand>("mb")
-									.WithDescription("Lookup a MusicBrainz release by GUID");
+									.AddCommand<MusicBrainzLookupCommand>(name: "mb")
+									.WithDescription(description: "Lookup a MusicBrainz release by GUID");
 							}
 						);
 					}
 				);
 
-				config.AddBranch(
-					"mail",
-					mail =>
-					{
-						mail.SetDescription("Temporary email commands");
-						mail.AddCommand<MailCreateCommand>("create")
-							.WithDescription("Create a temporary email");
-						mail.AddCommand<MailCheckCommand>("check")
-							.WithDescription("Check for incoming messages");
-						mail.AddCommand<MailDeleteCommand>("delete")
-							.WithDescription("Delete temporary email account");
-					}
-				);
 
 				config
-					.AddCommand<ReadCommand>("read")
-					.WithDescription("Extract an article from a URL to EPUB");
+					.AddCommand<ReadCommand>(name: "read")
+					.WithDescription(description: "Extract an article from a URL to EPUB");
 
 				config.AddBranch(
-					"cloud",
+					name: "cloud",
 					cloud =>
 					{
-						cloud.SetDescription("Cloud service management");
+						cloud.SetDescription(description: "Cloud service management");
 						cloud
-							.AddCommand<CloudUsageCommand>("usage")
+							.AddCommand<CloudUsageCommand>(name: "usage")
 							.WithDescription(
-								"Show Azure free tier usage for current billing period"
+								description: "Show Azure free tier usage for current billing period"
 							);
 					}
 				);
@@ -179,7 +164,3 @@ internal static class Program
 		}
 	}
 }
-
-
-
-

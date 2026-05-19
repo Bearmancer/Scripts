@@ -1,5 +1,6 @@
--- Initial Schema for Personal DB
+-- Initial Schema for Personal DB (pg_db)
 -- Adheres to PostgreSQL Table Design Skill
+-- Credentials in .env / $PGCONNSTR
 
 CREATE TABLE users
 (

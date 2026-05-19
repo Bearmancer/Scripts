@@ -11,19 +11,31 @@ namespace CSharpScripts.Core;
 
 internal static class Resilience
 {
-	public const int MAX_RETRIES = 10;
+	public const int MaxRetries = 10;
 
 	public static readonly TimeSpan BaseRetryDelay = TimeSpan.FromSeconds(seconds: 5);
 	public static readonly TimeSpan MaxRetryDelay = TimeSpan.FromMinutes(minutes: 5);
 
 	private static readonly ConcurrentDictionary<ServiceType, ResiliencePipeline> Pipelines = new();
 
+	private static readonly ConcurrentDictionary<string, object> OperationPipelines = new();
+
+	private static readonly SearchValues<string> TransientPatterns = SearchValues.Create(
+		["busy", "unavailable", "503", "429", "rate limit", "too many requests", "try again"],
+		comparisonType: OrdinalIgnoreCase
+	);
+
+	private static readonly SearchValues<string> QuotaPatterns = SearchValues.Create(
+		["daily limit", "quota exceeded"],
+		comparisonType: OrdinalIgnoreCase
+	);
+
 	public static ResiliencePipeline GetPipeline(ServiceType service) =>
-		Pipelines.GetOrAdd(service, BuildPipeline);
+		Pipelines.GetOrAdd(key: service, valueFactory: BuildPipeline);
 
 	private static ResiliencePipeline BuildPipeline(ServiceType service)
 	{
-		var builder = new ResiliencePipelineBuilder();
+		ResiliencePipelineBuilder builder = new();
 		BuildCircuitBreaker(builder: builder, service: service);
 		BuildRateLimiter(builder: builder, service: service);
 		BuildRetry(builder: builder, service: service);
@@ -39,24 +51,24 @@ internal static class Resilience
 			new CircuitBreakerStrategyOptions
 			{
 				FailureRatio = 0.5,
-				SamplingDuration = TimeSpan.FromMinutes(3),
+				SamplingDuration = TimeSpan.FromMinutes(minutes: 3),
 				MinimumThroughput = 5,
-				BreakDuration = TimeSpan.FromSeconds(30),
+				BreakDuration = TimeSpan.FromSeconds(seconds: 30),
 				OnOpened = _ =>
 				{
-					Log.Warning("CircuitBreakerOpened {Service}", service);
+					Log.Warning(messageTemplate: "CircuitBreakerOpened {Service}", service);
 					return ValueTask.CompletedTask;
 				},
 				OnClosed = _ =>
 				{
-					Log.Information("CircuitBreakerClosed {Service}", service);
+					Log.Information(messageTemplate: "CircuitBreakerClosed {Service}", service);
 					return ValueTask.CompletedTask;
 				},
 				OnHalfOpened = _ =>
 				{
-					Log.Debug("CircuitBreakerHalfOpen {Service}", service);
+					Log.Debug(messageTemplate: "CircuitBreakerHalfOpen {Service}", service);
 					return ValueTask.CompletedTask;
-				},
+				}
 			}
 		);
 
@@ -64,29 +76,26 @@ internal static class Resilience
 	{
 		if (service != ServiceType.LastFm)
 			return;
-		// creating a SlidingWindowRateLimiter here transfers ownership to the pipeline builder
-		// which will manage its lifetime; intentionally not disposing here so the pipeline
-		// controls the limiter's lifetime.
+
 		builder.AddRateLimiter(
 			new SlidingWindowRateLimiter(
 				new SlidingWindowRateLimiterOptions
 				{
 					PermitLimit = 1,
-					Window = TimeSpan.FromSeconds(1),
+					Window = TimeSpan.FromSeconds(seconds: 1),
 					SegmentsPerWindow = 1,
 					QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-					QueueLimit = 20,
+					QueueLimit = 20
 				}
 			)
 		);
-		// ownership transferred to builder (see comment above)
 	}
 
 	private static void BuildRetry(ResiliencePipelineBuilder builder, ServiceType service) =>
 		builder.AddRetry(
 			new RetryStrategyOptions
 			{
-				MaxRetryAttempts = MAX_RETRIES,
+				MaxRetryAttempts = MaxRetries,
 				Delay = BaseRetryDelay,
 				MaxDelay = MaxRetryDelay,
 				BackoffType = DelayBackoffType.Exponential,
@@ -100,32 +109,32 @@ internal static class Resilience
 					.HandleInner<TimeoutException>()
 					.HandleInner<IOException>()
 					.HandleInner<SocketException>()
-					.Handle<Exception>(ex => IsTransientError(ex.Message))
-					.HandleInner<Exception>(ex => IsTransientError(ex.Message)),
+					.Handle<Exception>(ex => IsTransientError(message: ex.Message))
+					.HandleInner<Exception>(ex => IsTransientError(message: ex.Message)),
 				OnRetry = args =>
 				{
 					var message = args.Outcome.Exception?.Message ?? "Unknown error";
-					if (IsFatalQuotaError(message))
+					if (IsFatalQuotaError(message: message))
 					{
-						Log.Warning("DailyQuotaExceeded {Service}: {Message}", service, message);
+						Log.Warning(messageTemplate: "DailyQuotaExceeded {Service}: {Message}", service, message);
 						return ValueTask.FromException(
-							new DailyQuotaExceededException(service.ToString(), message)
+							new DailyQuotaExceededException(service.ToString(), message: message)
 						);
 					}
 					Log.Warning(
-						"Retry {Attempt}/{MaxRetries} for {Service}: {Message}",
+						messageTemplate: "Retry {Attempt}/{MaxRetries} for {Service}: {Message}",
 						args.AttemptNumber + 1,
-						MAX_RETRIES,
+						MaxRetries,
 						service,
 						message
 					);
 					Log.Debug(
-						"Retrying in {DelaySeconds:F0}s (at {RetryTime:HH:mm:ss})",
+						messageTemplate: "Retrying in {DelaySeconds:F0}s (at {RetryTime:HH:mm:ss})",
 						args.RetryDelay.TotalSeconds,
-						DateTime.Now.Add(args.RetryDelay)
+						DateTimeOffset.Now.Add(timeSpan: args.RetryDelay)
 					);
 					return ValueTask.CompletedTask;
-				},
+				}
 			}
 		);
 
@@ -139,12 +148,10 @@ internal static class Resilience
 			ServiceType.Music => 30,
 			ServiceType.Read => 60,
 			ServiceType.Cloud => 60,
-			_ => 30,
+			_ => 30
 		};
-		builder.AddTimeout(TimeSpan.FromSeconds(timeoutSeconds));
+		builder.AddTimeout(TimeSpan.FromSeconds(seconds: timeoutSeconds));
 	}
-
-	private static readonly ConcurrentDictionary<string, object> OperationPipelines = new();
 
 	public static async Task<T> ExecuteAsync<T>(
 		string operation,
@@ -152,10 +159,10 @@ internal static class Resilience
 		CancellationToken ct = default
 	)
 	{
-		var pipeline =
+		ResiliencePipeline<T> pipeline =
 			(ResiliencePipeline<T>)
-				OperationPipelines.GetOrAdd(operation, static op => BuildTypedPipeline<T>(op));
-		return await pipeline.ExecuteAsync(token => new ValueTask<T>(action()), ct);
+			OperationPipelines.GetOrAdd(key: operation, static op => BuildTypedPipeline<T>(operation: op));
+		return await pipeline.ExecuteAsync(_ => new ValueTask<T>(action()), cancellationToken: ct);
 	}
 
 	private static ResiliencePipeline<T> BuildTypedPipeline<T>(string operation)
@@ -164,7 +171,7 @@ internal static class Resilience
 			.AddRetry(
 				new RetryStrategyOptions<T>
 				{
-					MaxRetryAttempts = MAX_RETRIES,
+					MaxRetryAttempts = MaxRetries,
 					Delay = BaseRetryDelay,
 					MaxDelay = MaxRetryDelay,
 					BackoffType = DelayBackoffType.Exponential,
@@ -178,33 +185,33 @@ internal static class Resilience
 						.HandleInner<TimeoutException>()
 						.HandleInner<IOException>()
 						.HandleInner<SocketException>()
-						.Handle<Exception>(ex => IsTransientError(ex.Message))
-						.HandleInner<Exception>(ex => IsTransientError(ex.Message)),
+						.Handle<Exception>(ex => IsTransientError(message: ex.Message))
+						.HandleInner<Exception>(ex => IsTransientError(message: ex.Message)),
 					OnRetry = args =>
 					{
 						var message = args.Outcome.Exception?.Message ?? "Unknown error";
-						if (IsFatalQuotaError(message))
+						if (IsFatalQuotaError(message: message))
 						{
-							var dot = operation.IndexOf('.');
+							var dot = operation.IndexOf(value: '.');
 							var svc = dot >= 0 ? operation[..dot] : operation;
 							return ValueTask.FromException(
-								new DailyQuotaExceededException(svc, message)
+								new DailyQuotaExceededException(service: svc, message: message)
 							);
 						}
 						Log.Warning(
-							"{Operation} failed (attempt {Attempt}/{MaxRetries}): {Message}",
+							messageTemplate: "{Operation} failed (attempt {Attempt}/{MaxRetries}): {Message}",
 							operation,
 							args.AttemptNumber + 1,
-							MAX_RETRIES,
+							MaxRetries,
 							message
 						);
 						Log.Debug(
-							"Retrying in {DelaySeconds:F0}s (at {RetryTime:HH:mm:ss})",
+							messageTemplate: "Retrying in {DelaySeconds:F0}s (at {RetryTime:HH:mm:ss})",
 							args.RetryDelay.TotalSeconds,
-							DateTime.Now.Add(args.RetryDelay)
+							DateTimeOffset.Now.Add(timeSpan: args.RetryDelay)
 						);
 						return ValueTask.CompletedTask;
-					},
+					}
 				}
 			)
 			.Build();
@@ -216,43 +223,33 @@ internal static class Resilience
 		CancellationToken ct = default
 	) =>
 		ExecuteAsync<object>(
-			operation,
+			operation: operation,
 			async () =>
 			{
 				await action();
-				return default!;
+				return null!;
 			},
-			ct
+			ct: ct
 		);
 
-	private static readonly SearchValues<string> TransientPatterns = SearchValues.Create(
-		["busy", "unavailable", "503", "429", "rate limit", "too many requests", "try again"],
-		OrdinalIgnoreCase
-	);
-
-	private static readonly SearchValues<string> QuotaPatterns = SearchValues.Create(
-		["daily limit", "quota exceeded"],
-		OrdinalIgnoreCase
-	);
-
 	public static bool IsTransientError(string? message) =>
-		message is not null && TransientPatterns.Contains(message);
+		message is { } && TransientPatterns.Contains(value: message);
 
 	public static bool IsFatalQuotaError(string message) =>
-		QuotaPatterns.Contains(message)
-		|| (message.ContainsIgnoreCase("quota") && message.ContainsIgnoreCase("day"));
+		QuotaPatterns.Contains(value: message)
+		|| message.ContainsIgnoreCase(substring: "quota") && message.ContainsIgnoreCase(substring: "day");
 
 	public static Task<T> ExecuteMusicApiAsync<T>(
 		string service,
 		Func<Task<T>> action,
 		CancellationToken ct = default
-	) => ExecuteAsync($"Music.{service}", action, ct);
+	) => ExecuteAsync($"Music.{service}", action: action, ct: ct);
 
 	public static Task ExecuteMusicApiAsync(
 		string service,
 		Func<Task> action,
 		CancellationToken ct = default
-	) => ExecuteAsync($"Music.{service}", action, ct);
+	) => ExecuteAsync($"Music.{service}", action: action, ct: ct);
 }
 
 public sealed class DailyQuotaExceededException : Exception
@@ -272,8 +269,3 @@ public sealed class DailyQuotaExceededException : Exception
 
 	internal string Service { get; }
 }
-
-
-
-
-

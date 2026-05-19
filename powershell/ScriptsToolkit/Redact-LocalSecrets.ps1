@@ -1,6 +1,5 @@
 $ErrorActionPreference = 'Stop'
 
-# Ensure .env is in .gitignore
 $gitignore = ".gitignore"
 if (Test-Path $gitignore) {
 	$content = Get-Content $gitignore -Raw
@@ -18,12 +17,10 @@ $iteration = 1
 while ($true) {
 	Write-Host "--- Iteration $iteration ---"
 
-	# Clean up previous report
 	if (Test-Path local_leaks.json) {
 		Remove-Item local_leaks.json
 	}
 
-	# Run gitleaks on the current working directory (untracked and modified files)
 	$proc = Start-Process gitleaks -ArgumentList "detect --no-git --report-path local_leaks.json -f json" -NoNewWindow -Wait -PassThru
 
 	if ($proc.ExitCode -eq 0 -or !(Test-Path local_leaks.json)) {
@@ -50,7 +47,6 @@ while ($true) {
 			continue
 		}
 
-		# Add to .env if not already there
 		$envExists = Test-Path .env
 		$envContent = if ($envExists) {
 			Get-Content .env -Raw
@@ -65,7 +61,6 @@ while ($true) {
 			Write-Host "Saved secret to .env as $envKey"
 		}
 
-		# Redact in the file
 		if (-not $modifiedFiles.ContainsKey($file)) {
 			$modifiedFiles[$file] = Get-Content $file -Raw
 		}
@@ -73,7 +68,6 @@ while ($true) {
 		$modifiedFiles[$file] = $modifiedFiles[$file].Replace($secret, "[REDACTED_$($rule.ToUpper() )]")
 	}
 
-	# Write changes back to files
 	foreach ($file in $modifiedFiles.Keys) {
 		[IO.File]::WriteAllText((Resolve-Path $file).Path, $modifiedFiles[$file])
 		Write-Host "Redacted secrets in $file"

@@ -13,25 +13,25 @@ internal sealed class LibreTranslateHostManager
 
 	public async Task<bool> EnsureRunningAsync(bool offline = true, CancellationToken ct = default)
 	{
-		Log.Debug("EnsureRunningAsync entry {Offline}", offline);
+		Log.Debug(messageTemplate: "EnsureRunningAsync entry {Offline}", offline);
 		if (IsRunning())
 		{
-			Log.Debug("LibreTranslate container already running");
-			Log.Debug("EnsureRunningAsync exit true");
+			Log.Debug(messageTemplate: "LibreTranslate container already running");
+			Log.Debug(messageTemplate: "EnsureRunningAsync exit true");
 			return true;
 		}
 
-		Log.Information("Starting LibreTranslate container for translation...");
+		Log.Information(messageTemplate: "Starting LibreTranslate container for translation...");
 		if (!Start(offline: offline))
 		{
-			Log.Error("Failed to start LibreTranslate container");
-			Log.Debug("EnsureRunningAsync exit false");
+			Log.Error(messageTemplate: "Failed to start LibreTranslate container");
+			Log.Debug(messageTemplate: "EnsureRunningAsync exit false");
 			return false;
 		}
 
-		Log.Debug("Waiting {0}ms for container to initialize...", StartupWaitMs);
-		await Task.Delay(millisecondsDelay: StartupWaitMs, ct);
-		Log.Debug("EnsureRunningAsync exit true");
+		Log.Debug(messageTemplate: "Waiting {0}ms for container to initialize...", StartupWaitMs);
+		await Task.Delay(millisecondsDelay: StartupWaitMs, cancellationToken: ct);
+		Log.Debug(messageTemplate: "EnsureRunningAsync exit true");
 		return true;
 	}
 
@@ -48,14 +48,14 @@ internal sealed class LibreTranslateHostManager
 
 		if (IsRunning())
 		{
-			Log.Debug("LibreTranslate container already running");
+			Log.Debug(messageTemplate: "LibreTranslate container already running");
 			LogDockerEvent(operation: "Start", status: "AlreadyRunning");
 			return true;
 		}
 
 		if (ContainerExists())
 		{
-			Log.Information("Starting LibreTranslate container...");
+			Log.Information(messageTemplate: "Starting LibreTranslate container...");
 			LogDockerEvent(
 				operation: "Start",
 				status: "StartingExisting",
@@ -71,7 +71,7 @@ internal sealed class LibreTranslateHostManager
 			return started;
 		}
 
-		Log.Information("Creating LibreTranslate container (offline mode: {0})...", offline);
+		Log.Information(messageTemplate: "Creating LibreTranslate container (offline mode: {0})...", offline);
 		var offlineFlag = offline ? "-e LT_UPDATE_MODELS=false" : "";
 		LogDockerEvent(
 			operation: "Start",
@@ -80,7 +80,7 @@ internal sealed class LibreTranslateHostManager
 			{
 				[key: "Container"] = ContainerName,
 				[key: "OfflineMode"] = offline,
-				[key: "Image"] = DockerImage,
+				[key: "Image"] = DockerImage
 			}
 		);
 
@@ -102,12 +102,12 @@ internal sealed class LibreTranslateHostManager
 
 		if (!IsRunning())
 		{
-			Log.Debug("LibreTranslate container not running");
+			Log.Debug(messageTemplate: "LibreTranslate container not running");
 			LogDockerEvent(operation: "Stop", status: "NotRunning");
 			return true;
 		}
 
-		Log.Information("Stopping LibreTranslate container...");
+		Log.Information(messageTemplate: "Stopping LibreTranslate container...");
 		var stopped = RunDockerCommand($"stop {ContainerName}");
 		LogDockerEvent(
 			operation: "Stop",
@@ -126,8 +126,8 @@ internal sealed class LibreTranslateHostManager
 
 	public static bool PullImage()
 	{
-		Log.Information("Pulling LibreTranslate Docker image (this may take a while)...");
-		Log.Information("Image: {0}", DockerImage);
+		Log.Information(messageTemplate: "Pulling LibreTranslate Docker image (this may take a while)...");
+		Log.Information(messageTemplate: "Image: {0}", DockerImage);
 		LogDockerEvent(
 			operation: "PullImage",
 			status: "Starting",
@@ -142,7 +142,7 @@ internal sealed class LibreTranslateHostManager
 				status: "Failed",
 				new Dictionary<string, object>
 				{
-					[key: "Reason"] = "Docker process failed to start",
+					[key: "Reason"] = "Docker process failed to start"
 				},
 				level: LogEventLevel.Error
 			);
@@ -150,28 +150,28 @@ internal sealed class LibreTranslateHostManager
 		}
 
 		while (process.StandardOutput.ReadLine() is { } line)
-			Log.Debug("{0}", line);
+			Log.Debug(messageTemplate: "{0}", line);
 
 		process.WaitForExit();
 
 		if (process.ExitCode != 0)
 		{
 			var errorOutput = process.StandardError.ReadToEnd();
-			Log.Error("Docker pull failed: {0}", errorOutput);
+			Log.Error(messageTemplate: "Docker pull failed: {0}", errorOutput);
 			LogDockerEvent(
 				operation: "PullImage",
 				status: "Failed",
 				new Dictionary<string, object>
 				{
 					[key: "ExitCode"] = process.ExitCode,
-					[key: "Error"] = errorOutput,
+					[key: "Error"] = errorOutput
 				},
 				level: LogEventLevel.Error
 			);
 			return false;
 		}
 
-		Log.Information("LibreTranslate image downloaded successfully");
+		Log.Information(messageTemplate: "LibreTranslate image downloaded successfully");
 		LogDockerEvent(
 			operation: "PullImage",
 			status: "Complete",
@@ -185,12 +185,12 @@ internal sealed class LibreTranslateHostManager
 
 	public static void ShowStatus(string url)
 	{
-		Log.Information("=== LibreTranslate Status ===");
-		Log.Information("Docker Image:  {0}", ImageExists() ? "Downloaded" : "Not downloaded");
-		Log.Information("Container:     {0}", ContainerExists() ? "Exists" : "Not created");
-		Log.Information("Status:        {0}", IsRunning() ? "Running" : "Stopped");
-		Log.Information("URL:           {0}", url);
-		Log.Information("Languages:     All (auto-detect enabled)");
+		Log.Information(messageTemplate: "=== LibreTranslate Status ===");
+		Log.Information(messageTemplate: "Docker Image:  {0}", ImageExists() ? "Downloaded" : "Not downloaded");
+		Log.Information(messageTemplate: "Container:     {0}", ContainerExists() ? "Exists" : "Not created");
+		Log.Information(messageTemplate: "Status:        {0}", IsRunning() ? "Running" : "Stopped");
+		Log.Information(messageTemplate: "URL:           {0}", url);
+		Log.Information(messageTemplate: "Languages:     All (auto-detect enabled)");
 	}
 
 	private static bool ContainerExists() =>
@@ -228,31 +228,29 @@ internal sealed class LibreTranslateHostManager
 
 		process.WaitForExit();
 
-		if (process.ExitCode != 0)
-		{
-			var errorOutput = process.StandardError.ReadToEnd();
-			Log.ForService(service: ServiceType.Music)
-				.Error(
-					messageTemplate: "DockerCommandFailed {Arguments} {ExitCode} {ErrorOutput}",
-					propertyValue0: arguments,
-					propertyValue1: process.ExitCode,
-					propertyValue2: errorOutput
-				);
-			LogDockerEvent(
-				operation: "DockerCommand",
-				status: "Failed",
-				new Dictionary<string, object>
-				{
-					[key: "Arguments"] = arguments,
-					[key: "ExitCode"] = process.ExitCode,
-					[key: "Error"] = errorOutput,
-				},
-				level: LogEventLevel.Error
-			);
-			return false;
-		}
+		if (process.ExitCode == 0)
+			return true;
 
-		return true;
+		var errorOutput = process.StandardError.ReadToEnd();
+		Log.ForService(service: ServiceType.Music)
+			.Error(
+				messageTemplate: "DockerCommandFailed {Arguments} {ExitCode} {ErrorOutput}",
+				propertyValue0: arguments,
+				propertyValue1: process.ExitCode,
+				propertyValue2: errorOutput
+			);
+		LogDockerEvent(
+			operation: "DockerCommand",
+			status: "Failed",
+			new Dictionary<string, object>
+			{
+				[key: "Arguments"] = arguments,
+				[key: "ExitCode"] = process.ExitCode,
+				[key: "Error"] = errorOutput
+			},
+			level: LogEventLevel.Error
+		);
+		return false;
 	}
 
 	private static Process? StartDockerProcess(string arguments, bool redirectError = false) =>
@@ -262,7 +260,7 @@ internal sealed class LibreTranslateHostManager
 				RedirectStandardOutput = true,
 				RedirectStandardError = redirectError,
 				UseShellExecute = false,
-				CreateNoWindow = true,
+				CreateNoWindow = true
 			}
 		);
 
@@ -273,16 +271,12 @@ internal sealed class LibreTranslateHostManager
 		LogEventLevel level = LogEventLevel.Debug
 	)
 	{
-		var props = Enumerable.ToDictionary(
-			Enumerable.Concat(
-				new Dictionary<string, object>
-				{
-					[key: "Status"] = status,
-					[key: "Container"] = ContainerName,
-				},
-				data ?? []
-			),
-			kvp => kvp.Key,
+		Dictionary<string, object> props = new Dictionary<string, object>
+		{
+			[key: "Status"] = status,
+			[key: "Container"] = ContainerName
+		}.Concat(data ?? []
+		).ToDictionary(kvp => kvp.Key,
 			kvp => kvp.Value
 		);
 		Log.ForService(service: ServiceType.Music)
@@ -294,5 +288,3 @@ internal sealed class LibreTranslateHostManager
 			);
 	}
 }
-
-

@@ -1,4 +1,5 @@
 -- init_schema.sql
+-- Target database: pg_db (credentials in .env / $PGCONNSTR)
 
 -- Artists table
 CREATE TABLE IF NOT EXISTS artists

@@ -15,7 +15,6 @@ logger = get_logger("pristine")
 
 HEADLESS: bool = os.getenv("PRISTINE_HEADLESS", "0") == "1"
 
-# SECURITY: Extracted hardcoded path to environment variable
 BASE_OUT_DIR: str = os.getenv("PRISTINE_BASE_OUT_DIR", "")
 if not BASE_OUT_DIR:
 	raise ValueError(
@@ -943,7 +942,6 @@ def _download_single_album(context: BrowserContext, code: str, out_dir: str) -> 
 						logger.debug("stall-retry playnow failed: %s", exc)
 				time.sleep(POLL_SLEEP)
 		downloaded_count = len(seen_titles)
-		# PERFORMANCE: List comprehension instead of manual append loop
 		missing_on_disk: list[str] = [
 			title
 			for title in seen_titles

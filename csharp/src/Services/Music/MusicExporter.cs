@@ -1,5 +1,5 @@
 namespace CSharpScripts.Services.Music;
 
-internal sealed class MusicExporter { }
-
-
+internal sealed class MusicExporter
+{
+}

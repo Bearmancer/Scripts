@@ -6,29 +6,29 @@ internal static class SheetNameHelper
 {
 	public static string Sanitize(string name)
 	{
-		var sb = new StringBuilder(name.Length + 4);
+		StringBuilder sb = new(name.Length + 4);
 		foreach (var c in name)
 		{
 			switch (c)
 			{
 				case ':':
-					sb.Append(" -");
+					sb.Append(value: " -");
 					break;
 				case '/':
 				case '\\':
-					sb.Append('-');
+					sb.Append(value: '-');
 					break;
 				case '[':
-					sb.Append('(');
+					sb.Append(value: '(');
 					break;
 				case ']':
-					sb.Append(')');
+					sb.Append(value: ')');
 					break;
 				case '?':
 				case '*':
 					break;
 				default:
-					sb.Append(c);
+					sb.Append(value: c);
 					break;
 			}
 		}
@@ -36,9 +36,7 @@ internal static class SheetNameHelper
 	}
 
 	public static string EscapeForFormula(string name) =>
-		name.Contains('\'') || name.Contains(' ') || name.Contains('-')
-			? $"'{name.Replace("'", "''")}'"
+		name.Contains(value: '\'') || name.Contains(value: ' ') || name.Contains(value: '-')
+			? $"'{name.Replace(oldValue: "'", newValue: "''")}'"
 			: name;
 }
-
-

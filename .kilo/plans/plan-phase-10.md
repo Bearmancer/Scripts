@@ -1,31 +1,27 @@
-# Phase 10: EF11 Query Upgrades Implementation Plan
+# Phase 10: EF10 Query Upgrades Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> **§ EF10 compliance note:** `MaxByAsync` and `MinByAsync` are EF Core 11 only — NOT available in EF10. Use
+> `OrderByDescending(...).FirstOrDefaultAsync()` instead. `EF.Functions.JsonPathExists()` is EF Core 11 only —
+> NOT available in EF10. Use Npgsql JSONB containment operator `@>` via `EF.Functions.JsonContains()` or
+> raw SQL `WHERE metadata @? '$.*'` instead. `TrigramsSimilarity` and `ILike` are Npgsql-specific and
+> available in EF10.
 
-**Goal:** Implement advanced querying patterns using EF11 `MaxByAsync`, PG-specific `JsonTypeof` searches, and `TrigramsSimilarity` for fuzzy artist lookup.
+**Goal:** Implement advanced querying patterns using EF10-compatible `OrderByDescending().FirstOrDefaultAsync()`, Npgsql JSONB `@>` containment searches, and `TrigramsSimilarity` for fuzzy artist lookup.
 
 **Architecture:** Implement helper query methods in `PostgresService.cs` and add integration tests in `PostgresServiceTests.cs`.
 
-**Tech Stack:** C#, EF Core 11, Postgres / SQLite
+**Tech Stack:** C#, EF Core 10, Npgsql 10, PostgreSQL 18
 
 ---
 
-### Task 10.1: Last Played — Implement GetLastPlayedScrobbleAsync using MaxByAsync
+### Task 10.1: Last Played — Implement GetLastPlayedScrobbleAsync using OrderByDescending
 
 **Files:**
 - Modify: `csharp/src/Services/PostgresService.cs`
 
 - [ ] **Step 1: Implement the query method**
-
-**Pre-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
-```csharp
-	internal async Task<int> ResyncFromAsync(DateTimeOffset fromDate, CancellationToken ct = default)
-	{
-		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Scrobbles.Where(s => s.ScrobbledAt >= fromDate).ExecuteDeleteAsync(ct);
-	}
-}
-```
 
 **Post-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
 ```csharp
@@ -38,7 +34,7 @@
 	internal async Task<Scrobble?> GetLastPlayedScrobbleAsync(CancellationToken ct = default)
 	{
 		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Scrobbles.MaxByAsync(s => s.ScrobbledAt, ct);
+		return await context.Scrobbles.OrderByDescending(s => s.ScrobbledAt).FirstOrDefaultAsync(ct);
 	}
 }
 ```
@@ -47,40 +43,33 @@
 
 ```bash
 git add csharp/src/Services/PostgresService.cs
-git commit -m "feat: implement GetLastPlayedScrobbleAsync using MaxByAsync"
+git commit -m "feat: implement GetLastPlayedScrobbleAsync using OrderByDescending"
 ```
 
 ---
 
-### Task 10.2: Most Played — Implement GetMostPlayedTrackAsync using MaxByAsync
+### Task 10.2: Most Played — Implement GetMostPlayedTrackAsync using OrderByDescending
 
 **Files:**
 - Modify: `csharp/src/Services/PostgresService.cs`
 
 - [ ] **Step 1: Implement the query method**
 
-**Pre-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
-```csharp
-	internal async Task<Scrobble?> GetLastPlayedScrobbleAsync(CancellationToken ct = default)
-	{
-		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Scrobbles.MaxByAsync(s => s.ScrobbledAt, ct);
-	}
-}
-```
-
 **Post-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
 ```csharp
 	internal async Task<Scrobble?> GetLastPlayedScrobbleAsync(CancellationToken ct = default)
 	{
 		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Scrobbles.MaxByAsync(s => s.ScrobbledAt, ct);
+		return await context.Scrobbles.OrderByDescending(s => s.ScrobbledAt).FirstOrDefaultAsync(ct);
 	}
 
 	internal async Task<Track?> GetMostPlayedTrackAsync(int artistId, CancellationToken ct = default)
 	{
 		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Tracks.Where(t => t.ArtistId == artistId).MaxByAsync(t => t.Scrobbles.Count, ct);
+		return await context.Tracks
+			.Where(t => t.ArtistId == artistId)
+			.OrderByDescending(t => t.Scrobbles.Count)
+			.FirstOrDefaultAsync(ct);
 	}
 }
 ```
@@ -89,40 +78,36 @@ git commit -m "feat: implement GetLastPlayedScrobbleAsync using MaxByAsync"
 
 ```bash
 git add csharp/src/Services/PostgresService.cs
-git commit -m "feat: implement GetMostPlayedTrackAsync using MaxByAsync"
+git commit -m "feat: implement GetMostPlayedTrackAsync using OrderByDescending"
 ```
 
 ---
 
-### Task 10.3: Video Metadata Search — Implement FindVideoByMetadataKeyAsync using JsonTypeof
+### Task 10.3: Video Metadata Search — Implement FindVideoByMetadataKeyAsync using JSONB containment
 
 **Files:**
 - Modify: `csharp/src/Services/PostgresService.cs`
 
 - [ ] **Step 1: Implement the query method**
 
-**Pre-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
-```csharp
-	internal async Task<Track?> GetMostPlayedTrackAsync(int artistId, CancellationToken ct = default)
-	{
-		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Tracks.Where(t => t.ArtistId == artistId).MaxByAsync(t => t.Scrobbles.Count, ct);
-	}
-}
-```
-
 **Post-modification code chunk for `csharp/src/Services/PostgresService.cs`:**
 ```csharp
 	internal async Task<Track?> GetMostPlayedTrackAsync(int artistId, CancellationToken ct = default)
 	{
 		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Tracks.Where(t => t.ArtistId == artistId).MaxByAsync(t => t.Scrobbles.Count, ct);
+		return await context.Tracks
+			.Where(t => t.ArtistId == artistId)
+			.OrderByDescending(t => t.Scrobbles.Count)
+			.FirstOrDefaultAsync(ct);
 	}
 
 	internal async Task<List<Video>> FindVideosByMetadataKeyAsync(string key, CancellationToken ct = default)
 	{
 		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Videos.Where(v => EF.Functions.JsonTypeof(v.Metadata, $"$.{key}") != null).ToListAsync(ct);
+		// Npgsql JSONB containment operator @> — EF10-compatible
+		return await context.Videos
+			.Where(v => EF.Functions.JsonContains(v.Metadata, key))
+			.ToListAsync(ct);
 	}
 }
 ```
@@ -131,7 +116,7 @@ git commit -m "feat: implement GetMostPlayedTrackAsync using MaxByAsync"
 
 ```bash
 git add csharp/src/Services/PostgresService.cs
-git commit -m "feat: implement FindVideosByMetadataKeyAsync using JsonTypeof"
+git commit -m "feat: implement FindVideosByMetadataKeyAsync using Npgsql JsonContains"
 ```
 
 ---

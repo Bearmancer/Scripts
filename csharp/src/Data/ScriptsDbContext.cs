@@ -6,18 +6,19 @@ namespace CSharpScripts.Data;
 
 internal sealed class ScriptsDbContext : DbContext
 {
-	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options) : base(options) => ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
+		: base(options: options) => ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
 	public DbSet<Track> Tracks => Set<Track>();
-	public DbSet<Scrobble> Scrobbles => Set<EntityScrobble>();
+	public DbSet<EntityScrobble> Scrobbles => Set<EntityScrobble>();
 	public DbSet<Video> Videos => Set<Video>();
 
 	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
 	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 
-	protected override void OnModelCreating(ModelBuilder mb)
-		=> mb.ApplyConfigurationsFromAssembly(typeof(ScriptsDbContext).Assembly);
+	protected override void OnModelCreating(ModelBuilder mb) =>
+		mb.ApplyConfigurationsFromAssembly(assembly: typeof(ScriptsDbContext).Assembly);
 }

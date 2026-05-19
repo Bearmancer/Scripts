@@ -18,21 +18,31 @@ internal static class StateManager
 	public static readonly JsonSerializerOptions JsonIndented = new()
 	{
 		WriteIndented = true,
-		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 	};
 
 	public static readonly JsonSerializerOptions JsonCompact = new()
 	{
-		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 	};
 
+	private static readonly FrozenDictionary<string, string> LegacyMigrations = new Dictionary<
+		string,
+		string
+	>
+	{
+		[key: "lastfm/fetch-state.json"] = "lastfm/sync.json",
+		[key: "youtube/fetch-state.json"] = "youtube/sync.json",
+		[key: "lastfm/scrobbles-cache.json"] = "lastfm/scrobbles.json"
+	}.ToFrozenDictionary();
+
 	private static string YouTubePlaylistsDirectory =>
-		Path.Combine(RootDirectory, YoutubePlaylistsSubdirectory);
+		Path.Combine(path1: RootDirectory, path2: YoutubePlaylistsSubdirectory);
 
 	private static string YouTubeDeletedDirectory =>
-		Path.Combine(RootDirectory, YoutubeDeletedSubdirectory);
+		Path.Combine(path1: RootDirectory, path2: YoutubeDeletedSubdirectory);
 
-	private static string ReleaseCachePath => Path.Combine(Paths.StateDirectory, "releases");
+	private static string ReleaseCachePath => Path.Combine(path1: Paths.StateDirectory, path2: "releases");
 
 	public static async Task<T> LoadStateAsync<T>(string fileName, CancellationToken ct = default)
 		where T : class, new()
@@ -48,27 +58,29 @@ internal static class StateManager
 		{
 			try
 			{
-				var json = await File.ReadAllTextAsync(path, ct);
+				var json = await File.ReadAllTextAsync(path: path, cancellationToken: ct);
 				return JsonSerializer.Deserialize<T>(json: json, options: JsonCompact) ?? new T();
 			}
 			catch (JsonException)
 			{
-				Log.Warning("JSON corruption detected in {Path}", path);
+				Log.Warning(messageTemplate: "JSON corruption detected in {Path}", path);
 				var corruptedPath = path + ".corrupted";
 				lock (StateLock)
 					File.Move(sourceFileName: path, destFileName: corruptedPath, overwrite: true);
-				Log.Debug("Backed up corrupted file to {Path}", corruptedPath);
+				Log.Debug(messageTemplate: "Backed up corrupted file to {Path}", corruptedPath);
 				return new T();
 			}
 		}
 
-		var legacyPath = GetLegacyPath(fileName);
-		if (legacyPath is not null && File.Exists(legacyPath))
+		var legacyPath = GetLegacyPath(fileName: fileName);
+		if (legacyPath is { } && File.Exists(path: legacyPath))
+		{
 			return await TryMigrateLegacyFileAsync<T>(
 				fileName: fileName,
 				legacyPath: legacyPath,
-				ct
+				ct: ct
 			);
+		}
 
 		return new T();
 	}
@@ -80,42 +92,32 @@ internal static class StateManager
 	)
 		where T : class, new()
 	{
-		var newPath = GetPath(fileName);
-		Log.Debug("Migrating state file: {LegacyPath} → {NewPath}", legacyPath, newPath);
+		var newPath = GetPath(fileName: fileName);
+		Log.Debug(messageTemplate: "Migrating state file: {LegacyPath} → {NewPath}", legacyPath, newPath);
 		try
 		{
-			var json = await File.ReadAllTextAsync(legacyPath, ct);
-			T? data = JsonSerializer.Deserialize<T>(json, JsonCompact) ?? new T();
+			var json = await File.ReadAllTextAsync(path: legacyPath, cancellationToken: ct);
+			T? data = JsonSerializer.Deserialize<T>(json: json, options: JsonCompact) ?? new T();
 
-			await SaveStateAsync(fileName, data, ct);
+			await SaveStateAsync(fileName: fileName, state: data, ct: ct);
 
 			lock (StateLock)
-				File.Delete(legacyPath);
+				File.Delete(path: legacyPath);
 
 			return data;
 		}
 		catch (JsonException)
 		{
-			Log.Warning("JSON corruption in legacy file {LegacyPath}", legacyPath);
+			Log.Warning(messageTemplate: "JSON corruption in legacy file {LegacyPath}", legacyPath);
 			var corruptedPath = legacyPath + ".corrupted";
 			lock (StateLock)
-				File.Move(legacyPath, corruptedPath, true);
+				File.Move(sourceFileName: legacyPath, destFileName: corruptedPath, overwrite: true);
 			return new T();
 		}
 	}
 
-	private static readonly FrozenDictionary<string, string> LegacyMigrations = new Dictionary<
-		string,
-		string
-	>
-	{
-		["lastfm/fetch-state.json"] = "lastfm/sync.json",
-		["youtube/fetch-state.json"] = "youtube/sync.json",
-		["lastfm/scrobbles-cache.json"] = "lastfm/scrobbles.json",
-	}.ToFrozenDictionary();
-
 	private static string? GetLegacyPath(string fileName) =>
-		LegacyMigrations.TryGetValue(fileName, out var legacy) ? GetPath(legacy) : null;
+		LegacyMigrations.TryGetValue(key: fileName, out var legacy) ? GetPath(fileName: legacy) : null;
 
 	public static async Task SaveStateAsync<T>(
 		string fileName,
@@ -149,18 +151,18 @@ internal static class StateManager
 
 	public static void DeleteAllStates()
 	{
-		if (Directory.Exists(path: RootDirectory))
-		{
-			Directory.Delete(path: RootDirectory, recursive: true);
-			Log.Debug("Deleted all state files");
-		}
+		if (!Directory.Exists(path: RootDirectory))
+			return;
+
+		Directory.Delete(path: RootDirectory, recursive: true);
+		Log.Debug(messageTemplate: "Deleted all state files");
 	}
 
 	public static void DeleteLastFmStates()
 	{
 		Delete(fileName: LastFmSyncFile);
 		Delete(fileName: LastFmScrobblesFile);
-		Log.Debug("Deleted Last.fm state files");
+		Log.Debug(messageTemplate: "Deleted Last.fm state files");
 	}
 
 	private static string GetPath(string fileName)
@@ -184,7 +186,7 @@ internal static class StateManager
 
 		var json = File.ReadAllText(path: path);
 		return JsonSerializer.Deserialize<List<YouTubeVideo>>(json: json, options: JsonCompact)
-			?? [];
+		       ?? [];
 	}
 
 	public static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
@@ -237,14 +239,14 @@ internal static class StateManager
 		if (Directory.Exists(path: YouTubePlaylistsDirectory))
 			Directory.Delete(path: YouTubePlaylistsDirectory, recursive: true);
 
-		Log.Debug("Deleted YouTube state files");
+		Log.Debug(messageTemplate: "Deleted YouTube state files");
 	}
 
 	public static void MigratePlaylistFiles(Dictionary<string, PlaylistSnapshot> snapshots)
 	{
 		List<string> oldFiles =
 		[
-			.. Directory.GetFiles(path: Paths.StateDirectory, searchPattern: "playlist_*.json"),
+			.. Directory.GetFiles(path: Paths.StateDirectory, searchPattern: "playlist_*.json")
 		];
 
 		var oldPlaylistsDir = Path.Combine(path1: Paths.StateDirectory, path2: "playlists");
@@ -259,14 +261,14 @@ internal static class StateManager
 
 		foreach (var oldFile in oldFiles)
 		{
-			var fileName = Path.GetFileName(oldFile);
-			var withoutExt = Path.GetFileNameWithoutExtension(fileName);
-			var playlistId = withoutExt.StartsWith("playlist_") ? withoutExt[9..] : withoutExt;
+			var fileName = Path.GetFileName(path: oldFile);
+			var withoutExt = Path.GetFileNameWithoutExtension(path: fileName);
+			var playlistId = withoutExt.StartsWith(value: "playlist_") ? withoutExt[9..] : withoutExt;
 
-			if (!snapshots.TryGetValue(playlistId, out PlaylistSnapshot? snapshot))
+			if (!snapshots.TryGetValue(key: playlistId, out PlaylistSnapshot? snapshot))
 			{
 				File.Delete(path: oldFile);
-				Log.Debug("Deleted orphan playlist cache: {0}", fileName);
+				Log.Debug(messageTemplate: "Deleted orphan playlist cache: {0}", fileName);
 				continue;
 			}
 
@@ -276,7 +278,7 @@ internal static class StateManager
 			{
 				File.Move(sourceFileName: oldFile, destFileName: newPath);
 				migrated++;
-				Log.Debug("Migrated: {0} → {1}", fileName, Path.GetFileName(path: newPath));
+				Log.Debug(messageTemplate: "Migrated: {0} → {1}", fileName, Path.GetFileName(path: newPath));
 			}
 			else
 				File.Delete(path: oldFile);
@@ -289,7 +291,7 @@ internal static class StateManager
 			Directory.Delete(path: oldPlaylistsDir, recursive: true);
 
 		if (migrated > 0)
-			Log.Information("Migrated {0} playlist cache files to new format", migrated);
+			Log.Information(messageTemplate: "Migrated {0} playlist cache files to new format", migrated);
 	}
 
 	private static string GetPlaylistPath(string playlistTitle) =>
@@ -314,16 +316,16 @@ internal static class StateManager
 			GetReleasePath(releaseId: releaseId),
 			JsonSerializer.Serialize(value: data, options: JsonIndented)
 		);
-		Log.Debug("Saved release cache: {0}", releaseId);
+		Log.Debug(messageTemplate: "Saved release cache: {0}", releaseId);
 	}
 
 	public static bool ReleaseCacheExists(string releaseId) =>
 		File.Exists(GetReleasePath(releaseId: releaseId));
 
-	public static DateTime? GetReleaseCacheAge(string releaseId)
+	public static DateTimeOffset? GetReleaseCacheAge(string releaseId)
 	{
 		var path = GetReleasePath(releaseId: releaseId);
-		return File.Exists(path: path) ? File.GetLastWriteTimeUtc(path: path) : null;
+		return File.Exists(path: path) ? new DateTimeOffset(File.GetLastWriteTimeUtc(path: path)) : null;
 	}
 
 	public static void DeleteReleaseCache(string releaseId)
@@ -332,7 +334,7 @@ internal static class StateManager
 		if (File.Exists(path: path))
 		{
 			File.Delete(path: path);
-			Log.Debug("Deleted release cache: {0}", releaseId);
+			Log.Debug(messageTemplate: "Deleted release cache: {0}", releaseId);
 		}
 	}
 
@@ -341,7 +343,7 @@ internal static class StateManager
 		if (Directory.Exists(path: ReleaseCachePath))
 		{
 			Directory.Delete(path: ReleaseCachePath, recursive: true);
-			Log.Debug("Deleted all release caches");
+			Log.Debug(messageTemplate: "Deleted all release caches");
 		}
 	}
 
@@ -357,8 +359,3 @@ internal static class StateManager
 	private static string GetReleasePath(string releaseId) =>
 		Path.Combine(path1: ReleaseCachePath, $"{releaseId.SanitizeFileName()}.json");
 }
-
-
-
-
-

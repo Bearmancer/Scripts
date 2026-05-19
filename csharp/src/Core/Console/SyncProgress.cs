@@ -20,7 +20,7 @@ internal record SyncProgressSnapshot(
 
 internal sealed class SyncProgressTracker
 {
-	private DateTime? StartTime;
+	private DateTimeOffset? StartTime;
 	public int TotalPlaylists { get; private set; }
 	public int CompletedPlaylists { get; private set; }
 	public int CurrentPlaylistIndex { get; private set; } = 1;
@@ -31,7 +31,7 @@ internal sealed class SyncProgressTracker
 	public int TotalVideosProcessedAcrossAllPlaylists { get; private set; }
 
 	public TimeSpan ElapsedTime =>
-		StartTime.HasValue ? DateTime.UtcNow - StartTime.Value : TimeSpan.Zero;
+		StartTime.HasValue ? DateTimeOffset.UtcNow - StartTime.Value : TimeSpan.Zero;
 
 	public TimeSpan? EstimatedTimeRemaining
 	{
@@ -67,7 +67,7 @@ internal sealed class SyncProgressTracker
 		CurrentPlaylistName = "";
 		CurrentPlaylistTotalVideos = 0;
 		CurrentPlaylistVideosProcessed = 0;
-		TotalVideosAcrossAllPlaylists = Enumerable.Sum(playlists, p => p.VideoCount);
+		TotalVideosAcrossAllPlaylists = playlists.Sum(p => p.VideoCount);
 		TotalVideosProcessedAcrossAllPlaylists = 0;
 		StartTime = null;
 	}
@@ -77,7 +77,7 @@ internal sealed class SyncProgressTracker
 		CurrentPlaylistName = name;
 		CurrentPlaylistTotalVideos = videoCount;
 		CurrentPlaylistVideosProcessed = 0;
-		StartTime ??= DateTime.UtcNow;
+		StartTime ??= DateTimeOffset.UtcNow;
 	}
 
 	public void UpdateVideoProgress(int videosProcessed)
@@ -133,8 +133,8 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 		var colorName = GetBarColor(percent: snapshot.OverallVideoPercent);
 
 		Markup line = new(
-			$"{UI.Colored(color: colorName, text: playlistName)} {countsText} "
-				+ $"[{colorName}]{progressBar}[/] {percentText} {videosText} {timeText}"
+			$"{Ui.Colored(color: colorName, text: playlistName)} {countsText} "
+			+ $"[{colorName}]{progressBar}[/] {percentText} {videosText} {timeText}"
 		);
 
 		return line;
@@ -143,9 +143,9 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 	private static string TruncateName(string name) =>
 		name.Length <= MaxNameLength ? name : name[..(MaxNameLength - 3)] + "...";
 
-	private static string BuildProgressBar(double percent) => UI.WideProgressBar(percent: percent);
+	private static string BuildProgressBar(double percent) => Ui.WideProgressBar(percent: percent);
 
-	private static string GetBarColor(double percent) => UI.ProgressColor(percent: percent);
+	private static string GetBarColor(double percent) => Ui.ProgressColor(percent: percent);
 
 	private static string FormatTimeText(SyncProgressSnapshot snapshot) =>
 		snapshot.EstimatedTimeRemaining is { } eta
@@ -157,5 +157,3 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 		: ts.TotalMinutes >= 1 ? $"{(int)ts.TotalMinutes}m {ts.Seconds}s"
 		: $"{ts.Seconds}s";
 }
-
-

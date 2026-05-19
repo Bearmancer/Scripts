@@ -9,17 +9,17 @@ internal static class EpubValidator
 		CancellationToken ct = default
 	)
 	{
-		UI.Info($"EPUBCheck: validating {epubPath}...");
+		Ui.Info($"EPUBCheck: validating {epubPath}...");
 
-		var startInfo = new ProcessStartInfo
+		ProcessStartInfo startInfo = new
 		{
 			FileName = "epubcheck",
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
-			CreateNoWindow = true,
+			CreateNoWindow = true
 		};
-		startInfo.ArgumentList.Add(epubPath);
+		startInfo.ArgumentList.Add(item: epubPath);
 
 		using Process process = new() { StartInfo = startInfo };
 
@@ -28,13 +28,13 @@ internal static class EpubValidator
 
 		process.OutputDataReceived += (_, e) =>
 		{
-			if (e.Data is not null)
-				output.AppendLine(e.Data);
+			if (e.Data is { })
+				output.AppendLine(value: e.Data);
 		};
 		process.ErrorDataReceived += (_, e) =>
 		{
-			if (e.Data is not null)
-				errors.AppendLine(e.Data);
+			if (e.Data is { })
+				errors.AppendLine(value: e.Data);
 		};
 
 		try
@@ -42,27 +42,25 @@ internal static class EpubValidator
 			process.Start();
 			process.BeginOutputReadLine();
 			process.BeginErrorReadLine();
-			await process.WaitForExitAsync(ct);
+			await process.WaitForExitAsync(cancellationToken: ct);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Warning(ex, "EPUBCheck not available. Skipping validation.");
-			return new EpubValidationResult(true, true, "");
+			Log.Warning(messageTemplate: ex, "EPUBCheck not available. Skipping validation.");
+			return new EpubValidationResult(Skipped: true, Passed: true, Output: "");
 		}
 
-		var combined = output.ToString() + errors.ToString();
-		var hasFatal = combined.Contains("FATAL") || combined.Contains("ERROR(S)");
+		var combined = output + errors;
+		var hasFatal = combined.Contains(value: "FATAL") || combined.Contains(value: "ERROR(S)");
 		var passed = process.ExitCode == 0 && !hasFatal;
 
 		if (passed)
-			UI.Ok($"EPUBCheck: validation passed.");
+			Ui.Ok(message: "EPUBCheck: validation passed.");
 		else
-			UI.Warn($"EPUBCheck: validation issues found:\n{combined.Trim()}");
+			Ui.Warn($"EPUBCheck: validation issues found:\n{combined.Trim()}");
 
-		return new EpubValidationResult(false, passed, combined.Trim());
+		return new EpubValidationResult(Skipped: false, Passed: passed, combined.Trim());
 	}
 }
 
 internal sealed record EpubValidationResult(bool Skipped, bool Passed, string Output);
-
-

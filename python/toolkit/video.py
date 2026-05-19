@@ -25,7 +25,6 @@ class VideoInfo(TypedDict):
 
 VIDEO_EXTENSIONS = [".mp4", ".mkv", ".ts", ".avi", ".webm"]
 
-# SECURITY: Extracted hardcoded paths to environment variables
 HANDBRAKE_PATH = os.getenv("HANDBRAKE_PATH", "")
 if not HANDBRAKE_PATH:
 	raise ConfigurationError("HANDBRAKE_PATH environment variable not set.")

@@ -13,5 +13,3 @@ internal interface IStructuredImageOcrProvider
 		CancellationToken ct = default
 	);
 }
-
-

@@ -1,221 +1,207 @@
-﻿namespace CSharpScripts.CLI.Clean;
+﻿using System.ComponentModel;
+
+namespace CSharpScripts.CLI.Clean;
 
 internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Settings>
 {
-        private const int TerminalCloseDelayMs = 2000;
+	private const int TerminalCloseDelayMs = 2000;
 
-        protected override async Task<int> ExecuteAsync(
-                CommandContext context,
-                Settings settings,
-                CancellationToken cancellationToken
-        )
-        {
-                var resetAll = settings.Service.EqualsIgnoreCase("all");
-                var resetLastFm = resetAll || settings.Service.EqualsIgnoreCase("lastfm");
-                var resetYouTube =
-                        resetAll
-                        || settings.Service.EqualsIgnoreCase("youtube")
-                        || settings.Service.EqualsIgnoreCase("yt");
+	protected async override Task<int> ExecuteAsync(
+		CommandContext context,
+		Settings settings,
+		CancellationToken cancellationToken
+	)
+	{
+		var resetAll = settings.Service.EqualsIgnoreCase(other: "all");
+		var resetLastFm = resetAll || settings.Service.EqualsIgnoreCase(other: "lastfm");
+		var resetYouTube =
+			resetAll
+			|| settings.Service.EqualsIgnoreCase(other: "youtube")
+			|| settings.Service.EqualsIgnoreCase(other: "yt");
 
-                if (!resetLastFm && !resetYouTube)
-                {
-                        UI.Warn("Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
-                        return 1;
-                }
+		if (!resetLastFm && !resetYouTube)
+		{
+			Ui.Warn(message: "Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
+			return 1;
+		}
 
-                UI.Rule("Clean Reset");
+		Ui.Rule(text: "Clean Reset");
 
-                try
-                {
-                        if (resetLastFm)
-                                await ResetLastFmAsync(cancellationToken);
+		if (resetLastFm)
+			await ResetLastFmAsync(ct: cancellationToken);
 
-                        if (resetYouTube)
-                                await ResetYouTubeAsync(cancellationToken);
+		if (resetYouTube)
+			await ResetYouTubeAsync(ct: cancellationToken);
 
-                        ResetCsvExports();
-                        ResetBuildArtifacts();
+		ResetCsvExports();
+		ResetBuildArtifacts();
 
-                        UI.NewLine();
-                        UI.Ok("Reset complete - terminal will close in 2 seconds...");
-                        Log.Information("ResetComplete");
+		Ui.NewLine();
+		Ui.Ok(message: "Reset complete - terminal will close in 2 seconds...");
+		Log.Information(messageTemplate: "ResetComplete");
 
-                        await Task.Delay(TerminalCloseDelayMs, cancellationToken);
-                        Exit(0);
+		await Task.Delay(millisecondsDelay: TerminalCloseDelayMs, cancellationToken: cancellationToken);
+		Exit(exitCode: 0);
 
-                        return 0;
-                }
-                finally
-                {
-                }
-        }
+		return 0;
+	}
 
-        private static async Task ResetLastFmAsync(
-                CancellationToken ct
-        )
-        {
-                UI.Info("Resetting Last.fm...");
+	private static async Task ResetLastFmAsync(CancellationToken ct)
+	{
+		Ui.Info(message: "Resetting Last.fm...");
 
-                FetchState state = await StateManager.LoadStateAsync<FetchState>(
-                        StateManager.LastFmSyncFile,
-                        ct
-                );
-                
-                StateManager.DeleteLastFmStates();
-                UI.Ok("  State files deleted");
-                Log.Information("ResetLastFmState");
-        }
+		FetchState state = await StateManager.LoadStateAsync<FetchState>(
+			fileName: StateManager.LastFmSyncFile,
+			ct: ct
+		);
 
-        private static async Task ResetYouTubeAsync(
-                CancellationToken ct
-        )
-        {
-                UI.Info("Resetting YouTube...");
+		StateManager.DeleteLastFmStates();
+		Ui.Ok(message: "  State files deleted");
+		Log.Information(messageTemplate: "ResetLastFmState");
+	}
 
-                YouTubeFetchState state = await StateManager.LoadStateAsync<YouTubeFetchState>(
-                        StateManager.YoutubeSyncFile,
-                        ct
-                );
-                
-                StateManager.DeleteAllYouTubeStates();
-                UI.Ok("  State files deleted");
-                Log.Information("ResetYouTubeState");
-        }
+	private static async Task ResetYouTubeAsync(CancellationToken ct)
+	{
+		Ui.Info(message: "Resetting YouTube...");
 
-        private static void ResetCsvExports()
-        {
-                UI.Info("Deleting CSV exports...");
+		YouTubeFetchState state = await StateManager.LoadStateAsync<YouTubeFetchState>(
+			fileName: StateManager.YoutubeSyncFile,
+			ct: ct
+		);
 
-                var csvDir = Path.Combine(Paths.ProjectRoot, "exports");
-                if (Directory.Exists(csvDir))
-                {
-                        Directory.Delete(csvDir, true);
-                        UI.Ok("  exports/ deleted");
-                        Log.Information("ResetCsvExports {Directory}", csvDir);
-                }
-                else
-                        Log.Debug("ResetCsvExports_NoExportsDirectory");
-        }
+		StateManager.DeleteAllYouTubeStates();
+		Ui.Ok(message: "  State files deleted");
+		Log.Information(messageTemplate: "ResetYouTubeState");
+	}
 
-        private static void ResetBuildArtifacts()
-        {
-                UI.Info("Deleting build artifacts...");
+	private static void ResetCsvExports()
+	{
+		Ui.Info(message: "Deleting CSV exports...");
 
-                var binDir = Path.Combine(Paths.ProjectRoot, "csharp", "bin");
-                var objDir = Path.Combine(Paths.ProjectRoot, "csharp", "obj");
+		var csvDir = Path.Combine(path1: Paths.ProjectRoot, path2: "exports");
+		if (Directory.Exists(path: csvDir))
+		{
+			Directory.Delete(path: csvDir, recursive: true);
+			Ui.Ok(message: "  exports/ deleted");
+			Log.Information(messageTemplate: "ResetCsvExports {Directory}", csvDir);
+		}
+		else
+			Log.Debug(messageTemplate: "ResetCsvExports_NoExportsDirectory");
+	}
 
-                try
-                {
-                        if (Directory.Exists(binDir))
-                        {
-                                Directory.Delete(binDir, true);
-                                UI.Ok("  bin/ deleted");
-                                Log.Information("ResetBuildArtifacts {Directory}", "bin");
-                        }
+	private static void ResetBuildArtifacts()
+	{
+		Ui.Info(message: "Deleting build artifacts...");
 
-                        if (Directory.Exists(objDir))
-                        {
-                                Directory.Delete(objDir, true);
-                                UI.Ok("  obj/ deleted");
-                                Log.Information("ResetBuildArtifacts {Directory}", "obj");
-                        }
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                        ScheduleDeferredCleanup(binDir, objDir);
-                        return;
-                }
+		var binDir = Path.Combine(path1: Paths.ProjectRoot, path2: "csharp", path3: "bin");
+		var objDir = Path.Combine(path1: Paths.ProjectRoot, path2: "csharp", path3: "obj");
 
-                RebuildProject();
-        }
+		try
+		{
+			if (Directory.Exists(path: binDir))
+			{
+				Directory.Delete(path: binDir, recursive: true);
+				Ui.Ok(message: "  bin/ deleted");
+				Log.Information(messageTemplate: "ResetBuildArtifacts {Directory}", "bin");
+			}
 
-        private static void ScheduleDeferredCleanup(string binDir, string objDir)
-        {
-                UI.Warn("  Build artifacts locked - scheduling deferred cleanup...");
-                Log.Warning("ResetBuildArtifacts_DeferredCleanup {BinDir} {ObjDir}", binDir, objDir);
+			if (Directory.Exists(path: objDir))
+			{
+				Directory.Delete(path: objDir, recursive: true);
+				Ui.Ok(message: "  obj/ deleted");
+				Log.Information(messageTemplate: "ResetBuildArtifacts {Directory}", "obj");
+			}
+		}
+		catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+		{
+			ScheduleDeferredCleanup(binDir: binDir, objDir: objDir);
+			return;
+		}
 
-                var csprojDir = Path.Combine(Paths.ProjectRoot, "csharp");
-                var script = """
-                        Start-Sleep -Seconds 2
-                        if (Test-Path $args[0]) { Remove-Item -Recurse -Force $args[0] }
-                        if (Test-Path $args[1]) { Remove-Item -Recurse -Force $args[1] }
-                        Set-Location $args[2]
-                        dotnet build
-                        """;
+		RebuildProject();
+	}
 
-                // SECURITY: Use ArgumentList to prevent command injection via path characters
-                try
-                {
-                        var pwsh = new ProcessStartInfo("pwsh")
-                        {
-                                UseShellExecute = false,
-                                CreateNoWindow = false,
-                        };
-                        pwsh.ArgumentList.Add("-Command");
-                        pwsh.ArgumentList.Add(script);
-                        pwsh.ArgumentList.Add(binDir);
-                        pwsh.ArgumentList.Add(objDir);
-                        pwsh.ArgumentList.Add(csprojDir);
-                        Process.Start(pwsh);
-                }
-                catch (Win32Exception)
-                {
-                        Log.Warning("pwsh not found, falling back to powershell.exe");
-                        var ps5 = new ProcessStartInfo("powershell.exe")
-                        {
-                                UseShellExecute = false,
-                                CreateNoWindow = false,
-                        };
-                        ps5.ArgumentList.Add("-Command");
-                        ps5.ArgumentList.Add(script);
-                        ps5.ArgumentList.Add(binDir);
-                        ps5.ArgumentList.Add(objDir);
-                        ps5.ArgumentList.Add(csprojDir);
-                        Process.Start(ps5);
-                }
+	private static void ScheduleDeferredCleanup(string binDir, string objDir)
+	{
+		Ui.Warn(message: "  Build artifacts locked - scheduling deferred cleanup...");
+		Log.Warning(messageTemplate: "ResetBuildArtifacts_DeferredCleanup {BinDir} {ObjDir}", binDir, objDir);
 
-                UI.Ok("  Cleanup scheduled - will run after this process exits");
-        }
+		var csprojDir = Path.Combine(path1: Paths.ProjectRoot, path2: "csharp");
+		var script = """
+		             Start-Sleep -Seconds 2
+		             if (Test-Path $args[0]) { Remove-Item -Recurse -Force $args[0] }
+		             if (Test-Path $args[1]) { Remove-Item -Recurse -Force $args[1] }
+		             Set-Location $args[2]
+		             dotnet build
+		             """;
 
-        private static void RebuildProject()
-        {
-                UI.NewLine();
-                UI.Info("Rebuilding...");
+		try
+		{
+			ProcessStartInfo pwsh = new(fileName: "pwsh") { UseShellExecute = false, CreateNoWindow = false };
+			pwsh.ArgumentList.Add(item: "-Command");
+			pwsh.ArgumentList.Add(item: script);
+			pwsh.ArgumentList.Add(item: binDir);
+			pwsh.ArgumentList.Add(item: objDir);
+			pwsh.ArgumentList.Add(item: csprojDir);
+			Process.Start(startInfo: pwsh);
+		}
+		catch (Win32Exception)
+		{
+			Log.Warning(messageTemplate: "pwsh not found, falling back to powershell.exe");
+			ProcessStartInfo ps5 = new(fileName: "powershell.exe")
+			{
+				UseShellExecute = false,
+				CreateNoWindow = false
+			};
+			ps5.ArgumentList.Add(item: "-Command");
+			ps5.ArgumentList.Add(item: script);
+			ps5.ArgumentList.Add(item: binDir);
+			ps5.ArgumentList.Add(item: objDir);
+			ps5.ArgumentList.Add(item: csprojDir);
+			Process.Start(startInfo: ps5);
+		}
 
-                var csprojDir = Path.Combine(Paths.ProjectRoot, "csharp");
-                var process = Process.Start(
-                        new ProcessStartInfo
-                        {
-                                FileName = "dotnet",
-                                Arguments = "build",
-                                WorkingDirectory = csprojDir,
-                                UseShellExecute = false,
-                                RedirectStandardOutput = true,
-                                RedirectStandardError = true,
-                        }
-                );
+		Ui.Ok(message: "  Cleanup scheduled - will run after this process exits");
+	}
 
-                process?.WaitForExit();
+	private static void RebuildProject()
+	{
+		Ui.NewLine();
+		Ui.Info(message: "Rebuilding...");
 
-                if (process?.ExitCode == 0)
-                {
-                        UI.Ok("Build complete");
-                        Log.Information("RebuildProject_Success");
-                }
-                else
-                {
-                        UI.Error("Build failed. Run 'dotnet build' manually.");
-                        Log.Error("RebuildProject_Failed {ExitCode}", process?.ExitCode ?? -1);
-                }
-        }
+		var csprojDir = Path.Combine(path1: Paths.ProjectRoot, path2: "csharp");
+		Process? process = Process.Start(
+			new ProcessStartInfo
+			{
+				FileName = "dotnet",
+				Arguments = "build",
+				WorkingDirectory = csprojDir,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true
+			}
+		);
 
-        internal sealed class Settings : CommandSettings
-        {
-                [CommandArgument(0, "[service]")]
-                [Description("yt, lastfm, all (default: all)")]
-                [DefaultValue("all")]
-                [AllowedValues("yt", "youtube", "lastfm", "all")]
-                public string Service { get; init; } = "all";
-        }
+		process?.WaitForExit();
+
+		if (process?.ExitCode == 0)
+		{
+			Ui.Ok(message: "Build complete");
+			Log.Information(messageTemplate: "RebuildProject_Success");
+		}
+		else
+		{
+			Ui.Error(message: "Build failed. Run 'dotnet build' manually.");
+			Log.Error(messageTemplate: "RebuildProject_Failed {ExitCode}", process?.ExitCode ?? -1);
+		}
+	}
+
+	internal sealed class Settings : CommandSettings
+	{
+		[CommandArgument(position: 0, template: "[service]")]
+		[Description(description: "yt, lastfm, all (default: all)")]
+		[DefaultValue(value: "all")]
+		[AllowedValues("yt", "youtube", "lastfm", "all")]
+		public string Service { get; init; } = "all";
+	}
 }
-

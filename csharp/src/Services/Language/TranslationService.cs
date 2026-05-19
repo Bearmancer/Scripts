@@ -7,19 +7,19 @@ internal static class TranslationService
 
 	private static readonly TranslationClient Client = new(libreTranslateUrl: LibreTranslateUrl);
 
-	public static string ToIso639_1(string iso639_3) =>
-		TranslationClient.ToIso639_1(iso639_3: iso639_3);
+	public static string ToIso639_1(string iso6393) =>
+		TranslationClient.ToIso639_1(iso6393: iso6393);
 
 	public static Task<TranslationResult?> TranslateAsync(
 		string? text,
 		string? sourceLanguage = null,
 		CancellationToken ct = default
-	) => Client.TranslateAsync(text: text, sourceLanguage: sourceLanguage, ct);
+	) => Client.TranslateAsync(text: text, sourceLanguage: sourceLanguage, ct: ct);
 
 	public static Task<bool> EnsureContainerRunningAsync(
 		bool offline = true,
 		CancellationToken ct = default
-	) => new LibreTranslateHostManager().EnsureRunningAsync(offline: offline, ct);
+	) => new LibreTranslateHostManager().EnsureRunningAsync(offline: offline, ct: ct);
 
 	public static async Task<T> WithContainerAsync<T>(
 		Func<CancellationToken, Task<T>> operation,
@@ -32,11 +32,13 @@ internal static class TranslationService
 
 		if (
 			!wasRunning
-			&& !await new LibreTranslateHostManager().EnsureRunningAsync(offline: offline, ct)
+			&& !await new LibreTranslateHostManager().EnsureRunningAsync(offline: offline, ct: ct)
 		)
+		{
 			throw new InvalidOperationException(
 				message: "Failed to start LibreTranslate container"
 			);
+		}
 
 		try
 		{
@@ -46,7 +48,7 @@ internal static class TranslationService
 		{
 			if (stopAfterwards && !wasRunning)
 			{
-				Log.Debug("Stopping LibreTranslate container after operation...");
+				Log.Debug(messageTemplate: "Stopping LibreTranslate container after operation...");
 				LibreTranslateHostManager.Stop();
 			}
 		}
@@ -69,9 +71,8 @@ internal static class TranslationService
 }
 
 internal record LibreTranslateResponse(
-	[property: JsonPropertyName(name: "translatedText")] string TranslatedText
+	[property: JsonPropertyName(name: "translatedText")]
+	string TranslatedText
 );
 
 internal record TranslationResult(string Translation, string DetectedLanguage);
-
-

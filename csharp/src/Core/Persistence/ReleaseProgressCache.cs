@@ -2,19 +2,19 @@ namespace CSharpScripts.Core;
 
 internal static class ReleaseProgressCache
 {
-	private static readonly CsvConfiguration CsvConfig = new(CultureInfo.InvariantCulture);
+	private static readonly CsvConfiguration CsvConfig = new(cultureInfo: CultureInfo.InvariantCulture);
 
 	private static string GetPath(string releaseId) =>
-		Path.Combine(Paths.CacheDirectory, $"{releaseId}.csv");
+		Path.Combine(path1: Paths.CacheDirectory, $"{releaseId}.csv");
 
 	public static void AppendTrack(string releaseId, TrackInfo track)
 	{
-		Directory.CreateDirectory(Paths.CacheDirectory);
-		var path = GetPath(releaseId);
+		Directory.CreateDirectory(path: Paths.CacheDirectory);
+		var path = GetPath(releaseId: releaseId);
 
-		var writeHeader = !File.Exists(path);
-		using StreamWriter writer = new(path, append: true);
-		using CsvWriter csv = new(writer, CsvConfig with { HasHeaderRecord = writeHeader });
+		var writeHeader = !File.Exists(path: path);
+		using StreamWriter writer = new(path: path, append: true);
+		using CsvWriter csv = new(writer: writer, CsvConfig with { HasHeaderRecord = writeHeader });
 
 		if (writeHeader)
 		{
@@ -27,12 +27,12 @@ internal static class ReleaseProgressCache
 
 	public static List<TrackInfo> Load(string releaseId)
 	{
-		var path = GetPath(releaseId);
-		if (!File.Exists(path))
+		var path = GetPath(releaseId: releaseId);
+		if (!File.Exists(path: path))
 			return [];
 
-		using StreamReader reader = new(path);
-		using CsvReader csv = new(reader, CsvConfig with { HasHeaderRecord = true });
+		using StreamReader reader = new(path: path);
+		using CsvReader csv = new(reader: reader, CsvConfig with { HasHeaderRecord = true });
 
 		return [.. csv.GetRecords<TrackInfo>()];
 	}
@@ -44,5 +44,3 @@ internal static class ReleaseProgressCache
 			File.Delete(path: path);
 	}
 }
-
-

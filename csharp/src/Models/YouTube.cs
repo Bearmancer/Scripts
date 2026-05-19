@@ -11,20 +11,19 @@ internal sealed record YouTubeVideo(
 {
 	internal string VideoUrl => $"https://www.youtube.com/watch?v={VideoId}";
 	internal string ChannelUrl => $"https://www.youtube.com/channel/{ChannelId}";
-	internal string FormattedDuration => Duration.ToString(@"hh\:mm\:ss");
+	internal string FormattedDuration => Duration.ToString(format: @"hh\:mm\:ss");
 
 	public string? DetectedLanguage { get; init; }
 	public string? TranslatedTitle { get; init; }
 	public string? TranslatedDescription { get; init; }
-	public DateTime? TranslatedAt { get; init; }
+	public DateTimeOffset? TranslatedAt { get; init; }
 
 	public string DisplayTitle => TranslatedTitle ?? Title;
 	public string DisplayDescription => TranslatedDescription ?? Description;
 
 	public bool NeedsTranslation =>
-		DetectedLanguage is { }
-		&& !DetectedLanguage.EqualsIgnoreCase("eng")
-		&& TranslatedTitle is null;
+		DetectedLanguage is { } && !DetectedLanguage.EqualsIgnoreCase(other: "eng")
+		                        && TranslatedTitle is null;
 
 	public YouTubeVideo WithTranslation(
 		string translatedTitle,
@@ -36,7 +35,7 @@ internal sealed record YouTubeVideo(
 			DetectedLanguage = detectedLanguage,
 			TranslatedTitle = translatedTitle,
 			TranslatedDescription = translatedDescription,
-			TranslatedAt = DateTime.UtcNow,
+			TranslatedAt = DateTimeOffset.UtcNow
 		};
 
 	public YouTubeVideo WithoutTranslation() =>
@@ -44,7 +43,7 @@ internal sealed record YouTubeVideo(
 		{
 			TranslatedTitle = null,
 			TranslatedDescription = null,
-			TranslatedAt = null,
+			TranslatedAt = null
 		};
 }
 
@@ -60,7 +59,7 @@ internal sealed record PlaylistSnapshot(
 	string PlaylistId,
 	string Title,
 	List<string> VideoIds,
-	DateTime LastUpdated,
+	DateTimeOffset LastUpdated,
 	int ReportedVideoCount = 0,
 	string? ETag = null
 );
@@ -73,8 +72,8 @@ internal sealed record YouTubeFetchState
 	public int VideoIdFetchIndex { get; init; }
 	public string? CurrentPlaylistId { get; init; }
 	public int CurrentPlaylistVideosFetched { get; init; }
-	public DateTime LastUpdated { get; init; } = DateTime.UtcNow;
-	public DateTime LastChecked { get; init; } = DateTime.UtcNow;
+	public DateTimeOffset LastUpdated { get; init; } = DateTimeOffset.UtcNow;
+	public DateTimeOffset LastChecked { get; init; } = DateTimeOffset.UtcNow;
 	public bool FetchComplete { get; init; }
 }
 
@@ -107,5 +106,3 @@ internal sealed record OptimizedChanges(
 	internal bool HasAnyChanges =>
 		NewIds.Count > 0 || DeletedIds.Count > 0 || ModifiedIds.Count > 0 || Renamed.Count > 0;
 }
-
-

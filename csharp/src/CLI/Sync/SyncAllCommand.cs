@@ -1,35 +1,38 @@
-﻿namespace CSharpScripts.CLI.Sync;
+﻿using System.ComponentModel;
+using CSharpScripts.Orchestrators;
+
+namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
 	)
 	{
-		UI.Rule(text: "YouTube Sync");
+		Ui.Rule(text: "YouTube Sync");
 		var ytResult = await RunYouTubeSyncAsync();
 
-		UI.NewLine();
-		UI.Rule(text: "Last.fm Sync");
+		Ui.NewLine();
+		Ui.Rule(text: "Last.fm Sync");
 		var lfResult = await RunLastFmSyncAsync();
 
-		UI.NewLine();
+		Ui.NewLine();
 		if (ytResult == 0 && lfResult == 0)
 		{
-			UI.Ok(message: "Sync complete! Everything's up to date.");
-			Log.Information("SyncAll_Success");
+			Ui.Ok(message: "Sync complete! Everything's up to date.");
+			Log.Information(messageTemplate: "SyncAll_Success");
 		}
 		else
 		{
-			UI.Warn(
+			Ui.Warn(
 				message: "Completed with errors (YouTube: {0}, Last.fm: {1})",
 				ytResult,
 				lfResult
 			);
 			Log.Warning(
-				"SyncAll_CompletedWithErrors {YouTubeResult} {LastFmResult}",
+				messageTemplate: "SyncAll_CompletedWithErrors {YouTubeResult} {LastFmResult}",
 				ytResult,
 				lfResult
 			);
@@ -76,4 +79,3 @@ internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 		public bool Verbose { get; init; }
 	}
 }
-

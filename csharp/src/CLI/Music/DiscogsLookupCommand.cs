@@ -1,40 +1,43 @@
-﻿namespace CSharpScripts.CLI.Music;
+﻿using System.ComponentModel;
+using CSharpScripts.Services.Music;
+
+namespace CSharpScripts.CLI.Music;
 
 internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
 	)
 	{
 		return await ExecuteWithErrorHandlingAsync(
-			ServiceType.Music,
+			service: ServiceType.Music,
 			async () =>
 			{
 				var discogsToken = Secrets.DiscogsToken;
-				if (IsNullOrEmpty(discogsToken))
+				if (IsNullOrEmpty(value: discogsToken))
 				{
-					UI.Error("DISCOGS_USER_TOKEN not set");
+					Ui.Error(message: "DISCOGS_USER_TOKEN not set");
 					return;
 				}
 
-				using DiscogsService discogs = new(discogsToken);
-				UI.Info("Looking up Discogs release {0}...", settings.Id!);
+				using DiscogsService discogs = new(token: discogsToken);
+				Ui.Info(message: "Looking up Discogs release {0}...", settings.Id!);
 
 				ReleaseData release = await discogs.GetReleaseAsync(
 					settings.Id!,
 					ct: cancellationToken
 				);
 				Log.Information(
-					"DiscogsLookupComplete {ReleaseId} {TrackCount}",
+					messageTemplate: "DiscogsLookupComplete {ReleaseId} {TrackCount}",
 					settings.Id,
 					release.Tracks.Count
 				);
 
 				if (release.Tracks.Count == 0)
 				{
-					UI.Warn("No release data found.");
+					Ui.Warn(message: "No release data found.");
 					return;
 				}
 
@@ -45,20 +48,18 @@ internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupComma
 
 	internal sealed class Settings : CommandSettings
 	{
-		[CommandOption("-i|--id")]
-		[Description("Discogs release ID (numeric)")]
+		[CommandOption(template: "-i|--id")]
+		[Description(description: "Discogs release ID (numeric)")]
 		public string? Id { get; init; }
 
 		public override ValidationResult Validate()
 		{
-			if (IsNullOrEmpty(Id))
-				return ValidationResult.Error("--id is required");
-			if (!int.TryParse(Id, out _))
-				return ValidationResult.Error("--id must be a numeric Discogs release ID");
+			if (IsNullOrEmpty(value: Id))
+				return ValidationResult.Error(message: "--id is required");
+			if (!int.TryParse(s: Id, result: out _))
+				return ValidationResult.Error(message: "--id must be a numeric Discogs release ID");
 
 			return ValidationResult.Success();
 		}
 	}
 }
-
-

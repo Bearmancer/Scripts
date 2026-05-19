@@ -8,10 +8,8 @@ internal sealed record ArticleContent
 	public string PublicationDate { get; init; } = "";
 	public string Doi { get; init; } = "";
 	public string AbstractText { get; init; } = "";
-	public Uri SourceUrl { get; init; } = new("about:blank");
+	public Uri SourceUrl { get; init; } = new(uriString: "about:blank");
 	public required string BodyHtml { get; init; }
 	public Dictionary<string, byte[]> Images { get; init; } = [];
 	public byte[]? OriginalPdf { get; init; }
 }
-
-

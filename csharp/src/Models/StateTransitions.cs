@@ -1,5 +1,3 @@
-// (removed pragma IDE0007, IDE0028; will apply explicit fixes for var/type and collection creation)
-
 namespace CSharpScripts.Models;
 
 internal static class StateTransitions
@@ -11,32 +9,32 @@ internal static class StateTransitions
 		public YouTubeFetchState RefreshTimestamps() =>
 			state with
 			{
-				LastChecked = DateTime.UtcNow,
-				LastUpdated = DateTime.UtcNow,
+				LastChecked = DateTimeOffset.UtcNow,
+				LastUpdated = DateTimeOffset.UtcNow
 			};
 
 		public YouTubeFetchState WithSpreadsheetId(string spreadsheetId) =>
 			state with
 			{
-				SpreadsheetId = spreadsheetId,
+				SpreadsheetId = spreadsheetId
 			};
 
 		public YouTubeFetchState MarkFetchComplete() => state with { FetchComplete = true };
 
 		public YouTubeFetchState WithPlaylistSnapshot(string playlistId, PlaylistSnapshot snapshot)
 		{
-			var updated = new Dictionary<string, PlaylistSnapshot>(state.PlaylistSnapshots)
+			Dictionary<string, PlaylistSnapshot> updated = new(dictionary: state.PlaylistSnapshots)
 			{
-				[playlistId] = snapshot,
+				[key: playlistId] = snapshot
 			};
-			return state with { PlaylistSnapshots = updated, LastUpdated = DateTime.UtcNow };
+			return state with { PlaylistSnapshots = updated, LastUpdated = DateTimeOffset.UtcNow };
 		}
 
 		public YouTubeFetchState RemovePlaylistSnapshot(string playlistId)
 		{
-			var updated = new Dictionary<string, PlaylistSnapshot>(state.PlaylistSnapshots);
-			updated.Remove(playlistId);
-			return state with { PlaylistSnapshots = updated, LastUpdated = DateTime.UtcNow };
+			Dictionary<string, PlaylistSnapshot> updated = [with(dictionary: state.PlaylistSnapshots)];
+			updated.Remove(key: playlistId);
+			return state with { PlaylistSnapshots = updated, LastUpdated = DateTimeOffset.UtcNow };
 		}
 	}
 
@@ -47,9 +45,7 @@ internal static class StateTransitions
 		public FetchState WithSpreadsheetId(string spreadsheetId) =>
 			state with
 			{
-				SpreadsheetId = spreadsheetId,
+				SpreadsheetId = spreadsheetId
 			};
 	}
 }
-
-

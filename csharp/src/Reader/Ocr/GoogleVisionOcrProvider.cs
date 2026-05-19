@@ -1,5 +1,3 @@
-﻿// (removed pragma warning disables; will refactor code to satisfy analyzers)
-
 using System.Text;
 using Google.Cloud.Vision.V1;
 using Google.Protobuf;
@@ -14,17 +12,17 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 
 	public async Task<string> OcrPdfAsync(byte[] pdfBytes, CancellationToken ct = default)
 	{
-		UI.Info("OCR: Google Cloud Vision Document Text Detection...");
-		ImageAnnotatorClient client = await ImageAnnotatorClient.CreateAsync(ct);
+		Ui.Info(message: "OCR: Google Cloud Vision Document Text Detection...");
+		ImageAnnotatorClient client = await ImageAnnotatorClient.CreateAsync(cancellationToken: ct);
 
 		int pageCount;
 		List<byte[]> chunks;
-		(pageCount, chunks) = SplitIntoChunks(pdfBytes);
-		UI.Info($"Vision: processing {chunks.Count} chunk(s) for {pageCount} pages.");
+		(pageCount, chunks) = SplitIntoChunks(pdfBytes: pdfBytes);
+		Ui.Info($"Vision: processing {chunks.Count} chunk(s) for {pageCount} pages.");
 
-		var results = await Task.WhenAll(chunks.Select(chunk => OcrChunkAsync(client, chunk, ct)));
+		var results = await Task.WhenAll(chunks.Select(chunk => OcrChunkAsync(client: client, chunkBytes: chunk, ct: ct)));
 
-		return Join("", results);
+		return Join(separator: "", value: results);
 	}
 
 	private static async Task<string> OcrChunkAsync(
@@ -33,49 +31,47 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 		CancellationToken ct
 	)
 	{
-		var request = new AnnotateFileRequest
+		AnnotateFileRequest request = new()
 		{
 			InputConfig = new InputConfig
 			{
-				Content = ByteString.CopyFrom(chunkBytes),
-				MimeType = "application/pdf",
+				Content = ByteString.CopyFrom(bytes: chunkBytes),
+				MimeType = "application/pdf"
 			},
-			Features = { new Feature { Type = Feature.Types.Type.DocumentTextDetection } },
+			Features = { new Feature { Type = Feature.Types.Type.DocumentTextDetection } }
 		};
 
-		var batchRequest = new BatchAnnotateFilesRequest { Requests = { request } };
+		BatchAnnotateFilesRequest batchRequest = new() { Requests = { request } };
 		BatchAnnotateFilesResponse response = await client.BatchAnnotateFilesAsync(
-			batchRequest,
-			ct
+			request: batchRequest,
+			cancellationToken: ct
 		);
 
-		var sb = new StringBuilder(4096);
-		foreach (AnnotateImageResponse pageResponse in response.Responses[0].Responses)
+		StringBuilder sb = new(capacity: 4096);
+		foreach (AnnotateImageResponse pageResponse in response.Responses[index: 0].Responses)
 		{
-			if (pageResponse.FullTextAnnotation is not null)
-				sb.AppendLine(pageResponse.FullTextAnnotation.Text);
+			if (pageResponse.FullTextAnnotation is { })
+				sb.AppendLine(value: pageResponse.FullTextAnnotation.Text);
 		}
 		return sb.ToString();
 	}
 
 	private static (int PageCount, List<byte[]> Chunks) SplitIntoChunks(byte[] pdfBytes)
 	{
-		using MemoryStream stream = new(pdfBytes);
-		using var doc = PdfDocument.Open(stream);
+		using MemoryStream stream = new(buffer: pdfBytes);
+		using PdfDocument doc = PdfDocument.Open(stream: stream);
 		var totalPages = doc.NumberOfPages;
 
 		var chunkCount = (totalPages + MaxPagesPerRequest - 1) / MaxPagesPerRequest;
-		var chunks = new List<byte[]>(chunkCount);
+		List<byte[]> chunks = [with(capacity: chunkCount)];
 		for (var start = 1; start <= totalPages; start += MaxPagesPerRequest)
 		{
-			var end = Math.Min(start + MaxPagesPerRequest - 1, totalPages);
+			var end = Math.Min(start + MaxPagesPerRequest - 1, val2: totalPages);
 			using PdfDocumentBuilder builder = new();
 			for (var pageNum = start; pageNum <= end; pageNum++)
-				builder.AddPage(doc, pageNum);
+				builder.AddPage(document: doc, pageNumber: pageNum);
 			chunks.Add(builder.Build());
 		}
 		return (totalPages, chunks);
 	}
 }
-
-

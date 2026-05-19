@@ -3,7 +3,7 @@ using Azure.AI.DocumentIntelligence;
 
 namespace CSharpScripts.Services.Read.Ocr;
 
-internal sealed partial class AzureDocumentIntelligenceOcrProvider
+internal sealed class AzureDocumentIntelligenceOcrProvider
 	: IOcrProvider,
 		IStructuredImageOcrProvider
 {
@@ -19,18 +19,18 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 		string? modelId = null
 	)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
-		ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
+		ArgumentException.ThrowIfNullOrWhiteSpace(argument: endpoint);
+		ArgumentException.ThrowIfNullOrWhiteSpace(argument: apiKey);
 
-		Client = new DocumentIntelligenceClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-		ModelId = IsNullOrWhiteSpace(modelId) ? "prebuilt-layout" : modelId;
+		Client = new DocumentIntelligenceClient(new Uri(uriString: endpoint), new AzureKeyCredential(key: apiKey));
+		ModelId = IsNullOrWhiteSpace(value: modelId) ? "prebuilt-layout" : modelId;
 	}
 
 	public async Task<string> OcrPdfAsync(byte[] pdfBytes, CancellationToken ct = default)
 	{
-		UI.Info("OCR: Azure Document Intelligence ({0})...", ModelId);
-		AnalyzeResult result = await AnalyzeAsync(pdfBytes, ct);
-		return Join("\n\n", ExtractStructured(result).BodyBlocks);
+		Ui.Info(message: "OCR: Azure Document Intelligence ({0})...", ModelId);
+		AnalyzeResult result = await AnalyzeAsync(bytes: pdfBytes, ct: ct);
+		return Join(separator: "\n\n", values: ExtractStructured(result: result).BodyBlocks);
 	}
 
 	public async Task<DocumentPageResult> OcrImageAsync(
@@ -39,8 +39,8 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 		CancellationToken ct = default
 	)
 	{
-		AnalyzeResult result = await AnalyzeAsync(imageBytes, ct);
-		return ExtractStructured(result);
+		AnalyzeResult result = await AnalyzeAsync(bytes: imageBytes, ct: ct);
+		return ExtractStructured(result: result);
 	}
 
 	internal static bool IsConfigured(AzureDocumentIntelligenceOptions? options = null) =>
@@ -52,25 +52,23 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 	) =>
 		new(
 			options?.Endpoint
-				?? Secrets.AzureDocumentIntelligenceEndpoint
-				?? throw new InvalidOperationException(
-					"Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
-				),
+			?? Secrets.AzureDocumentIntelligenceEndpoint
+			?? throw new InvalidOperationException(
+				message: "Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
+			),
 			options?.ApiKey
-				?? Secrets.AzureDocumentIntelligenceKey
-				?? throw new InvalidOperationException(
-					"Azure Document Intelligence API key is not set. Pass --azure-docintel-key or set AZURE_DOCUMENT_INTELLIGENCE_KEY."
-				),
+			?? Secrets.AzureDocumentIntelligenceKey
+			?? throw new InvalidOperationException(
+				message: "Azure Document Intelligence API key is not set. Pass --azure-docintel-key or set AZURE_DOCUMENT_INTELLIGENCE_KEY."
+			),
 			options?.ModelId ?? Secrets.AzureDocumentIntelligenceModelId
 		);
 
 	internal static DocumentPageResult ExtractStructured(AnalyzeResult result)
 	{
-		var bodyBlocks = new List<string>(result.Pages.Count * 4);
+		List<string> bodyBlocks = new(result.Pages.Count * 4);
 		var skippedCount = 0;
-		var pageHeights = Enumerable.ToDictionary(
-			Enumerable.Where(result.Pages, static page => page.Height is > 0),
-			page => page.PageNumber,
+		Dictionary<int, float> pageHeights = result.Pages.Where(static page => page.Height is > 0).ToDictionary(page => page.PageNumber,
 			page => page.Height!.Value
 		);
 
@@ -78,48 +76,48 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 		{
 			foreach (DocumentParagraph paragraph in result.Paragraphs)
 			{
-				if (IsNullOrWhiteSpace(paragraph.Content))
+				if (IsNullOrWhiteSpace(value: paragraph.Content))
 					continue;
 
-				if (IsHeaderFooterParagraph(paragraph, pageHeights))
+				if (IsHeaderFooterParagraph(paragraph: paragraph, pageHeights: pageHeights))
 				{
 					skippedCount++;
 					continue;
 				}
 
-				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(paragraph.Content));
+				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(raw: paragraph.Content));
 			}
 
-			return new DocumentPageResult(bodyBlocks, skippedCount);
+			return new DocumentPageResult(BodyBlocks: bodyBlocks, SkippedHeadersFooters: skippedCount);
 		}
 
 		foreach (DocumentPage page in result.Pages)
 		{
 			foreach (DocumentLine line in page.Lines)
 			{
-				if (IsNullOrWhiteSpace(line.Content))
+				if (IsNullOrWhiteSpace(value: line.Content))
 					continue;
 
-				if (IsHeaderOrFooter(line.Polygon, page.Height))
+				if (IsHeaderOrFooter(polygon: line.Polygon, pageHeight: page.Height))
 				{
 					skippedCount++;
 					continue;
 				}
 
-				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(line.Content));
+				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(raw: line.Content));
 			}
 		}
 
-		return new DocumentPageResult(bodyBlocks, skippedCount);
+		return new DocumentPageResult(BodyBlocks: bodyBlocks, SkippedHeadersFooters: skippedCount);
 	}
 
 	private async Task<AnalyzeResult> AnalyzeAsync(byte[] bytes, CancellationToken ct)
 	{
 		Operation<AnalyzeResult> operation = await Client.AnalyzeDocumentAsync(
-			WaitUntil.Completed,
-			ModelId,
-			BinaryData.FromBytes(bytes),
-			ct
+			waitUntil: WaitUntil.Completed,
+			modelId: ModelId,
+			BinaryData.FromBytes(data: bytes),
+			cancellationToken: ct
 		);
 		return operation.Value;
 	}
@@ -141,10 +139,10 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 		foreach (BoundingRegion region in paragraph.BoundingRegions)
 		{
-			var pageHeight = pageHeights.TryGetValue(region.PageNumber, out var knownPageHeight)
+			var pageHeight = pageHeights.TryGetValue(key: region.PageNumber, out var knownPageHeight)
 				? knownPageHeight
 				: (float?)null;
-			if (IsHeaderOrFooter(region.Polygon, pageHeight))
+			if (IsHeaderOrFooter(polygon: region.Polygon, pageHeight: pageHeight))
 				return true;
 		}
 
@@ -162,16 +160,16 @@ internal sealed partial class AzureDocumentIntelligenceOcrProvider
 
 		Span<float> yCoords = stackalloc float[coordCount];
 		for (var i = 0; i < coordCount; i++)
-			yCoords[i] = polygon[(i * 2) + 1];
+			yCoords[index: i] = polygon[i * 2 + 1];
 
-		var minY = yCoords[0];
-		var maxY = yCoords[0];
+		var minY = yCoords[index: 0];
+		var maxY = yCoords[index: 0];
 		for (var i = 1; i < coordCount; i++)
 		{
-			if (yCoords[i] < minY)
-				minY = yCoords[i];
-			if (yCoords[i] > maxY)
-				maxY = yCoords[i];
+			if (yCoords[index: i] < minY)
+				minY = yCoords[index: i];
+			if (yCoords[index: i] > maxY)
+				maxY = yCoords[index: i];
 		}
 
 		if (pageHeight is > 0)
@@ -189,5 +187,3 @@ internal sealed record AzureDocumentIntelligenceOptions(
 	string? ApiKey,
 	string? ModelId
 );
-
-

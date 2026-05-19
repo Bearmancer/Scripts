@@ -1,4 +1,6 @@
-﻿namespace CSharpScripts.Orchestrators;
+﻿using CSharpScripts.Services.Sync.LastFm;
+
+namespace CSharpScripts.Orchestrators;
 
 internal sealed class ScrobbleSyncOrchestrator : IDisposable
 {
@@ -21,32 +23,24 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		Ct = ct;
 	}
 
-	public void Dispose()
-	{
-		GC.SuppressFinalize(this);
-	}
+	public void Dispose() => GC.SuppressFinalize(this);
 
 	public static async Task<ScrobbleSyncOrchestrator> CreateAsync(
 		DateTime? forceFromDate,
 		CancellationToken ct
 	)
 	{
-		LastFmService lastFmService = new(Secrets.LastFmApiKey, "kanishknishar");
+		LastFmService lastFmService = new(apiKey: Secrets.LastFmApiKey, username: "kanishknishar");
 		FetchState state = await StateManager.LoadStateAsync<FetchState>(
-			StateManager.LastFmSyncFile,
-			ct
+			fileName: StateManager.LastFmSyncFile,
+			ct: ct
 		);
-		return new ScrobbleSyncOrchestrator(
-			lastFmService,
-			state,
-			forceFromDate,
-			ct
-		);
+		return new ScrobbleSyncOrchestrator(lastFmService: lastFmService, state: state, forceFromDate: forceFromDate, ct: ct);
 	}
 
 	internal async Task ExecuteAsync()
 	{
-		UI.Info("Starting Last.fm sync...");
+		Ui.Info(message: "Starting Last.fm sync...");
 
 		var deletedCount = 0;
 		if (ForceFromDate.HasValue)
@@ -59,57 +53,55 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		if (Ct.IsCancellationRequested)
 		{
 			Log.Warning(
-				"LastFmFetchInterrupted {Detail}",
+				messageTemplate: "LastFmFetchInterrupted {Detail}",
 				$"Fetched {State.TotalFetched} scrobbles across {State.LastPage} pages"
 			);
 			return;
 		}
 
-		State = StateTransitions.MarkFetchComplete(State);
+		State = State.MarkFetchComplete();
 		await SaveStateAsync();
 
-		List<Scrobble> scrobbles = await LastFmService.LoadScrobblesAsync();
+		List<Scrobble> scrobbles = await this.LastFmService.LoadScrobblesAsync();
 
 		if (scrobbles.Count == 0)
 		{
-			UI.Ok("No new scrobbles to sync");
-			Log.Information("SyncComplete {Detail}", "No changes detected");
+			Ui.Ok(message: "No new scrobbles to sync");
+			Log.Information(messageTemplate: "SyncComplete {Detail}", "No changes detected");
 			return;
 		}
-        
-        // TODO: Database saving logic will go here
-        UI.Ok("Fetched {0} scrobbles ready for DB.", scrobbles.Count);
+
+		Ui.Ok(message: "Fetched {0} scrobbles ready for DB.", scrobbles.Count);
 	}
 
 	private async Task<int> ExecuteForceResyncAsync()
 	{
-		UI.Info("Force resync from {0}", DateTimeExtensions.ToDisplayDate(ForceFromDate!.Value));
-        // TODO: DB delete logic will go here
-		var deleted = 0; 
-		State = StateTransitions.Reset(""); // Empty spreadsheet ID for now
+		Ui.Info(message: "Force resync from {0}", ForceFromDate!.Value.ToDisplayDate());
+		var deleted = 0;
+		State = StateTransitions.Reset(spreadsheetId: "");
 		await SaveStateAsync();
-		LastFmService.DeleteScrobblesCache();
-		await FetchScrobblesAsync(ForceFromDate.Value.AddSeconds(-1));
+		this.LastFmService.DeleteScrobblesCache();
+		await FetchScrobblesAsync(ForceFromDate.Value.AddSeconds(value: -1));
 		return deleted;
 	}
 
 	private async Task ExecuteResumeFetchAsync()
 	{
-		UI.Warn(
-			"Resuming full sync from page {0} ({1} scrobbles fetched)",
+		Ui.Warn(
+			message: "Resuming full sync from page {0} ({1} scrobbles fetched)",
 			State.LastPage + 1,
 			State.TotalFetched
 		);
-		await FetchScrobblesAsync(null);
+		await FetchScrobblesAsync(fetchAfter: null);
 	}
 
 	private async Task ExecuteIncrementalSyncAsync()
 	{
-		List<Scrobble> cachedScrobbles = await LastFmService.LoadScrobblesAsync();
+		List<Scrobble> cachedScrobbles = await this.LastFmService.LoadScrobblesAsync();
 
 		if (cachedScrobbles.Count > 0)
 		{
-			DateTime? newestCached = cachedScrobbles[0].PlayedAt;
+			DateTime? newestCached = cachedScrobbles[index: 0].PlayedAt;
 			DateTime? oldestCached = cachedScrobbles[^1].PlayedAt;
 
 			if (
@@ -118,22 +110,21 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 				&& oldestCached.HasValue
 				&& newestCached.HasValue
 			)
-				await FetchScrobblesAsync(newestCached);
+				await FetchScrobblesAsync(fetchAfter: newestCached);
 		}
 		else
 		{
-            // TODO: Query DB for latest scrobble
 			DateTime? latestInDb = null;
 
 			if (latestInDb is { })
 			{
-				UI.Info("Latest in db: {0}", DateTimeExtensions.ToDisplay(latestInDb.Value));
-				await FetchScrobblesAsync(latestInDb);
+				Ui.Info(message: "Latest in db: {0}", latestInDb.Value.ToDisplay());
+				await FetchScrobblesAsync(fetchAfter: latestInDb);
 			}
 			else
 			{
-				UI.Info("No existing data. Full sync...");
-				await FetchScrobblesAsync(null);
+				Ui.Info(message: "No existing data. Full sync...");
+				await FetchScrobblesAsync(fetchAfter: null);
 			}
 		}
 	}
@@ -141,32 +132,32 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 	private async Task FetchScrobblesAsync(DateTime? fetchAfter)
 	{
 		var saveStateCounter = 0;
-		const int SaveStateInterval = 10;
+		const int saveStateInterval = 10;
 
 		try
 		{
 			await LastFmService.FetchScrobblesSinceAsync(
-				fetchAfter,
-				State,
+				fetchAfter: fetchAfter,
+				state: State,
 				(page, total, elapsed, oldest, newest) =>
 				{
-					State = State.WithUpdate(page, total, oldest, newest);
+					State = State.WithUpdate(page: page, total: total, oldest: oldest, newest: newest);
 					saveStateCounter++;
 
-					if (saveStateCounter >= SaveStateInterval)
+					if (saveStateCounter >= saveStateInterval)
 					{
 						SaveState();
 						saveStateCounter = 0;
 					}
 
-					UI.Progress(
-						"Page: {0} | Tracks: {1} | Elapsed: {2}",
+					Ui.Progress(
+						message: "Page: {0} | Tracks: {1} | Elapsed: {2}",
 						page,
 						total,
-						elapsed.ToString(@"hh\:mm\:ss")
+						elapsed.ToString(format: @"hh\:mm\:ss")
 					);
 				},
-				Ct
+				ct: Ct
 			);
 		}
 		finally
@@ -175,13 +166,12 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		}
 
 		if (Ct.IsCancellationRequested)
-			UI.Warn("Stopped at page {0} ({1} scrobbles)", State.LastPage, State.TotalFetched);
+			Ui.Warn(message: "Stopped at page {0} ({1} scrobbles)", State.LastPage, State.TotalFetched);
 	}
 
 	private void SaveState() =>
-		_ = StateManager.SaveStateAsync(StateManager.LastFmSyncFile, State, Ct);
+		_ = StateManager.SaveStateAsync(fileName: StateManager.LastFmSyncFile, state: State, ct: Ct);
 
 	internal Task SaveStateAsync() =>
-		StateManager.SaveStateAsync(StateManager.LastFmSyncFile, State, Ct);
+		StateManager.SaveStateAsync(fileName: StateManager.LastFmSyncFile, state: State, ct: Ct);
 }
-

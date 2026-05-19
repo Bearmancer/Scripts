@@ -10,7 +10,7 @@ internal static class AzureTranslationService
 
 	private static readonly TextTranslationClient? Client = ApiKey is null
 		? null
-		: new TextTranslationClient(new AzureKeyCredential(ApiKey), Region);
+		: new TextTranslationClient(new AzureKeyCredential(key: ApiKey), region: Region);
 
 	internal static bool IsConfigured => ApiKey is { };
 
@@ -24,8 +24,8 @@ internal static class AzureTranslationService
 			return null;
 
 		Response<IReadOnlyList<TranslatedTextItem>> response = await Client
-			.TranslateAsync("en", [text], sourceLanguage, ct)
-			.ConfigureAwait(false);
+			.TranslateAsync(targetLanguage: "en", [text], sourceLanguage: sourceLanguage, cancellationToken: ct)
+			.ConfigureAwait(continueOnCapturedContext: false);
 
 		TranslatedTextItem item = response.Value[0];
 		var detectedLanguage = item.DetectedLanguage?.Language ?? sourceLanguage ?? "unknown";
@@ -33,7 +33,7 @@ internal static class AzureTranslationService
 
 		return translatedText is null
 			? null
-			: new TranslationResult(translatedText, detectedLanguage);
+			: new TranslationResult(Translation: translatedText, DetectedLanguage: detectedLanguage);
 	}
 
 	internal static async Task<IReadOnlyList<TranslationResult>> TranslateBatchAsync(
@@ -53,11 +53,11 @@ internal static class AzureTranslationService
 				targetLanguage: "en",
 				content: texts,
 				sourceLanguage: sourceLanguage,
-				ct
+				cancellationToken: ct
 			)
-			.ConfigureAwait(false);
+			.ConfigureAwait(continueOnCapturedContext: false);
 
-		var results = new List<TranslationResult>(response.Value.Count);
+		List<TranslationResult> results = [with(capacity: response.Value.Count)];
 		foreach (TranslatedTextItem item in response.Value)
 		{
 			var detectedLanguage = item.DetectedLanguage?.Language ?? sourceLanguage ?? "unknown";
@@ -73,5 +73,3 @@ internal static class AzureTranslationService
 		return results;
 	}
 }
-
-

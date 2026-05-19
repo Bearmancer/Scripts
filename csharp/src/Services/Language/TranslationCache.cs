@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 namespace CSharpScripts.Services.Language;
@@ -10,13 +10,13 @@ internal static class TranslationCache
 		path2: "translation-cache.json"
 	);
 
-	private static volatile Dictionary<string, string>? _memoryCache;
+	private static volatile Dictionary<string, string>? MemoryCache;
 
 	private static readonly SemaphoreSlim FileLock = new(initialCount: 1, maxCount: 1);
 
 	private static readonly JsonSerializerOptions SerializerOptions = new()
 	{
-		WriteIndented = false,
+		WriteIndented = false
 	};
 
 	internal static async Task<string?> GetCachedAsync(
@@ -26,8 +26,8 @@ internal static class TranslationCache
 	)
 	{
 		var key = ComputeKey(text: text, targetLang: targetLang);
-		Dictionary<string, string> cache = await GetCacheAsync(ct);
-		return CollectionExtensions.GetValueOrDefault(cache, key: key);
+		Dictionary<string, string> cache = await GetCacheAsync(ct: ct);
+		return cache.GetValueOrDefault(key: key);
 	}
 
 	internal static async Task SetCachedAsync(
@@ -37,14 +37,14 @@ internal static class TranslationCache
 		CancellationToken ct = default
 	)
 	{
-		await FileLock.WaitAsync(ct);
+		await FileLock.WaitAsync(cancellationToken: ct);
 		try
 		{
-			Dictionary<string, string> cache = await GetCacheAsync(ct);
+			Dictionary<string, string> cache = await GetCacheAsync(ct: ct);
 			var key = ComputeKey(text: text, targetLang: targetLang);
 			cache[key: key] = translation;
-			await SaveAsync(cache: cache, ct);
-			_memoryCache = cache;
+			await SaveAsync(cache: cache, ct: ct);
+			MemoryCache = cache;
 		}
 		finally
 		{
@@ -57,18 +57,18 @@ internal static class TranslationCache
 		CancellationToken ct = default
 	)
 	{
-		await FileLock.WaitAsync(ct);
+		await FileLock.WaitAsync(cancellationToken: ct);
 		try
 		{
-			Dictionary<string, string> cache = await GetCacheAsync(ct);
-			foreach ((var text, var lang, var translation) in entries)
+			Dictionary<string, string> cache = await GetCacheAsync(ct: ct);
+			foreach (var (text, lang, translation) in entries)
 			{
 				var key = ComputeKey(text: text, targetLang: lang);
 				cache[key: key] = translation;
 			}
 
-			await SaveAsync(cache: cache, ct);
-			_memoryCache = cache;
+			await SaveAsync(cache: cache, ct: ct);
+			MemoryCache = cache;
 		}
 		finally
 		{
@@ -78,10 +78,11 @@ internal static class TranslationCache
 
 	private static async Task<Dictionary<string, string>> GetCacheAsync(CancellationToken ct)
 	{
-		if (_memoryCache is not null)
-			return _memoryCache;
-		Dictionary<string, string> cache = await LoadAsync(ct);
-		_memoryCache = cache;
+		if (MemoryCache is { })
+			return MemoryCache;
+
+		Dictionary<string, string> cache = await LoadAsync(ct: ct);
+		MemoryCache = cache;
 		return cache;
 	}
 
@@ -92,10 +93,10 @@ internal static class TranslationCache
 
 		await using FileStream stream = File.OpenRead(path: CachePath);
 		return await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(
-				utf8Json: stream,
-				options: SerializerOptions,
-				ct
-			) ?? [];
+			utf8Json: stream,
+			options: SerializerOptions,
+			cancellationToken: ct
+		) ?? [];
 	}
 
 	private static async Task SaveAsync(Dictionary<string, string> cache, CancellationToken ct)
@@ -106,17 +107,14 @@ internal static class TranslationCache
 			utf8Json: stream,
 			value: cache,
 			options: SerializerOptions,
-			ct
+			cancellationToken: ct
 		);
 	}
 
 	private static string ComputeKey(string text, string targetLang)
 	{
-		var raw = Concat(text.AsSpan().Trim(), "::", targetLang.ToLowerInvariant());
+		var raw = Concat(text.AsSpan().Trim(), str1: "::", targetLang.ToLowerInvariant());
 		var hash = SHA256.HashData(Encoding.UTF8.GetBytes(s: raw));
 		return Convert.ToHexString(inArray: hash)[..16];
 	}
 }
-
-
-

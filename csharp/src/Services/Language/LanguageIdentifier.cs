@@ -1,6 +1,4 @@
-using NTextCat;
-
-namespace CSharpScripts.Services.Language;
+﻿namespace CSharpScripts.Services.Language;
 
 internal static class LanguageIdentifier
 {
@@ -12,7 +10,7 @@ internal static class LanguageIdentifier
 
 			if (!File.Exists(path: profilePath))
 			{
-				Log.Warning("Language profile not found: {Path}", profilePath);
+				Log.Warning(messageTemplate: "Language profile not found: {Path}", profilePath);
 				return null;
 			}
 
@@ -24,12 +22,7 @@ internal static class LanguageIdentifier
 		if (IsNullOrWhiteSpace(value: text) || text.Length < 15)
 			return null;
 
-		if (Detector.Value is null)
-			return null;
-
-		Tuple<LanguageInfo, double>? result = Enumerable.FirstOrDefault(
-			Detector.Value.Identify(text: text)
-		);
+		Tuple<LanguageInfo, double>? result = Detector.Value?.Identify(text: text).FirstOrDefault();
 
 		return result?.Item1.Iso639_3;
 	}
@@ -40,8 +33,6 @@ internal static class LanguageIdentifier
 	public static bool RequiresTranslation(string text)
 	{
 		var lang = Detect(text: text);
-		return lang is { } && !lang.EqualsIgnoreCase("eng");
+		return lang is { } && !lang.EqualsIgnoreCase(other: "eng");
 	}
 }
-
-

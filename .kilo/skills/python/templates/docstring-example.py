@@ -22,4 +22,3 @@ def sync_library(source: str, dry_run: bool = False) -> int:
     if not source:
         raise FileNotFoundError(f"Source path not found: {source}")
     return 0
-

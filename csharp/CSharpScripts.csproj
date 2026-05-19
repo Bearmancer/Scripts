@@ -8,64 +8,56 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<ItemGroup>
-		<InternalsVisibleTo Include="CSharpScripts.Tests"/>
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="AngleSharp" Version="*"/>
-		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0"/>
-		<PackageReference Include="Azure.AI.Translation.Text" Version="1.0.0"/>
-		<PackageReference Include="Azure.Identity" Version="1.21.0"/>
-		<PackageReference Include="CsvHelper" Version="*"/>
-		<PackageReference Include="Google.Apis" Version="*"/>
-		<PackageReference Include="Google.Apis.Auth" Version="*"/>
-		<PackageReference Include="Google.Apis.YouTube.v3" Version="*"/>
-		<PackageReference Include="Google.Cloud.DocumentAI.V1" Version="3.25.0"/>
-		<PackageReference Include="Google.Cloud.Vision.V1" Version="3.8.0"/>
-		<PackageReference Include="Hqub.Last.fm" Version="*"/>
-		<PackageReference Include="MetaBrainz.MusicBrainz" Version="*"/>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*"/>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
+		<Compile Remove="tests\**" />
+		<Content Remove="tests\**" />
+		<EmbeddedResource Remove="tests\**" />
+		<None Remove="tests\**" />
+
+		<Compile Remove="src\Reader\**" />
+		<Compile Remove="src\Orchestrators\**" />
+		<Compile Remove="src\CLI\**" />
+		<Compile Remove="src\Program.cs" />
+		<Compile Remove="src\Data\Configuration\**" />
+		<Compile Remove="src\Services\Language\LanguageIdentifier.cs" />
+
+		<PackageReference Include="AngleSharp" Version="*" />
+		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="*" />
+		<PackageReference Include="Azure.AI.Translation.Text" Version="*" />
+		<PackageReference Include="Azure.Identity" Version="*" />
+		<PackageReference Include="CsvHelper" Version="*" />
+		<PackageReference Include="Google.Apis" Version="*" />
+		<PackageReference Include="Google.Apis.Auth" Version="*" />
+		<PackageReference Include="Google.Apis.YouTube.v3" Version="*" />
+		<PackageReference Include="Google.Cloud.DocumentAI.V1" Version="*" />
+		<PackageReference Include="Google.Cloud.Vision.V1" Version="*" />
+		<PackageReference Include="Hqub.Last.fm" Version="*" />
+		<PackageReference Include="MetaBrainz.MusicBrainz" Version="*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*">
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*">
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="*"/>
-		<PackageReference Include="Microsoft.Playwright" Version="*"/>
-		<PackageReference Include="NTextCat" Version="*"/>
-		<PackageReference Include="Npgsql" Version="*"/>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*"/>
-		<PackageReference Include="ParkSquare.Discogs" Version="*"/>
-		<PackageReference Include="PdfPig" Version="*"/>
-		<PackageReference Include="Polly" Version="*"/>
-		<PackageReference Include="Polly.RateLimiting" Version="8.6.5"/>
-		<PackageReference Include="RestSharp" Version="*"/>
-		<PackageReference Include="Riok.Mapperly" Version="*"/>
-		<PackageReference Include="Serilog" Version="*"/>
-		<PackageReference Include="Serilog.Enrichers.Process" Version="*"/>
-		<PackageReference Include="Serilog.Enrichers.Thread" Version="*"/>
-		<PackageReference Include="Serilog.Formatting.Compact" Version="*"/>
-		<PackageReference Include="Serilog.Sinks.File" Version="*"/>
-		<PackageReference Include="SmartReader" Version="*"/>
-		<PackageReference Include="Spectre.Console" Version="*"/>
-		<PackageReference Include="Spectre.Console.Cli" Version="*"/>
-		<PackageReference Include="System.Threading.RateLimiting" Version="*"/>
-	</ItemGroup>
-	<Target Name="CopyNTextCatProfile" AfterTargets="Build">
-		<ItemGroup>
-			<NTextCatFiles Include="$(NuGetPackageRoot)ntextcat\**\content\*.xml"/>
-		</ItemGroup>
-		<Copy SourceFiles="@(NTextCatFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true"/>
-	</Target>
-	<ItemGroup>
-		<Compile Remove="src\Tests\**"/>
-		<EmbeddedResource Remove="src\Tests\**"/>
-		<None Remove="src\Tests\**"/>
-		<Compile Remove="src\Reader\**"/>
-		<Compile Remove="src\Orchestrators\**"/>
-		<Compile Remove="src\CLI\**"/>
-		<Compile Remove="src\Program.cs"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="*" />
+		<PackageReference
+			Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+			Version="*" />
+		<PackageReference Include="Microsoft.Playwright" Version="*" />
+		<PackageReference Include="Npgsql" Version="*" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
+		<PackageReference Include="ParkSquare.Discogs" Version="*" />
+		<PackageReference Include="PdfPig" Version="*" />
+		<PackageReference Include="Polly" Version="*" />
+		<PackageReference Include="Polly.RateLimiting" Version="*" />
+		<PackageReference Include="RestSharp" Version="*" />
+		<PackageReference Include="Riok.Mapperly" Version="*" />
+		<PackageReference Include="Serilog" Version="*" />
+		<PackageReference Include="Serilog.Enrichers.Process" Version="*" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="*" />
+		<PackageReference Include="Serilog.Formatting.Compact" Version="*" />
+		<PackageReference Include="Serilog.Sinks.File" Version="*" />
+		<PackageReference Include="SmartReader" Version="*" />
+		<PackageReference Include="Spectre.Console" Version="*" />
+		<PackageReference Include="Spectre.Console.Cli" Version="*" />
+		<PackageReference Include="System.Threading.RateLimiting" Version="*" />
 	</ItemGroup>
 </Project>

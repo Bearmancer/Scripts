@@ -32,33 +32,31 @@ internal sealed class BrowserSession : IAsyncDisposable
 		cancellationToken.ThrowIfCancellationRequested();
 
 		IPlaywright pw = await Playwright.CreateAsync();
-		var userDataDir = Path.GetFullPath(UserDataDirName);
+		var userDataDir = Path.GetFullPath(path: UserDataDirName);
 
 		BrowserTypeLaunchPersistentContextOptions options = new()
 		{
 			Headless = false,
 			ViewportSize = new ViewportSize { Width = ViewportWidth, Height = ViewportHeight },
-			AcceptDownloads = true,
+			AcceptDownloads = true
 		};
 
-		if (!IsNullOrEmpty(extensionPath))
+		if (!IsNullOrEmpty(value: extensionPath))
 		{
 			options.Args =
 			[
 				$"--disable-extensions-except={extensionPath}",
-				$"--load-extension={extensionPath}",
+				$"--load-extension={extensionPath}"
 			];
 		}
 
 		IBrowserContext browser = await pw.Chromium.LaunchPersistentContextAsync(
-			userDataDir,
-			options
+			userDataDir: userDataDir,
+			options: options
 		);
-		return new BrowserSession(pw, browser);
+		return new BrowserSession(playwright: pw, browser: browser);
 	}
 
 	public async Task<IPage> GetOrCreatePageAsync() =>
-		Browser.Pages.Count > 0 ? Browser.Pages[0] : await Browser.NewPageAsync();
+		Browser.Pages.Count > 0 ? Browser.Pages[index: 0] : await Browser.NewPageAsync();
 }
-
-

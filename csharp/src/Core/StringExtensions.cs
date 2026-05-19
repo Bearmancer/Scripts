@@ -7,22 +7,22 @@ internal static class StringExtensions
 		internal bool EqualsIgnoreCase(
 			string? other,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => string.Equals(value, other, comparisonType);
+		) => string.Equals(a: value, b: other, comparisonType: comparisonType);
 
 		internal bool ContainsIgnoreCase(
 			string substring,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value?.Contains(substring, comparisonType) ?? false;
+		) => value?.Contains(value: substring, comparisonType: comparisonType) ?? false;
 
 		internal bool StartsWithIgnoreCase(
 			string prefix,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value?.StartsWith(prefix, comparisonType) ?? false;
+		) => value?.StartsWith(value: prefix, comparisonType: comparisonType) ?? false;
 
 		internal bool EndsWithIgnoreCase(
 			string suffix,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value?.EndsWith(suffix, comparisonType) ?? false;
+		) => value?.EndsWith(value: suffix, comparisonType: comparisonType) ?? false;
 	}
 
 	extension(string value)
@@ -30,26 +30,26 @@ internal static class StringExtensions
 		internal int IndexOfIgnoreCase(
 			string substring,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value.IndexOf(substring, comparisonType);
+		) => value.IndexOf(value: substring, comparisonType: comparisonType);
 
 		internal string GetImageMimeType() =>
-			value.EndsWithIgnoreCase(".png") ? "image/png"
-			: value.EndsWithIgnoreCase(".gif") ? "image/gif"
-			: value.EndsWithIgnoreCase(".jpg") || value.EndsWithIgnoreCase(".jpeg") ? "image/jpeg"
-			: value.EndsWithIgnoreCase(".webp") ? "image/webp"
-			: value.EndsWithIgnoreCase(".svg") ? "image/svg+xml"
+			value.EndsWithIgnoreCase(suffix: ".png") ? "image/png"
+			: value.EndsWithIgnoreCase(suffix: ".gif") ? "image/gif"
+			: value.EndsWithIgnoreCase(suffix: ".jpg") || value.EndsWithIgnoreCase(suffix: ".jpeg") ? "image/jpeg"
+			: value.EndsWithIgnoreCase(suffix: ".webp") ? "image/webp"
+			: value.EndsWithIgnoreCase(suffix: ".svg") ? "image/svg+xml"
 			: "application/octet-stream";
 
 		internal string SanitizeFileName(int maxLength = int.MaxValue)
 		{
-			if (IsNullOrWhiteSpace(value))
+			if (IsNullOrWhiteSpace(value: value))
 				return "unnamed";
 
 			ReadOnlySpan<char> invalid = Path.GetInvalidFileNameChars().AsSpan();
 			var needsSanitizing = false;
 			foreach (var c in value)
 			{
-				if (invalid.Contains(c))
+				if (invalid.Contains(value: c))
 				{
 					needsSanitizing = true;
 					break;
@@ -57,20 +57,20 @@ internal static class StringExtensions
 			}
 
 			var result = !needsSanitizing
-				? value.Trim().TrimEnd('.')
+				? value.Trim().TrimEnd(trimChar: '.')
 				: Create(
-						value.Length,
-						value,
+						length: value.Length,
+						state: value,
 						static (span, src) =>
 						{
 							ReadOnlySpan<char> invalidChars = Path.GetInvalidFileNameChars()
 								.AsSpan();
 							for (var i = 0; i < src.Length; i++)
-								span[i] = invalidChars.Contains(src[i]) ? '_' : src[i];
+								span[index: i] = invalidChars.Contains(src[index: i]) ? '_' : src[index: i];
 						}
 					)
 					.Trim()
-					.TrimEnd('.');
+					.TrimEnd(trimChar: '.');
 
 			return result.Length <= maxLength ? result : result[..maxLength];
 		}
@@ -81,13 +81,11 @@ internal static class StringExtensions
 		internal bool ContainsIgnoreCase(
 			ReadOnlySpan<char> substring,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value.Contains(substring, comparisonType);
+		) => value.Contains(value: substring, comparisonType: comparisonType);
 
 		internal int IndexOfIgnoreCase(
 			ReadOnlySpan<char> substring,
 			StringComparison comparisonType = OrdinalIgnoreCase
-		) => value.IndexOf(substring, comparisonType);
+		) => value.IndexOf(value: substring, comparisonType: comparisonType);
 	}
 }
-
-

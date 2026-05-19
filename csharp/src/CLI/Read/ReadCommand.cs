@@ -1,11 +1,13 @@
-﻿using CSharpScripts.Services.Read.Ocr;
+﻿using System.ComponentModel;
+using CSharpScripts.Services.Read;
+using CSharpScripts.Services.Read.Ocr;
 using CSharpScripts.Services.Read.Validation;
 
 namespace CSharpScripts.CLI.Read;
 
 internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -24,29 +26,29 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 
 				if (File.Exists(path: settings.Source) && IsPdf(path: settings.Source))
 				{
-					UI.Info(message: "Local PDF detected — using LocalPdfExtractor.");
+					Ui.Info(message: "Local PDF detected — using LocalPdfExtractor.");
 					content = await new LocalPdfExtractor(
 						filePath: settings.Source,
 						azureDocumentIntelligence: azureDocumentIntelligence,
-						cancellationToken
+						ct: cancellationToken
 					).ExtractAsync();
 				}
 				else if (File.Exists(path: settings.Source) && IsEpub(path: settings.Source))
 				{
-					UI.Info(message: "Local EPUB detected — using LocalEpubExtractor + OCR.");
+					Ui.Info(message: "Local EPUB detected — using LocalEpubExtractor + OCR.");
 					content = await new LocalEpubExtractor(
 						filePath: settings.Source,
 						azureDocumentIntelligence: azureDocumentIntelligence,
-						cancellationToken
+						ct: cancellationToken
 					).ExtractAsync();
 				}
 				else if (File.Exists(path: settings.Source) && IsImage(path: settings.Source))
 				{
-					UI.Info(message: "Local image detected — using LocalImageExtractor + OCR.");
+					Ui.Info(message: "Local image detected — using LocalImageExtractor + OCR.");
 					content = await new LocalImageExtractor(
 						filePath: settings.Source,
 						azureDocumentIntelligence: azureDocumentIntelligence,
-						cancellationToken
+						ct: cancellationToken
 					).ExtractAsync();
 				}
 				else if (
@@ -57,19 +59,19 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					)
 				)
 				{
-					var isJstor = settings.Source.ContainsIgnoreCase("jstor.org/stable/");
-					UI.Info(
+					var isJstor = settings.Source.ContainsIgnoreCase(substring: "jstor.org/stable/");
+					Ui.Info(
 						isJstor
 							? "JSTOR article detected — using PDF-based extraction."
 							: "Standard article detected — using BPC + SmartReader extraction."
 					);
 
 					content = isJstor
-						? await new JstorExtractor(url: url, cancellationToken).ExtractAsync()
+						? await new JstorExtractor(url: url, ct: cancellationToken).ExtractAsync()
 						: await new StandardExtractor(
 							url: url,
 							bpcPath: settings.BpcPath,
-							cancellationToken
+							ct: cancellationToken
 						).ExtractAsync();
 				}
 				else
@@ -83,16 +85,16 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 				var output =
 					settings.Output ?? $"{EpubWriter.SanitizeFilename(title: content.Title)}.epub";
 				EpubWriter.Write(content: content, outputPath: output);
-				UI.Ok($"EPUB saved to {output}");
+				Ui.Ok($"EPUB saved to {output}");
 
 				if (!settings.SkipValidation)
 				{
 					EpubValidationResult validation = await EpubValidator.ValidateAsync(
 						epubPath: output,
-						cancellationToken
+						ct: cancellationToken
 					);
 					if (!validation.Passed && !validation.Skipped)
-						UI.Warn(message: "EPUB validation failed — review before distributing.");
+						Ui.Warn(message: "EPUB validation failed — review before distributing.");
 				}
 
 				if (!IsNullOrWhiteSpace(value: settings.CalibreLibrary))
@@ -100,7 +102,7 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					await CalibreClient.AddAsync(
 						epubPath: output,
 						library: settings.CalibreLibrary,
-						cancellationToken
+						ct: cancellationToken
 					);
 				}
 			}
@@ -108,17 +110,17 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 	}
 
 	internal static bool IsPdf(string path) =>
-		!IsNullOrEmpty(value: path) && path.EndsWithIgnoreCase(".pdf");
+		!IsNullOrEmpty(value: path) && path.EndsWithIgnoreCase(suffix: ".pdf");
 
 	internal static bool IsEpub(string path) =>
-		!IsNullOrEmpty(value: path) && path.EndsWithIgnoreCase(".epub");
+		!IsNullOrEmpty(value: path) && path.EndsWithIgnoreCase(suffix: ".epub");
 
 	internal static bool IsImage(string path) =>
 		!IsNullOrEmpty(value: path)
 		&& (
-			path.EndsWithIgnoreCase(".jpg")
-			|| path.EndsWithIgnoreCase(".jpeg")
-			|| path.EndsWithIgnoreCase(".png")
+			path.EndsWithIgnoreCase(suffix: ".jpg")
+			|| path.EndsWithIgnoreCase(suffix: ".jpeg")
+			|| path.EndsWithIgnoreCase(suffix: ".png")
 		);
 
 	internal sealed class Settings : CommandSettings
@@ -164,5 +166,3 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 		public string? AzureDocumentIntelligenceModel { get; init; }
 	}
 }
-
-

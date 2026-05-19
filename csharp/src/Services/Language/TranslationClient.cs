@@ -39,13 +39,11 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 		[key: "ukr"] = "uk",
 		[key: "vie"] = "vi",
 		[key: "tha"] = "th",
-		[key: "ind"] = "id",
-	}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+		[key: "ind"] = "id"
+	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
-	private readonly string LibreTranslateUrl = libreTranslateUrl;
-
-	public static string ToIso639_1(string iso639_3) =>
-		Iso6393To1.TryGetValue(key: iso639_3, out var code) ? code : "auto";
+	public static string ToIso639_1(string iso6393) =>
+		Iso6393To1.GetValueOrDefault(key: iso6393, defaultValue: "auto");
 
 	public async Task<TranslationResult?> TranslateAsync(
 		string? text,
@@ -54,18 +52,18 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 	)
 	{
 		Log.Debug(
-			"TranslateAsync entry {Length} chars {SourceLanguage}",
+			messageTemplate: "TranslateAsync entry {Length} chars {SourceLanguage}",
 			text?.Length ?? 0,
 			sourceLanguage
 		);
 		if (IsNullOrWhiteSpace(value: text))
 		{
-			Log.Debug("TranslateAsync exit null (no text)");
+			Log.Debug(messageTemplate: "TranslateAsync exit null (no text)");
 			return null;
 		}
 
 		var langCode = sourceLanguage is { Length: 3 }
-			? ToIso639_1(iso639_3: sourceLanguage)
+			? ToIso639_1(iso6393: sourceLanguage)
 			: sourceLanguage ?? "auto";
 
 		using RestClient client = new(
@@ -76,15 +74,17 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 		{
 			try
 			{
-				using var cts = CancellationTokenSource.CreateLinkedTokenSource(token: ct);
+				using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(
+					token: ct
+				);
 				cts.CancelAfter(TimeSpan.FromSeconds(seconds: RequestTimeoutSeconds));
 
-				RestRequest request = new(resource: LibreTranslateUrl, method: Method.Post);
+				RestRequest request = new(resource: libreTranslateUrl, method: Method.Post);
 
-				RestRequestExtensions.AddParameter(request, name: "q", value: text);
-				RestRequestExtensions.AddParameter(request, name: "source", value: langCode);
-				RestRequestExtensions.AddParameter(request, name: "target", value: "en");
-				RestRequestExtensions.AddParameter(request, name: "format", value: "text");
+				request.AddParameter(name: "q", value: text);
+				request.AddParameter(name: "source", value: langCode);
+				request.AddParameter(name: "target", value: "en");
+				request.AddParameter(name: "format", value: "text");
 
 				RestResponse response = await client.ExecuteAsync(
 					request: request,
@@ -110,13 +110,13 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 
 				if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
 				{
-					Log.Debug("LibreTranslate unavailable, attempt {0}/{1}", attempt, MaxRetries);
-					await Task.Delay(1000 * attempt, ct);
+					Log.Debug(messageTemplate: "LibreTranslate unavailable, attempt {0}/{1}", attempt, MaxRetries);
+					await Task.Delay(1000 * attempt, cancellationToken: ct);
 					continue;
 				}
 
 				Log.Debug(
-					"Translation failed ({0}): {1}",
+					messageTemplate: "Translation failed ({0}): {1}",
 					response.StatusCode,
 					response.Content ?? response.ErrorMessage ?? "Unknown error"
 				);
@@ -124,21 +124,19 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 			}
 			catch (TaskCanceledException) when (!ct.IsCancellationRequested)
 			{
-				Log.Debug("Translation timeout, attempt {0}/{1}", attempt, MaxRetries);
+				Log.Debug(messageTemplate: "Translation timeout, attempt {0}/{1}", attempt, MaxRetries);
 				if (attempt < MaxRetries)
-					await Task.Delay(500 * attempt, ct);
+					await Task.Delay(500 * attempt, cancellationToken: ct);
 			}
 			catch (HttpRequestException ex)
 			{
-				Log.Error(ex, "Translation HTTP error: {Message}", ex.Message);
+				Log.Error(ex: ex, messageTemplate: "Translation HTTP error: {Message}", ex.Message);
 				if (attempt < MaxRetries)
-					await Task.Delay(500 * attempt, ct);
+					await Task.Delay(500 * attempt, cancellationToken: ct);
 			}
 		}
 
-		Log.Error("TranslateAsync exit null (failed all retries)");
+		Log.Error(messageTemplate: "TranslateAsync exit null (failed all retries)");
 		return null;
 	}
 }
-
-

@@ -1,4 +1,7 @@
-﻿namespace CSharpScripts.Orchestrators;
+﻿using CSharpScripts.Services.Sync.YouTube;
+using CollectionExtensions = AngleSharp.Dom.CollectionExtensions;
+
+namespace CSharpScripts.Orchestrators;
 
 internal sealed class YouTubePlaylistOrchestrator : IDisposable
 {
@@ -34,23 +37,18 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		bool previewMode = false
 	)
 	{
-		YouTubeService youtubeService = await YouTubeService.CreateAsync(ct);
+		YouTubeService youtubeService = await YouTubeService.CreateAsync(ct: ct);
 		YouTubeFetchState state = await StateManager.LoadStateAsync<YouTubeFetchState>(
-			StateManager.YoutubeSyncFile,
-			ct
+			fileName: StateManager.YoutubeSyncFile,
+			ct: ct
 		);
-		return new YouTubePlaylistOrchestrator(
-			youtubeService,
-			state,
-			previewMode,
-			ct
-		);
+		return new YouTubePlaylistOrchestrator(youtubeService: youtubeService, state: state, previewMode: previewMode, ct: ct);
 	}
 
 	internal async Task ExecuteAsync()
 	{
-		UI.Info("Starting YouTube sync...");
-		StateManager.MigratePlaylistFiles(State.PlaylistSnapshots);
+		Ui.Info(message: "Starting YouTube sync...");
+		StateManager.MigratePlaylistFiles(snapshots: State.PlaylistSnapshots);
 
 		if (State.FetchComplete && State.PlaylistSnapshots.Count > 0)
 		{
@@ -63,45 +61,41 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 	internal async Task ExecuteForPlaylistsAsync(string[] playlistIdentifiers)
 	{
-		Log.Debug("Selective sync initiated for {0} playlist(s)", playlistIdentifiers.Length);
+		Log.Debug(messageTemplate: "Selective sync initiated for {0} playlist(s)", playlistIdentifiers.Length);
 
 		List<YouTubePlaylist> resolvedPlaylists = await ResolvePlaylistIdentifiersAsync(
-			playlistIdentifiers
+			identifiers: playlistIdentifiers
 		);
 
 		if (resolvedPlaylists.Count == 0)
 		{
-			UI.Error("No matching playlists found for the provided identifiers.");
+			Ui.Error(message: "No matching playlists found for the provided identifiers.");
 			return;
 		}
 
-		UI.Info("Syncing {0} playlist(s):", resolvedPlaylists.Count);
+		Ui.Info(message: "Syncing {0} playlist(s):", resolvedPlaylists.Count);
 		foreach (YouTubePlaylist playlist in resolvedPlaylists)
-			UI.Info("  • {0}", playlist.Title);
+			Ui.Info(message: "  • {0}", playlist.Title);
 
 		var isFirstPlaylist = State.PlaylistSnapshots.Count == 0;
 		var processedCount = await ProcessPlaylistsWithProgressAsync(
-			resolvedPlaylists,
-			isFirstPlaylist
+			playlistsToProcess: resolvedPlaylists,
+			isFirstPlaylist: isFirstPlaylist
 		);
 
 		if (!Ct.IsCancellationRequested)
-			UI.Complete("Done! Synced {0} playlist(s).", processedCount);
+			Ui.Complete(message: "Done! Synced {0} playlist(s).", processedCount);
 		else
-		{
-			Log.Warning("SyncInterrupted {Reason}", "Interrupted during selective sync");
-		}
+			Log.Warning(messageTemplate: "SyncInterrupted {Reason}", "Interrupted during selective sync");
 	}
 
 	private async Task<List<YouTubePlaylist>> ResolvePlaylistIdentifiersAsync(string[] identifiers)
 	{
 		List<YouTubePlaylist> resolved = [];
 
-		var titleLookup = Enumerable.ToDictionary(
-			State.PlaylistSnapshots.Values,
-			s => s.Title,
+		Dictionary<string, PlaylistSnapshot> titleLookup = State.PlaylistSnapshots.Values.ToDictionary(s => s.Title,
 			s => s,
-			StringComparer.OrdinalIgnoreCase
+			comparer: StringComparer.OrdinalIgnoreCase
 		);
 
 		foreach (var identifier in identifiers)
@@ -110,13 +104,13 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 				break;
 
 			YouTubePlaylist? playlist = await ResolvePlaylistIdentifierAsync(
-				identifier,
-				titleLookup
+				identifier: identifier,
+				titleLookup: titleLookup
 			);
 			if (playlist is { })
-				resolved.Add(playlist);
+				resolved.Add(item: playlist);
 			else
-				UI.Warn("Could not resolve: {0}", identifier);
+				Ui.Warn(message: "Could not resolve: {0}", identifier);
 		}
 
 		return resolved;
@@ -127,55 +121,53 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		Dictionary<string, PlaylistSnapshot>? titleLookup = null
 	)
 	{
-		if (State.PlaylistSnapshots.TryGetValue(identifier, out PlaylistSnapshot? snapshot))
+		if (State.PlaylistSnapshots.TryGetValue(key: identifier, out PlaylistSnapshot? snapshot))
 		{
-			Log.Debug("Resolved '{0}' from cached snapshot", identifier);
+			Log.Debug(messageTemplate: "Resolved '{0}' from cached snapshot", identifier);
 			return new YouTubePlaylist(
-				snapshot.PlaylistId,
-				snapshot.Title,
-				snapshot.ReportedVideoCount,
+				Id: snapshot.PlaylistId,
+				Title: snapshot.Title,
+				VideoCount: snapshot.ReportedVideoCount,
 				await YoutubeService.GetPlaylistVideoIdsAsync(snapshot.PlaylistId, Ct),
-				snapshot.ETag
+				ETag: snapshot.ETag
 			);
 		}
 
 		PlaylistSnapshot? titleMatch =
-			titleLookup?.GetValueOrDefault(identifier)
-			?? Enumerable.FirstOrDefault(
-				State.PlaylistSnapshots.Values,
-				s => s.Title.EqualsIgnoreCase(identifier)
+			titleLookup?.GetValueOrDefault(key: identifier)
+			?? State.PlaylistSnapshots.Values.FirstOrDefault(s => s.Title.EqualsIgnoreCase(other: identifier)
 			);
 
 		if (titleMatch is { } match)
 		{
-			Log.Debug("Resolved '{0}' by title match", identifier);
+			Log.Debug(messageTemplate: "Resolved '{0}' by title match", identifier);
 			return new YouTubePlaylist(
-				match.PlaylistId,
-				match.Title,
-				match.ReportedVideoCount,
+				Id: match.PlaylistId,
+				Title: match.Title,
+				VideoCount: match.ReportedVideoCount,
 				await YoutubeService.GetPlaylistVideoIdsAsync(match.PlaylistId, Ct),
-				match.ETag
+				ETag: match.ETag
 			);
 		}
 
 		if (
-			identifier.StartsWith("PL")
-			|| identifier.StartsWith("UU")
-			|| identifier.StartsWith("FL")
+			identifier.StartsWith(value: "PL")
+			|| identifier.StartsWith(value: "UU")
+			|| identifier.StartsWith(value: "FL")
 		)
 		{
-			Log.Debug("Fetching playlist by ID: {0}", identifier);
+			Log.Debug(messageTemplate: "Fetching playlist by ID: {0}", identifier);
 			List<string> videoIds = await YoutubeService.GetPlaylistVideoIdsAsync(identifier, Ct);
 			if (videoIds.Count > 0)
 			{
 				if (await YoutubeService.GetPlaylistSummaryAsync(identifier, Ct) is { } summary)
 				{
 					return new YouTubePlaylist(
-						identifier,
-						summary.Title,
-						summary.VideoCount,
-						videoIds,
-						summary.ETag
+						Id: identifier,
+						Title: summary.Title,
+						VideoCount: summary.VideoCount,
+						VideoIds: videoIds,
+						ETag: summary.ETag
 					);
 				}
 			}
@@ -186,49 +178,43 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 	private async Task ExecuteOptimizedAsync()
 	{
-		Log.Debug("Last change: {0:yyyy/MM/dd HH:mm:ss}", State.LastUpdated);
-		State = StateTransitions.RefreshTimestamps(State);
+		Log.Debug(messageTemplate: "Last change: {0:yyyy/MM/dd HH:mm:ss}", State.LastUpdated);
+		State = State.RefreshTimestamps();
 		await SaveStateAsync();
 
 		List<PlaylistSummary> summaries = [];
-		await StatusExtensions
-			.Spinner(AnsiConsole.Status(), Spinner.Known.Dots)
+		await AnsiConsole.Status()
+			.Spinner(spinner: Spinner.Known.Dots)
 			.StartAsync(
-				"Fetching playlist metadata...",
-				async _ =>
-				{
-					summaries = await YoutubeService.GetPlaylistSummariesAsync(Ct);
-				}
+				status: "Fetching playlist metadata...",
+				async _ => { summaries = await YoutubeService.GetPlaylistSummariesAsync(ct: Ct); }
 			);
 
 		if (Ct.IsCancellationRequested)
 		{
-			Log.Warning("SyncInterrupted {Reason}", "Interrupted while fetching playlist metadata");
+			Log.Warning(messageTemplate: "SyncInterrupted {Reason}", "Interrupted while fetching playlist metadata");
 			return;
 		}
 
 		OptimizedChanges changes = YouTubeChangeDetector.DetectOptimizedChanges(
-			summaries,
-			State.PlaylistSnapshots
+			currentSummaries: summaries,
+			snapshots: State.PlaylistSnapshots
 		);
 
 		if (!changes.HasAnyChanges)
 		{
-			UI.Complete("No changes detected.");
+			Ui.Complete(message: "No changes detected.");
 			return;
 		}
 
-		YouTubeChangeDetector.LogDetailedChanges(changes, summaries, State.PlaylistSnapshots);
+		YouTubeChangeDetector.LogDetailedChanges(changes: changes, summaries: summaries, snapshots: State.PlaylistSnapshots);
 
-		await ProcessDeletedPlaylistsAsync(changes.DeletedIds);
-		await ProcessRenamedPlaylistsAsync(changes.Renamed);
-		await ProcessModifiedPlaylistsAsync(
-			[.. changes.NewIds, .. changes.ModifiedIds],
-			summaries
-		);
+		await ProcessDeletedPlaylistsAsync(deletedIds: changes.DeletedIds);
+		await ProcessRenamedPlaylistsAsync(renames: changes.Renamed);
+		await ProcessModifiedPlaylistsAsync([.. changes.NewIds, .. changes.ModifiedIds], summaries: summaries);
 
 		if (Ct.IsCancellationRequested)
-			Log.Warning("SyncInterrupted {Reason}", "Interrupted during sync");
+			Log.Warning(messageTemplate: "SyncInterrupted {Reason}", "Interrupted during sync");
 	}
 
 	private async Task ProcessDeletedPlaylistsAsync(List<string> deletedIds)
@@ -243,14 +229,14 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 				{ } snapshot
 			)
 			{
-				ArchiveDeletedPlaylist(snapshot);
-				
+				ArchiveDeletedPlaylist(snapshot: snapshot);
+
 				Log.Information(
-					"PlaylistDeleted {Title} {VideoCount}",
+					messageTemplate: "PlaylistDeleted {Title} {VideoCount}",
 					snapshot.Title,
 					snapshot.VideoIds.Count
 				);
-				State.PlaylistSnapshots.Remove(deletedId);
+				State.PlaylistSnapshots.Remove(key: deletedId);
 			}
 		}
 
@@ -258,34 +244,32 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 			await SaveStateAsync();
 	}
 
-	private async Task ProcessRenamedPlaylistsAsync(
-		List<PlaylistRename> renames
-	)
+	private async Task ProcessRenamedPlaylistsAsync(List<PlaylistRename> renames)
 	{
 		foreach (PlaylistRename rename in renames)
 		{
 			if (Ct.IsCancellationRequested)
 				break;
 
-			UI.Info("Renaming: {0} → {1}", rename.OldTitle, rename.NewTitle);
+			Ui.Info(message: "Renaming: {0} → {1}", rename.OldTitle, rename.NewTitle);
 			Log.Information(
-				"PlaylistRenamed {OldTitle} {NewTitle}",
+				messageTemplate: "PlaylistRenamed {OldTitle} {NewTitle}",
 				rename.OldTitle,
 				rename.NewTitle
 			);
 
-			StateManager.RenamePlaylistCache(rename.OldTitle, rename.NewTitle);
+			StateManager.RenamePlaylistCache(oldTitle: rename.OldTitle, newTitle: rename.NewTitle);
 
 			if (
 				State.PlaylistSnapshots.TryGetValue(
-					rename.PlaylistId,
+					key: rename.PlaylistId,
 					out PlaylistSnapshot? snapshot
 				)
 			)
 			{
-				State.PlaylistSnapshots[rename.PlaylistId] = snapshot with
+				State.PlaylistSnapshots[key: rename.PlaylistId] = snapshot with
 				{
-					Title = rename.NewTitle,
+					Title = rename.NewTitle
 				};
 			}
 		}
@@ -301,15 +285,15 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 	{
 		if (playlistIds.Count == 0)
 		{
-			UI.Complete("Done! Only metadata changes applied.");
+			Ui.Complete(message: "Done! Only metadata changes applied.");
 			return;
 		}
 
-		Log.Debug("Fetching details for {0} changed playlists...", playlistIds.Count);
+		Log.Debug(messageTemplate: "Fetching details for {0} changed playlists...", playlistIds.Count);
 
 		List<YouTubePlaylist> playlistsToProcess = await FetchPlaylistVideoIdsAsync(
-			playlistIds,
-			summaries
+			playlistIds: playlistIds,
+			summaries: summaries
 		);
 
 		if (Ct.IsCancellationRequested || playlistsToProcess.Count == 0)
@@ -317,13 +301,13 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 		var isFirstPlaylist = State.PlaylistSnapshots.Count == 0;
 		var processedCount = await ProcessPlaylistsWithProgressAsync(
-			playlistsToProcess,
-			isFirstPlaylist
+			playlistsToProcess: playlistsToProcess,
+			isFirstPlaylist: isFirstPlaylist
 		);
 
-		UpdateSnapshotsForProcessedPlaylists(playlistsToProcess, summaries);
+		UpdateSnapshotsForProcessedPlaylists(playlists: playlistsToProcess, summaries: summaries);
 
-		UI.Complete("Done! Updated {0} playlists.", processedCount);
+		Ui.Complete(message: "Done! Updated {0} playlists.", processedCount);
 	}
 
 	private async Task<List<YouTubePlaylist>> FetchPlaylistVideoIdsAsync(
@@ -332,15 +316,15 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 	)
 	{
 		List<YouTubePlaylist> result = [];
-		var summaryLookup = Enumerable.ToDictionary(summaries, s => s.Id);
+		Dictionary<string, PlaylistSummary> summaryLookup = summaries.ToDictionary(s => s.Id);
 
-		UI.Suppress = true;
+		Ui.Suppress = true;
 
 		await UI.CreateStandardProgress(DescriptionColumnWidth)
 			.StartAsync(async ctx =>
 			{
 				ProgressTask task = ctx.AddTask(
-					UI.TaskTitle($"Fetching video IDs (0/{playlistIds.Count})"),
+					Ui.TaskTitle($"Fetching video IDs (0/{playlistIds.Count})"),
 					maxValue: playlistIds.Count
 				);
 
@@ -349,7 +333,7 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 					if (Ct.IsCancellationRequested)
 						break;
 
-					PlaylistSummary summary = summaryLookup[playlistId];
+					PlaylistSummary summary = summaryLookup[key: playlistId];
 					task.Description = UI.TaskTitle(summary.Title);
 
 					List<string> videoIds = await YoutubeService.GetPlaylistVideoIdsAsync(
@@ -362,19 +346,19 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 					result.Add(
 						new YouTubePlaylist(
-							playlistId,
-							summary.Title,
-							summary.VideoCount,
-							videoIds,
-							summary.ETag
+							Id: playlistId,
+							Title: summary.Title,
+							VideoCount: summary.VideoCount,
+							VideoIds: videoIds,
+							ETag: summary.ETag
 						)
 					);
 
-					task.Increment(1);
+					task.Increment(value: 1);
 				}
 			});
 
-		UI.Suppress = false;
+		Ui.Suppress = false;
 		return result;
 	}
 
@@ -383,18 +367,18 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		List<PlaylistSummary> summaries
 	)
 	{
-		var summaryLookup = Enumerable.ToDictionary(summaries, s => s.Id);
+		Dictionary<string, PlaylistSummary> summaryLookup = summaries.ToDictionary(s => s.Id);
 
 		foreach (YouTubePlaylist playlist in playlists)
 		{
-			PlaylistSummary summary = summaryLookup[playlist.Id];
-			State.PlaylistSnapshots[playlist.Id] = new PlaylistSnapshot(
-				playlist.Id,
-				playlist.Title,
-				playlist.VideoIds,
-				DateTime.UtcNow,
-				playlist.VideoCount,
-				summary.ETag
+			PlaylistSummary summary = summaryLookup[key: playlist.Id];
+			State.PlaylistSnapshots[key: playlist.Id] = new PlaylistSnapshot(
+				PlaylistId: playlist.Id,
+				Title: playlist.Title,
+				VideoIds: playlist.VideoIds,
+				LastUpdated: DateTime.UtcNow,
+				ReportedVideoCount: playlist.VideoCount,
+				ETag: summary.ETag
 			);
 		}
 		_ = SaveStateAsync();
@@ -408,47 +392,47 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 		if (playlists.Count == 0)
 		{
-			UI.Info("No playlists found.");
+			Ui.Info(message: "No playlists found.");
 			return;
 		}
 
-		if (!await FetchAllVideoIdsAsync(playlists))
+		if (!await FetchAllVideoIdsAsync(playlists: playlists))
 			return;
 
-		UI.Info("[Phase 1/2] Video ID fetch complete - all {0} playlists ready", playlists.Count);
-		UI.Info("[Phase 2/2] Starting DB write phase...");
+		Ui.Info(message: "[Phase 1/2] Video ID fetch complete - all {0} playlists ready", playlists.Count);
+		Ui.Info(message: "[Phase 2/2] Starting DB write phase...");
 
 		PlaylistChanges playlistChanges = YouTubeChangeDetector.DetectPlaylistChanges(
-			playlists,
-			State.PlaylistSnapshots
+			currentPlaylists: playlists,
+			snapshots: State.PlaylistSnapshots
 		);
 
 		if (!playlistChanges.HasChanges && State.FetchComplete)
 		{
-			UI.Complete("No changes detected.");
+			Ui.Complete(message: "No changes detected.");
 			return;
 		}
 
-		YouTubeChangeDetector.LogDetectedChanges(playlistChanges);
+		YouTubeChangeDetector.LogDetectedChanges(changes: playlistChanges);
 
 		if (Ct.IsCancellationRequested)
 		{
 			Log.Warning(
-				"SyncInterrupted {Reason}",
+				messageTemplate: "SyncInterrupted {Reason}",
 				"Interrupted before processing playlist changes"
 			);
 			return;
 		}
 
-		await ProcessDeletedPlaylistsAsync(playlistChanges.DeletedPlaylistIds);
+		await ProcessDeletedPlaylistsAsync(deletedIds: playlistChanges.DeletedPlaylistIds);
 
 		if (Ct.IsCancellationRequested)
 		{
-			Log.Warning("SyncInterrupted {Reason}", "Interrupted after processing deletions");
+			Log.Warning(messageTemplate: "SyncInterrupted {Reason}", "Interrupted after processing deletions");
 			return;
 		}
 
-		await WritePlaylistsToDbAsync(playlists, playlistChanges);
+		await WritePlaylistsToDbAsync(playlists: playlists, playlistChanges: playlistChanges);
 	}
 
 	private async Task<List<YouTubePlaylist>?> GetOrFetchPlaylistMetadataAsync()
@@ -461,16 +445,16 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 			var progressPercent = (int)(alreadyHaveVideoIds / (double)playlistCount * 100);
 			var currentPlaylistTitle =
 				alreadyHaveVideoIds < playlistCount
-					? playlists[alreadyHaveVideoIds].Title
+					? playlists[index: alreadyHaveVideoIds].Title
 					: "(all playlists fetched)";
-			UI.Info(
-				"[Phase 1/2] Resuming video ID fetch: {0}/{1} ({2}%) - {3}",
+			Ui.Info(
+				message: "[Phase 1/2] Resuming video ID fetch: {0}/{1} ({2}%) - {3}",
 				alreadyHaveVideoIds,
 				playlistCount,
 				progressPercent,
 				currentPlaylistTitle
 			);
-			Log.Debug("Using cached playlist metadata ({0} playlists)", playlistCount);
+			Log.Debug(messageTemplate: "Using cached playlist metadata ({0} playlists)", playlistCount);
 			return playlists;
 		}
 
@@ -478,14 +462,14 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 		if (Ct.IsCancellationRequested)
 		{
-			Log.Warning("SyncInterrupted {Reason}", "Interrupted while fetching playlist metadata");
+			Log.Warning(messageTemplate: "SyncInterrupted {Reason}", "Interrupted while fetching playlist metadata");
 			return null;
 		}
 
 		State = State with { CachedPlaylists = freshPlaylists, VideoIdFetchIndex = 0 };
 		await SaveStateAsync();
-		UI.Info("[Phase 1/2] Starting video ID fetch for {0} playlists", freshPlaylists.Count);
-		Log.Debug("Cached playlist metadata for resume capability");
+		Ui.Info(message: "[Phase 1/2] Starting video ID fetch for {0} playlists", freshPlaylists.Count);
+		Log.Debug(messageTemplate: "Cached playlist metadata for resume capability");
 		return freshPlaylists;
 	}
 
@@ -501,13 +485,13 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		var interruptedAt = 0;
 		var alreadyFetched = startIndex;
 
-		UI.Suppress = true;
+		Ui.Suppress = true;
 
 		await UI.CreateStandardProgress(DescriptionColumnWidth)
 			.StartAsync(async ctx =>
 			{
 				ProgressTask task = ctx.AddTask(
-					UI.TaskTitle($"Fetching video IDs ({alreadyFetched}/{playlistCount} done)"),
+					Ui.TaskTitle($"Fetching video IDs ({alreadyFetched}/{playlistCount} done)"),
 					maxValue: playlistCount
 				);
 				task.Value = alreadyFetched;
@@ -521,7 +505,7 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 						return;
 					}
 
-					YouTubePlaylist playlist = playlists[i];
+					YouTubePlaylist playlist = playlists[index: i];
 					task.Description = UI.TaskTitle(playlist.Title);
 
 					List<string> videoIds = await YoutubeService.GetPlaylistVideoIdsAsync(
@@ -536,22 +520,22 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 						return;
 					}
 
-					playlists[i] = playlist with { VideoIds = videoIds };
+					playlists[index: i] = playlist with { VideoIds = videoIds };
 					State = State with { CachedPlaylists = playlists, VideoIdFetchIndex = i + 1 };
 					await SaveStateAsync();
 
-					task.Increment(1);
+					task.Increment(value: 1);
 				}
 
 				task.Value = task.MaxValue;
 			});
 
-		UI.Suppress = false;
+		Ui.Suppress = false;
 
 		if (interrupted)
 		{
 			Log.Warning(
-				"YouTubeVideoIdFetchInterrupted {Detail}",
+				messageTemplate: "YouTubeVideoIdFetchInterrupted {Detail}",
 				$"Video ID fetch interrupted at {interruptedAt}/{playlists.Count} playlists"
 			);
 			return false;
@@ -566,40 +550,38 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 	)
 	{
 		var isFirstPlaylist = State.PlaylistSnapshots.Count == 0;
-		var newPlaylistIds = Enumerable.ToHashSet(playlistChanges.NewPlaylistIds);
-		var modifiedPlaylistIds = Enumerable.ToHashSet(playlistChanges.ModifiedPlaylistIds);
+		HashSet<string> newPlaylistIds = playlistChanges.NewPlaylistIds.ToHashSet();
+		HashSet<string> modifiedPlaylistIds = playlistChanges.ModifiedPlaylistIds.ToHashSet();
 
-		var playlistsToProcess = new List<YouTubePlaylist>(playlists.Count);
+		List<YouTubePlaylist> playlistsToProcess = new(capacity: playlists.Count);
 		foreach (YouTubePlaylist playlist in playlists)
 		{
 			if (
-				newPlaylistIds.Contains(playlist.Id)
-				|| modifiedPlaylistIds.Contains(playlist.Id)
-				|| !State.PlaylistSnapshots.ContainsKey(playlist.Id)
+				newPlaylistIds.Contains(item: playlist.Id)
+				|| modifiedPlaylistIds.Contains(item: playlist.Id)
+				|| !State.PlaylistSnapshots.ContainsKey(key: playlist.Id)
 			)
-			{
-				playlistsToProcess.Add(playlist);
-			}
+				playlistsToProcess.Add(item: playlist);
 		}
 
 		var skippedCount = playlists.Count - playlistsToProcess.Count;
 		var processedCount = 0;
 
 		if (skippedCount > 0)
-			UI.Info("Skipping {0} unchanged playlists", skippedCount);
+			Ui.Info(message: "Skipping {0} unchanged playlists", skippedCount);
 
 		if (playlistsToProcess.Count > 0)
 		{
 			processedCount = await ProcessPlaylistsWithProgressAsync(
-				playlistsToProcess,
-				isFirstPlaylist
+				playlistsToProcess: playlistsToProcess,
+				isFirstPlaylist: isFirstPlaylist
 			);
 		}
 
 		if (Ct.IsCancellationRequested)
 		{
 			Log.Warning(
-				"YouTubeInterruptedBeforeWrite {Detail}",
+				messageTemplate: "YouTubeInterruptedBeforeWrite {Detail}",
 				$"{State.PlaylistSnapshots.Count} playlists completed before interrupt"
 			);
 			return;
@@ -608,8 +590,8 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		State = State with { FetchComplete = true, CachedPlaylists = null };
 		await SaveStateAsync();
 
-		UI.Complete(
-			"Done! Synced {0} playlists ({1} processed, {2} unchanged).",
+		Ui.Complete(
+			message: "Done! Synced {0} playlists ({1} processed, {2} unchanged).",
 			playlists.Count,
 			processedCount,
 			playlists.Count - processedCount
@@ -637,11 +619,11 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 				maxVideoCount = playlist.VideoIds.Count;
 		}
 
-		var titleWidth = Math.Min(40, maxTitleLength);
+		var titleWidth = Math.Min(val1: 40, val2: maxTitleLength);
 		var suffixWidth = $"(0/{maxVideoCount} videos)".Length;
 		var totalDescriptionWidth = prefixWidth + 1 + titleWidth + 1 + suffixWidth;
 
-		UI.Suppress = true;
+		Ui.Suppress = true;
 
 		await UI.CreateStandardProgress(totalDescriptionWidth)
 			.StartAsync(async ctx =>
@@ -655,18 +637,18 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 					var playlistVideoCount = playlist.VideoIds.Count;
 
 					ProgressTask task = ctx.AddTask(
-						UI.TaskDescription(
-							playlistCount,
-							playlist.Title,
+						Ui.TaskDescription(
+							prefix: playlistCount,
+							title: playlist.Title,
 							$"(0/{playlistVideoCount} videos)",
-							prefixWidth,
-							titleWidth
+							prefixWidth: prefixWidth,
+							titleWidth: titleWidth
 						),
 						maxValue: playlistVideoCount
 					);
 
 					await ProcessPlaylistWithContextAsync(
-						playlist,
+						playlist: playlist,
 						isFirstPlaylist && processedCount == 0,
 						count =>
 						{
@@ -686,7 +668,7 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 				}
 			});
 
-		UI.Suppress = false;
+		Ui.Suppress = false;
 
 		return processedCount;
 	}
@@ -700,16 +682,16 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		var alreadyFetched = 0;
 		var playlistVideoCount = playlist.VideoIds.Count;
 		List<YouTubeVideo> videos = [];
-		List<YouTubeVideo> existingCache = StateManager.LoadPlaylistCache(playlist.Title);
+		List<YouTubeVideo> existingCache = StateManager.LoadPlaylistCache(playlistTitle: playlist.Title);
 		List<YouTubeVideo> previousVideos = [.. existingCache];
 
 		if (State.CurrentPlaylistId == playlist.Id && existingCache.Count > 0)
 		{
 			alreadyFetched = State.CurrentPlaylistVideosFetched;
 			videos = existingCache;
-			onVideoProgress(alreadyFetched);
+			onVideoProgress(obj: alreadyFetched);
 			Log.Debug(
-				"Resuming '{0}': {1}/{2} videos already fetched from cache",
+				messageTemplate: "Resuming '{0}': {1}/{2} videos already fetched from cache",
 				playlist.Title,
 				alreadyFetched,
 				playlistVideoCount
@@ -717,7 +699,7 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		}
 
 		List<string> remainingIds = playlist.VideoIds.GetRange(
-			alreadyFetched,
+			index: alreadyFetched,
 			playlistVideoCount - alreadyFetched
 		);
 		var videosFetchedSoFar = alreadyFetched;
@@ -726,26 +708,26 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 			remainingIds,
 			async batchVideos =>
 			{
-				videos.AddRange(batchVideos);
+				videos.AddRange(collection: batchVideos);
 				videosFetchedSoFar += batchVideos.Count;
 
-				StateManager.SavePlaylistCache(playlist.Title, videos);
+				StateManager.SavePlaylistCache(playlistTitle: playlist.Title, videos: videos);
 
 				State = State with
 				{
 					CurrentPlaylistId = playlist.Id,
 					CurrentPlaylistVideosFetched = videosFetchedSoFar,
-					LastUpdated = DateTime.UtcNow,
+					LastUpdated = DateTime.UtcNow
 				};
 				await SaveStateAsync();
 				Log.Debug(
-					"Cached: {0}/{1} video details for '{2}' (batch resume)",
+					messageTemplate: "Cached: {0}/{1} video details for '{2}' (batch resume)",
 					videosFetchedSoFar,
 					playlistVideoCount,
 					playlist.Title
 				);
 
-				onVideoProgress(videosFetchedSoFar);
+				onVideoProgress(obj: videosFetchedSoFar);
 				await Task.CompletedTask;
 			},
 			Ct
@@ -756,16 +738,16 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 		if (PreviewMode)
 		{
-			UI.Suppress = false;
-			UI.Info("Translating {0} videos...", videos.Count);
-			videos = await YouTubeTranslationService.TranslateVideosAsync(videos, Ct);
+			Ui.Suppress = false;
+			Ui.Info(message: "Translating {0} videos...", videos.Count);
+			videos = await YouTubeTranslationService.TranslateVideosAsync(videos: videos, ct: Ct);
 
 			if (Ct.IsCancellationRequested)
 				return;
 
-			UI.NewLine();
-			YouTubeTranslationService.ShowTranslationPreview(videos);
-			UI.Suppress = true;
+			Ui.NewLine();
+			YouTubeTranslationService.ShowTranslationPreview(videos: videos);
+			Ui.Suppress = true;
 		}
 		else
 		{
@@ -778,62 +760,55 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 
 			if (needsTranslationCount > 0)
 			{
-				Log.Debug("Translating {0} non-English videos...", needsTranslationCount);
-				videos = await YouTubeTranslationService.TranslateVideosAsync(videos, Ct);
+				Log.Debug(messageTemplate: "Translating {0} non-English videos...", needsTranslationCount);
+				videos = await YouTubeTranslationService.TranslateVideosAsync(videos: videos, ct: Ct);
 
 				if (Ct.IsCancellationRequested)
 					return;
 			}
 		}
 
-        // TODO: Database logic will go here
-		Log.Information("SyncComplete {Detail}", $"Fetched {videos.Count} videos for DB.");
+		Log.Information(messageTemplate: "SyncComplete {Detail}", $"Fetched {videos.Count} videos for DB.");
 
 		PlaylistSnapshot snapshot = new(
-			playlist.Id,
-			playlist.Title,
-			playlist.VideoIds,
-			DateTime.UtcNow,
-			playlist.VideoCount,
-			playlist.ETag
+			PlaylistId: playlist.Id,
+			Title: playlist.Title,
+			VideoIds: playlist.VideoIds,
+			LastUpdated: DateTime.UtcNow,
+			ReportedVideoCount: playlist.VideoCount,
+			ETag: playlist.ETag
 		);
-		State.PlaylistSnapshots[playlist.Id] = snapshot;
+		State.PlaylistSnapshots[key: playlist.Id] = snapshot;
 		State = State with
 		{
 			CurrentPlaylistId = null,
 			CurrentPlaylistVideosFetched = 0,
-			LastUpdated = DateTime.UtcNow,
+			LastUpdated = DateTime.UtcNow
 		};
 		await SaveStateAsync();
 	}
 
 	internal async Task SaveStateAsync() =>
-		await StateManager.SaveStateAsync(StateManager.YoutubeSyncFile, State, Ct);
+		await StateManager.SaveStateAsync(fileName: StateManager.YoutubeSyncFile, state: State, ct: Ct);
 
 	private static void ArchiveDeletedPlaylist(PlaylistSnapshot snapshot)
 	{
-		var archivedPath = StateManager.ArchivePlaylistCache(snapshot.Title);
+		var archivedPath = StateManager.ArchivePlaylistCache(playlistTitle: snapshot.Title);
 
-		UI.Warn("Playlist deleted: {0}", snapshot.Title);
-		UI.Info("Archived to: {0}", archivedPath);
+		Ui.Warn(message: "Playlist deleted: {0}", snapshot.Title);
+		Ui.Info(message: "Archived to: {0}", archivedPath);
 	}
 
-	public static Task ExportSheetsAsCSVsAsync(
+	public static Task ExportSheetsAsCsVsAsync(
 		string outputDirectory = "YouTube Playlists",
 		CancellationToken ct = default
-	)
-	{
-        // TODO: Implement export from DB
-        throw new NotImplementedException("Export to CSV requires DB implementation.");
-	}
+	) => throw new NotImplementedException(message: "Export to CSV requires DB implementation.");
 
 	public static async Task CountPlaylistsAsync(CancellationToken ct = default)
 	{
-		using YouTubeService youtubeService = await YouTubeService.CreateAsync(ct);
+		using YouTubeService youtubeService = await YouTubeService.CreateAsync(ct: ct);
 
-		List<PlaylistSummary> playlists = await youtubeService.GetPlaylistSummariesAsync(ct);
-		UI.Info("Playlists: {0}", playlists.Count);
+		List<PlaylistSummary> playlists = await youtubeService.GetPlaylistSummariesAsync(ct: ct);
+		Ui.Info(message: "Playlists: {0}", playlists.Count);
 	}
 }
-
-

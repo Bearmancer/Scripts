@@ -3,14 +3,14 @@
 ## Project Overview
 
 This is a personal repository for automation scripts, utilities, and lightweight applications. The project is
-multi-lingual, housing code in C#, Python, and PowerShell. It also includes a local PostgreSQL 16 database instance
-managed via Docker Compose for isolated testing and local data storage.
+multi-lingual, housing code in C#, Python, and PowerShell. It also includes a local PostgreSQL 18 database instance
+(pg_db) managed via Docker Compose for isolated testing and local data storage.
 
 ### Key Technologies:
 
 * **Shell:** PowerShell Core / Windows PowerShell
-* **Languages:** C# (.NET), Python (managed by `uv`), PowerShell
-* **Database:** PostgreSQL 16 (Local Docker)
+* **Languages:** C# (.NET 10), Python (managed by `uv`), PowerShell
+* **Database:** PostgreSQL 18 (Local Docker) — credentials in `.env` / `$PGCONNSTR`
 * **Infrastructure:** Docker Compose
 
 ---
@@ -19,8 +19,9 @@ managed via Docker Compose for isolated testing and local data storage.
 
 ### Database Management
 
-A local PostgreSQL instance is provided for script testing. Ensure Docker is running.
+A local PostgreSQL 18 instance is provided for script testing. Ensure Docker is running.
 
+* **Connection:** Set via `$env:PGCONNSTR` (see `.env`)
 * **Start Database:**
   ```powershell
   docker compose up -d
@@ -50,6 +51,7 @@ A local PostgreSQL instance is provided for script testing. Ensure Docker is run
 	  strings) in the code.
 	* Rely on `.env` files or secure credential stores.
 * **State Management:** Do not modify files in the `state/` directory manually. This directory is used by Docker for
-  PostgreSQL data persistence (`state/postgres-data`).
-* **Database Schema:** The initial database schema is defined in `schema.sql` and is automatically applied when the
-  database container starts for the first time.
+  PostgreSQL data persistence (`state/postgres/18/docker`).
+* **Database Schema:** The initial database schema is defined in `.kilo/references/init_schema.sql` and is automatically
+  applied when the database container starts for the first time. The full canonical schema is in
+  `.kilo/references/schema.sql`.

@@ -1,29 +1,27 @@
-namespace CSharpScripts.Services.Music;
+﻿namespace CSharpScripts.Services.Music;
 
 internal static class RecordingEnrichmentService
 {
 	private static readonly FrozenDictionary<string, string> LabelAbbreviations =
-		FrozenDictionary.ToFrozenDictionary(
-			new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
-			{
-				[key: "Deutsche Grammophon"] = "DG",
-				[key: "His Master's Voice"] = "HMV",
-				[key: "Columbia Masterworks"] = "Columbia",
-				[key: "RCA Victor Red Seal"] = "RCA Red Seal",
-				[key: "Decca Record Company"] = "Decca",
-				[key: "Angel Records"] = "Angel",
-				[key: "Philips Classics"] = "Philips",
-				[key: "London Records"] = "London",
-				[key: "EMI Classics"] = "EMI",
-				[key: "Sony Classical"] = "Sony",
-				[key: "Warner Classics"] = "Warner",
-			},
-			comparer: StringComparer.OrdinalIgnoreCase
+		new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
+		{
+			[key: "Deutsche Grammophon"] = "DG",
+			[key: "His Master's Voice"] = "HMV",
+			[key: "Columbia Masterworks"] = "Columbia",
+			[key: "RCA Victor Red Seal"] = "RCA Red Seal",
+			[key: "Decca Record Company"] = "Decca",
+			[key: "Angel Records"] = "Angel",
+			[key: "Philips Classics"] = "Philips",
+			[key: "London Records"] = "London",
+			[key: "EMI Classics"] = "EMI",
+			[key: "Sony Classical"] = "Sony",
+			[key: "Warner Classics"] = "Warner"
+		}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase
 		);
 
 	internal static List<RecordingInput> ReadRecordings(string filePath)
 	{
-		var delimiter = filePath.EndsWithIgnoreCase(".tsv") ? "\t" : ",";
+		var delimiter = filePath.EndsWithIgnoreCase(suffix: ".tsv") ? "\t" : ",";
 
 		using StreamReader reader = new(path: filePath);
 		using CsvReader csv = new(
@@ -50,7 +48,7 @@ internal static class RecordingEnrichmentService
 				},
 				TrimOptions = TrimOptions.Trim,
 				IgnoreBlankLines = true,
-				DetectColumnCountChanges = false,
+				DetectColumnCountChanges = false
 			}
 		);
 
@@ -70,28 +68,29 @@ internal static class RecordingEnrichmentService
 		if (IsNullOrEmpty(value: record.Composer) && IsNullOrEmpty(value: record.Work))
 			return suggestions;
 
-		List<Func<Task>> tasks = [];
-
-		tasks.Add(async () =>
-		{
-			var parsedYear =
-				record.Year is { } && int.TryParse(record.Year.TrimEnd(trimChar: '?'), out var y)
-					? (int?)y
-					: null;
-			List<SearchResult> mbResults = await mbService.SearchReleasesAsync(
-				artist: record.Composer,
-				release: record.Work,
-				year: parsedYear,
-				maxResults: 5,
-				ct: ct
-			);
-			ExtractSuggestions(
-				results: mbResults,
-				record: record,
-				suggestions: suggestions,
-				source: "MusicBrainz"
-			);
-		});
+		List<Func<Task>> tasks =
+		[
+			async () =>
+			{
+				var parsedYear =
+					record.Year is { } && int.TryParse(record.Year.TrimEnd(trimChar: '?'), out var y)
+						? (int?)y
+						: null;
+				List<SearchResult> mbResults = await mbService.SearchReleasesAsync(
+					artist: record.Composer,
+					release: record.Work,
+					year: parsedYear,
+					maxResults: 5,
+					ct: ct
+				);
+				ExtractSuggestions(
+					results: mbResults,
+					record: record,
+					suggestions: suggestions,
+					source: "MusicBrainz"
+				);
+			}
+		];
 
 		if (discogsService is { })
 		{
@@ -113,9 +112,7 @@ internal static class RecordingEnrichmentService
 		}
 
 		await Task.WhenAll(
-			Enumerable.Select(
-				tasks,
-				async t =>
+			tasks.Select(async t =>
 				{
 					try
 					{
@@ -123,21 +120,24 @@ internal static class RecordingEnrichmentService
 					}
 					catch (HttpRequestException)
 					{
-						Log.Warning("Transient music metadata lookup failure for {Composer} - {Work}",
+						Log.Warning(
+							messageTemplate: "Transient music metadata lookup failure for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
 					}
 					catch (TimeoutException)
 					{
-						Log.Warning("Timed out while looking up music metadata for {Composer} - {Work}",
+						Log.Warning(
+							messageTemplate: "Timed out while looking up music metadata for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
 					}
 					catch (TaskCanceledException) when (!ct.IsCancellationRequested)
 					{
-						Log.Warning("Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}",
+						Log.Warning(
+							messageTemplate: "Lookup task was canceled by a timeout while searching music metadata for {Composer} - {Work}",
 							record.Composer,
 							record.Work
 						);
@@ -201,7 +201,7 @@ internal static class RecordingEnrichmentService
 		if (IsNullOrEmpty(value: label))
 			return null;
 
-		foreach ((var full, var abbr) in LabelAbbreviations)
+		foreach (var (full, abbr) in LabelAbbreviations)
 		{
 			if (label.Contains(value: full))
 				return abbr;
@@ -225,12 +225,12 @@ internal static class RecordingEnrichmentService
 	{
 		if (IsNullOrEmpty(value: a) || IsNullOrEmpty(value: b))
 			return false;
-		if (a.ContainsIgnoreCase(b) || b.ContainsIgnoreCase(a))
+		if (a.ContainsIgnoreCase(substring: b) || b.ContainsIgnoreCase(substring: a))
 			return true;
 
 		var aNorm = NormalizePersonName(name: a);
 		var bNorm = NormalizePersonName(name: b);
-		return aNorm.ContainsIgnoreCase(bNorm) || bNorm.ContainsIgnoreCase(aNorm);
+		return aNorm.ContainsIgnoreCase(substring: bNorm) || bNorm.ContainsIgnoreCase(substring: aNorm);
 	}
 
 	private static int CalculateConfidence(SearchResult result, RecordingInput record)
@@ -249,8 +249,8 @@ internal static class RecordingEnrichmentService
 		{
 			checks++;
 			if (
-				result.Title.ContainsIgnoreCase(record.Work)
-				|| record.Work.ContainsIgnoreCase(result.Title)
+				result.Title.ContainsIgnoreCase(substring: record.Work)
+				|| record.Work.ContainsIgnoreCase(substring: result.Title)
 			)
 				score += 40;
 		}
@@ -279,16 +279,16 @@ internal sealed class RecordingInputMap : ClassMap<RecordingInput>
 {
 	public RecordingInputMap()
 	{
-		Map(m => m.Composer).Name("Composer").Optional();
-		Map(m => m.Work).Name("Work").Optional();
-		Map(m => m.Orchestra).Name("Orchestra").Optional();
-		Map(m => m.Conductor).Name("Conductor").Optional();
-		Map(m => m.Performers).Name("Performers").Optional();
-		Map(m => m.Label).Name("Label").Optional();
-		Map(m => m.Year).Name("Year").Optional();
-		Map(m => m.CatalogNumber).Name("Catalog Number", "CatalogNumber", "Cat No").Optional();
-		Map(m => m.Rating).Name("Rating").Optional();
-		Map(m => m.Comment).Name("Comment").Optional();
+		Map(static m => m.Composer).Name("Composer").Optional();
+		Map(static m => m.Work).Name("Work").Optional();
+		Map(static m => m.Orchestra).Name("Orchestra").Optional();
+		Map(static m => m.Conductor).Name("Conductor").Optional();
+		Map(static m => m.Performers).Name("Performers").Optional();
+		Map(static m => m.Label).Name("Label").Optional();
+		Map(static m => m.Year).Name("Year").Optional();
+		Map(static m => m.CatalogNumber).Name("Catalog Number", "CatalogNumber", "Cat No").Optional();
+		Map(static m => m.Rating).Name("Rating").Optional();
+		Map(static m => m.Comment).Name("Comment").Optional();
 	}
 }
 
@@ -324,29 +324,24 @@ internal sealed class SuggestionSet
 	public void Add(SuggestionBundle bundle)
 	{
 		if (
-			!Enumerable.Any(
-				Items,
-				i =>
-					i.Label == bundle.Label
-					&& i.CatalogNumber == bundle.CatalogNumber
-					&& i.Year == bundle.Year
+			!Items.Any(i =>
+				i.Label == bundle.Label
+				&& i.CatalogNumber == bundle.CatalogNumber
+				&& i.Year == bundle.Year
 			)
 		)
 			Items.Add(item: bundle);
 	}
 
 	public void Normalize() =>
-		Items = [
-			.. Enumerable.Take(
-				Enumerable.ThenBy(
-					Enumerable.OrderByDescending(Items, i => i.Confidence),
-					i => i.Year
-				),
-				count: 5
-			),
+		Items =
+		[
+			.. Items.OrderByDescending(static i => i.Confidence).ThenBy(static i => i.Year
+			).Take(count: 5
+			)
 		];
 
-	public SuggestionBundle? GetBest() => Enumerable.FirstOrDefault(Items);
+	public SuggestionBundle? GetBest() => Items.FirstOrDefault();
 
 	public string GetPreviewMarkup()
 	{
@@ -367,8 +362,3 @@ internal sealed class SuggestionSet
 }
 
 internal record RecordingWithSuggestions(RecordingInput Original, SuggestionSet Suggestions);
-
-
-
-
-

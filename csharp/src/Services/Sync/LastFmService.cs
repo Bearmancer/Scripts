@@ -1,6 +1,6 @@
-using Scrobble = CSharpScripts.Models.Scrobble;
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
+using Scrobble = CSharpScripts.Models.Scrobble;
 
 namespace CSharpScripts.Services.Sync.LastFm;
 
@@ -13,22 +13,22 @@ internal sealed class LastFmService(string apiKey, string username)
 	internal async Task FetchScrobblesSinceAsync(
 		DateTime? fetchAfter,
 		FetchState state,
-		Action<int, int, TimeSpan, DateTime?, DateTime?> onProgress,
+		Action<int, int, TimeSpan, DateTimeOffset?, DateTimeOffset?> onProgress,
 		CancellationToken ct
 	)
 	{
-		Log.Debug("FetchScrobblesSinceAsync entry {FetchAfter}", fetchAfter);
+		Log.Debug(messageTemplate: "FetchScrobblesSinceAsync entry {FetchAfter}", fetchAfter);
 		List<Scrobble> existingScrobbles = await LoadScrobblesAsync();
 		List<Scrobble> newScrobbles = [];
 
-		var isIncremental = fetchAfter is not null;
+		var isIncremental = fetchAfter is { };
 		var page = DetermineStartPage(fetchAfter: fetchAfter, state: state);
 		var totalFetched = isIncremental ? 0 : state.TotalFetched;
-		var stopwatch = Stopwatch.StartNew();
+		Stopwatch stopwatch = Stopwatch.StartNew();
 
 		while (!ct.IsCancellationRequested)
 		{
-			List<Scrobble>? batch = await FetchPageAsync(page: page, ct);
+			List<Scrobble>? batch = await FetchPageAsync(page: page, ct: ct);
 
 			if (ct.IsCancellationRequested || batch is null || batch.Count == 0)
 				break;
@@ -41,14 +41,13 @@ internal sealed class LastFmService(string apiKey, string username)
 				continue;
 			}
 
-			if (fetchAfter is not null)
+			if (fetchAfter is { })
 			{
-				var freshScrobbles = new List<Scrobble>(batch.Count);
-				// PERFORMANCE: Optimize foreach on List to for loop
-				for (var i = 0; i < batch.Count; i++)
+				List<Scrobble> freshScrobbles = [with(capacity: batch.Count)];
+				foreach (var track in batch)
 				{
-					if (batch[i].PlayedAt > fetchAfter)
-						freshScrobbles.Add(batch[i]);
+					if (track.PlayedAt > fetchAfter)
+						freshScrobbles.Add(track);
 				}
 
 				if (freshScrobbles.Count == 0)
@@ -63,8 +62,8 @@ internal sealed class LastFmService(string apiKey, string username)
 						existing: existingScrobbles,
 						newOnes: newScrobbles
 					);
-					DateTime? oldest = Enumerable.Min(newScrobbles, s => s.PlayedAt);
-					DateTime? newest = Enumerable.Max(newScrobbles, s => s.PlayedAt);
+					DateTimeOffset? oldest = newScrobbles.Min(s => s.PlayedAt);
+					DateTimeOffset? newest = newScrobbles.Max(s => s.PlayedAt);
 					onProgress(
 						arg1: page,
 						arg2: totalFetched,
@@ -82,8 +81,8 @@ internal sealed class LastFmService(string apiKey, string username)
 			}
 
 			await SaveMergedScrobblesAsync(existing: existingScrobbles, newOnes: newScrobbles);
-			DateTime? batchOldest = Enumerable.Min(batch, s => s.PlayedAt);
-			DateTime? batchNewest = Enumerable.Max(batch, s => s.PlayedAt);
+			DateTimeOffset? batchOldest = batch.Min(s => s.PlayedAt);
+			DateTimeOffset? batchNewest = batch.Max(s => s.PlayedAt);
 			onProgress(
 				arg1: page,
 				arg2: totalFetched,
@@ -103,14 +102,14 @@ internal sealed class LastFmService(string apiKey, string username)
 		if (newScrobbles.Count > 0)
 		{
 			Log.Information(
-				"Fetched {0} new scrobbles in {1:mm\\:ss}",
+				messageTemplate: "Fetched {0} new scrobbles in {1:mm\\:ss}",
 				newScrobbles.Count,
 				stopwatch.Elapsed
 			);
 		}
 		else
-			Log.Information("No new scrobbles found");
-		Log.Debug("FetchScrobblesSinceAsync exit {Count}", newScrobbles.Count);
+			Log.Information(messageTemplate: "No new scrobbles found");
+		Log.Debug(messageTemplate: "FetchScrobblesSinceAsync exit {Count}", newScrobbles.Count);
 	}
 
 	private static async Task SaveMergedScrobblesAsync(
@@ -118,66 +117,59 @@ internal sealed class LastFmService(string apiKey, string username)
 		List<Scrobble> newOnes
 	)
 	{
-		HashSet<DateTime?> existingTimes = [];
-		existingTimes.UnionWith(Enumerable.Select(existing, s => s.PlayedAt));
-		var merged = new List<Scrobble>(existing.Count + newOnes.Count);
-		// PERFORMANCE: Optimize foreach on List to for loop
-		for (var i = 0; i < newOnes.Count; i++)
+		HashSet<DateTimeOffset?> existingTimes = [];
+		existingTimes.UnionWith(existing.Select(s => s.PlayedAt));
+		List<Scrobble> merged = [with(existing.Count + newOnes.Count)];
+		foreach (var newScrobble in newOnes)
 		{
-			if (!existingTimes.Contains(item: newOnes[i].PlayedAt))
-				merged.Add(newOnes[i]);
+			if (!existingTimes.Contains(item: newScrobble.PlayedAt))
+				merged.Add(newScrobble);
 		}
 
-		merged.AddRange(existing);
-		await StateManager.SaveStateAsync(StateManager.LastFmScrobblesFile, merged);
+		merged.AddRange(collection: existing);
+		await StateManager.SaveStateAsync(fileName: StateManager.LastFmScrobblesFile, state: merged);
 	}
 
 	private async Task<List<Scrobble>?> FetchPageAsync(int page, CancellationToken ct)
 	{
-		Log.Debug("FetchPageAsync entry {Page}", page);
+		Log.Debug(messageTemplate: "FetchPageAsync entry {Page}", page);
 		PagedResponse<Track>? response = await Resilience.ExecuteAsync(
 			operation: "LastFm.GetRecentTracks",
 			() => Client.User.GetRecentTracksAsync(user: username, limit: PerPage, page: page),
-			ct
+			ct: ct
 		);
 
 		if (ct.IsCancellationRequested || response is null)
 		{
-			Log.Warning("FetchPageAsync exit null (cancelled or no response)");
+			Log.Warning(messageTemplate: "FetchPageAsync exit null (cancelled or no response)");
 			return null;
 		}
 
-		var result = new List<Scrobble>(response.Count);
-		// PERFORMANCE: Optimize foreach to for loop on indexable collection
-		for (var i = 0; i < response.Count; i++)
+		List<Scrobble> result = [with(capacity: response.Count)];
+		foreach (var track in response)
 		{
-			Track track = response[i];
 			result.Add(
 				new Scrobble(
 					track.Name
-						?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
+					?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
 					track.Artist?.Name ?? "",
 					track.Album?.Name ?? "",
 					PlayedAt: track.Date
 				)
 			);
 		}
-		Log.Debug("FetchPageAsync exit {Count}", result.Count);
+		Log.Debug(messageTemplate: "FetchPageAsync exit {Count}", result.Count);
 		return result;
 	}
 
 	internal static async Task<List<Scrobble>> LoadScrobblesAsync() =>
-		await StateManager.LoadStateAsync<List<Scrobble>>(StateManager.LastFmScrobblesFile);
+		await StateManager.LoadStateAsync<List<Scrobble>>(fileName: StateManager.LastFmScrobblesFile);
 
 	public static void DeleteScrobblesCache() =>
 		StateManager.Delete(fileName: StateManager.LastFmScrobblesFile);
 
-	private static int DetermineStartPage(DateTime? fetchAfter, FetchState state) =>
-		fetchAfter is not null ? 1
+	private static int DetermineStartPage(DateTimeOffset? fetchAfter, FetchState state) =>
+		fetchAfter is { } ? 1
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
 }
-
-
-
-

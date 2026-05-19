@@ -3,7 +3,7 @@ namespace CSharpScripts.Models;
 internal enum MusicSource
 {
 	Discogs,
-	MusicBrainz,
+	MusicBrainz
 }
 
 internal sealed record ReleaseInfo(
@@ -42,17 +42,17 @@ internal sealed record TrackInfo(
 	{
 		List<string> missing = [];
 
-		if (IsNullOrWhiteSpace(Composer))
-			missing.Add("Composer");
+		if (IsNullOrWhiteSpace(value: Composer))
+			missing.Add(item: "Composer");
 
-		if (IsNullOrWhiteSpace(WorkName) && IsNullOrWhiteSpace(Title))
-			missing.Add("Work/Title");
+		if (IsNullOrWhiteSpace(value: WorkName) && IsNullOrWhiteSpace(value: Title))
+			missing.Add(item: "Work/Title");
 
 		if (Duration is null || Duration.Value == TimeSpan.Zero)
-			missing.Add("Duration");
+			missing.Add(item: "Duration");
 
 		if (RecordingYear is null)
-			missing.Add("Recording Year");
+			missing.Add(item: "Recording Year");
 
 		return missing;
 	}
@@ -79,10 +79,10 @@ internal sealed record WorkSummary(
 		Years.Count switch
 		{
 			0 => "",
-			1 => Years[0].ToString(),
+			1 => Years[index: 0].ToString(),
 			_ when Years.Max() - Years.Min() <= 2 && Years.Count == Years.Max() - Years.Min() + 1 =>
 				$"{Years.Min()}-{Years.Max() % 100:D2}",
-			_ => Join(", ", Years.Distinct().OrderBy(y => y)),
+			_ => Join(separator: ", ", Years.Distinct().OrderBy(static y => y))
 		};
 }
 
@@ -103,5 +103,3 @@ internal sealed record SearchResult(
 	List<string>? Genres = null,
 	List<string>? Styles = null
 );
-
-

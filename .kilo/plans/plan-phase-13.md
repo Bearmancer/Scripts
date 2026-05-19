@@ -1,87 +1,103 @@
-# Phase 13: Final Verification Implementation Plan
+# Phase 13: Security, Secrets & Python Upgrades Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Perform absolute final validation of build correctness, unit tests, integration tests, and push rewritten changes to the origin remote.
+**Goal:** Upgrade Python dependencies to latest secure versions, redact secrets defaults, and run Gitleaks audit to clean any accidentally-committed credentials.
 
-**Architecture:** PowerShell script assertions.
+**Architecture:** Use `uv` for Python dependency management. PowerShell scripts for redaction and Gitleaks execution.
 
-**Tech Stack:** PowerShell, Git, dotnet CLI
+**Tech Stack:** Python 3.12, `uv`, PowerShell, Gitleaks
 
 ---
 
-### Task 13.1: Full solution build
+### Task 13.1: Upgrade Python dependencies
 
 **Files:**
-- Create validation script: `.kilo/tests/VerifyFinalBuild.ps1`
+- Modify: `python/pyproject.toml`
 
-- [ ] **Step 1: Write validation script**
+- [ ] **Step 1: Upgrade pyasn1, requests, urllib3**
 
-Create `.kilo/tests/VerifyFinalBuild.ps1` with the following content:
 ```powershell
-$ErrorActionPreference = 'Stop'
-Set-Location "C:\Users\Lance\Dev\Scripts"
-dotnet restore "csharp/CSharpScripts.csproj"
-dotnet build "csharp/CSharpScripts.csproj" --no-restore
-if ($LASTEXITCODE -ne 0) {
-    throw "FINAL_BUILD_FAILED"
-}
-Write-Output "BUILD_PASS"
+Set-Location "C:\Users\Lance\Dev\Scripts\python"
+uv lock --upgrade-package pyasn1 --upgrade-package requests --upgrade-package urllib3
 ```
 
-- [ ] **Step 2: Run build script**
+- [ ] **Step 2: Upgrade cryptography, Pygments, pillow**
 
-Run: `pwsh -File C:\Users\Lance\Dev\Scripts\.kilo\tests\VerifyFinalBuild.ps1`
-Expected: `BUILD_PASS`
+```powershell
+uv lock --upgrade-package cryptography --upgrade-package pygments --upgrade-package pillow
+```
+
+- [ ] **Step 3: Upgrade pytest**
+
+```powershell
+uv lock --upgrade-package pytest
+```
+
+- [ ] **Step 4: Verify lock file**
+
+Run: `Test-Path "C:\Users\Lance\Dev\Scripts\python\uv.lock"`
+Expected: `True`
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add python/uv.lock
+git commit -m "security: upgrade Python dependencies to latest versions"
+```
+
+---
+
+### Task 13.2: Redact secrets defaults
+
+**Files:**
+- Run: `powershell/ScriptsToolkit/Redact-LocalSecrets.ps1`
+
+- [ ] **Step 1: Execute redaction script**
+
+```powershell
+pwsh -File "C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\Redact-LocalSecrets.ps1"
+```
+
+- [ ] **Step 2: Verify no plaintext secrets remain**
+
+Search for common secret patterns in source:
+```powershell
+Get-ChildItem -Recurse -Include *.cs,*.ps1,*.py,*.json,*.yml -Exclude *.lock,uv.lock | Select-String -Pattern 'password\s*=\s*"[^$]|api[_-]?key\s*=\s*"[^$]|secret\s*=\s*"[^$]' -CaseSensitive:$false
+```
+Expected: No matches (or only placeholder/documentation values).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add .kilo/tests/VerifyFinalBuild.ps1
-git commit -m "test: add final build verification script"
+git commit --allow-empty -m "security: verify no plaintext secrets in source"
 ```
 
 ---
 
-### Task 13.2: Full test run with 100% pass rate
+### Task 13.3: Gitleaks audit
 
 **Files:**
-- Create validation script: `.kilo/tests/VerifyFinalTests.ps1`
+- Run: `gitleaks` (if installed)
 
-- [ ] **Step 1: Write test runner script**
+- [ ] **Step 1: Run Gitleaks detect**
 
-Create `.kilo/tests/VerifyFinalTests.ps1` with the following content:
 ```powershell
-$ErrorActionPreference = 'Stop'
-Set-Location "C:\Users\Lance\Dev\Scripts"
-dotnet test "csharp/src/Tests/CSharpScripts.Tests.csproj" --verbosity normal
-if ($LASTEXITCODE -ne 0) {
-    throw "FINAL_TESTS_FAILED"
-}
-Write-Output "ALL_TESTS_PASS"
+gitleaks detect --source "C:\Users\Lance\Dev\Scripts" --verbose 2>&1
 ```
 
-- [ ] **Step 2: Run test runner script**
+If Gitleaks is not installed:
+```powershell
+winget install --id Gitleaks.Gitleaks
+gitleaks detect --source "C:\Users\Lance\Dev\Scripts" --verbose 2>&1
+```
 
-Run: `pwsh -File C:\Users\Lance\Dev\Scripts\.kilo\tests\VerifyFinalTests.ps1`
-Expected: `ALL_TESTS_PASS`
+- [ ] **Step 2: Fix any findings**
+
+Review each finding and determine if it's a real secret (revoke/rotate) or a false positive (add to `.gitleaks.toml` allowlist).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add .kilo/tests/VerifyFinalTests.ps1
-git commit -m "test: add final test suite verification script"
+git commit --allow-empty -m "security: Gitleaks audit complete"
 ```
-
----
-
-### Task 13.3: Final push to GitHub remote
-
-- [ ] **Step 1: Re-add origin remote if it was dropped during history filters**
-
-Run: `git remote add origin https://github.com/Bearmancer/Scripts.git`
-
-- [ ] **Step 2: Force-push rewritten history**
-
-Run: `git push -u origin main --force`
-Expected: Push succeeds.

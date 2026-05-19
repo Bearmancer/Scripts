@@ -1,30 +1,33 @@
-﻿namespace CSharpScripts.CLI.Music;
+﻿using System.ComponentModel;
+using CSharpScripts.Services.Music;
+
+namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicBrainzLookupCommand : BaseAsyncCommand<MusicBrainzLookupCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
 	)
 	{
 		return await ExecuteWithErrorHandlingAsync(
-			ServiceType.Music,
+			service: ServiceType.Music,
 			async () =>
 			{
 				MusicBrainzService mb = new();
-				UI.Info("Looking up MusicBrainz release {0}...", settings.Id!);
+				Ui.Info(message: "Looking up MusicBrainz release {0}...", settings.Id!);
 
 				ReleaseData release = await mb.GetReleaseAsync(settings.Id!, ct: cancellationToken);
 				Log.Information(
-					"MBLookupComplete {ReleaseId} {TrackCount}",
+					messageTemplate: "MBLookupComplete {ReleaseId} {TrackCount}",
 					settings.Id,
 					release.Tracks.Count
 				);
 
 				if (release.Tracks.Count == 0)
 				{
-					UI.Warn("No release data found.");
+					Ui.Warn(message: "No release data found.");
 					return;
 				}
 
@@ -35,24 +38,22 @@ internal sealed class MusicBrainzLookupCommand : BaseAsyncCommand<MusicBrainzLoo
 
 	internal sealed class Settings : CommandSettings
 	{
-		[CommandOption("-i|--id")]
-		[Description("MusicBrainz release GUID")]
+		[CommandOption(template: "-i|--id")]
+		[Description(description: "MusicBrainz release GUID")]
 		public string? Id { get; init; }
 
-		[CommandOption("--fresh")]
-		[Description("Clear cached state and force fresh API fetch")]
+		[CommandOption(template: "--fresh")]
+		[Description(description: "Clear cached state and force fresh API fetch")]
 		public bool Fresh { get; init; }
 
 		public override ValidationResult Validate()
 		{
-			if (IsNullOrEmpty(Id))
-				return ValidationResult.Error("--id is required");
-			if (!Guid.TryParse(Id, out _))
-				return ValidationResult.Error("--id must be a valid GUID");
+			if (IsNullOrEmpty(value: Id))
+				return ValidationResult.Error(message: "--id is required");
+			if (!Guid.TryParse(input: Id, result: out _))
+				return ValidationResult.Error(message: "--id must be a valid GUID");
 
 			return ValidationResult.Success();
 		}
 	}
 }
-
-

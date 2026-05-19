@@ -1,116 +1,115 @@
-﻿namespace CSharpScripts.CLI.Music;
+﻿using System.ComponentModel;
+using CSharpScripts.Services.Music;
+
+namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicNotesCommand : BaseAsyncCommand<MusicNotesCommand.Settings>
 {
-	protected override async Task<int> ExecuteAsync(
+	protected async override Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
 	)
 	{
 		return await ExecuteWithErrorHandlingAsync(
-			ServiceType.Music,
+			service: ServiceType.Music,
 			async () =>
 			{
 				var discogsToken = Secrets.DiscogsToken;
-				if (IsNullOrEmpty(discogsToken))
+				if (IsNullOrEmpty(value: discogsToken))
 				{
-					UI.Error("DISCOGS_USER_TOKEN not set");
+					Ui.Error(message: "DISCOGS_USER_TOKEN not set");
 					return;
 				}
 
-				using DiscogsService discogs = new(discogsToken);
-				UI.Info("Fetching Discogs release {0}...", settings.Id);
+				using DiscogsService discogs = new(token: discogsToken);
+				Ui.Info(message: "Fetching Discogs release {0}...", settings.Id);
 
 				ReleaseData release = await discogs.GetReleaseAsync(
-					settings.Id,
+					releaseId: settings.Id,
 					ct: cancellationToken
 				);
 
 				var notes = release.Info.Notes;
-				if (IsNullOrWhiteSpace(notes))
+				if (IsNullOrWhiteSpace(value: notes))
 				{
-					UI.Warn("Release '{0}' has no notes field.", release.Info.Title);
+					Ui.Warn(message: "Release '{0}' has no notes field.", release.Info.Title);
 					return;
 				}
 
-				ParsedNotes parsed = NotesParserService.Parse(notes);
-				DisplayParsedNotes(settings.Id, release.Info.Title, parsed);
+				ParsedNotes parsed = NotesParserService.Parse(notes: notes);
+				DisplayParsedNotes(id: settings.Id, title: release.Info.Title, parsed: parsed);
 			}
 		);
 	}
 
 	private static void DisplayParsedNotes(string id, string title, ParsedNotes parsed)
 	{
-		UI.NewLine();
-		UI.Rule($"Discogs Release Notes \u2014 ID: {id}");
-		UI.NewLine();
-		UI.Field("Title:", title);
-		UI.NewLine();
+		Ui.NewLine();
+		Ui.Rule($"Discogs Release Notes \u2014 ID: {id}");
+		Ui.NewLine();
+		Ui.Field(label: "Title:", value: title);
+		Ui.NewLine();
 
 		if (parsed.Composers.Count > 0)
-			UI.Field("Composers:", Join(", ", parsed.Composers));
+			Ui.Field(label: "Composers:", Join(separator: ", ", values: parsed.Composers));
 		if (parsed.Conductors.Count > 0)
-			UI.Field("Conductor:", Join(", ", parsed.Conductors));
+			Ui.Field(label: "Conductor:", Join(separator: ", ", values: parsed.Conductors));
 		if (parsed.Orchestras.Count > 0)
-			UI.Field("Orchestra:", Join(", ", parsed.Orchestras));
+			Ui.Field(label: "Orchestra:", Join(separator: ", ", values: parsed.Orchestras));
 		if (parsed.Venues.Count > 0)
-			UI.Field("Venue:", Join(", ", parsed.Venues));
+			Ui.Field(label: "Venue:", Join(separator: ", ", values: parsed.Venues));
 
 		if (parsed.RecordingDates.Count > 0)
 		{
-			UI.NewLine();
-			UI.Rule("Recording Dates");
+			Ui.NewLine();
+			Ui.Rule(text: "Recording Dates");
 			foreach (RecordingDate rd in parsed.RecordingDates)
 			{
 				var dateDisplay = rd.Date.HasValue
-					? DateFormatter.FormatForCli(rd.Date.Value)
+					? DateFormatter.FormatForCli(dt: rd.Date.Value)
 					: "(unparsed)";
-				UI.LabelValue(dateDisplay, rd.Description);
+				Ui.LabelValue(label: dateDisplay, value: rd.Description);
 			}
 		}
 
 		if (parsed.TrackAnnotations.Count > 0)
 		{
-			UI.NewLine();
-			UI.Rule("Track Annotations");
+			Ui.NewLine();
+			Ui.Rule(text: "Track Annotations");
 			SpectreTable table = new();
-			HasTableBorderExtensions.Border(table, TableBorder.Simple);
-			TableExtensions.AddColumn(table, "Track");
-			TableExtensions.AddColumn(table, "Annotation");
+			table.Border(border: TableBorder.Simple);
+			table.AddColumn(column: "Track");
+			table.AddColumn(column: "Annotation");
 			foreach (TrackAnnotation ta in parsed.TrackAnnotations)
 			{
-				TableExtensions.AddRow(
-					table,
-					Markup.Escape(ta.TrackReference),
-					Markup.Escape(ta.Annotation)
+				table.AddRow(Markup.Escape(text: ta.TrackReference),
+					Markup.Escape(text: ta.Annotation)
 				);
 			}
-			AnsiConsole.Write(table);
+			AnsiConsole.Write(renderable: table);
 		}
 
-		UI.NewLine();
-		UI.Rule("Raw Notes");
-		UI.NewLine();
-		AnsiConsole.WriteLine(Markup.Escape(parsed.RawNotes));
+		Ui.NewLine();
+		Ui.Rule(text: "Raw Notes");
+		Ui.NewLine();
+		AnsiConsole.WriteLine(Markup.Escape(text: parsed.RawNotes));
 	}
 
 	internal sealed class Settings : CommandSettings
 	{
-		[CommandArgument(0, "<id>")]
-		[Description("Discogs release ID (numeric)")]
+		[CommandArgument(position: 0, template: "<id>")]
+		[Description(description: "Discogs release ID (numeric)")]
 		public string Id { get; init; } = "";
 
 		public override ValidationResult Validate()
 		{
-			if (IsNullOrEmpty(Id))
-				return ValidationResult.Error("<id> is required");
-			if (!int.TryParse(Id, out _))
-				return ValidationResult.Error("<id> must be a numeric Discogs release ID");
+			if (IsNullOrEmpty(value: Id))
+				return ValidationResult.Error(message: "<id> is required");
+			if (!int.TryParse(s: Id, result: out _))
+				return ValidationResult.Error(message: "<id> must be a numeric Discogs release ID");
 
 			return ValidationResult.Success();
 		}
 	}
 }
-
-

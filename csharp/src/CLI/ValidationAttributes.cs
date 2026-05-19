@@ -4,12 +4,10 @@
 internal sealed class AllowedValuesAttribute(params string[] values)
 	: ParameterValidationAttribute($"Must be one of: {Join(separator: ", ", value: values)}")
 {
-	private readonly FrozenSet<string> allowedValues = FrozenSet.ToFrozenSet(
-		values,
-		comparer: StringComparer.OrdinalIgnoreCase
+	private readonly FrozenSet<string> AllowedValues = values.ToFrozenSet(comparer: StringComparer.OrdinalIgnoreCase
 	);
 
-	public IReadOnlyList<string> Values => [.. allowedValues];
+	public IReadOnlyList<string> Values => [.. AllowedValues];
 
 	public override ValidationResult Validate(CommandParameterContext context)
 	{
@@ -18,10 +16,8 @@ internal sealed class AllowedValuesAttribute(params string[] values)
 
 		var value = context.Value.ToString() ?? "";
 
-		return allowedValues.Contains(item: value)
+		return AllowedValues.Contains(item: value)
 			? ValidationResult.Success()
 			: ValidationResult.Error($"Invalid value '{value}'. {ErrorMessage}");
 	}
 }
-
-

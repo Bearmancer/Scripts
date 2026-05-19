@@ -10,12 +10,12 @@ global using System.Text.RegularExpressions;
 global using CSharpScripts.Core;
 global using CSharpScripts.Core.Auth;
 global using CSharpScripts.Data;
-global using Microsoft.EntityFrameworkCore;
 global using CSharpScripts.Models;
 global using CSharpScripts.Services.Language;
 global using CsvHelper;
 global using CsvHelper.Configuration;
 global using MetaBrainz.MusicBrainz.Interfaces.Entities;
+global using Microsoft.EntityFrameworkCore;
 global using RestSharp;
 global using Serilog;
 global using Serilog.Events;
@@ -28,7 +28,3 @@ global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;
 global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;
-
-
-
-

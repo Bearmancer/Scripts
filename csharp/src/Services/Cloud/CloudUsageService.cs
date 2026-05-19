@@ -21,46 +21,45 @@ internal static class CloudUsageService
 			GetEnvironmentVariable(variable: "AZURE_SUBSCRIPTION_ID")
 			?? throw new InvalidOperationException(
 				"AZURE_SUBSCRIPTION_ID environment variable is not set. "
-					+ "Run 'az login' and set AZURE_SUBSCRIPTION_ID to your subscription ID."
+				+ "Run 'az login' and set AZURE_SUBSCRIPTION_ID to your subscription ID."
 			);
 
 		TokenCredential credential = new DefaultAzureCredential();
 		AccessToken token = await credential.GetTokenAsync(
 			new TokenRequestContext([ManagementScope]),
-			ct
+			cancellationToken: ct
 		);
 
-		var billingPeriod = DateTime.Now.ToString(
+		var billingPeriod = DateTimeOffset.Now.ToString(
 			format: "MMMM yyyy",
-			provider: CultureInfo.InvariantCulture
+			formatProvider: CultureInfo.InvariantCulture
 		);
 
 		var url =
 			$"https://management.azure.com/subscriptions/{subscriptionId}"
 			+ $"/providers/Microsoft.CostManagement/query?api-version={ApiVersion}";
 
-		var requestBody = /*lang=json,strict*/
-			"""
-			{
-			  "type": "ActualCost",
-			  "timeframe": "BillingMonthToDate",
-			  "dataset": {
-			    "granularity": "None",
-			    "grouping": [
-			      { "type": "Dimension", "name": "ServiceName" },
-			      { "type": "Dimension", "name": "MeterName" }
-			    ],
-			    "aggregation": {
-			      "totalCost": {
-			        "name": "PreTaxCost",
-			        "function": "Sum"
-			      }
-			    }
-			  }
-			}
-			""";
+		const string requestBody = """
+		                           {
+		                             "type": "ActualCost",
+		                             "timeframe": "BillingMonthToDate",
+		                             "dataset": {
+		                               "granularity": "None",
+		                               "grouping": [
+		                                 { "type": "Dimension", "name": "ServiceName" },
+		                                 { "type": "Dimension", "name": "MeterName" }
+		                               ],
+		                               "aggregation": {
+		                                 "totalCost": {
+		                                   "name": "PreTaxCost",
+		                                   "function": "Sum"
+		                                 }
+		                               }
+		                             }
+		                           }
+		                           """;
 
-		using var request = new HttpRequestMessage(method: HttpMethod.Post, requestUri: url);
+		using HttpRequestMessage request = new(method: HttpMethod.Post, requestUri: url);
 		request.Headers.Authorization = new AuthenticationHeaderValue(
 			scheme: "Bearer",
 			parameter: token.Token
@@ -71,8 +70,8 @@ internal static class CloudUsageService
 			mediaType: "application/json"
 		);
 
-		using HttpResponseMessage response = await Http.SendAsync(request: request, ct);
-		var json = await response.Content.ReadAsStringAsync(ct);
+		using HttpResponseMessage response = await Http.SendAsync(request: request, cancellationToken: ct);
+		var json = await response.Content.ReadAsStringAsync(cancellationToken: ct);
 
 		if (!response.IsSuccessStatusCode)
 		{
@@ -94,7 +93,7 @@ internal static class CloudUsageService
 		string json
 	)
 	{
-		using var doc = JsonDocument.Parse(json: json);
+		using JsonDocument doc = JsonDocument.Parse(json: json);
 		JsonElement properties = doc.RootElement.GetProperty(propertyName: "properties");
 		JsonElement columns = properties.GetProperty(propertyName: "columns");
 		JsonElement rows = properties.GetProperty(propertyName: "rows");
@@ -110,17 +109,17 @@ internal static class CloudUsageService
 		{
 			var i = 0;
 			var cost = 0m;
-			var serviceName = Empty;
-			var meterName = Empty;
+			var serviceName = "";
+			var meterName = "";
 			var currency = "USD";
 			foreach (JsonElement cell in row.EnumerateArray())
 			{
 				if (i == costIndex)
 					cost = cell.ValueKind == JsonValueKind.Number ? cell.GetDecimal() : 0m;
 				else if (i == serviceIndex)
-					serviceName = cell.GetString() ?? Empty;
+					serviceName = cell.GetString() ?? "";
 				else if (i == meterIndex)
-					meterName = cell.GetString() ?? Empty;
+					meterName = cell.GetString() ?? "";
 				else if (i == currencyIndex && currencyIndex >= 0)
 					currency = cell.GetString() ?? "USD";
 				i++;
@@ -136,8 +135,7 @@ internal static class CloudUsageService
 			);
 		}
 
-		services.Sort(
-			(a, b) =>
+		services.Sort((a, b) =>
 			{
 				var costCompare = b.Cost.CompareTo(value: a.Cost);
 				return costCompare != 0
@@ -167,7 +165,7 @@ internal static class CloudUsageService
 		var index = 0;
 		foreach (JsonElement col in columns.EnumerateArray())
 		{
-			if (col.GetProperty(propertyName: "name").GetString()?.EqualsIgnoreCase(name) ?? false)
+			if (col.GetProperty(propertyName: "name").GetString()?.EqualsIgnoreCase(other: name) ?? false)
 				return index;
 
 			index++;
@@ -176,5 +174,3 @@ internal static class CloudUsageService
 		return -1;
 	}
 }
-
-

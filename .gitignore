@@ -12,7 +12,6 @@
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/CompiledModels/
 TestResults/
 *.trx
 *.coverage
@@ -54,4 +53,28 @@ Thumbs.db
 # ============================================================
 *.tmp
 *.orig
+*.bak
+*.bak.*
 state/postgres-data/
+state/postgres/
+
+# Secrets / Environment
+.env
+
+# ============================================================
+# AI agent working files (Gemini, Claude, Antigravity, etc.)
+# ============================================================
+.antigravitycli/
+.gemini/
+tmpclaude-*
+
+# ============================================================
+# git filter-branch / filter-repo working directories
+# ============================================================
+.git-rewrite/
+
+# ============================================================
+# Rider / IDE artifacts
+# ============================================================
+csharp/inspect.xml
+*.DotSettings.user

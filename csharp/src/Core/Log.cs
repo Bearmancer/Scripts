@@ -12,7 +12,7 @@ internal enum ServiceType
 	Sheets,
 	Music,
 	Read,
-	Cloud,
+	Cloud
 }
 
 internal static class Log
@@ -20,29 +20,29 @@ internal static class Log
 	private static readonly FrozenDictionary<ServiceType, ILogger> ServiceLoggers;
 	private static readonly AsyncLocal<ServiceType?> ActiveServiceLocal = new();
 
+#pragma warning disable CA1810
+	static Log()
+	{
+		ServiceLoggers = new Dictionary<ServiceType, ILogger>
+		{
+			[key: ServiceType.LastFm] = BuildServiceLogger(filename: "lastfm.jsonl"),
+			[key: ServiceType.YouTube] = BuildServiceLogger(filename: "youtube.jsonl"),
+			[key: ServiceType.Music] = BuildServiceLogger(filename: "music.jsonl"),
+			[key: ServiceType.Sheets] = BuildServiceLogger(filename: "sheets.jsonl"),
+			[key: ServiceType.Read] = BuildServiceLogger(filename: "read.jsonl"),
+			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl")
+		}.ToFrozenDictionary();
+	}
+#pragma warning restore CA1810
+
 	private static ServiceType? ActiveService
 	{
 		get => ActiveServiceLocal.Value;
 		set => ActiveServiceLocal.Value = value;
 	}
 
-#pragma warning disable CA1810
-	static Log()
-	{
-		ServiceLoggers = new Dictionary<ServiceType, ILogger>
-		{
-			[ServiceType.LastFm] = BuildServiceLogger("lastfm.jsonl"),
-			[ServiceType.YouTube] = BuildServiceLogger("youtube.jsonl"),
-			[ServiceType.Music] = BuildServiceLogger("music.jsonl"),
-			[ServiceType.Sheets] = BuildServiceLogger("sheets.jsonl"),
-			[ServiceType.Read] = BuildServiceLogger("read.jsonl"),
-			[ServiceType.Cloud] = BuildServiceLogger("cloud.jsonl"),
-		}.ToFrozenDictionary();
-	}
-#pragma warning restore CA1810
-
 	internal static ILogger ActiveLogger =>
-		ActiveService.HasValue ? ServiceLoggers[ActiveService.Value] : Serilog.Log.Logger;
+		ActiveService.HasValue ? ServiceLoggers[key: ActiveService.Value] : Serilog.Log.Logger;
 
 	internal static Logger BuildServiceLogger(string filename) =>
 		new LoggerConfiguration()
@@ -50,10 +50,10 @@ internal static class Log
 			.Enrich.FromLogContext()
 			.Enrich.WithProcessId()
 			.Enrich.WithThreadId()
-			.Enrich.WithProperty("Application", "CSharpScripts")
+			.Enrich.WithProperty(name: "Application", value: "CSharpScripts")
 			.WriteTo.File(
 				new CompactJsonFormatter(),
-				Path.Combine(Paths.LogDirectory, filename),
+				Path.Combine(path1: Paths.LogDirectory, path2: filename),
 				rollingInterval: RollingInterval.Infinite,
 				shared: true
 			)
@@ -65,17 +65,17 @@ internal static class Log
 			.Enrich.FromLogContext()
 			.Enrich.WithProcessId()
 			.Enrich.WithThreadId()
-			.Enrich.WithProperty("Application", "CSharpScripts")
+			.Enrich.WithProperty(name: "Application", value: "CSharpScripts")
 			.WriteTo.File(
 				new CompactJsonFormatter(),
-				Path.Combine(Paths.LogDirectory, filename),
+				Path.Combine(path1: Paths.LogDirectory, path2: filename),
 				rollingInterval: RollingInterval.Day,
 				retainedFileCountLimit: 30,
 				shared: true
 			)
 			.CreateLogger();
 
-	public static ILogger ForService(ServiceType service) => ServiceLoggers[service];
+	public static ILogger ForService(ServiceType service) => ServiceLoggers[key: service];
 
 	public static IDisposable BeginSession(ServiceType service)
 	{
@@ -89,7 +89,7 @@ internal static class Log
 			messageTemplate: "SessionStart {SessionId}",
 			propertyValue: sessionId
 		);
-		UI.Starting(message: "{0} session started", service);
+		Ui.Starting(message: "{0} session started", service);
 		return new SessionScope(service: service, logScope: scope, () => ActiveService = null);
 	}
 
@@ -125,8 +125,8 @@ internal static class Log
 	public static void ApiResponse(string api, int statusCode, TimeSpan elapsed) =>
 		ActiveLogger.Write(
 			statusCode >= 500 ? LogEventLevel.Error
-				: statusCode >= 400 ? LogEventLevel.Warning
-				: LogEventLevel.Debug,
+			: statusCode >= 400 ? LogEventLevel.Warning
+			: LogEventLevel.Debug,
 			messageTemplate: "ApiResponse {Api} {StatusCode} in {ElapsedMs}ms",
 			propertyValue0: api,
 			propertyValue1: statusCode,
@@ -149,7 +149,7 @@ internal static class Log
 			propertyValue1: added,
 			propertyValue2: removed
 		);
-		UI.Progress(message: "Synced {0}: +{1} / -{2}", title, added, removed);
+		Ui.Progress(message: "Synced {0}: +{1} / -{2}", title, added, removed);
 		if (addedTitles is { Count: > 0 })
 		{
 			ActiveLogger.Debug(
@@ -168,7 +168,7 @@ internal static class Log
 			propertyValue1: written,
 			propertyValue2: skipped
 		);
-		UI.Progress(
+		Ui.Progress(
 			message: "Processed {0} scrobbles: {1} written, {2} skipped",
 			fetched,
 			written,
@@ -212,9 +212,8 @@ file sealed class SessionScope(ServiceType service, IDisposable logScope, Action
 	public void Dispose()
 	{
 		Log.ForService(service: service).Information(messageTemplate: "SessionEnd");
-		UI.Complete(message: "{0} session ended", service);
+		Ui.Complete(message: "{0} session ended", service);
 		logScope.Dispose();
 		onDispose();
 	}
 }
-

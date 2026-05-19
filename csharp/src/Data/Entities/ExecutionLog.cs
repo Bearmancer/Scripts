@@ -8,5 +8,3 @@ internal sealed record ExecutionLog
 	public JsonDocument? Payload { get; set; }
 	public int? ExitCode { get; set; }
 }
-
-

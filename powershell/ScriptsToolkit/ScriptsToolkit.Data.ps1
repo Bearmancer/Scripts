@@ -1,4 +1,3 @@
-#region Constants, completers, and shared helpers
 
 $Script:TIME_FORMAT = 'HH:mm:ss'
 $Script:DATETIME_FORMAT = 'yyyy/MM/dd HH:mm:ss'
@@ -21,7 +20,6 @@ $Script:WhisperModels = @(
 	'large-v1', 'large-v2', 'large-v3', 'large-v3-turbo', 'turbo',
 	'distil-large-v2', 'distil-large-v3', 'distil-large-v3.5', 'distil-medium.en', 'distil-small.en'
 )
-#endregion
 
 
 function Assert-NetworkAvailable {

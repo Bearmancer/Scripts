@@ -1,11 +1,11 @@
-namespace CSharpScripts.Services.Music;
+﻿namespace CSharpScripts.Services.Music;
 
 internal enum MusicGenreCategory
 {
 	Classical,
 	Pop,
 	Jazz,
-	Unknown,
+	Unknown
 }
 
 internal static class GenreDetector
@@ -26,14 +26,14 @@ internal static class GenreDetector
 			"early music",
 			"renaissance",
 			"medieval",
-			"modern classical",
+			"modern classical"
 		],
-		StringComparer.OrdinalIgnoreCase
+		comparer: StringComparer.OrdinalIgnoreCase
 	);
 
 	private static readonly FrozenSet<string> JazzTerms = FrozenSet.ToFrozenSet(
 		["jazz", "bebop", "swing", "blues", "bossa nova", "latin jazz", "free jazz", "jazz fusion"],
-		StringComparer.OrdinalIgnoreCase
+		comparer: StringComparer.OrdinalIgnoreCase
 	);
 
 	internal static MusicGenreCategory Detect(MusicBrainzRelease release)
@@ -42,9 +42,9 @@ internal static class GenreDetector
 		var hasOrchestra = false;
 		foreach (MusicBrainzCredit c in release.Credits)
 		{
-			if (MusicBrainzMapper.ConductorRoles.Contains(c.Role))
+			if (MusicBrainzMapper.ConductorRoles.Contains(item: c.Role))
 				hasConductor = true;
-			if (MusicBrainzMapper.OrchestraRoles.Contains(c.Role))
+			if (MusicBrainzMapper.OrchestraRoles.Contains(item: c.Role))
 				hasOrchestra = true;
 			if (hasConductor && hasOrchestra)
 				break;
@@ -53,12 +53,12 @@ internal static class GenreDetector
 		if (hasConductor || hasOrchestra)
 			return MusicGenreCategory.Classical;
 
-		IEnumerable<string> allTerms = release.Genres.Concat(release.Tags);
+		IEnumerable<string> allTerms = release.Genres.Concat(second: release.Tags);
 
-		if (ClassicalTerms.Overlaps(allTerms))
+		if (ClassicalTerms.Overlaps(other: allTerms))
 			return MusicGenreCategory.Classical;
 
-		if (JazzTerms.Overlaps(allTerms))
+		if (JazzTerms.Overlaps(other: allTerms))
 			return MusicGenreCategory.Jazz;
 
 		return MusicGenreCategory.Pop;
@@ -66,10 +66,10 @@ internal static class GenreDetector
 
 	internal static MusicGenreCategory Detect(RecordingInput record)
 	{
-		if (!IsNullOrEmpty(record.Composer) || !IsNullOrEmpty(record.Work))
+		if (!IsNullOrEmpty(value: record.Composer) || !IsNullOrEmpty(value: record.Work))
 			return MusicGenreCategory.Classical;
 
-		if (!IsNullOrEmpty(record.Orchestra) || !IsNullOrEmpty(record.Conductor))
+		if (!IsNullOrEmpty(value: record.Orchestra) || !IsNullOrEmpty(value: record.Conductor))
 			return MusicGenreCategory.Classical;
 
 		return MusicGenreCategory.Unknown;
@@ -82,17 +82,15 @@ internal static class GenreDetector
 
 		Dictionary<MusicGenreCategory, int> counts = new()
 		{
-			[MusicGenreCategory.Classical] = 0,
-			[MusicGenreCategory.Pop] = 0,
-			[MusicGenreCategory.Jazz] = 0,
-			[MusicGenreCategory.Unknown] = 0,
+			[key: MusicGenreCategory.Classical] = 0,
+			[key: MusicGenreCategory.Pop] = 0,
+			[key: MusicGenreCategory.Jazz] = 0,
+			[key: MusicGenreCategory.Unknown] = 0
 		};
 
 		foreach (RecordingInput record in records)
-			counts[Detect(record)]++;
+			counts[Detect(record: record)]++;
 
-		return Enumerable.MaxBy(counts, kv => kv.Value).Key;
+		return counts.MaxBy(static kv => kv.Value).Key;
 	}
 }
-
-

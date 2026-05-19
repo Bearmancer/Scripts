@@ -49,8 +49,8 @@ internal static partial class TranslationNormalizer
 		[key: "Kodaly"] = "Kodály",
 
 		[key: "Vineyard"] = "Weinberg",
-		[key: "Dull"] = "Dutilleux",
-	}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+		[key: "Dull"] = "Dutilleux"
+	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	private static readonly FrozenDictionary<string, string> MistranslationCorrections =
 		new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
@@ -62,8 +62,8 @@ internal static partial class TranslationNormalizer
 			[key: "Stringserenade"] = "Serenade for Strings",
 			[key: "order recording"] = "orchestral version",
 			[key: "hr Symphony Orchestra"] = "Frankfurt Radio Symphony",
-			[key: "hr symphony orchestra"] = "Frankfurt Radio Symphony",
-		}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+			[key: "hr symphony orchestra"] = "Frankfurt Radio Symphony"
+		}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	private static readonly FrozenDictionary<string, string> MusicalTerms = new Dictionary<
 		string,
@@ -127,8 +127,26 @@ internal static partial class TranslationNormalizer
 
 		[key: "Concerto per pianoforte"] = "Piano Concerto",
 		[key: "Concerto per violino"] = "Violin Concerto",
-		[key: "Sinfonia"] = "Symphony",
-	}.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+		[key: "Sinfonia"] = "Symphony"
+	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
+
+	private static readonly (
+		Regex Regex,
+		string Original,
+		string Replacement
+		)[] MistranslationRegexes = BuildRegexPatterns(source: MistranslationCorrections);
+
+	private static readonly (
+		Regex Regex,
+		string Original,
+		string Replacement
+		)[] ComposerNameRegexes = BuildRegexPatterns(source: ComposerNameVariants);
+
+	private static readonly (
+		Regex Regex,
+		string Original,
+		string Replacement
+		)[] MusicalTermRegexes = BuildRegexPatterns(source: MusicalTerms);
 
 	[GeneratedRegex(
 		pattern: @"\b(\d+)(?:st|nd|rd|th)\s+(Symphony|Concerto|Sonata|Quartet|Quintet|Trio|Suite)",
@@ -156,22 +174,6 @@ internal static partial class TranslationNormalizer
 
 	[GeneratedRegex(pattern: @"\bop\.\s*(\d+)", options: RegexOptions.IgnoreCase)]
 	private static partial Regex OpusRegex();
-
-	private static readonly (
-		Regex Regex,
-		string Original,
-		string Replacement
-	)[] MistranslationRegexes = BuildRegexPatterns(MistranslationCorrections);
-	private static readonly (
-		Regex Regex,
-		string Original,
-		string Replacement
-	)[] ComposerNameRegexes = BuildRegexPatterns(ComposerNameVariants);
-	private static readonly (
-		Regex Regex,
-		string Original,
-		string Replacement
-	)[] MusicalTermRegexes = BuildRegexPatterns(MusicalTerms);
 
 	public static string Normalize(string text)
 	{
@@ -228,7 +230,7 @@ internal static partial class TranslationNormalizer
 				{
 					var number = match.Groups[groupnum: 1].Value;
 					var term = match.Groups[groupnum: 2].Value;
-					var englishTerm = MusicalTerms.TryGetValue(key: term, out var t) ? t : term;
+					var englishTerm = MusicalTerms.GetValueOrDefault(key: term, defaultValue: term);
 					return $"{englishTerm} No. {number}";
 				}
 			);
@@ -294,8 +296,10 @@ internal static partial class TranslationNormalizer
 			patterns.Add($"Opus: {match.Value}");
 
 		foreach ((Regex regex, var original, var replacement) in ComposerNameRegexes)
+		{
 			if (regex.IsMatch(input: text))
 				patterns.Add($"Composer variant: {original} → {replacement}");
+		}
 
 		return patterns;
 	}
@@ -304,19 +308,19 @@ internal static partial class TranslationNormalizer
 		FrozenDictionary<string, string> source
 	)
 	{
-		var result = new (Regex, string, string)[source.Count];
+		(Regex, string, string)[] result = new (Regex, string, string)[source.Count];
 		var i = 0;
-		foreach ((var key, var value) in source)
+		foreach (var (key, value) in source)
+		{
 			result[i++] = (
 				new Regex(
-					$@"\b{Regex.Escape(key)}\b",
+					$@"\b{Regex.Escape(str: key)}\b",
 					RegexOptions.Compiled | RegexOptions.IgnoreCase
 				),
 				key,
 				value
 			);
+		}
 		return result;
 	}
 }
-
-
