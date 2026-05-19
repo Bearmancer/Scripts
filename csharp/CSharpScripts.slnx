@@ -1,8 +1,7 @@
-
 <Solution>
-	<Folder Name="/src/" />
+	<Folder Name="/src/"/>
 	<Folder Name="/src/Tests/">
-		<Project Path="src/Tests/CSharpScripts.Tests.csproj" />
+		<Project Path="src/Tests/CSharpScripts.Tests.csproj"/>
 	</Folder>
-	<Project Path="CSharpScripts.csproj" />
+	<Project Path="CSharpScripts.csproj"/>
 </Solution>

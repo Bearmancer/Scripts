@@ -495,9 +495,9 @@ def get_dff_target_params(fmt: AudioFormat) -> tuple[str, int]:
 	"""Determine target sample format and rate for DFF conversion based on format."""
 	match fmt:
 		case "16bit" | "cd" | "mp3":
-			return ("s16", 44100)
+			return "s16", 44100
 		case "24-bit" | "all":
-			return ("s32", 88200)
+			return "s32", 88200
 
 
 def detect_audio_mode(directory: Path) -> str:
