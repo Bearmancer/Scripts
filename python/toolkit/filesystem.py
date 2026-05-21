@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from py3createtorrent import create_torrent

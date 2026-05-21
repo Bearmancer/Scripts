@@ -65,7 +65,6 @@ state/postgres/
 # AI agent working files (Gemini, Claude, Antigravity, etc.)
 # ============================================================
 .antigravitycli/
-.gemini/
 tmpclaude-*
 
 # ============================================================

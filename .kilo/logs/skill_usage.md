@@ -1,1 +1,0 @@
-Using writing-plans skill to create implementation plan for uv/ty/ruff integration, git leak checks, github repo status, and merging CPM TDD approaches.

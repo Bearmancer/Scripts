@@ -12,8 +12,7 @@ from unidecode import unidecode
 from toolkit.cuesheet import process_cue_file
 from toolkit.exceptions import ConversionError
 from toolkit.logging_config import get_logger
-from toolkit.types import AudioFormat
-from toolkit.types import AudioTier
+from toolkit.types import AudioFormat, AudioTier
 from toolkit.utils import run_command
 
 logger = get_logger("audio")
@@ -92,11 +91,11 @@ def calculate_image_size(path: Path) -> None:
 
 
 exif_tool = os.getenv("EXIFTOOL_PATH", "")
-if not exif_tool:
-	raise ValueError(
-		"EXIFTOOL_PATH environment variable not set. "
-		"Please configure the path to the exiftool executable."
-	)
+	if not exif_tool:
+		raise ValueError(
+			"EXIFTOOL_PATH environment variable not set. "
+			"Please configure the path to the exiftool executable."
+		)
 	problematic_files: list[Path] = []
 
 	for flac_file in path.glob("*.flac"):
