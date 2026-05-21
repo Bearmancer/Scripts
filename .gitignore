@@ -78,3 +78,5 @@ tmpclaude-*
 # ============================================================
 csharp/inspect.xml
 *.DotSettings.user
+
+.worktrees/
