@@ -142,3 +142,7 @@ flowchart TD
 All connection strings are set via the `PGCONNSTR` environment variable (defined in `.env`).
 Run `$env:PGCONNSTR` before EF Core commands, or source `.env` in your shell profile.
 The Docker MCP database profile URL is defined in `.env` as `DOCKER_MCP_DB_URL`.
+* **[Phase 24: Security — Deserialization & Injection](.kilo/plans/plan-phase-24.md)** — Resolve immediate arbitrary code execution and command injection vulnerabilities.
+* **[Phase 25: Performance — Loop Optimizations](.kilo/plans/plan-phase-25.md)** — Optimize explicitly marked `for` loops to use `foreach` struct enumerators.
+* **[Phase 26: Performance — N+1 Call Elimination](.kilo/plans/plan-phase-26.md)** — Eliminate sequential API calls inside loops.
+* **[Phase 27: Testing — Utility Classes](.kilo/plans/plan-phase-27.md)** — Establish test coverage for core C# and Python utility functions.
