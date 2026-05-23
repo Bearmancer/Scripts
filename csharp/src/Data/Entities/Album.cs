@@ -1,14 +1,17 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record Album
+/// <summary>
+/// Represents a music album belonging to an artist.
+/// ReleaseDate uses DateOnly — maps to PostgreSQL DATE via Npgsql.
+/// </summary>
+public sealed class Album
 {
-	public int Id { get; init; }
-	public int ArtistId { get; init; }
-	public string Title { get; init; } = null!;
-	public DateOnly? ReleaseDate { get; init; }
-	public string? Mbid { get; init; }
+    public int Id { get; set; }
+    public int ArtistId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public DateOnly? ReleaseDate { get; set; }
 
-	public Artist Artist { get; init; } = null!;
-	public ICollection<Track> Tracks { get; } = [];
+    // Navigation properties
+    public Artist Artist { get; set; } = null!;
+    public ICollection<Track> Tracks { get; init; } = new List<Track>();
 }
