@@ -1,24 +1,17 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
-using CSharpScripts.Data.Entities;
-using EntityScrobble = CSharpScripts.Data.Entities.Scrobble;
+using Microsoft.EntityFrameworkCore;
 
 namespace CSharpScripts.Data;
 
-internal sealed class ScriptsDbContext : DbContext
+/// <summary>
+/// Primary EF Core DbContext for the Scripts application.
+/// NoTracking is the default; enable tracking explicitly per-operation when needed.
+/// </summary>
+public sealed class ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
+    : DbContext(options)
 {
-	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
-		: base(options: options) => ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-
-	public DbSet<Artist> Artists => Set<Artist>();
-	public DbSet<Album> Albums => Set<Album>();
-	public DbSet<Track> Tracks => Set<Track>();
-	public DbSet<EntityScrobble> Scrobbles => Set<EntityScrobble>();
-	public DbSet<Video> Videos => Set<Video>();
-
-	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
-	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
-	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
-
-	protected override void OnModelCreating(ModelBuilder mb) =>
-		mb.ApplyConfigurationsFromAssembly(assembly: typeof(ScriptsDbContext).Assembly);
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        // Entity configurations will be loaded here in subsequent plans (03-dbcontext-config)
+    }
 }
