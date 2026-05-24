@@ -1,33 +1,29 @@
+#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data.Entities;
-using Scrobble = CSharpScripts.Data.Entities.Scrobble;
-using Track = CSharpScripts.Data.Entities.Track;
+using EntityScrobble = CSharpScripts.Data.Entities.Scrobble;
 
 namespace CSharpScripts.Data;
 
-/// <summary>
-/// Primary EF Core DbContext for the Scripts application.
-/// NoTracking is the default; enable tracking explicitly per-operation when needed.
-/// Entity type configurations are loaded from assembly in OnModelCreating.
-/// </summary>
-public sealed class ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
-    : DbContext(options)
+internal sealed class ScriptsDbContext : DbContext
 {
-    // Music domain
-    public DbSet<Artist> Artists => Set<Artist>();
-    public DbSet<Album> Albums => Set<Album>();
-    public DbSet<Track> Tracks => Set<Track>();
-    public DbSet<Scrobble> Scrobbles => Set<Scrobble>();
-    public DbSet<Video> Videos => Set<Video>();
+	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
+		: base(options: options) => ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
-    // Management domain
-    public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
-    public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
+	public DbSet<Artist> Artists => Set<Artist>();
+	public DbSet<Album> Albums => Set<Album>();
+	public DbSet<Track> Tracks => Set<Track>();
+	public DbSet<EntityScrobble> Scrobbles => Set<EntityScrobble>();
+	public DbSet<Video> Videos => Set<Video>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.Ignore<System.Text.Json.JsonDocument>();
-        // Entity configurations will be loaded here in subsequent plans (03-dbcontext-config)
-    }
+	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
+	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
+	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
+	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
+
+	protected override void OnModelCreating(ModelBuilder mb)
+	{
+		mb.Ignore<System.Text.Json.JsonDocument>();
+		mb.ApplyConfigurationsFromAssembly(assembly: typeof(ScriptsDbContext).Assembly);
+	}
 }
