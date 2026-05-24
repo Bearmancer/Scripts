@@ -32,4 +32,12 @@ internal sealed class OciDeploymentTests
         var (exitCode, stdout, stderr) = RunCommand("ssh", "oci \"test -f /home/ubuntu/.oci_verified\"");
         exitCode.Should().Be(0, $"SSH verified file check failed: {stderr}\n{stdout}");
     }
+
+    [Test]
+    public void OciPostgresContainer_IsRunning()
+    {
+        var (exitCode, stdout, stderr) = RunCommand("ssh", "oci \"docker ps --filter name=postgres --format '{{.Status}}'\"");
+        exitCode.Should().Be(0, $"Docker check failed: {stderr}");
+        stdout.Trim().Should().StartWith("Up", "because PostgreSQL container must be running on OCI");
+    }
 }
