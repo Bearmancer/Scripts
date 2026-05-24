@@ -1,4 +1,3 @@
-#pragma warning disable CA2263
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -22,34 +21,34 @@ internal sealed class ArtistEntityTests
     [Test]
     public void Artist_Id_IsInt()
     {
-        var idProp = typeof(Artist).GetProperty("Id");
-        idProp.Should().NotBeNull();
-        idProp!.PropertyType.Should().Be(typeof(int));
+        var prop = typeof(Artist).GetProperty("Id");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<int>();
     }
 
     [Test]
     public void Artist_Name_IsString()
     {
-        var nameProp = typeof(Artist).GetProperty("Name");
-        nameProp.Should().NotBeNull();
-        nameProp!.PropertyType.Should().Be(typeof(string));
+        var prop = typeof(Artist).GetProperty("Name");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<string>();
     }
 
     [Test]
     public void Artist_Metadata_IsNullableJsonDocument()
     {
-        var metaProp = typeof(Artist).GetProperty("Metadata");
-        metaProp.Should().NotBeNull();
-        metaProp!.PropertyType.Should().Be(typeof(JsonDocument));
+        var prop = typeof(Artist).GetProperty("Metadata");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<JsonDocument>();
     }
 
     [Test]
     public void Artist_Albums_IsCollection()
     {
-        var albumsProp = typeof(Artist).GetProperty("Albums");
-        albumsProp.Should().NotBeNull();
-        albumsProp!.PropertyType.IsGenericType.Should().BeTrue();
-        albumsProp.PropertyType.GetGenericTypeDefinition().Should().Be(typeof(ICollection<>));
+        var prop = typeof(Artist).GetProperty("Albums");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.IsGenericType.Should().BeTrue();
+        prop.PropertyType.GetGenericTypeDefinition().Should().Be(typeof(ICollection<>));
     }
 
     [Test]

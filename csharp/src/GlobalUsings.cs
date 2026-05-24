@@ -1,4 +1,5 @@
 global using System.Collections.Frozen;
+global using System.ComponentModel;
 global using System.Diagnostics;
 global using static System.Environment;
 global using System.Globalization;
@@ -28,3 +29,15 @@ global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;
 global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;
+global using Google.Apis.Auth.OAuth2;
+global using Google.Apis.Services;
+global using Google.Apis.Sheets.v4;
+global using Google.Apis.Sheets.v4.Data;
+global using Google.Apis.Drive.v3;
+global using Polly;
+global using Polly.Retry;
+global using static System.IO.Path;
+global using static System.IO.File;
+global using static System.IO.Directory;
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Scripts.Tests")]

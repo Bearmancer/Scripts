@@ -1,6 +1,3 @@
-#pragma warning disable CA2263 // Prefer generic overload Be<T>
-#pragma warning disable IDE0022 // Use expression body for method
-
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -24,20 +21,25 @@ internal sealed class ScrobbleEntityTests
     [Test]
     public void Scrobble_Id_IsLong()
     {
-        typeof(Scrobble).GetProperty("Id")!.PropertyType.Should().Be(typeof(long));
+        var prop = typeof(Scrobble).GetProperty("Id");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<long>();
     }
 
     [Test]
     public void Scrobble_ScrobbledAt_IsDateTimeOffset()
     {
-        typeof(Scrobble).GetProperty("ScrobbledAt")!.PropertyType
-            .Should().Be(typeof(DateTimeOffset));
+        var prop = typeof(Scrobble).GetProperty("ScrobbledAt");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<DateTimeOffset>();
     }
 
     [Test]
     public void Scrobble_Platform_IsString()
     {
-        typeof(Scrobble).GetProperty("Platform")!.PropertyType.Should().Be(typeof(string));
+        var prop = typeof(Scrobble).GetProperty("Platform");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<string>();
     }
 
     [Test]

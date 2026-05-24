@@ -16,6 +16,7 @@ internal static class Program
 	public static int Main(string[] args)
 	{
 		Serilog.Log.Logger = Log.BuildAppLogger(filename: "app.jsonl");
+		AzureCredentialManager.EnsureCredentials();
 
 		try
 		{

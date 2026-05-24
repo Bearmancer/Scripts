@@ -213,11 +213,7 @@ internal sealed class JstorExtractor
 		}
 		catch (Exception ex) when (ex is not InvalidOperationException)
 		{
-			Log.Warning(
-				messageTemplate: ex,
-				"Playwright download failed ({Message}), trying HTTP fallback...",
-				ex.Message
-			);
+			Log.Error(ex, "Playwright download failed, trying HTTP fallback...");
 			Ui.Warn($"Playwright download failed ({ex.Message}), trying HTTP fallback...");
 			return await DownloadPdfViaHttpAsync(pdfUrl: pdfUrl);
 		}

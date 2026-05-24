@@ -54,7 +54,7 @@ internal sealed class LocalPdfExtractor(
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
-				Log.Warning(messageTemplate: ex, "Azure Document Intelligence failed for PDF");
+				Log.Error(ex, "Azure Document Intelligence failed for PDF");
 			}
 		}
 
@@ -64,7 +64,7 @@ internal sealed class LocalPdfExtractor(
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Warning(messageTemplate: ex, "Google Vision failed. Attempting Tesseract fallback...");
+			Log.Error(ex, "Google Vision failed. Attempting Tesseract fallback...");
 			return await new TesseractOcrProvider().OcrPdfAsync(pdfBytes: pdfBytes, ct: ct);
 		}
 	}

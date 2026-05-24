@@ -1,4 +1,3 @@
-#pragma warning disable CA2263, IDE0022
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -22,13 +21,17 @@ internal sealed class VideoEntityTests
     [Test]
     public void Video_YoutubeId_IsString()
     {
-        typeof(Video).GetProperty("YoutubeId")!.PropertyType.Should().Be(typeof(string));
+        var prop = typeof(Video).GetProperty("YoutubeId");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<string>();
     }
 
     [Test]
     public void Video_IsDeleted_IsBool()
     {
-        typeof(Video).GetProperty("IsDeleted")!.PropertyType.Should().Be(typeof(bool));
+        var prop = typeof(Video).GetProperty("IsDeleted");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<bool>();
     }
 
     [Test]
@@ -38,4 +41,3 @@ internal sealed class VideoEntityTests
         video.IsDeleted.Should().BeFalse();
     }
 }
-#pragma warning restore CA2263, IDE0022

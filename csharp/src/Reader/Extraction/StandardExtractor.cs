@@ -168,7 +168,7 @@ internal sealed class StandardExtractor
 	{
 		Ui.Info(message: "Extracting content with SmartReader...");
 
-		using Reader reader = new(uri: Url.AbsoluteUri, text: htmlContent);
+		using SmartReader.Reader reader = new(uri: Url.AbsoluteUri, text: htmlContent);
 		Article article = await reader.GetArticleAsync();
 
 		WebExtractionQuality quality = WebExtractionQualityAnalyzer.ClassifyArticleQuality(article: article);

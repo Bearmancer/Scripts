@@ -80,7 +80,7 @@ internal sealed partial class LocalEpubExtractor(
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
-				Log.Warning(messageTemplate: ex, "Azure Document Intelligence failed for {FileName}", name);
+				Log.Error(ex, "Azure Document Intelligence failed for {FileName}", name);
 			}
 		}
 

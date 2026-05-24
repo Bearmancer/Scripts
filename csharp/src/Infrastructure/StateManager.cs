@@ -1,4 +1,5 @@
 namespace CSharpScripts.Infrastructure;
+using System.Text.Encodings.Web;
 
 public static class StateManager
 {
@@ -93,7 +94,7 @@ public static class StateManager
 			?? [];
 	}
 
-	public static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
+	internal static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
 	{
 		CreateDirectory(YouTubePlaylistsDirectory);
 		WriteAllText(
@@ -143,7 +144,7 @@ public static class StateManager
 		Console.Debug("Deleted YouTube state files");
 	}
 
-	public static void MigratePlaylistFiles(Dictionary<string, PlaylistSnapshot> snapshots)
+	internal static void MigratePlaylistFiles(Dictionary<string, PlaylistSnapshot> snapshots)
 	{
 		List<string> oldFiles =
 		[

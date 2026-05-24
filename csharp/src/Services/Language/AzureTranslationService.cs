@@ -1,18 +1,17 @@
 using Azure;
 using Azure.AI.Translation.Text;
+using Azure.Identity;
 
 namespace CSharpScripts.Services.Language;
 
 internal static class AzureTranslationService
 {
-	private static readonly string? ApiKey = Secrets.AzureTranslatorKey;
-	private static readonly string Region = Secrets.AzureTranslatorRegion;
+	private static readonly TextTranslationClient? Client =
+		string.IsNullOrWhiteSpace(Secrets.AzureTranslatorEndpoint)
+			? null
+			: new TextTranslationClient(new DefaultAzureCredential(), new Uri(Secrets.AzureTranslatorEndpoint));
 
-	private static readonly TextTranslationClient? Client = ApiKey is null
-		? null
-		: new TextTranslationClient(new AzureKeyCredential(key: ApiKey), region: Region);
-
-	internal static bool IsConfigured => ApiKey is { };
+	internal static bool IsConfigured => Client is not null;
 
 	internal static async Task<TranslationResult?> TranslateAsync(
 		string text,

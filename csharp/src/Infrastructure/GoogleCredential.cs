@@ -1,4 +1,5 @@
 namespace CSharpScripts.Infrastructure;
+using Google.Apis.YouTube.v3;
 
 public static class GoogleCredentials
 {
@@ -6,7 +7,7 @@ public static class GoogleCredentials
 	[
 		SheetsService.Scope.Spreadsheets,
 		DriveService.Scope.Drive,
-		YouTubeServiceApi.Scope.YoutubeReadonly,
+		YouTubeService.Scope.YoutubeReadonly,
 	];
 
 	private static UserCredential? CachedCredential { get; set; }

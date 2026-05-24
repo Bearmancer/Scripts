@@ -1,5 +1,6 @@
-﻿using Azure;
+using Azure;
 using Azure.AI.DocumentIntelligence;
+using Azure.Identity;
 
 namespace CSharpScripts.Services.Read.Ocr;
 
@@ -15,14 +16,13 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 
 	internal AzureDocumentIntelligenceOcrProvider(
 		string endpoint,
-		string apiKey,
 		string? modelId = null
 	)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(argument: endpoint);
-		ArgumentException.ThrowIfNullOrWhiteSpace(argument: apiKey);
 
-		Client = new DocumentIntelligenceClient(new Uri(uriString: endpoint), new AzureKeyCredential(key: apiKey));
+		Client = new DocumentIntelligenceClient(new Uri(uriString: endpoint), new DefaultAzureCredential());
+		
 		ModelId = IsNullOrWhiteSpace(value: modelId) ? "prebuilt-layout" : modelId;
 	}
 
@@ -44,8 +44,7 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 	}
 
 	internal static bool IsConfigured(AzureDocumentIntelligenceOptions? options = null) =>
-		!IsNullOrWhiteSpace(options?.Endpoint ?? Secrets.AzureDocumentIntelligenceEndpoint)
-		&& !IsNullOrWhiteSpace(options?.ApiKey ?? Secrets.AzureDocumentIntelligenceKey);
+		!IsNullOrWhiteSpace(options?.Endpoint ?? Secrets.AzureDocumentIntelligenceEndpoint);
 
 	internal static AzureDocumentIntelligenceOcrProvider CreateConfigured(
 		AzureDocumentIntelligenceOptions? options = null
@@ -55,11 +54,6 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 			?? Secrets.AzureDocumentIntelligenceEndpoint
 			?? throw new InvalidOperationException(
 				message: "Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
-			),
-			options?.ApiKey
-			?? Secrets.AzureDocumentIntelligenceKey
-			?? throw new InvalidOperationException(
-				message: "Azure Document Intelligence API key is not set. Pass --azure-docintel-key or set AZURE_DOCUMENT_INTELLIGENCE_KEY."
 			),
 			options?.ModelId ?? Secrets.AzureDocumentIntelligenceModelId
 		);
@@ -184,6 +178,5 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 
 internal sealed record AzureDocumentIntelligenceOptions(
 	string? Endpoint,
-	string? ApiKey,
 	string? ModelId
 );

@@ -1,4 +1,3 @@
-#pragma warning disable CA2263
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -27,13 +26,14 @@ internal sealed class TrackEntityTests
     {
         var prop = typeof(Track).GetProperty("DurationSeconds");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(int?));
+        prop!.PropertyType.Should().Be<int?>();
     }
 
     [Test]
     public void Track_Scrobbles_IsCollection()
     {
         var prop = typeof(Track).GetProperty("Scrobbles");
+        prop.Should().NotBeNull();
         prop!.PropertyType.IsGenericType.Should().BeTrue();
         prop.PropertyType.GetGenericTypeDefinition().Should().Be(typeof(ICollection<>));
     }

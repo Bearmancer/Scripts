@@ -1,6 +1,3 @@
-#pragma warning disable CA2263 // Prefer generic overload
-#pragma warning disable IDE0022 // Use expression body for methods
-
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -23,13 +20,16 @@ internal sealed class FailedTaskEntityTests
     [Test]
     public void FailedTask_Id_IsGuid()
     {
-        typeof(FailedTask).GetProperty("Id")!.PropertyType.Should().Be(typeof(Guid));
+        var prop = typeof(FailedTask).GetProperty("Id");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<Guid>();
     }
 
     [Test]
     public void FailedTask_CreatedAt_IsDateTimeOffset()
     {
-        typeof(FailedTask).GetProperty("CreatedAt")!.PropertyType
-            .Should().Be(typeof(DateTimeOffset));
+        var prop = typeof(FailedTask).GetProperty("CreatedAt");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<DateTimeOffset>();
     }
 }

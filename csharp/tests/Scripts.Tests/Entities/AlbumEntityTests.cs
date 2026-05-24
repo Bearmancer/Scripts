@@ -1,5 +1,3 @@
-#pragma warning disable CA2263, IDE0022
-
 using TUnit;
 using FluentAssertions;
 using CSharpScripts.Data.Entities;
@@ -24,7 +22,9 @@ internal sealed class AlbumEntityTests
     [Test]
     public void Album_ArtistId_IsInt()
     {
-        typeof(Album).GetProperty("ArtistId")!.PropertyType.Should().Be(typeof(int));
+        var prop = typeof(Album).GetProperty("ArtistId");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<int>();
     }
 
     [Test]
@@ -32,7 +32,7 @@ internal sealed class AlbumEntityTests
     {
         var prop = typeof(Album).GetProperty("ReleaseDate");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(DateOnly?));
+        prop!.PropertyType.Should().Be<DateOnly?>();
     }
 
     [Test]

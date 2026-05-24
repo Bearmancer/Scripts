@@ -22,18 +22,16 @@ internal sealed class ExecutionLogEntityTests
     [Test]
     public void ExecutionLog_Payload_IsJsonDocument()
     {
-#pragma warning disable CA2263
-        typeof(ExecutionLog).GetProperty("Payload")!.PropertyType
-            .Should().Be(typeof(JsonDocument));
-#pragma warning restore CA2263
+        var prop = typeof(ExecutionLog).GetProperty("Payload");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<JsonDocument>();
     }
 
     [Test]
     public void ExecutionLog_Timestamp_IsDateTimeOffset()
     {
-#pragma warning disable CA2263
-        typeof(ExecutionLog).GetProperty("Timestamp")!.PropertyType
-            .Should().Be(typeof(DateTimeOffset));
-#pragma warning restore CA2263
+        var prop = typeof(ExecutionLog).GetProperty("Timestamp");
+        prop.Should().NotBeNull();
+        prop!.PropertyType.Should().Be<DateTimeOffset>();
     }
 }
