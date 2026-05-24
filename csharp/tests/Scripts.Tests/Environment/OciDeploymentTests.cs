@@ -40,4 +40,19 @@ internal sealed class OciDeploymentTests
         exitCode.Should().Be(0, $"Docker check failed: {stderr}");
         stdout.Trim().Should().StartWith("Up", "because PostgreSQL container must be running on OCI");
     }
+    [Test]
+    public async Task OciDatabase_CanConnect_ViaConnectionString()
+    {
+        var connStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
+        connStr.Should().NotBeNullOrWhiteSpace("PGCONNSTR must be loaded");
+        connStr.Should().Contain("Host=oci", "because the application must connect to the remote OCI instance");
+
+        var options = new DbContextOptionsBuilder<ScriptsDbContext>()
+            .UseNpgsql(connStr)
+            .Options;
+
+        await using var context = new ScriptsDbContext(options);
+        var canConnect = await context.Database.CanConnectAsync();
+        canConnect.Should().BeTrue("because connection to OCI database must succeed");
+    }
 }
