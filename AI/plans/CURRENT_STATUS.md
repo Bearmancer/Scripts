@@ -1,8 +1,8 @@
 # EF Core 10 Migration — Current Status
 
 **Last Updated:** 2026-05-26  
-**Status:** 100% Complete (Tier 1 Foundation Phase - Monolith EF Migration)  
-**Next Action:** Evaluate T2 (Modularization) path of least resistance by comparing `feature/cpm-srp-refactoring-3041881028894447998` branch against current T1 Monolith.
+**Status:** 60% Complete (Tier 1 Foundation Complete - Monolith Migration In Progress)  
+**Next Action:** Begin T1-07 (StateManager migration to EF Core) on the monolith.
 
 ---
 
@@ -17,15 +17,7 @@
 
 ### Passing Tests by Category
 
-- DbContext Configuration: 5 tests
-- Entity Definitions: 8 tests
-- Entity Refactoring: 3 tests
-- Environment Setup: 8 tests
-- EF11 Guards: 1 test
-- Repositories (unit): 44 tests
-- Other: 9 tests
-
-- All 136 tests passing following elimination of Testcontainers and migration to local Postgres fixture.
+- All 136 tests passing on `main` following merge of `ef-state` and environment loading.
 
 ---
 
@@ -33,8 +25,8 @@
 
 | Tier | Phase | Status | Progress | Notes |
 |------|-------|--------|----------|-------|
-| T1 | 00-16 | ✅ Complete | 100% | Monolith EF Migration finished |
-| T2 | 00-10 | 🔒 Blocked | 0% | Waiting for T1 sign-off |
+| T1 | 00-16 | 🟡 In Progress | 60% | Foundation (00-06, 11, 14, 15) complete. T1-07 to T1-13 pending. |
+| T2 | 00-10 | 🔒 Blocked | 0% | Waiting for T1 completion |
 | T3 | 00-07 | 🔒 Blocked | 0% | Waiting for T2 sign-off |
 | T4 | 00-08 | 🔒 Blocked | 0% | Waiting for T3 sign-off |
 
@@ -130,8 +122,8 @@
 |--------|---------|--------|-----|
 | Tests Passing | 136 | 250+ | -114 |
 | Pass Rate | 100% | 100% | 0% |
-| Tiers Complete | 1 | 4 | -3 |
-| Tier 1 Progress | 100% | 100% | 0% |
+| Tiers Complete | 0 | 4 | -4 |
+| Tier 1 Progress | 60% | 100% | -40% |
 | Build Warnings | 0 | 0 | 0 |
 
 ---

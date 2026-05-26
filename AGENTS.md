@@ -272,9 +272,9 @@ Each tier must reach **sign-off** (all tests green, `dotnet build` clean) before
 
 ## 11. Current Status
 
-**Last Updated:** 2026-05-25  
-**Test Status:** 78 passing, 53 failing (60% pass rate)  
+**Last Updated:** 2026-05-26  
+**Test Status:** 136 passing, 0 failing (100% pass rate)  
 **Tier 1 Progress:** 60% complete  
-**Blocker:** Compiled model out of sync
+**Blocker:** None. Next step: T1-07 (StateManager migration to EF).
 
 See `AI/plans/CURRENT_STATUS.md` for detailed status, blockers, and next action.
