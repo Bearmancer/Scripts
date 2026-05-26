@@ -77,6 +77,7 @@ combine-as-imports = true
 [tool.ruff.format]
 indent-style = "tab"
 quote-style = "double"
+docstring-code-format = true
 
 # ==============================================================================
 # TY CONFIGURATION (Strict Type Checking)

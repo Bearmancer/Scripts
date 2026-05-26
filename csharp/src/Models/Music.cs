@@ -3,7 +3,7 @@ namespace CSharpScripts.Models;
 internal enum MusicSource
 {
 	Discogs,
-	MusicBrainz
+	MusicBrainz,
 }
 
 internal sealed record ReleaseInfo(
@@ -82,7 +82,7 @@ internal sealed record WorkSummary(
 			1 => Years[index: 0].ToString(),
 			_ when Years.Max() - Years.Min() <= 2 && Years.Count == Years.Max() - Years.Min() + 1 =>
 				$"{Years.Min()}-{Years.Max() % 100:D2}",
-			_ => Join(separator: ", ", Years.Distinct().OrderBy(static y => y))
+			_ => Join(separator: ", ", Years.Distinct().OrderBy(static y => y)),
 		};
 }
 

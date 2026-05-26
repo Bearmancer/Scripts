@@ -1,4 +1,5 @@
 namespace CSharpScripts.Infrastructure;
+
 using Google.Apis.YouTube.v3;
 
 public static class GoogleCredentials

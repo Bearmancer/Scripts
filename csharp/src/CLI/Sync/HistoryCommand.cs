@@ -1,5 +1,3 @@
 ﻿namespace CSharpScripts.CLI.Sync;
 
-internal sealed class HistoryCommand
-{
-}
+internal sealed class HistoryCommand { }

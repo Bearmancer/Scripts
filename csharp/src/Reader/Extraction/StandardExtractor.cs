@@ -17,44 +17,44 @@ internal sealed class StandardExtractor
 	private const int ImageDownloadTimeoutSeconds = 10;
 
 	private const string ContentReadyScript = """
-	                                          () => {
-	                                              const candidates = [
-	                                                  'article', '[role="article"]', 'main',
-	                                                  '.article-body', '.story-body', '.post-content',
-	                                                  '.article-content', '.content-body', '.entry-content'
-	                                              ];
-	                                              for (const sel of candidates) {
-	                                                  const el = document.querySelector(sel);
-	                                                  if (!el) continue;
-	                                                  const text = el.innerText?.trim() ?? '';
-	                                                  const substantialParas = Array.from(el.querySelectorAll('p'))
-	                                                      .filter(p => (p.innerText?.trim().length ?? 0) > 50);
-	                                                  if (text.length > 1500 && substantialParas.length >= 3) return true;
-	                                              }
-	                                              return false;
-	                                          }
-	                                          """;
+		() => {
+		    const candidates = [
+		        'article', '[role="article"]', 'main',
+		        '.article-body', '.story-body', '.post-content',
+		        '.article-content', '.content-body', '.entry-content'
+		    ];
+		    for (const sel of candidates) {
+		        const el = document.querySelector(sel);
+		        if (!el) continue;
+		        const text = el.innerText?.trim() ?? '';
+		        const substantialParas = Array.from(el.querySelectorAll('p'))
+		            .filter(p => (p.innerText?.trim().length ?? 0) > 50);
+		        if (text.length > 1500 && substantialParas.length >= 3) return true;
+		    }
+		    return false;
+		}
+		""";
 
 	private const string BpcExtDirName = "bpc-ext";
 
 	private const string ScrollScript = """
-	                                    async () => {
-	                                        await new Promise(resolve => {
-	                                            let totalHeight = 0;
-	                                            const distance = 100;
-	                                            const timer = setInterval(() => {
-	                                                const scrollHeight = document.body.scrollHeight;
-	                                                window.scrollBy(0, distance);
-	                                                totalHeight += distance;
-	                                                if (totalHeight >= scrollHeight) { clearInterval(timer); resolve(); }
-	                                            }, 50);
-	                                        });
-	                                    }
-	                                    """;
+		async () => {
+		    await new Promise(resolve => {
+		        let totalHeight = 0;
+		        const distance = 100;
+		        const timer = setInterval(() => {
+		            const scrollHeight = document.body.scrollHeight;
+		            window.scrollBy(0, distance);
+		            totalHeight += distance;
+		            if (totalHeight >= scrollHeight) { clearInterval(timer); resolve(); }
+		        }, 50);
+		    });
+		}
+		""";
 
 	private static readonly HttpClient SharedHttpClient = new()
 	{
-		Timeout = TimeSpan.FromSeconds(seconds: ImageDownloadTimeoutSeconds)
+		Timeout = TimeSpan.FromSeconds(seconds: ImageDownloadTimeoutSeconds),
 	};
 
 	private readonly CancellationToken Ct;
@@ -71,9 +71,9 @@ internal sealed class StandardExtractor
 		ExtensionPath = bpcPath is { }
 			? Path.GetFullPath(path: bpcPath)
 			: FindBpcExtension()
-			  ?? throw new DirectoryNotFoundException(
-				  $"BPC extension directory '{BpcExtDirName}' not found in any ancestor of {AppContext.BaseDirectory}"
-			  );
+				?? throw new DirectoryNotFoundException(
+					$"BPC extension directory '{BpcExtDirName}' not found in any ancestor of {AppContext.BaseDirectory}"
+				);
 		if (!Directory.Exists(path: ExtensionPath))
 			throw new DirectoryNotFoundException($"BPC extension not found at {ExtensionPath}");
 
@@ -99,7 +99,10 @@ internal sealed class StandardExtractor
 		Ct.ThrowIfCancellationRequested();
 		Ui.Info(message: "Launching Playwright with BPC extension...");
 
-		await using BrowserSession session = await BrowserSession.CreateAsync(extensionPath: ExtensionPath, cancellationToken: Ct);
+		await using BrowserSession session = await BrowserSession.CreateAsync(
+			extensionPath: ExtensionPath,
+			cancellationToken: Ct
+		);
 		Page = await session.GetOrCreatePageAsync();
 
 		await NavigateAndScrollAsync();
@@ -119,7 +122,7 @@ internal sealed class StandardExtractor
 				new PageGotoOptions
 				{
 					WaitUntil = WaitUntilState.DOMContentLoaded,
-					Timeout = NavigationTimeoutMs
+					Timeout = NavigationTimeoutMs,
 				}
 			);
 		}
@@ -151,7 +154,7 @@ internal sealed class StandardExtractor
 				new PageWaitForFunctionOptions
 				{
 					Timeout = ContentReadyTimeoutMs,
-					PollingInterval = 500
+					PollingInterval = 500,
 				}
 			);
 			Ui.Info(message: "Article content ready.");
@@ -171,8 +174,15 @@ internal sealed class StandardExtractor
 		using SmartReader.Reader reader = new(uri: Url.AbsoluteUri, text: htmlContent);
 		Article article = await reader.GetArticleAsync();
 
-		WebExtractionQuality quality = WebExtractionQualityAnalyzer.ClassifyArticleQuality(article: article);
-		Ui.Info(WebExtractionQualityAnalyzer.GetDiagnosticMessage(quality: quality, charCount: article.Length));
+		WebExtractionQuality quality = WebExtractionQualityAnalyzer.ClassifyArticleQuality(
+			article: article
+		);
+		Ui.Info(
+			WebExtractionQualityAnalyzer.GetDiagnosticMessage(
+				quality: quality,
+				charCount: article.Length
+			)
+		);
 
 		if (quality == WebExtractionQuality.Incomplete)
 		{
@@ -187,14 +197,17 @@ internal sealed class StandardExtractor
 				reasons.Add($"content too short ({article.Length} chars)");
 
 			throw new InvalidOperationException(
-				"Page did not fully load \u2014 extraction incomplete. " + Join(separator: ". ", values: reasons) + "."
+				"Page did not fully load \u2014 extraction incomplete. "
+					+ Join(separator: ". ", values: reasons)
+					+ "."
 			);
 		}
 
 		var title = article.Title ?? "Extracted Article";
 
 		HtmlParser parser = new();
-		IHtmlDocument doc = await parser.ParseDocumentAsync(article.Content ?? "<h1>No content found</h1>"
+		IHtmlDocument doc = await parser.ParseDocumentAsync(
+			article.Content ?? "<h1>No content found</h1>"
 		);
 
 		HtmlCleanupHelper.RemoveUnwantedElements(doc: doc);
@@ -208,7 +221,7 @@ internal sealed class StandardExtractor
 			Title = title,
 			SourceUrl = Url,
 			BodyHtml = doc.Body!.InnerHtml,
-			Images = images
+			Images = images,
 		};
 	}
 
@@ -275,11 +288,16 @@ internal sealed class StandardExtractor
 	{
 		try
 		{
-			HttpResponseMessage response = await httpClient.GetAsync(requestUri: uri, cancellationToken: ct);
+			HttpResponseMessage response = await httpClient.GetAsync(
+				requestUri: uri,
+				cancellationToken: ct
+			);
 			if (!response.IsSuccessStatusCode)
 				return null;
 
-			var ext = InferImageExtension(mediaType: response.Content.Headers.ContentType?.MediaType);
+			var ext = InferImageExtension(
+				mediaType: response.Content.Headers.ContentType?.MediaType
+			);
 			var name = $"img_{index}.{ext}";
 			return (name, await response.Content.ReadAsByteArrayAsync(cancellationToken: ct));
 		}
@@ -303,6 +321,6 @@ internal sealed class StandardExtractor
 			"image/svg+xml" => "svg",
 			"image/webp" => "webp",
 			"image/jpeg" => "jpg",
-			_ => "jpg"
+			_ => "jpg",
 		};
 }

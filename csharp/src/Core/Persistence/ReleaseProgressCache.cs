@@ -2,7 +2,9 @@ namespace CSharpScripts.Core;
 
 internal static class ReleaseProgressCache
 {
-	private static readonly CsvConfiguration CsvConfig = new(cultureInfo: CultureInfo.InvariantCulture);
+	private static readonly CsvConfiguration CsvConfig = new(
+		cultureInfo: CultureInfo.InvariantCulture
+	);
 
 	private static string GetPath(string releaseId) =>
 		Path.Combine(path1: Paths.CacheDirectory, $"{releaseId}.csv");

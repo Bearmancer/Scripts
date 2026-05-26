@@ -1,4 +1,5 @@
 namespace CSharpScripts.Infrastructure;
+
 using System.Net.Sockets;
 
 public static class Resilience
@@ -53,14 +54,10 @@ public static class Resilience
 	}
 
 	private static ResiliencePipeline<T> CreateAsyncPipeline<T>(string operation) =>
-		new ResiliencePipelineBuilder<T>()
-			.AddRetry(CreateRetryOptions<T>(operation))
-			.Build();
+		new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
 
 	private static ResiliencePipeline<T> CreateSyncPipeline<T>(string operation) =>
-		new ResiliencePipelineBuilder<T>()
-			.AddRetry(CreateRetryOptions<T>(operation))
-			.Build();
+		new ResiliencePipelineBuilder<T>().AddRetry(CreateRetryOptions<T>(operation)).Build();
 
 	public static T Execute<T>(string operation, Func<T> action, CancellationToken ct = default)
 	{

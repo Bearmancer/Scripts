@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Google.Cloud.DocumentAI.V1;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
@@ -36,11 +36,14 @@ internal sealed class DocumentAiOcrProvider : IStructuredImageOcrProvider
 			RawDocument = new RawDocument
 			{
 				Content = ByteString.CopyFrom(bytes: imageBytes),
-				MimeType = mimeType
-			}
+				MimeType = mimeType,
+			},
 		};
 
-		ProcessResponse response = await client.ProcessDocumentAsync(request: request, cancellationToken: ct);
+		ProcessResponse response = await client.ProcessDocumentAsync(
+			request: request,
+			cancellationToken: ct
+		);
 		return ExtractStructured(document: response.Document);
 	}
 

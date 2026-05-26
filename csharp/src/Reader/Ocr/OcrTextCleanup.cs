@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Services.Read.Ocr;
+namespace CSharpScripts.Services.Read.Ocr;
 
 internal static partial class OcrTextCleanup
 {

@@ -8,7 +8,8 @@ internal sealed record Scrobble(
 )
 {
 	public string FormattedDate =>
-		PlayedAt?.ToString(format: "yyyy-MM-dd HH:mm", formatProvider: CultureInfo.InvariantCulture) ?? "Unknown";
+		PlayedAt?.ToString(format: "yyyy-MM-dd HH:mm", formatProvider: CultureInfo.InvariantCulture)
+		?? "Unknown";
 }
 
 internal sealed record FetchState
@@ -33,12 +34,12 @@ internal sealed record FetchState
 			TotalFetched = total,
 			LastUpdated = DateTimeOffset.UtcNow,
 			OldestScrobble =
-			oldest.HasValue && (!OldestScrobble.HasValue || oldest < OldestScrobble)
-				? oldest
-				: OldestScrobble,
+				oldest.HasValue && (!OldestScrobble.HasValue || oldest < OldestScrobble)
+					? oldest
+					: OldestScrobble,
 			NewestScrobble =
-			newest.HasValue && (!NewestScrobble.HasValue || newest > NewestScrobble)
-				? newest
-				: NewestScrobble
+				newest.HasValue && (!NewestScrobble.HasValue || newest > NewestScrobble)
+					? newest
+					: NewestScrobble,
 		};
 }

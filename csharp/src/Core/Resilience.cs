@@ -68,7 +68,7 @@ internal static class Resilience
 				{
 					Log.Debug(messageTemplate: "CircuitBreakerHalfOpen {Service}", service);
 					return ValueTask.CompletedTask;
-				}
+				},
 			}
 		);
 
@@ -85,7 +85,7 @@ internal static class Resilience
 					Window = TimeSpan.FromSeconds(seconds: 1),
 					SegmentsPerWindow = 1,
 					QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-					QueueLimit = 20
+					QueueLimit = 20,
 				}
 			)
 		);
@@ -116,7 +116,11 @@ internal static class Resilience
 					var message = args.Outcome.Exception?.Message ?? "Unknown error";
 					if (IsFatalQuotaError(message: message))
 					{
-						Log.Warning(messageTemplate: "DailyQuotaExceeded {Service}: {Message}", service, message);
+						Log.Warning(
+							messageTemplate: "DailyQuotaExceeded {Service}: {Message}",
+							service,
+							message
+						);
 						return ValueTask.FromException(
 							new DailyQuotaExceededException(service.ToString(), message: message)
 						);
@@ -134,7 +138,7 @@ internal static class Resilience
 						DateTimeOffset.Now.Add(timeSpan: args.RetryDelay)
 					);
 					return ValueTask.CompletedTask;
-				}
+				},
 			}
 		);
 
@@ -148,7 +152,7 @@ internal static class Resilience
 			ServiceType.Music => 30,
 			ServiceType.Read => 60,
 			ServiceType.Cloud => 60,
-			_ => 30
+			_ => 30,
 		};
 		builder.AddTimeout(TimeSpan.FromSeconds(seconds: timeoutSeconds));
 	}
@@ -161,7 +165,10 @@ internal static class Resilience
 	{
 		ResiliencePipeline<T> pipeline =
 			(ResiliencePipeline<T>)
-			OperationPipelines.GetOrAdd(key: operation, static op => BuildTypedPipeline<T>(operation: op));
+				OperationPipelines.GetOrAdd(
+					key: operation,
+					static op => BuildTypedPipeline<T>(operation: op)
+				);
 		return await pipeline.ExecuteAsync(_ => new ValueTask<T>(action()), cancellationToken: ct);
 	}
 
@@ -211,7 +218,7 @@ internal static class Resilience
 							DateTimeOffset.Now.Add(timeSpan: args.RetryDelay)
 						);
 						return ValueTask.CompletedTask;
-					}
+					},
 				}
 			)
 			.Build();
@@ -237,7 +244,8 @@ internal static class Resilience
 
 	public static bool IsFatalQuotaError(string message) =>
 		QuotaPatterns.Contains(value: message)
-		|| message.ContainsIgnoreCase(substring: "quota") && message.ContainsIgnoreCase(substring: "day");
+		|| message.ContainsIgnoreCase(substring: "quota")
+			&& message.ContainsIgnoreCase(substring: "day");
 
 	public static Task<T> ExecuteMusicApiAsync<T>(
 		string service,

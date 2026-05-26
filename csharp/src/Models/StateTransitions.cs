@@ -10,13 +10,13 @@ internal static class StateTransitions
 			state with
 			{
 				LastChecked = DateTimeOffset.UtcNow,
-				LastUpdated = DateTimeOffset.UtcNow
+				LastUpdated = DateTimeOffset.UtcNow,
 			};
 
 		public YouTubeFetchState WithSpreadsheetId(string spreadsheetId) =>
 			state with
 			{
-				SpreadsheetId = spreadsheetId
+				SpreadsheetId = spreadsheetId,
 			};
 
 		public YouTubeFetchState MarkFetchComplete() => state with { FetchComplete = true };
@@ -25,14 +25,17 @@ internal static class StateTransitions
 		{
 			Dictionary<string, PlaylistSnapshot> updated = new(dictionary: state.PlaylistSnapshots)
 			{
-				[key: playlistId] = snapshot
+				[key: playlistId] = snapshot,
 			};
 			return state with { PlaylistSnapshots = updated, LastUpdated = DateTimeOffset.UtcNow };
 		}
 
 		public YouTubeFetchState RemovePlaylistSnapshot(string playlistId)
 		{
-			Dictionary<string, PlaylistSnapshot> updated = [with(dictionary: state.PlaylistSnapshots)];
+			Dictionary<string, PlaylistSnapshot> updated =
+			[
+				with(dictionary: state.PlaylistSnapshots),
+			];
 			updated.Remove(key: playlistId);
 			return state with { PlaylistSnapshots = updated, LastUpdated = DateTimeOffset.UtcNow };
 		}
@@ -45,7 +48,7 @@ internal static class StateTransitions
 		public FetchState WithSpreadsheetId(string spreadsheetId) =>
 			state with
 			{
-				SpreadsheetId = spreadsheetId
+				SpreadsheetId = spreadsheetId,
 			};
 	}
 }

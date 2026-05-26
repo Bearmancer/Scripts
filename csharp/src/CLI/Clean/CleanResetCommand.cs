@@ -6,7 +6,7 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 {
 	private const int TerminalCloseDelayMs = 2000;
 
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -40,7 +40,10 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 		Ui.Ok(message: "Reset complete - terminal will close in 2 seconds...");
 		Log.Information(messageTemplate: "ResetComplete");
 
-		await Task.Delay(millisecondsDelay: TerminalCloseDelayMs, cancellationToken: cancellationToken);
+		await Task.Delay(
+			millisecondsDelay: TerminalCloseDelayMs,
+			cancellationToken: cancellationToken
+		);
 		Exit(exitCode: 0);
 
 		return 0;
@@ -124,20 +127,28 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 	private static void ScheduleDeferredCleanup(string binDir, string objDir)
 	{
 		Ui.Warn(message: "  Build artifacts locked - scheduling deferred cleanup...");
-		Log.Warning(messageTemplate: "ResetBuildArtifacts_DeferredCleanup {BinDir} {ObjDir}", binDir, objDir);
+		Log.Warning(
+			messageTemplate: "ResetBuildArtifacts_DeferredCleanup {BinDir} {ObjDir}",
+			binDir,
+			objDir
+		);
 
 		var csprojDir = Path.Combine(path1: Paths.ProjectRoot, path2: "csharp");
 		var script = """
-		             Start-Sleep -Seconds 2
-		             if (Test-Path $args[0]) { Remove-Item -Recurse -Force $args[0] }
-		             if (Test-Path $args[1]) { Remove-Item -Recurse -Force $args[1] }
-		             Set-Location $args[2]
-		             dotnet build
-		             """;
+			Start-Sleep -Seconds 2
+			if (Test-Path $args[0]) { Remove-Item -Recurse -Force $args[0] }
+			if (Test-Path $args[1]) { Remove-Item -Recurse -Force $args[1] }
+			Set-Location $args[2]
+			dotnet build
+			""";
 
 		try
 		{
-			ProcessStartInfo pwsh = new(fileName: "pwsh") { UseShellExecute = false, CreateNoWindow = false };
+			ProcessStartInfo pwsh = new(fileName: "pwsh")
+			{
+				UseShellExecute = false,
+				CreateNoWindow = false,
+			};
 			pwsh.ArgumentList.Add(item: "-Command");
 			pwsh.ArgumentList.Add(item: script);
 			pwsh.ArgumentList.Add(item: binDir);
@@ -151,7 +162,7 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 			ProcessStartInfo ps5 = new(fileName: "powershell.exe")
 			{
 				UseShellExecute = false,
-				CreateNoWindow = false
+				CreateNoWindow = false,
 			};
 			ps5.ArgumentList.Add(item: "-Command");
 			ps5.ArgumentList.Add(item: script);
@@ -178,7 +189,7 @@ internal sealed class CleanResetCommand : AsyncCommand<CleanResetCommand.Setting
 				WorkingDirectory = csprojDir,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
-				RedirectStandardError = true
+				RedirectStandardError = true,
 			}
 		);
 

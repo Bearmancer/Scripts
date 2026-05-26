@@ -134,7 +134,7 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 
 		Markup line = new(
 			$"{Ui.Colored(color: colorName, text: playlistName)} {countsText} "
-			+ $"[{colorName}]{progressBar}[/] {percentText} {videosText} {timeText}"
+				+ $"[{colorName}]{progressBar}[/] {percentText} {videosText} {timeText}"
 		);
 
 		return line;

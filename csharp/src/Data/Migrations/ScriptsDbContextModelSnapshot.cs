@@ -29,7 +29,7 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ArtistId")
                         .HasColumnType("integer");
@@ -45,7 +45,18 @@ namespace CSharpScripts.src.Data.Migrations
 
                     b.HasIndex("ArtistId");
 
-                    b.ToTable("Albums");
+                    b.HasIndex("ReleaseDate")
+                        .HasDatabaseName("idx_albums_release_date");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("idx_albums_title_trgm")
+                        .HasFilter("true");
+
+                    b.HasIndex("ArtistId", "Title")
+                        .IsUnique()
+                        .HasDatabaseName("idx_albums_title");
+
+                    b.ToTable("albums", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Artist", b =>
@@ -54,7 +65,7 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
                     b.Property<JsonDocument>("Metadata")
                         .HasColumnType("jsonb");
@@ -65,7 +76,12 @@ namespace CSharpScripts.src.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Artists");
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("idx_artists_name_trgm")
+                        .HasFilter("true");
+
+                    b.ToTable("artists", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.ExecutionLog", b =>
@@ -88,11 +104,19 @@ namespace CSharpScripts.src.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamptz")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ExecutionLogs");
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("idx_execution_logs_session_id");
+
+                    b.HasIndex("Timestamp")
+                        .HasDatabaseName("idx_execution_logs_timestamp");
+
+                    b.ToTable("execution_logs", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.FailedTask", b =>
@@ -101,42 +125,58 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("ErrorMessage")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Operation")
+                    b.Property<string>("TaskName")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamptz")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
                     b.HasKey("Id");
 
-                    b.ToTable("FailedTasks");
+                    b.HasIndex("TaskName")
+                        .HasDatabaseName("idx_failed_tasks_task_name");
+
+                    b.HasIndex("Timestamp")
+                        .HasDatabaseName("idx_failed_tasks_timestamp");
+
+                    b.ToTable("failed_tasks", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.FiberyEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("EntityType")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("FiberyId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<JsonDocument>("RawData")
                         .HasColumnType("jsonb");
 
                     b.HasKey("Id");
 
-                    b.ToTable("FiberyEntities");
+                    b.HasIndex("EntityType")
+                        .HasDatabaseName("idx_fibery_entities_entity_type");
+
+                    b.HasIndex("FiberyId", "EntityType")
+                        .IsUnique()
+                        .HasDatabaseName("idx_fibery_entities_fibery_id_type");
+
+                    b.ToTable("fibery_entities", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Scrobble", b =>
@@ -145,30 +185,41 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Platform")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(50)");
 
                     b.Property<DateTimeOffset>("ScrobbledAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamptz");
 
                     b.Property<int>("TrackId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Platform")
+                        .HasDatabaseName("idx_scrobbles_platform");
+
+                    b.HasIndex("ScrobbledAt")
+                        .HasDatabaseName("idx_scrobbles_scrobbled_at");
+
                     b.HasIndex("TrackId");
 
-                    b.ToTable("Scrobbles");
+                    b.HasIndex("TrackId", "ScrobbledAt")
+                        .IsUnique()
+                        .HasDatabaseName("idx_scrobbles_timestamp");
+
+                    b.ToTable("scrobbles", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.SourceRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("EntityType")
                         .IsRequired()
@@ -183,7 +234,17 @@ namespace CSharpScripts.src.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SourceRecords");
+                    b.HasIndex("EntityType")
+                        .HasDatabaseName("idx_source_records_entity_type");
+
+                    b.HasIndex("SourceId")
+                        .HasDatabaseName("idx_source_records_source_id");
+
+                    b.HasIndex("SourceId", "EntityType")
+                        .IsUnique()
+                        .HasDatabaseName("idx_source_records_source_entity_type");
+
+                    b.ToTable("source_records", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Track", b =>
@@ -192,7 +253,7 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AlbumId")
                         .HasColumnType("integer");
@@ -213,7 +274,15 @@ namespace CSharpScripts.src.Data.Migrations
 
                     b.HasIndex("ArtistId");
 
-                    b.ToTable("Tracks");
+                    b.HasIndex("Title")
+                        .HasDatabaseName("idx_tracks_title_trgm")
+                        .HasFilter("true");
+
+                    b.HasIndex("ArtistId", "Title")
+                        .IsUnique()
+                        .HasDatabaseName("idx_tracks_artist_title");
+
+                    b.ToTable("tracks", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Video", b =>
@@ -222,26 +291,50 @@ namespace CSharpScripts.src.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PlaylistId")
+                    b.Property<string>("ChannelName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<JsonDocument>("Metadata")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("SyncedAt")
+                        .HasColumnType("timestamptz");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("YoutubeId")
+                    b.Property<DateOnly?>("UploadDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Videos");
+                    b.HasIndex("ChannelName")
+                        .HasDatabaseName("idx_videos_channel");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("idx_videos_title_trgm")
+                        .HasFilter("true");
+
+                    b.HasIndex("UploadDate")
+                        .HasDatabaseName("idx_videos_upload_date");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("idx_videos_url");
+
+                    b.ToTable("videos", (string)null);
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Album", b =>
@@ -275,7 +368,7 @@ namespace CSharpScripts.src.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
-                        .WithMany()
+                        .WithMany("Tracks")
                         .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -293,6 +386,8 @@ namespace CSharpScripts.src.Data.Migrations
             modelBuilder.Entity("CSharpScripts.Data.Entities.Artist", b =>
                 {
                     b.Navigation("Albums");
+
+                    b.Navigation("Tracks");
                 });
 
             modelBuilder.Entity("CSharpScripts.Data.Entities.Track", b =>

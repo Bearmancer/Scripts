@@ -318,8 +318,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 		var type = r.ReleaseType.ToLowerInvariant();
 
-		return type is "recording" or "track" or "single"
-			&& r.Format?.Contains("Single") != true;
+		return type is "recording" or "track" or "single" && r.Format?.Contains("Single") != true;
 	}
 
 	private static int CalculateRelevanceScore(string query, SearchResult r)
@@ -619,11 +618,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			foreach (WorkSummary work in works)
 			{
 				var duration =
-					work.TotalDuration > TimeSpan.Zero
-						? work.TotalDuration.ToString(@"m\:ss")
-						: "";
-				var soloists =
-					work.Soloists.Count > 0 ? Join(", ", work.Soloists) : "";
+					work.TotalDuration > TimeSpan.Zero ? work.TotalDuration.ToString(@"m\:ss") : "";
+				var soloists = work.Soloists.Count > 0 ? Join(", ", work.Soloists) : "";
 
 				table.AddRow(
 					work.Disc.ToString(),
@@ -753,10 +749,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			if (!LoggedWorkHierarchyWarnings.Add(missing))
 				continue;
 
-			Console.Warning(
-				"Work hierarchy missing for '{0}' - tracks not grouped",
-				missing
-			);
+			Console.Warning("Work hierarchy missing for '{0}' - tracks not grouped", missing);
 		}
 	}
 
@@ -861,9 +854,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 			var year = t.RecordingYear;
 			if (!IsNullOrEmpty(t.Composer))
-				parts.Add(
-					Console.Combine(Console.Composer(t.Composer), Console.Year(year))
-				);
+				parts.Add(Console.Combine(Console.Composer(t.Composer), Console.Year(year)));
 			else if (year is { } y)
 				parts.Add($"({y})");
 
@@ -989,10 +980,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		if (cancelled)
 		{
 			Console.Warning("Enrichment interrupted at {0}/{1} tracks", completed, total);
-			Console.Info(
-				"Run the same command again to resume from track {0}",
-				completed + 1
-			);
+			Console.Info("Run the same command again to resume from track {0}", completed + 1);
 			Logger.Interrupted($"{completed}/{total} tracks");
 		}
 		else

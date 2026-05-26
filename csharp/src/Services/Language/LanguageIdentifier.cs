@@ -2,19 +2,21 @@
 
 internal static class LanguageIdentifier
 {
-	private static Lazy<RankedLanguageIdentifier?> Detector { get; } =
+	private static Lazy<Lingua.LanguageDetector?> Detector { get; } =
 		new(() =>
 		{
-			var exeDir = AppContext.BaseDirectory;
-			var profilePath = Path.Combine(path1: exeDir, path2: "Core14.profile.xml");
-
-			if (!File.Exists(path: profilePath))
+			try
 			{
-				Log.Warning(messageTemplate: "Language profile not found: {Path}", profilePath);
+				return Lingua.LanguageDetectorBuilder.FromAllLanguages().Build();
+			}
+			catch (Exception ex)
+			{
+				Log.Warning(
+					messageTemplate: "Failed to initialize Lingua language detector: {Error}",
+					ex.Message
+				);
 				return null;
 			}
-
-			return new RankedLanguageIdentifierFactory().Load(inputFilePath: profilePath);
 		});
 
 	public static string? Detect(string text)
@@ -22,17 +24,28 @@ internal static class LanguageIdentifier
 		if (IsNullOrWhiteSpace(value: text) || text.Length < 15)
 			return null;
 
-		Tuple<LanguageInfo, double>? result = Detector.Value?.Identify(text: text).FirstOrDefault();
+		try
+		{
+			var detector = Detector.Value;
+			if (detector is null)
+				return null;
 
-		return result?.Item1.Iso639_3;
+			var language = detector.DetectLanguageOf(text: text);
+			return language?.IsoCode639_1;
+		}
+		catch (Exception ex)
+		{
+			Log.Warning(messageTemplate: "Language detection failed: {Error}", ex.Message);
+			return null;
+		}
 	}
 
 	public static bool IsEnglish(string text) =>
-		Detect(text: text)?.EqualsIgnoreCase(other: "eng") == true;
+		Detect(text: text)?.EqualsIgnoreCase(other: "en") == true;
 
 	public static bool RequiresTranslation(string text)
 	{
 		var lang = Detect(text: text);
-		return lang is { } && !lang.EqualsIgnoreCase(other: "eng");
+		return lang is { } && !lang.EqualsIgnoreCase(other: "en");
 	}
 }

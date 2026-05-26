@@ -6,10 +6,14 @@ namespace CSharpScripts.Services.Language;
 
 internal static class AzureTranslationService
 {
-	private static readonly TextTranslationClient? Client =
-		string.IsNullOrWhiteSpace(Secrets.AzureTranslatorEndpoint)
-			? null
-			: new TextTranslationClient(new DefaultAzureCredential(), new Uri(Secrets.AzureTranslatorEndpoint));
+	private static readonly TextTranslationClient? Client = string.IsNullOrWhiteSpace(
+		Secrets.AzureTranslatorEndpoint
+	)
+		? null
+		: new TextTranslationClient(
+			new DefaultAzureCredential(),
+			new Uri(Secrets.AzureTranslatorEndpoint)
+		);
 
 	internal static bool IsConfigured => Client is not null;
 
@@ -23,7 +27,12 @@ internal static class AzureTranslationService
 			return null;
 
 		Response<IReadOnlyList<TranslatedTextItem>> response = await Client
-			.TranslateAsync(targetLanguage: "en", [text], sourceLanguage: sourceLanguage, cancellationToken: ct)
+			.TranslateAsync(
+				targetLanguage: "en",
+				[text],
+				sourceLanguage: sourceLanguage,
+				cancellationToken: ct
+			)
 			.ConfigureAwait(continueOnCapturedContext: false);
 
 		TranslatedTextItem item = response.Value[0];
@@ -32,7 +41,10 @@ internal static class AzureTranslationService
 
 		return translatedText is null
 			? null
-			: new TranslationResult(Translation: translatedText, DetectedLanguage: detectedLanguage);
+			: new TranslationResult(
+				Translation: translatedText,
+				DetectedLanguage: detectedLanguage
+			);
 	}
 
 	internal static async Task<IReadOnlyList<TranslationResult>> TranslateBatchAsync(

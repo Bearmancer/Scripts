@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using MetaBrainz.Common;
 using MetaBrainz.MusicBrainz;
 using MetaBrainz.MusicBrainz.Interfaces.Browses;
@@ -187,7 +187,12 @@ internal sealed class MusicBrainzService(
 		CancellationToken ct = default
 	)
 	{
-		Log.Debug(messageTemplate: "SearchReleasesAsync entry {Artist} {Release} {Year}", artist, release, year);
+		Log.Debug(
+			messageTemplate: "SearchReleasesAsync entry {Artist} {Release} {Year}",
+			artist,
+			release,
+			year
+		);
 		var query = BuildQuery(
 			artist: artist,
 			release: release,
@@ -209,7 +214,8 @@ internal sealed class MusicBrainzService(
 					query: query,
 					limit: maxResults
 				);
-				List<SearchResult> result = results.Results.Select(r =>
+				List<SearchResult> result = results
+					.Results.Select(r =>
 					{
 						INameCredit? firstArtistCredit = r.Item.ArtistCredit?.FirstOrDefault();
 						IMedium? firstMedia = r.Item.Media?.FirstOrDefault();
@@ -233,8 +239,8 @@ internal sealed class MusicBrainzService(
 								? [.. genres.Select(g => g.Name).OfType<string>()]
 								: []
 						);
-					}
-				).ToList();
+					})
+					.ToList();
 				Log.Debug(messageTemplate: "SearchReleasesAsync exit {Count}", result.Count);
 				return result;
 			},
@@ -251,7 +257,11 @@ internal sealed class MusicBrainzService(
 		CancellationToken ct = default
 	)
 	{
-		Log.Debug(messageTemplate: "SearchFirstReleaseAsync entry {Artist} {Release}", artist, release);
+		Log.Debug(
+			messageTemplate: "SearchFirstReleaseAsync entry {Artist} {Release}",
+			artist,
+			release
+		);
 		List<SearchResult> results = await SearchReleasesAsync(
 			artist: artist,
 			release: release,
@@ -281,7 +291,8 @@ internal sealed class MusicBrainzService(
 					$"artist:\"{artist}\"",
 					limit: maxResults
 				);
-				List<SearchResult> result = results.Results.Select(r => new SearchResult(
+				List<SearchResult> result = results
+					.Results.Select(r => new SearchResult(
 						Source: MusicSource.MusicBrainz,
 						r.Item.Id.ToString(),
 						r.Item.Name ?? "",
@@ -294,8 +305,8 @@ internal sealed class MusicBrainzService(
 						Country: r.Item.Country,
 						Status: r.Item.Type,
 						Disambiguation: r.Item.Disambiguation
-					)
-				).ToList();
+					))
+					.ToList();
 				Log.Debug(messageTemplate: "SearchArtistsAsync exit {Count}", result.Count);
 				return result;
 			},
@@ -326,7 +337,8 @@ internal sealed class MusicBrainzService(
 			{
 				ISearchResults<ISearchResult<IReleaseGroup>> results =
 					await Query.FindReleaseGroupsAsync(query: query, limit: maxResults);
-				return results.Results.Select(r => new SearchResult(
+				return results
+					.Results.Select(r => new SearchResult(
 						Source: MusicSource.MusicBrainz,
 						r.Item.Id.ToString(),
 						r.Item.Title ?? "",
@@ -338,8 +350,8 @@ internal sealed class MusicBrainzService(
 						Score: r.Score,
 						Status: r.Item.PrimaryType,
 						Disambiguation: r.Item.Disambiguation
-					)
-				).ToList();
+					))
+					.ToList();
 			},
 			ct: ct
 		);
@@ -352,7 +364,11 @@ internal sealed class MusicBrainzService(
 		CancellationToken ct = default
 	)
 	{
-		Log.Debug(messageTemplate: "SearchRecordingsAsync entry {Artist} {Recording}", artist, recording);
+		Log.Debug(
+			messageTemplate: "SearchRecordingsAsync entry {Artist} {Recording}",
+			artist,
+			recording
+		);
 		List<string> parts = [];
 		if (!IsNullOrWhiteSpace(value: artist))
 			parts.Add($"artist:\"{artist}\"");
@@ -371,8 +387,9 @@ internal sealed class MusicBrainzService(
 					query: query,
 					limit: maxResults
 				);
-				List<MusicBrainzRecording> result = results.Results.Select(r => MusicBrainzMapper.MapRecordingFromSearch(r: r.Item)
-				).ToList();
+				List<MusicBrainzRecording> result = results
+					.Results.Select(r => MusicBrainzMapper.MapRecordingFromSearch(r: r.Item))
+					.ToList();
 				Log.Debug(messageTemplate: "SearchRecordingsAsync exit {Count}", result.Count);
 				return result;
 			},
@@ -391,14 +408,14 @@ internal sealed class MusicBrainzService(
 				IRelease? release = await Query.LookupReleaseAsync(
 					mbid: releaseId,
 					Include.ArtistCredits
-					| Include.Recordings
-					| Include.Media
-					| Include.Labels
-					| Include.ArtistRelationships
-					| Include.Annotation
-					| Include.Tags
-					| Include.Genres
-					| Include.ReleaseGroups
+						| Include.Recordings
+						| Include.Media
+						| Include.Labels
+						| Include.ArtistRelationships
+						| Include.Annotation
+						| Include.Tags
+						| Include.Genres
+						| Include.ReleaseGroups
 				);
 				if (release is null)
 					return null;
@@ -423,11 +440,11 @@ internal sealed class MusicBrainzService(
 				IReleaseGroup? rg = await Query.LookupReleaseGroupAsync(
 					mbid: releaseGroupId,
 					Include.ArtistCredits
-					| Include.Releases
-					| Include.Annotation
-					| Include.Ratings
-					| Include.Tags
-					| Include.Genres
+						| Include.Releases
+						| Include.Annotation
+						| Include.Ratings
+						| Include.Tags
+						| Include.Genres
 				);
 				if (rg is null)
 					return null;
@@ -471,10 +488,10 @@ internal sealed class MusicBrainzService(
 				IArtist? artist = await Query.LookupArtistAsync(
 					mbid: artistId,
 					Include.Aliases
-					| Include.Annotation
-					| Include.Ratings
-					| Include.Tags
-					| Include.Genres
+						| Include.Annotation
+						| Include.Ratings
+						| Include.Tags
+						| Include.Genres
 				);
 				if (artist is null)
 					return null;
@@ -500,14 +517,14 @@ internal sealed class MusicBrainzService(
 				IRecording? rec = await Query.LookupRecordingAsync(
 					mbid: recordingId,
 					Include.ArtistCredits
-					| Include.Isrcs
-					| Include.Annotation
-					| Include.Ratings
-					| Include.Tags
-					| Include.Genres
-					| Include.WorkRelationships
-					| Include.ArtistRelationships
-					| Include.PlaceRelationships
+						| Include.Isrcs
+						| Include.Annotation
+						| Include.Ratings
+						| Include.Tags
+						| Include.Genres
+						| Include.WorkRelationships
+						| Include.ArtistRelationships
+						| Include.PlaceRelationships
 				);
 				if (rec is null)
 					return null;
@@ -548,7 +565,10 @@ internal sealed class MusicBrainzService(
 						composerName ??= artist.Name;
 					else if (
 						relType is "parts"
-						&& rel.Direction.EqualsIgnoreCase(other: "backward", comparisonType: Ordinal)
+						&& rel.Direction.EqualsIgnoreCase(
+							other: "backward",
+							comparisonType: Ordinal
+						)
 						&& rel.Work is { } parentWork
 					)
 						parentWorkName = parentWork.Title;
@@ -598,9 +618,13 @@ internal sealed class MusicBrainzService(
 					limit: maxResults,
 					inc: Include.ArtistCredits | Include.Isrcs
 				);
-				List<MusicBrainzRecording> result = results.Results.Select(selector: MusicBrainzMapper.MapRecordingFromSearch
-				).ToList();
-				Log.Debug(messageTemplate: "BrowseArtistRecordingsAsync exit {Count}", result.Count);
+				List<MusicBrainzRecording> result = results
+					.Results.Select(selector: MusicBrainzMapper.MapRecordingFromSearch)
+					.ToList();
+				Log.Debug(
+					messageTemplate: "BrowseArtistRecordingsAsync exit {Count}",
+					result.Count
+				);
 				return result;
 			},
 			ct: ct
@@ -609,24 +633,22 @@ internal sealed class MusicBrainzService(
 
 	private static ReleaseCredits ExtractReleaseCredits(MusicBrainzRelease release)
 	{
-		List<MusicBrainzCredit> credits = release.Credits.Where(c => !MusicBrainzMapper.ExcludedRoles.Contains(item: c.Role)
-		).ToList();
+		List<MusicBrainzCredit> credits = release
+			.Credits.Where(c => !MusicBrainzMapper.ExcludedRoles.Contains(item: c.Role))
+			.ToList();
 
 		return new ReleaseCredits(
 			Conductor: credits
-				.FirstOrDefault(c => MusicBrainzMapper.ConductorRoles.Contains(item: c.Role)
-				)
+				.FirstOrDefault(c => MusicBrainzMapper.ConductorRoles.Contains(item: c.Role))
 				?.Name,
 			Orchestra: credits
-				.FirstOrDefault(c => MusicBrainzMapper.OrchestraRoles.Contains(item: c.Role)
-				)
+				.FirstOrDefault(c => MusicBrainzMapper.OrchestraRoles.Contains(item: c.Role))
 				?.Name,
 			[
-				.. credits.Where(c =>
-					MusicBrainzMapper.SoloistRoles.Any(r => c.Role.Contains(value: r)
-					)
-				).Select(c => c.Name
-				).Distinct()
+				.. credits
+					.Where(c => MusicBrainzMapper.SoloistRoles.Any(r => c.Role.Contains(value: r)))
+					.Select(c => c.Name)
+					.Distinct(),
 			],
 			Composer: release.Artist
 		);
@@ -689,7 +711,11 @@ internal sealed class MusicBrainzService(
 
 	public async Task<TrackInfo> EnrichTrackAsync(TrackInfo track, CancellationToken ct = default)
 	{
-		Log.Debug(messageTemplate: "EnrichTrackAsync entry {Title} {RecordingId}", track.Title, track.RecordingId);
+		Log.Debug(
+			messageTemplate: "EnrichTrackAsync entry {Title} {RecordingId}",
+			track.Title,
+			track.RecordingId
+		);
 		if (IsNullOrEmpty(value: track.RecordingId))
 		{
 			Log.Debug(messageTemplate: "EnrichTrackAsync exit (no recording ID)");
@@ -754,7 +780,7 @@ internal sealed class MusicBrainzService(
 			Conductor = recording.Conductor ?? track.Conductor,
 			Orchestra = recording.Orchestra ?? track.Orchestra,
 			RecordingVenue = recording.RecordingVenue ?? track.RecordingVenue,
-			RecordingYear = recording.RecordingDate?.Year ?? track.RecordingYear
+			RecordingYear = recording.RecordingDate?.Year ?? track.RecordingYear,
 		};
 
 		List<string> missingFields = enriched.GetMissingFields();

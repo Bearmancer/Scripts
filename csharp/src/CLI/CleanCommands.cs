@@ -17,10 +17,7 @@ public sealed class CleanLocalCommand : Command<CleanLocalCommand.Settings>
 
 		if (!cleanLastFm && !cleanYouTube)
 		{
-			Console.Warning(
-				"Invalid service: {0}. Use: yt, lastfm, or all",
-				settings.Service
-			);
+			Console.Warning("Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
 			return 1;
 		}
 
@@ -74,10 +71,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 
 		if (!purgeLastFm && !purgeYouTube)
 		{
-			Console.Warning(
-				"Invalid service: {0}. Use: yt, lastfm, or all",
-				settings.Service
-			);
+			Console.Warning("Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
 			return 1;
 		}
 

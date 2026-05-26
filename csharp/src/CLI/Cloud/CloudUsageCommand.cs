@@ -5,7 +5,7 @@ namespace CSharpScripts.CLI.Cloud;
 
 internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -20,7 +20,9 @@ internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Set
 					Ui.Warn(message: "AZURE_SUBSCRIPTION_ID is not set.");
 					Ui.Info(message: "To configure Azure access:");
 					Ui.Info(message: "  1. Run: az login");
-					Ui.Info(message: "  2. Set: $env:AZURE_SUBSCRIPTION_ID = '<your-subscription-id>'");
+					Ui.Info(
+						message: "  2. Set: $env:AZURE_SUBSCRIPTION_ID = '<your-subscription-id>'"
+					);
 					Ui.Info(
 						message: "  3. Find your subscription ID with: az account show --query id -o tsv"
 					);
@@ -55,8 +57,12 @@ internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Set
 	private static void RenderReport(AzureUsageReport report)
 	{
 		AnsiConsole.WriteLine();
-		AnsiConsole.MarkupLine($"[bold]Azure Usage — {Markup.Escape(text: report.BillingPeriod)}[/]");
-		AnsiConsole.MarkupLine($"[dim]Subscription: {Markup.Escape(text: report.SubscriptionId)}[/]");
+		AnsiConsole.MarkupLine(
+			$"[bold]Azure Usage — {Markup.Escape(text: report.BillingPeriod)}[/]"
+		);
+		AnsiConsole.MarkupLine(
+			$"[dim]Subscription: {Markup.Escape(text: report.SubscriptionId)}[/]"
+		);
 		AnsiConsole.WriteLine();
 
 		if (report.Services.Count == 0)
@@ -80,7 +86,8 @@ internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Set
 				: $"[yellow]{usage.Currency} {usage.Cost:F4}[/]";
 			var freeTierDisplay = isFree ? "[green]✔[/]" : "[dim]—[/]";
 
-			table.AddRow(Markup.Escape(text: usage.ServiceName),
+			table.AddRow(
+				Markup.Escape(text: usage.ServiceName),
 				Markup.Escape(text: usage.Meter),
 				costDisplay,
 				freeTierDisplay
@@ -99,7 +106,5 @@ internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Set
 		AnsiConsole.WriteLine();
 	}
 
-	internal sealed class Settings : CommandSettings
-	{
-	}
+	internal sealed class Settings : CommandSettings { }
 }

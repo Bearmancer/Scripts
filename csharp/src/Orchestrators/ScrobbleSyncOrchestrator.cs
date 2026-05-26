@@ -35,7 +35,12 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 			fileName: StateManager.LastFmSyncFile,
 			ct: ct
 		);
-		return new ScrobbleSyncOrchestrator(lastFmService: lastFmService, state: state, forceFromDate: forceFromDate, ct: ct);
+		return new ScrobbleSyncOrchestrator(
+			lastFmService: lastFmService,
+			state: state,
+			forceFromDate: forceFromDate,
+			ct: ct
+		);
 	}
 
 	internal async Task ExecuteAsync()
@@ -141,7 +146,12 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 				state: State,
 				(page, total, elapsed, oldest, newest) =>
 				{
-					State = State.WithUpdate(page: page, total: total, oldest: oldest, newest: newest);
+					State = State.WithUpdate(
+						page: page,
+						total: total,
+						oldest: oldest,
+						newest: newest
+					);
 					saveStateCounter++;
 
 					if (saveStateCounter >= saveStateInterval)
@@ -166,11 +176,19 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		}
 
 		if (Ct.IsCancellationRequested)
-			Ui.Warn(message: "Stopped at page {0} ({1} scrobbles)", State.LastPage, State.TotalFetched);
+			Ui.Warn(
+				message: "Stopped at page {0} ({1} scrobbles)",
+				State.LastPage,
+				State.TotalFetched
+			);
 	}
 
 	private void SaveState() =>
-		_ = StateManager.SaveStateAsync(fileName: StateManager.LastFmSyncFile, state: State, ct: Ct);
+		_ = StateManager.SaveStateAsync(
+			fileName: StateManager.LastFmSyncFile,
+			state: State,
+			ct: Ct
+		);
 
 	internal Task SaveStateAsync() =>
 		StateManager.SaveStateAsync(fileName: StateManager.LastFmSyncFile, state: State, ct: Ct);

@@ -1,11 +1,11 @@
-﻿namespace CSharpScripts.Services.Music;
+namespace CSharpScripts.Services.Music;
 
 internal enum MusicGenreCategory
 {
 	Classical,
 	Pop,
 	Jazz,
-	Unknown
+	Unknown,
 }
 
 internal static class GenreDetector
@@ -26,7 +26,7 @@ internal static class GenreDetector
 			"early music",
 			"renaissance",
 			"medieval",
-			"modern classical"
+			"modern classical",
 		],
 		comparer: StringComparer.OrdinalIgnoreCase
 	);
@@ -85,7 +85,7 @@ internal static class GenreDetector
 			[key: MusicGenreCategory.Classical] = 0,
 			[key: MusicGenreCategory.Pop] = 0,
 			[key: MusicGenreCategory.Jazz] = 0,
-			[key: MusicGenreCategory.Unknown] = 0
+			[key: MusicGenreCategory.Unknown] = 0,
 		};
 
 		foreach (RecordingInput record in records)

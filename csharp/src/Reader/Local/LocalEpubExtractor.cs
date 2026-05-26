@@ -55,7 +55,9 @@ internal sealed partial class LocalEpubExtractor(
 		{
 			Title = title,
 			BodyHtml = bodyHtml,
-			SourceUrl = new Uri($"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}")
+			SourceUrl = new Uri(
+				$"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}"
+			),
 		};
 	}
 
@@ -87,11 +89,9 @@ internal sealed partial class LocalEpubExtractor(
 		Ui.Info(
 			$"[{pageNumber}/{totalPages}] Google Document AI: {name} ({bytes.Length:N0} bytes)..."
 		);
-		return await new DocumentAiOcrProvider(processorName: Secrets.GoogleDocumentAiProcessorName).OcrImageAsync(
-			imageBytes: bytes,
-			mimeType: mimeType,
-			ct: ct
-		);
+		return await new DocumentAiOcrProvider(
+			processorName: Secrets.GoogleDocumentAiProcessorName
+		).OcrImageAsync(imageBytes: bytes, mimeType: mimeType, ct: ct);
 	}
 
 	private static List<(string Name, byte[] Bytes)> ExtractImages(string epubPath)
@@ -99,10 +99,10 @@ internal sealed partial class LocalEpubExtractor(
 		using ZipArchive archive = ZipFile.OpenRead(archiveFileName: epubPath);
 		return
 		[
-			.. archive.Entries.Where(e => IsContentImage(fullName: e.FullName)).OrderBy(e => e.Name,
-				Comparer<string>.Create(comparison: CompareNatural)
-			).Select(selector: ReadEntry
-			)
+			.. archive
+				.Entries.Where(e => IsContentImage(fullName: e.FullName))
+				.OrderBy(e => e.Name, Comparer<string>.Create(comparison: CompareNatural))
+				.Select(selector: ReadEntry),
 		];
 	}
 

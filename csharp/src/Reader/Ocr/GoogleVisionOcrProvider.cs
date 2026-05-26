@@ -20,7 +20,9 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 		(pageCount, chunks) = SplitIntoChunks(pdfBytes: pdfBytes);
 		Ui.Info($"Vision: processing {chunks.Count} chunk(s) for {pageCount} pages.");
 
-		var results = await Task.WhenAll(chunks.Select(chunk => OcrChunkAsync(client: client, chunkBytes: chunk, ct: ct)));
+		var results = await Task.WhenAll(
+			chunks.Select(chunk => OcrChunkAsync(client: client, chunkBytes: chunk, ct: ct))
+		);
 
 		return Join(separator: "", value: results);
 	}
@@ -36,9 +38,9 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 			InputConfig = new InputConfig
 			{
 				Content = ByteString.CopyFrom(bytes: chunkBytes),
-				MimeType = "application/pdf"
+				MimeType = "application/pdf",
 			},
-			Features = { new Feature { Type = Feature.Types.Type.DocumentTextDetection } }
+			Features = { new Feature { Type = Feature.Types.Type.DocumentTextDetection } },
 		};
 
 		BatchAnnotateFilesRequest batchRequest = new() { Requests = { request } };

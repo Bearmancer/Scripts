@@ -14,7 +14,9 @@ internal sealed class PostgresService(IDbContextFactory<ScriptsDbContext> contex
 		CancellationToken ct = default
 	)
 	{
-		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(cancellationToken: ct);
+		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(
+			cancellationToken: ct
+		);
 
 		await context
 			.Scrobbles.Where(s => s.Id == id)
@@ -33,7 +35,9 @@ internal sealed class PostgresService(IDbContextFactory<ScriptsDbContext> contex
 		CancellationToken ct = default
 	)
 	{
-		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(cancellationToken: ct);
+		await using ScriptsDbContext context = await contextFactory.CreateDbContextAsync(
+			cancellationToken: ct
+		);
 
 		context.Tracks.AddRange(entities: tracks);
 		await context.SaveChangesAsync(cancellationToken: ct);

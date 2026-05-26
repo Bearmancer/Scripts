@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Services.Music;
+namespace CSharpScripts.Services.Music;
 
 internal static class RecordingEnrichmentService
 {

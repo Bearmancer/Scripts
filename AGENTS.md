@@ -1,7 +1,7 @@
 # Scripts Repository — Agent Init Guide
 
 > **This is the single source of truth for repo context, conventions, and navigation.**
-> Read this file first. Then open `.gemini/plans/INDEX.md` to find your place in the plan.
+> Read this file first. Then open `AI/plans/INDEX.md` to find your place in the plan.
 
 ---
 
@@ -15,7 +15,7 @@ Local PostgreSQL 18 database managed via Docker Compose.
 
 ```
 Old Pipeline: API → .NET Object → JSON → CSV → Google Sheets
-New Pipeline: API → .NET 10 Service → Local PostgreSQL 18 ($PGCONNSTR) → Neon (logical replication)
+New Pipeline: API → .NET 10 Service → Local PostgreSQL 18 ($PGCONNSTR) → OCI Object Storage (weekly pg_dump + daily WAL backup)
 ```
 
 Google Sheets is **retained for backward compatibility** during the migration.
@@ -30,9 +30,9 @@ It will be deprecated in a future phase after EF Core is fully operational and v
 | Shell          | PowerShell Core / Windows PowerShell                |
 | C#             | .NET 10 SDK, EF Core 10, Npgsql 10                  |
 | Python         | Python 3.12+, managed by `uv`                       |
-| Database       | PostgreSQL 18 (local Docker) + Neon (cloud replica) |
+| Database       | PostgreSQL 18 (local Docker) + OCI Object Storage (backup/WAL) |
 | Infrastructure | Docker Compose                                      |
-| Test           | TUnit + FluentAssertions + Testcontainers           |
+| Test           | TUnit + FluentAssertions           |
 | CLI            | Spectre.Console + Spectre.Console.Cli               |
 | Logging        | Serilog (CompactJsonFormatter → `~/.cache/logs/scripts/`) |
 | Auth           | Google OAuth 2.0 (`Google.Apis.Auth`)               |
@@ -48,7 +48,6 @@ It will be deprecated in a future phase after EF Core is fully operational and v
 - PowerShell 7+ (`pwsh --version`)
 
 ### Database (PostgreSQL 18 — Docker Compose)
-
 ```powershell
 # Start database
 docker compose up -d
@@ -167,22 +166,22 @@ Core → (nothing)
 
 | Table       | Key Columns                                          |
 | ----------- | ---------------------------------------------------- |
-| `artists`   | `id UUID PK`, `name TEXT`, `metadata JSONB`          |
-| `albums`    | `id UUID PK`, `artist_id FK`, `title`, `release_date DATE` |
-| `tracks`    | `id UUID PK`, `album_id FK`, `artist_id FK`, `title`, `duration INT` |
-| `scrobbles` | `id BIGINT PK`, `track_id FK`, `timestamp TIMESTAMPTZ`, `platform ENUM` |
-| `videos`    | `id UUID PK`, `playlist_id`, `title`, `youtube_id`   |
+| `artists`   | `Id INT PK`, `Name TEXT`, `Metadata JSONB`           |
+| `albums`    | `Id INT PK`, `ArtistId INT FK`, `Title TEXT`, `ReleaseDate DATE` |
+| `tracks`    | `Id INT PK`, `AlbumId INT FK`, `ArtistId INT FK`, `Title TEXT`, `DurationSeconds INT?` |
+| `scrobbles` | `Id BIGINT PK`, `TrackId INT FK`, `ScrobbledAt TIMESTAMPTZ`, `Platform VARCHAR(50)` |
+| `videos`    | `Id INT PK`, `Url TEXT`, `Title TEXT`, `Description TEXT`, `ChannelName TEXT`, `UploadDate DATE`, `SyncedAt TIMESTAMPTZ`, `Metadata JSONB` |
 
 ### Management Domain
 
 | Table            | Key Columns                                       |
 | ---------------- | ------------------------------------------------- |
-| `execution_logs` | `id SERIAL`, `timestamp`, `session_id`, `payload JSONB`, `exit_code` |
-| `failed_tasks`   | `id UUID`, `operation`, `error`, `created_at`    |
+| `execution_logs` | `Id INT PK`, `Timestamp TIMESTAMPTZ`, `SessionId TEXT`, `Payload JSONB`, `ExitCode INT` |
+| `failed_tasks`   | `Id UUID PK`, `TaskName TEXT`, `ErrorMessage TEXT`, `Timestamp TIMESTAMPTZ` |
+| `fibery_entities`| `Id UUID PK`, `FiberyId VARCHAR(255)`, `EntityType VARCHAR(100)`, `RawData JSONB` |
+| `source_records` | `Id UUID PK`, `SourceId TEXT`, `EntityType TEXT`, `RawData JSONB` |
 
-**Schema files:**
-- Initial: `.gemini/docs/references/init_schema.sql`
-- Canonical: `.gemini/docs/references/schema.sql`
+**Schema authority:** Actual entity files in `csharp/src/Data/Entities/*.cs` take precedence over this table. EF Core 10 migrations via `dotnet ef database update`. No manual SQL files.
 
 ---
 
@@ -258,11 +257,24 @@ Every agent task MUST follow these rules. No exceptions.
 ## 10. Plan Navigation
 
 ```
-.gemini/plans/INDEX.md            ← Start here for plan status and CPM graph
-.gemini/plans/tier-1-ef-migration/   ← Database foundation (critical path blocker)
-.gemini/plans/tier-2-cpm-split/      ← CPM + 8-project split (depends on T1 green)
-.gemini/plans/tier-3-domain/         ← Domain isolation + naming (depends on T2 green)
-.gemini/plans/tier-4-hardening/      ← Integration, quality, DI (depends on T3 green)
+AI/plans/INDEX.md                  ← Start here for plan status and CPM graph
+AI/plans/CURRENT_STATUS.md         ← Current test counts, blockers, next action
+.kiro/specs/ef-core-10-migration-continuation/  ← Kiro spec wrapper (requirements, design, tasks)
+AI/plans/tier-1-ef-migration/      ← Database foundation (critical path blocker)
+AI/plans/tier-2-cpm-split/         ← CPM + 8-project split (depends on T1 green)
+AI/plans/tier-3-domain/            ← Domain isolation + naming (depends on T2 green)
+AI/plans/tier-4-hardening/         ← Integration, quality, DI (depends on T3 green)
 ```
 
 Each tier must reach **sign-off** (all tests green, `dotnet build` clean) before the next tier begins.
+
+---
+
+## 11. Current Status
+
+**Last Updated:** 2026-05-25  
+**Test Status:** 78 passing, 53 failing (60% pass rate)  
+**Tier 1 Progress:** 60% complete  
+**Blocker:** Compiled model out of sync
+
+See `AI/plans/CURRENT_STATUS.md` for detailed status, blockers, and next action.

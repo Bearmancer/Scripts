@@ -5,7 +5,7 @@ namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicBrainzSearchCommand : BaseAsyncCommand<MusicBrainzSearchCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken

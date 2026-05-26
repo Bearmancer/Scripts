@@ -14,15 +14,15 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 	private readonly DocumentIntelligenceClient Client;
 	private readonly string ModelId;
 
-	internal AzureDocumentIntelligenceOcrProvider(
-		string endpoint,
-		string? modelId = null
-	)
+	internal AzureDocumentIntelligenceOcrProvider(string endpoint, string? modelId = null)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(argument: endpoint);
 
-		Client = new DocumentIntelligenceClient(new Uri(uriString: endpoint), new DefaultAzureCredential());
-		
+		Client = new DocumentIntelligenceClient(
+			new Uri(uriString: endpoint),
+			new DefaultAzureCredential()
+		);
+
 		ModelId = IsNullOrWhiteSpace(value: modelId) ? "prebuilt-layout" : modelId;
 	}
 
@@ -51,10 +51,10 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 	) =>
 		new(
 			options?.Endpoint
-			?? Secrets.AzureDocumentIntelligenceEndpoint
-			?? throw new InvalidOperationException(
-				message: "Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
-			),
+				?? Secrets.AzureDocumentIntelligenceEndpoint
+				?? throw new InvalidOperationException(
+					message: "Azure Document Intelligence endpoint is not set. Pass --azure-docintel-endpoint or set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT."
+				),
 			options?.ModelId ?? Secrets.AzureDocumentIntelligenceModelId
 		);
 
@@ -62,9 +62,9 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 	{
 		List<string> bodyBlocks = new(result.Pages.Count * 4);
 		var skippedCount = 0;
-		Dictionary<int, float> pageHeights = result.Pages.Where(static page => page.Height is > 0).ToDictionary(page => page.PageNumber,
-			page => page.Height!.Value
-		);
+		Dictionary<int, float> pageHeights = result
+			.Pages.Where(static page => page.Height is > 0)
+			.ToDictionary(page => page.PageNumber, page => page.Height!.Value);
 
 		if (result.Paragraphs.Count > 0)
 		{
@@ -82,7 +82,10 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 				bodyBlocks.Add(OcrTextCleanup.CleanBlockText(raw: paragraph.Content));
 			}
 
-			return new DocumentPageResult(BodyBlocks: bodyBlocks, SkippedHeadersFooters: skippedCount);
+			return new DocumentPageResult(
+				BodyBlocks: bodyBlocks,
+				SkippedHeadersFooters: skippedCount
+			);
 		}
 
 		foreach (DocumentPage page in result.Pages)
@@ -133,7 +136,10 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 
 		foreach (BoundingRegion region in paragraph.BoundingRegions)
 		{
-			var pageHeight = pageHeights.TryGetValue(key: region.PageNumber, out var knownPageHeight)
+			var pageHeight = pageHeights.TryGetValue(
+				key: region.PageNumber,
+				out var knownPageHeight
+			)
 				? knownPageHeight
 				: (float?)null;
 			if (IsHeaderOrFooter(polygon: region.Polygon, pageHeight: pageHeight))
@@ -176,7 +182,4 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 	}
 }
 
-internal sealed record AzureDocumentIntelligenceOptions(
-	string? Endpoint,
-	string? ModelId
-);
+internal sealed record AzureDocumentIntelligenceOptions(string? Endpoint, string? ModelId);

@@ -6,8 +6,9 @@ namespace CSharpScripts.Data.Entities;
 /// </summary>
 public sealed class FailedTask
 {
-    public Guid Id { get; set; }
-    public string Operation { get; set; } = string.Empty;
-    public string ErrorMessage { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
+	public Guid Id { get; set; }
+	public string TaskName { get; set; } = string.Empty;
+	public string ErrorMessage { get; set; } = string.Empty;
+	public DateTimeOffset Timestamp { get; set; }
 }
+

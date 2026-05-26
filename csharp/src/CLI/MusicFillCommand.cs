@@ -332,11 +332,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 
 		tasks.Add(async () =>
 		{
-			List<SearchResult> mbResults = await mbService.SearchAsync(
-				query,
-				maxResults: 5,
-				ct
-			);
+			List<SearchResult> mbResults = await mbService.SearchAsync(query, maxResults: 5, ct);
 			ExtractSuggestions(
 				results: mbResults,
 				record: record,

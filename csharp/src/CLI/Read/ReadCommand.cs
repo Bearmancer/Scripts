@@ -7,7 +7,7 @@ namespace CSharpScripts.CLI.Read;
 
 internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -58,7 +58,9 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					)
 				)
 				{
-					var isJstor = settings.Source.ContainsIgnoreCase(substring: "jstor.org/stable/");
+					var isJstor = settings.Source.ContainsIgnoreCase(
+						substring: "jstor.org/stable/"
+					);
 					Ui.Info(
 						isJstor
 							? "JSTOR article detected — using PDF-based extraction."

@@ -88,8 +88,7 @@ internal sealed record MusicBrainzRelease(
 	string? Annotation
 )
 {
-	public List<MusicBrainzTrack> Tracks =>
-		field ??= [.. Media.SelectMany(m => m.Tracks)];
+	public List<MusicBrainzTrack> Tracks => field ??= [.. Media.SelectMany(m => m.Tracks)];
 }
 
 internal sealed record MusicBrainzReleaseGroup(

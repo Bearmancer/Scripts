@@ -12,7 +12,7 @@ internal enum ServiceType
 	Sheets,
 	Music,
 	Read,
-	Cloud
+	Cloud,
 }
 
 internal static class Log
@@ -30,7 +30,7 @@ internal static class Log
 			[key: ServiceType.Music] = BuildServiceLogger(filename: "music.jsonl"),
 			[key: ServiceType.Sheets] = BuildServiceLogger(filename: "sheets.jsonl"),
 			[key: ServiceType.Read] = BuildServiceLogger(filename: "read.jsonl"),
-			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl")
+			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl"),
 		}.ToFrozenDictionary();
 	}
 #pragma warning restore CA1810
@@ -57,6 +57,9 @@ internal static class Log
 				rollingInterval: RollingInterval.Infinite,
 				shared: true
 			)
+			.WriteTo.Console(
+				outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+			)
 			.CreateLogger();
 
 	internal static Logger BuildAppLogger(string filename) =>
@@ -72,6 +75,9 @@ internal static class Log
 				rollingInterval: RollingInterval.Day,
 				retainedFileCountLimit: 30,
 				shared: true
+			)
+			.WriteTo.Console(
+				outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}"
 			)
 			.CreateLogger();
 
@@ -125,8 +131,8 @@ internal static class Log
 	public static void ApiResponse(string api, int statusCode, TimeSpan elapsed) =>
 		ActiveLogger.Write(
 			statusCode >= 500 ? LogEventLevel.Error
-			: statusCode >= 400 ? LogEventLevel.Warning
-			: LogEventLevel.Debug,
+				: statusCode >= 400 ? LogEventLevel.Warning
+				: LogEventLevel.Debug,
 			messageTemplate: "ApiResponse {Api} {StatusCode} in {ElapsedMs}ms",
 			propertyValue0: api,
 			propertyValue1: statusCode,

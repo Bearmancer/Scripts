@@ -6,5 +6,5 @@ internal enum PdfContentQuality
 	Poor,
 	Fair,
 	Good,
-	Excellent
+	Excellent,
 }

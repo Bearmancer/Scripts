@@ -11,9 +11,22 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 	{
 		b.ToTable(name: "videos");
 		b.Property(static v => v.Id).UseIdentityAlwaysColumn();
-		b.HasIndex(static v => v.Url).IsUnique();
-		b.HasIndex(static v => v.ChannelName);
-		b.HasIndex(static v => v.UploadDate);
+		b.Property(static v => v.Url).HasColumnType(typeName: "text").IsRequired();
+		b.Property(static v => v.Title).HasColumnType(typeName: "text").IsRequired();
+		b.Property(static v => v.Description).HasColumnType(typeName: "text");
+		b.Property(static v => v.ChannelName).HasColumnType(typeName: "text");
+		b.Property(static v => v.UploadDate).HasColumnType(typeName: "date");
+		b.Property(static v => v.SyncedAt).HasColumnType(typeName: "timestamptz");
 		b.Property(static v => v.Metadata).HasColumnType(typeName: "jsonb");
+		b.HasIndex(static v => v.Url).IsUnique().HasDatabaseName(name: "idx_videos_url");
+		b.HasIndex(static v => v.ChannelName).HasDatabaseName(name: "idx_videos_channel");
+		b.HasIndex(static v => v.UploadDate).HasDatabaseName(name: "idx_videos_upload_date");
+		b.HasIndex(static v => v.Title).HasDatabaseName(name: "idx_videos_title");
+
+		// Trigram GIN index for fuzzy search (requires pg_trgm extension)
+		b.HasIndex(static v => v.Title)
+			.HasDatabaseName(name: "idx_videos_title_trgm")
+			.HasFilter("true"); // Placeholder - actual trigram index via migration
 	}
 }
+

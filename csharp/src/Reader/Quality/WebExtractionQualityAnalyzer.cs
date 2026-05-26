@@ -9,14 +9,14 @@ internal static partial class WebExtractionQualityAnalyzer
 	[
 		"paywall",
 		"subscription-required",
-		"subscribe-to-read"
+		"subscribe-to-read",
 	];
 
 	private static readonly string[] BpcSuccessMarkers =
 	[
 		"bpc-paywall-removed",
 		"bpc-unlocked",
-		"data-bpc"
+		"data-bpc",
 	];
 
 	[GeneratedRegex(pattern: "<[^>]+>")]
@@ -73,7 +73,11 @@ internal static partial class WebExtractionQualityAnalyzer
 	}
 
 	public static WebExtractionQuality ClassifyArticleQuality(Article article) =>
-		ClassifyArticleQuality(completed: article.Completed, isReadable: article.IsReadable, charLength: article.Length);
+		ClassifyArticleQuality(
+			completed: article.Completed,
+			isReadable: article.IsReadable,
+			charLength: article.Length
+		);
 
 	public static WebExtractionQuality ClassifyArticleQuality(
 		bool completed,
@@ -126,7 +130,7 @@ internal static partial class WebExtractionQualityAnalyzer
 				$"Extraction quality: INCOMPLETE{charInfo} \u2014 SmartReader could not identify a readable article",
 			WebExtractionQuality.Unknown =>
 				"Extraction quality: UNKNOWN (no quality markers detected)",
-			_ => "Extraction quality: UNRECOGNIZED"
+			_ => "Extraction quality: UNRECOGNIZED",
 		};
 	}
 }

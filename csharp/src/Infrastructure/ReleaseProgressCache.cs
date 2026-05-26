@@ -14,10 +14,7 @@ internal static class ReleaseProgressCache
 		using StreamWriter writer = new(path, append: true);
 		using CsvWriter csv = new(
 			writer,
-			new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = writeHeader,
-			}
+			new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = writeHeader }
 		);
 
 		if (writeHeader)
@@ -38,10 +35,7 @@ internal static class ReleaseProgressCache
 		using StreamReader reader = new(path);
 		using CsvReader csv = new(
 			reader,
-			new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = true,
-			}
+			new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true }
 		);
 
 		return [.. csv.GetRecords<TrackInfo>()];

@@ -16,7 +16,7 @@ internal static class CalibreClient
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
-			CreateNoWindow = true
+			CreateNoWindow = true,
 		};
 		startInfo.ArgumentList.Add(item: "add");
 		startInfo.ArgumentList.Add(item: epubPath);

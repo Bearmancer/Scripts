@@ -17,7 +17,7 @@ internal static class EpubValidator
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
-			CreateNoWindow = true
+			CreateNoWindow = true,
 		};
 		startInfo.ArgumentList.Add(item: epubPath);
 
