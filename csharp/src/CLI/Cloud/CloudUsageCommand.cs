@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using CSharpScripts.Services.Cloud;
 
 namespace CSharpScripts.CLI.Cloud;

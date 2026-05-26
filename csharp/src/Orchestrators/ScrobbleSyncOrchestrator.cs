@@ -1,4 +1,4 @@
-﻿using CSharpScripts.Services.Sync.LastFm;
+using CSharpScripts.Services.Sync.LastFm;
 
 namespace CSharpScripts.Orchestrators;
 

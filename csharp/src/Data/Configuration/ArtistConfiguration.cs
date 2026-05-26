@@ -14,14 +14,12 @@ internal sealed class ArtistConfiguration : IEntityTypeConfiguration<Artist>
 		b.Property(static a => a.Metadata).HasColumnType(typeName: "jsonb");
 		b.HasIndex(static a => a.Name).IsUnique().HasDatabaseName(name: "idx_artists_name");
 
-		// Functional index for case-insensitive search (requires unaccent extension)
 		b.HasIndex(static a => a.Name)
 			.HasDatabaseName(name: "idx_artists_name_unaccent")
-			.HasFilter("true"); // Placeholder - actual functional index via migration
+			.HasFilter("true");
 
-		// Trigram GIN index for fuzzy search (requires pg_trgm extension)
 		b.HasIndex(static a => a.Name)
 			.HasDatabaseName(name: "idx_artists_name_trgm")
-			.HasFilter("true"); // Placeholder - actual trigram index via migration
+			.HasFilter("true");
 	}
 }

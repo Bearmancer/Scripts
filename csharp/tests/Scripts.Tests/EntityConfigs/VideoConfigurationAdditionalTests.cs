@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data;
 using CSharpScripts.Data.Entities;

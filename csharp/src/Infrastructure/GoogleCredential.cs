@@ -25,7 +25,6 @@ public static class GoogleCredentials
 	{
 		if (CachedCredential is not null)
 		{
-			// Check if token is expired or about to expire
 			if (CachedCredential.Token.IsStale)
 			{
 				Console.Info("Google token expired, refreshing...");

@@ -1,4 +1,4 @@
-﻿using CSharpScripts.Services.Sync.YouTube;
+using CSharpScripts.Services.Sync.YouTube;
 using CollectionExtensions = AngleSharp.Dom.CollectionExtensions;
 
 namespace CSharpScripts.Orchestrators;

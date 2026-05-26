@@ -12,7 +12,6 @@ public sealed class Scrobble
 	public DateTimeOffset ScrobbledAt { get; set; }
 	public string Platform { get; set; } = string.Empty;
 
-	// Navigation property
 	public Track Track { get; set; } = null!;
 }
 

@@ -10,7 +10,6 @@ internal sealed class MigrationTests
 	[Test]
 	public void DbContext_HasPendingModelChanges_IsFalse()
 	{
-		// This test ensures that the current code model matches the latest migration snapshot
 		using var context = new ScriptsDbContext(new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<ScriptsDbContext>().UseNpgsql("Host=localhost;Database=MigrationTest;Username=postgres;Password=postgres").Options);
 
 		var hasChanges = context.Database.HasPendingModelChanges();

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Services.Music;
 
 namespace CSharpScripts.CLI.Music;

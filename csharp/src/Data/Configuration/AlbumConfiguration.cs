@@ -20,15 +20,13 @@ internal sealed class AlbumConfiguration : IEntityTypeConfiguration<Album>
 			.HasDatabaseName(name: "idx_albums_title");
 		b.HasIndex(static a => a.ReleaseDate).HasDatabaseName(name: "idx_albums_release_date");
 
-		// Functional index for case-insensitive search (requires unaccent extension)
 		b.HasIndex(static a => a.Title)
 			.HasDatabaseName(name: "idx_albums_title_unaccent")
-			.HasFilter("true"); // Placeholder - actual functional index via migration
+			.HasFilter("true");
 
-		// Trigram GIN index for fuzzy search (requires pg_trgm extension)
 		b.HasIndex(static a => a.Title)
 			.HasDatabaseName(name: "idx_albums_title_trgm")
-			.HasFilter("true"); // Placeholder - actual trigram index via migration
+			.HasFilter("true");
 
 		b.HasOne(static a => a.Artist)
 			.WithMany(static a => a.Albums)

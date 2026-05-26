@@ -11,8 +11,6 @@ internal class OcrTest
 		var provider = AzureDocumentIntelligenceOcrProvider.CreateConfigured();
 		provider.Should().NotBeNull();
 
-		// Attempt to OCR a tiny dummy image to test authentication
-		// A simple 1x1 png image
 		byte[] tinyPng = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==");
 
 		try

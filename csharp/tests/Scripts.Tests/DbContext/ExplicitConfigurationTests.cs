@@ -10,7 +10,7 @@ namespace Scripts.Tests.DbContext;
 internal sealed class ExplicitConfigurationTests
 {
 	[Test]
-	public async Task OnModelCreating_UsesExplicitApplyConfiguration_ForAllNineEntities()
+	public async Task OnModelCreating_UsesExplicitApplyConfiguration_ForAllTenEntities()
 	{
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("ExplicitConfigTest_" + Guid.NewGuid())
@@ -25,7 +25,7 @@ internal sealed class ExplicitConfigurationTests
 			.Select(e => e.ClrType)
 			.ToList();
 
-		entityTypes.Should().HaveCount(9, "all 9 entity configurations must be applied explicitly");
+		entityTypes.Should().HaveCount(10, "all 10 entity configurations must be applied explicitly");
 
 		entityTypes.Should().Contain(typeof(Artist), "ArtistConfiguration must be applied");
 		entityTypes.Should().Contain(typeof(Album), "AlbumConfiguration must be applied");
@@ -42,6 +42,9 @@ internal sealed class ExplicitConfigurationTests
 		entityTypes
 			.Should()
 			.Contain(typeof(SourceRecord), "SourceRecordConfiguration must be applied");
+		entityTypes
+			.Should()
+			.Contain(typeof(ReleaseProgress), "ReleaseProgressConfiguration must be applied");
 	}
 
 	[Test]
@@ -89,6 +92,7 @@ internal sealed class ExplicitConfigurationTests
 			nameof(ExecutionLog),
 			nameof(FailedTask),
 			nameof(FiberyEntity),
+			nameof(ReleaseProgress),
 			nameof(Scrobble),
 			nameof(SourceRecord),
 			nameof(Track),
@@ -101,7 +105,7 @@ internal sealed class ExplicitConfigurationTests
 			.Should()
 			.BeEquivalentTo(
 				expectedEntities,
-				"all 9 entity configurations must be applied together in OnModelCreating"
+				"all 10 entity configurations must be applied together in OnModelCreating"
 			);
 	}
 }

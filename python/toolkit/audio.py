@@ -90,7 +90,7 @@ def calculate_image_size(path: Path) -> None:
 	"""Report FLAC files with embedded artwork larger than 1MB."""
 
 
-exif_tool = os.getenv("EXIFTOOL_PATH", "")
+	exif_tool = os.getenv("EXIFTOOL_PATH", "")
 	if not exif_tool:
 		raise ValueError(
 			"EXIFTOOL_PATH environment variable not set. "

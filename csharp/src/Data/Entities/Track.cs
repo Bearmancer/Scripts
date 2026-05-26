@@ -12,7 +12,6 @@ public sealed class Track
 	public string Title { get; set; } = string.Empty;
 	public int? DurationSeconds { get; set; }
 
-	// Navigation properties
 	public Album Album { get; set; } = null!;
 	public Artist Artist { get; set; } = null!;
 	public ICollection<Scrobble> Scrobbles { get; init; } = new List<Scrobble>();

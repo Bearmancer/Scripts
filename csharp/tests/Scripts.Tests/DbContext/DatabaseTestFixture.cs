@@ -24,7 +24,6 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		builder.Database = $"{builder.Database}_{Guid.NewGuid():N}";
 		_connectionString = builder.ConnectionString;
 
-		// Wipe any data left from a previous run, then apply all migrations fresh.
 		await using var ctx = BuildContext();
 		await ctx.Database.EnsureDeletedAsync();
 		await ctx.Database.MigrateAsync();

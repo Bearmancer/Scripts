@@ -45,13 +45,12 @@ internal static class RepositoryResilienceFactory
 	/// </summary>
 	private static bool IsTransientError(NpgsqlException ex)
 	{
-		// Connection-related errors (transient)
 		return ex.SqlState switch
 		{
-			"53300" => true, // too_many_connections
-			"08000" => true, // connection_exception
-			"08003" => true, // connection_does_not_exist
-			"08006" => true, // connection_failure
+			"53300" => true,
+			"08000" => true,
+			"08003" => true,
+			"08006" => true,
 			_ => false,
 		};
 	}

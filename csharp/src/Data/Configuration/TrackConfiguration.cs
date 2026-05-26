@@ -22,15 +22,13 @@ internal sealed class TrackConfiguration : IEntityTypeConfiguration<Track>
 			.IsUnique()
 			.HasDatabaseName(name: "idx_tracks_artist_title");
 
-		// Functional index for case-insensitive search (requires unaccent extension)
 		b.HasIndex(static t => t.Title)
 			.HasDatabaseName(name: "idx_tracks_title_unaccent")
-			.HasFilter("true"); // Placeholder - actual functional index via migration
+			.HasFilter("true");
 
-		// Trigram GIN index for fuzzy search (requires pg_trgm extension)
 		b.HasIndex(static t => t.Title)
 			.HasDatabaseName(name: "idx_tracks_title_trgm")
-			.HasFilter("true"); // Placeholder - actual trigram index via migration
+			.HasFilter("true");
 
 		b.HasOne(static t => t.Artist)
 			.WithMany(static a => a.Tracks)

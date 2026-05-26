@@ -30,9 +30,7 @@ internal sealed class ConnectionStringTests
 	[Test]
 	public void ConnectionString_DoesNotContain_Password_InPlainText_InLogs()
 	{
-		// Confirm we can get the string — we do NOT log or print it
 		var connStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
-		// If this assertion passes, the test runner never printed the value
 		connStr.Should().NotBeNull();
 	}
 }

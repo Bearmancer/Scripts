@@ -23,10 +23,9 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 		b.HasIndex(static v => v.UploadDate).HasDatabaseName(name: "idx_videos_upload_date");
 		b.HasIndex(static v => v.Title).HasDatabaseName(name: "idx_videos_title");
 
-		// Trigram GIN index for fuzzy search (requires pg_trgm extension)
 		b.HasIndex(static v => v.Title)
 			.HasDatabaseName(name: "idx_videos_title_trgm")
-			.HasFilter("true"); // Placeholder - actual trigram index via migration
+			.HasFilter("true");
 	}
 }
 

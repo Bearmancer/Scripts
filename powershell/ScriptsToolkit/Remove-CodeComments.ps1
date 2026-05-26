@@ -156,6 +156,7 @@ function Remove-TrailingComment {
         $i    += $strEnd.Length
         continue
       }
+      $i++
     }
     else {
       $opened = $false

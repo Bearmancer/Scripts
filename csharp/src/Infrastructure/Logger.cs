@@ -215,7 +215,7 @@ public static class Logger
 			{
 				entry = JsonSerializer.Deserialize<LogEntry>(line, StateManager.JsonCompact);
 			}
-			catch
+			catch (JsonException)
 			{
 				continue;
 			}

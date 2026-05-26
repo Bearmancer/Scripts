@@ -19,6 +19,7 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
 	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
+	public DbSet<ReleaseProgress> ReleaseProgress => Set<ReleaseProgress>();
 
 	protected override void OnModelCreating(ModelBuilder mb)
 	{
@@ -31,6 +32,7 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.FiberyEntityConfiguration());
 		mb.ApplyConfiguration(new Configuration.FailedTaskConfiguration());
 		mb.ApplyConfiguration(new Configuration.SourceRecordConfiguration());
+		mb.ApplyConfiguration(new Configuration.ReleaseProgressConfiguration());
 
 		if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
 		{

@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Services.Language;
+namespace CSharpScripts.Services.Language;
 
 internal static class LanguageIdentifier
 {
