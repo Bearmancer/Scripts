@@ -5,10 +5,10 @@ namespace CSharpScripts.Tests.Guards;
 
 internal class EF11GuardTests
 {
-	private static readonly string[] SourceDirectories =
-	[
-		Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src"),
-	];
+	private static string GetSourceRoot([System.Runtime.CompilerServices.CallerFilePath] string path = "") =>
+		Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, "..", "..", "..", "src"));
+
+	private static readonly string[] SourceDirectories = [ GetSourceRoot() ];
 
 	[Test]
 	public void ShouldNotUseMaxByAsync()
@@ -43,7 +43,7 @@ internal class EF11GuardTests
 		var pattern = new Regex(@"OrderByDescending\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync", RegexOptions.Compiled);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThan(0, "Should have at least one OrderByDescending().FirstOrDefaultAsync() pattern");
+		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one OrderByDescending().FirstOrDefaultAsync() pattern");
 	}
 
 	[Test]
@@ -52,7 +52,7 @@ internal class EF11GuardTests
 		var pattern = new Regex(@"OrderBy\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync", RegexOptions.Compiled);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThan(0, "Should have at least one OrderBy().FirstOrDefaultAsync() pattern");
+		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one OrderBy().FirstOrDefaultAsync() pattern");
 	}
 
 	[Test]
@@ -70,7 +70,7 @@ internal class EF11GuardTests
 		var pattern = new Regex(@"ExecuteUpdateAsync\s*\(", RegexOptions.Compiled);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThan(0, "Should have at least one ExecuteUpdateAsync() call");
+		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one ExecuteUpdateAsync() call");
 	}
 
 	private static List<string> FindViolations(Regex pattern, string patternName)

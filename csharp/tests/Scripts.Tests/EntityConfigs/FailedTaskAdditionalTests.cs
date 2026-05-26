@@ -11,7 +11,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task FailedTask_CanInsertAndRetrieve()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var task = new FailedTask
 		{
@@ -33,7 +33,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task FailedTask_CanQueryByTaskName()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var task1 = new FailedTask
 		{
@@ -64,7 +64,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task FailedTask_CanQueryByTimestamp()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var now = DateTimeOffset.UtcNow;
 		var oneHourAgo = now.AddHours(-1);
@@ -98,7 +98,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task FailedTask_CanUpdateErrorMessage()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var task = new FailedTask
 		{
@@ -124,7 +124,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task FailedTask_CanDeleteByTaskName()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var task1 = new FailedTask
 		{
@@ -143,12 +143,9 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		context.FailedTasks.AddRange(task1, task2);
 		await context.SaveChangesAsync();
 
-		var toDelete = await context.FailedTasks
+		await context.FailedTasks
 			.Where(t => t.TaskName == "SyncLastFm")
-			.ToListAsync();
-
-		context.FailedTasks.RemoveRange(toDelete);
-		await context.SaveChangesAsync();
+			.ExecuteDeleteAsync();
 
 		var remaining = await context.FailedTasks.ToListAsync();
 

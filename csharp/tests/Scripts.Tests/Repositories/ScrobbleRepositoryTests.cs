@@ -6,15 +6,12 @@ using CSharpScripts.Data.Entities;
 using CSharpScripts.Data.Repositories;
 using CSharpScripts.Data.Repositories.Interfaces;
 using Polly;
+using CSharpScripts.Tests;
 
 namespace Scripts.Tests.Repositories;
 
-internal sealed class ScrobbleRepositoryTests
+internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 {
-	private static DbContextOptions<ScriptsDbContext> CreateInMemoryOptions() =>
-		new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseInMemoryDatabase("ScrobbleTest_" + Guid.NewGuid())
-			.Options;
 
 	private static async Task<(Artist, Album, Track)> SetupArtistAlbumTrack(ScriptsDbContext context)
 	{
@@ -33,12 +30,11 @@ internal sealed class ScrobbleRepositoryTests
 	[Test]
 	public async Task UpsertAsync_InsertsNewScrobbles()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
 		var scrobbles = new[]
@@ -51,7 +47,7 @@ internal sealed class ScrobbleRepositoryTests
 
 		result.Should().Be(2);
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Scrobbles.CountAsync();
 		count.Should().Be(2);
 	}
@@ -59,8 +55,7 @@ internal sealed class ScrobbleRepositoryTests
 	[Test]
 	public async Task UpsertAsync_UpdatesExistingScrobbles()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		var scrobbledAt = DateTimeOffset.UtcNow;
@@ -69,7 +64,7 @@ internal sealed class ScrobbleRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
 		var updatedScrobbles = new[] { new Scrobble { TrackId = track.Id, ScrobbledAt = scrobbledAt, Platform = "spotify" } };
@@ -77,7 +72,7 @@ internal sealed class ScrobbleRepositoryTests
 
 		result.Should().Be(1);
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var updated = await verifyContext.Scrobbles.FirstAsync();
 		updated.Platform.Should().Be("spotify");
 	}
@@ -85,8 +80,7 @@ internal sealed class ScrobbleRepositoryTests
 	[Test]
 	public async Task DeleteByTrackIdAsync_DeletesAllScrobblesForTrack()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		context.Scrobbles.AddRange(
@@ -96,14 +90,14 @@ internal sealed class ScrobbleRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
 		var result = await repository.DeleteByTrackIdAsync(track.Id);
 
 		result.Should().Be(2);
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Scrobbles.CountAsync();
 		count.Should().Be(0);
 	}
@@ -111,8 +105,7 @@ internal sealed class ScrobbleRepositoryTests
 	[Test]
 	public async Task GetByTrackIdAsync_ReturnsScrobblesOrderedByMostRecent()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		var now = DateTimeOffset.UtcNow;
@@ -124,22 +117,21 @@ internal sealed class ScrobbleRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
 		var result = await repository.GetByTrackIdAsync(track.Id);
 
 		result.Should().HaveCount(3);
-		result[0].ScrobbledAt.Should().Be(now);
-		result[1].ScrobbledAt.Should().Be(now.AddHours(-1));
-		result[2].ScrobbledAt.Should().Be(now.AddHours(-2));
+		result[0].ScrobbledAt.Should().BeCloseTo(now, TimeSpan.FromMilliseconds(1));
+		result[1].ScrobbledAt.Should().BeCloseTo(now.AddHours(-1), TimeSpan.FromMilliseconds(1));
+		result[2].ScrobbledAt.Should().BeCloseTo(now.AddHours(-2), TimeSpan.FromMilliseconds(1));
 	}
 
 	[Test]
 	public async Task GetByPlatformAsync_ReturnsScrobblesForPlatform()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		context.Scrobbles.AddRange(
@@ -150,7 +142,7 @@ internal sealed class ScrobbleRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
 		var result = await repository.GetByPlatformAsync("lastfm");

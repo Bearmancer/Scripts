@@ -2,9 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement tier plans task-by-task.
 
-**Goal:** Migrate monolithic C# project to PostgreSQL (EF Core 10) + 8-project modular solution + hardening.
+**Goal:** Migrate monolithic C# project to PostgreSQL (EF Core 10), THEN split into an 8-project modular solution + hardening.
 
-**Strategy:** Test-Driven Development (TDD) at every step. No production code without a failing test first.
+**Strategy:** 
+1. **Delineation:** Keep the migration to EF Core (Tier 1) strictly separated from the modularization effort (Tier 2). 
+2. **Monolith First:** Execute Tier 1 entirely within the existing monolithic architecture to minimize compilation errors and isolate database logic changes.
+3. **TDD:** Test-Driven Development (TDD) at every step. No production code without a failing test first.
 
 **Execution order is strictly sequential by tier.** Each tier's sign-off gates the next tier.
 
@@ -14,9 +17,9 @@
 
 | Tier | Directory                   | Phases | Focus                                              | Status  |
 | ---- | --------------------------- | ------ | -------------------------------------------------- | ------- |
-| T1   | `tier-1-ef-migration/`      | 00–16  | EF Core + PostgreSQL foundation (critical blocker) | ⏳ Ready |
-| T2   | `tier-2-cpm-split/`         | 00–10  | CPM + 8-project modular split                      | 🔒 T1   |
-| T3   | `tier-3-domain/`            | 00–07  | Domain isolation, naming, DateTimeOffset           | 🔒 T2   |
+| T1   | `tier-1-ef-migration/`      | 00–16  | **Monolith:** EF Core + Postgres migration         | ⏳ Ready |
+| T2   | `tier-2-cpm-split/`         | 00–10  | **Modularization:** CPM + 8-project split          | 🔒 T1   |
+| T3   | `tier-3-domain/`            | 00–07  | **Refinement:** Domain isolation, DateTimeOffset   | 🔒 T2   |
 | T4   | `tier-4-hardening/`         | 00–08  | DI, integration, quality, tooling, security        | 🔒 T3   |
 
 **Total:** 45 sequenced plan files across 4 tiers.

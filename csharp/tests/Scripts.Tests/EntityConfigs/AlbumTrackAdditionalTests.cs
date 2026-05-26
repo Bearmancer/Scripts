@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data;
 using CSharpScripts.Data.Entities;
@@ -11,7 +11,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Album_CanInsertWithArtist()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var album = new Album { Artist = artist, Title = "Test Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
@@ -30,7 +30,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Album_CanQueryByArtistId()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist1 = new Artist { Name = "Artist 1" };
 		var artist2 = new Artist { Name = "Artist 2" };
@@ -56,7 +56,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Track_CanInsertWithAlbumAndArtist()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var album = new Album { Artist = artist, Title = "Test Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
@@ -77,7 +77,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Track_CanQueryByAlbumId()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var album1 = new Album { Artist = artist, Title = "Album 1", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
@@ -105,7 +105,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Track_CanQueryByArtistId()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist1 = new Artist { Name = "Artist 1" };
 		var artist2 = new Artist { Name = "Artist 2" };
@@ -133,7 +133,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Track_CanQueryByDurationRange()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var album = new Album { Artist = artist, Title = "Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
@@ -161,7 +161,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Album_CanUpdateReleaseDate()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var originalDate = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -186,7 +186,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Track_CanUpdateDuration()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		var album = new Album { Artist = artist, Title = "Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };

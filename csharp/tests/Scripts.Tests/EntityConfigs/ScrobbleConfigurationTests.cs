@@ -1,4 +1,4 @@
-using TUnit;
+﻿using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data;

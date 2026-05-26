@@ -1,15 +1,10 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 using CSharpScripts.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using EntityScrobble = CSharpScripts.Data.Entities.Scrobble;
 
 namespace CSharpScripts.Data;
 
 internal sealed class ScriptsDbContext : DbContext
 {
-	private static bool IsTestContext =>
-		AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == "Scripts.Tests");
-
 	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
 		: base(options: options) =>
 		ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -17,21 +12,13 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
 	public DbSet<Track> Tracks => Set<Track>();
-	public DbSet<EntityScrobble> Scrobbles => Set<EntityScrobble>();
+	public DbSet<Entities.Scrobble> Scrobbles => Set<Entities.Scrobble>();
 	public DbSet<Video> Videos => Set<Video>();
 
 	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
 	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
-
-	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-	{
-		base.OnConfiguring(optionsBuilder);
-
-		if (!IsTestContext)
-			optionsBuilder.UseModel(ScriptsDbContextModel.Instance);
-	}
 
 	protected override void OnModelCreating(ModelBuilder mb)
 	{
@@ -53,23 +40,19 @@ internal sealed class ScriptsDbContext : DbContext
 					string
 				>(
 					v => v.RootElement.ToString(),
-					v =>
-						System.Text.Json.JsonDocument.Parse(
-							v,
-							new System.Text.Json.JsonDocumentOptions()
-						)
+					v => System.Text.Json.JsonDocument.Parse(
+						v,
+						new System.Text.Json.JsonDocumentOptions()
+					)
 				);
 
 			foreach (var entityType in mb.Model.GetEntityTypes())
+			foreach (var property in entityType.GetProperties())
 			{
-				foreach (var property in entityType.GetProperties())
-				{
-					if (property.ClrType == typeof(System.Text.Json.JsonDocument))
-					{
-						property.SetValueConverter(jsonConverter);
-					}
-				}
+				if (property.ClrType == typeof(System.Text.Json.JsonDocument))
+					property.SetValueConverter(jsonConverter);
 			}
 		}
 	}
 }
+

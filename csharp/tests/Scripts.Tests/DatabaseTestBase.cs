@@ -1,9 +1,14 @@
-using System;
-using System.Threading.Tasks;
 using CSharpScripts.Tests.DbContext;
 
 namespace CSharpScripts.Tests;
 
+/// <summary>
+/// Base class for integration tests that need a real PostgreSQL database.
+/// One fixture instance is created per test class (not per test).
+/// 
+/// Migration path: convert consumers to [ClassDataSource&lt;DatabaseTestFixture&gt;]
+/// constructor injection instead, then delete this base class.
+/// </summary>
 internal abstract class DatabaseTestBase
 {
 #pragma warning disable TUnit0023
@@ -21,8 +26,7 @@ internal abstract class DatabaseTestBase
 	public async Task TeardownFixture()
 	{
 		if (Fixture is not null)
-		{
 			await ((IAsyncDisposable)Fixture).DisposeAsync();
-		}
 	}
 }
+

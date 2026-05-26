@@ -1,66 +1,65 @@
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 using CSharpScripts.Data;
+using Npgsql;
 
 namespace CSharpScripts.Tests.DbContext;
 
+/// <summary>
+/// Shared integration-test fixture backed by the local PostgreSQL instance ($PGCONNSTR).
+/// Drops and recreates the database on initialization so each test class gets a clean schema.
+/// No Testcontainers — the Docker Compose Postgres is already running.
+/// </summary>
 internal sealed class DatabaseTestFixture : IAsyncDisposable
 {
-	private PostgreSqlContainer? _container;
-	private ScriptsDbContext? _context;
+	private string? _connectionString;
 
 	public async Task InitializeAsync()
 	{
-		_container = new PostgreSqlBuilder()
-			.WithImage("postgres:18")
-			.WithDatabase("scripts_test")
-			.WithUsername("postgres")
-			.WithPassword("postgres")
-			.Build();
+		var baseConnStr = Environment.GetEnvironmentVariable("PGCONNSTR")
+			?? throw new InvalidOperationException(
+				"PGCONNSTR environment variable is not set. " +
+				"Load .env before running integration tests.");
 
-		await _container.StartAsync();
+		var builder = new NpgsqlConnectionStringBuilder(baseConnStr);
+		builder.Database = $"{builder.Database}_{Guid.NewGuid():N}";
+		_connectionString = builder.ConnectionString;
 
-		var connectionString = _container.GetConnectionString();
-		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseNpgsql(connectionString)
-			.Options;
-
-		_context = new ScriptsDbContext(options);
-		await _context.Database.MigrateAsync();
+		// Wipe any data left from a previous run, then apply all migrations fresh.
+		await using var ctx = BuildContext();
+		await ctx.Database.EnsureDeletedAsync();
+		await ctx.Database.MigrateAsync();
 	}
 
-	public ScriptsDbContext GetContext()
-	{
-		if (_context is null)
-			throw new InvalidOperationException("Fixture not initialized. Call InitializeAsync first.");
-		return _context;
-	}
+	/// <summary>Returns a fresh context for every call — callers must dispose it.</summary>
+	public ScriptsDbContext GetContext() => BuildContext();
 
+	/// <summary>Returns a factory that creates fresh contexts from the same connection string.</summary>
 	public IDbContextFactory<ScriptsDbContext> GetContextFactory()
 	{
-		if (_context is null)
-			throw new InvalidOperationException("Fixture not initialized. Call InitializeAsync first.");
-
-		var connectionString = _container!.GetConnectionString();
-		return new TestDbContextFactory(connectionString);
+		if (_connectionString is null)
+			throw new InvalidOperationException("Fixture not initialized.");
+		return new PostgresContextFactory(_connectionString);
 	}
 
 	async ValueTask IAsyncDisposable.DisposeAsync()
 	{
-		if (_context is not null)
-		{
-			await _context.Database.EnsureDeletedAsync();
-			await _context.DisposeAsync();
-		}
-
-		if (_container is not null)
-		{
-			await _container.StopAsync();
-			await _container.DisposeAsync();
-		}
+		if (_connectionString is null) return;
+		await using var ctx = BuildContext();
+		await ctx.Database.EnsureDeletedAsync();
 	}
 
-	private sealed class TestDbContextFactory(string connectionString) : IDbContextFactory<ScriptsDbContext>
+	private ScriptsDbContext BuildContext()
+	{
+		if (_connectionString is null)
+			throw new InvalidOperationException("Fixture not initialized. Call InitializeAsync first.");
+
+		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
+			.UseNpgsql(_connectionString)
+			.Options;
+		return new ScriptsDbContext(options);
+	}
+
+	private sealed class PostgresContextFactory(string connectionString) : IDbContextFactory<ScriptsDbContext>
 	{
 		public ScriptsDbContext CreateDbContext()
 		{
@@ -71,3 +70,4 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		}
 	}
 }
+

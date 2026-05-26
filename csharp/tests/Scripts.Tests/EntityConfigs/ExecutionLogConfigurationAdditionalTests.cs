@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data;
 using CSharpScripts.Data.Entities;
@@ -11,7 +11,7 @@ internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task ExecutionLog_CanInsertAndRetrieve()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var log = new ExecutionLog
 		{
@@ -34,7 +34,7 @@ internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task ExecutionLog_CanQueryBySessionId()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var log1 = new ExecutionLog
 		{
@@ -67,7 +67,7 @@ internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task ExecutionLog_CanQueryByTimestamp()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var now = DateTimeOffset.UtcNow;
 		var oneHourAgo = now.AddHours(-1);
@@ -103,7 +103,7 @@ internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task ExecutionLog_CanQueryByExitCode()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var log1 = new ExecutionLog
 		{
@@ -143,7 +143,7 @@ internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task ExecutionLog_CanUpdatePayload()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var log = new ExecutionLog
 		{

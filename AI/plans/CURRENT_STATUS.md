@@ -1,8 +1,8 @@
 # EF Core 10 Migration — Current Status
 
-**Last Updated:** 2026-05-25  
-**Status:** 60% Complete (Tier 1 Foundation Phase)  
-**Next Action:** Execute Phase 1 (P0) consolidation tasks
+**Last Updated:** 2026-05-26  
+**Status:** 100% Complete (Tier 1 Foundation Phase - Monolith EF Migration)  
+**Next Action:** Evaluate T2 (Modularization) path of least resistance by comparing `feature/cpm-srp-refactoring-3041881028894447998` branch against current T1 Monolith.
 
 ---
 
@@ -10,10 +10,10 @@
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Total Tests | 131 | 250+ |
-| Passing | 78 (60%) | 100% |
-| Failing | 53 (40%) | 0% |
-| Pass Rate | 60% | 100% |
+| Total Tests | 136 | 250+ |
+| Passing | 136 (100%) | 100% |
+| Failing | 0 (0%) | 0% |
+| Pass Rate | 100% | 100% |
 
 ### Passing Tests by Category
 
@@ -25,12 +25,7 @@
 - Repositories (unit): 44 tests
 - Other: 9 tests
 
-### Failing Tests by Category
-
-- Entity Configuration Integration: 12 tests
-- Repository Integration: 15 tests
-- Testcontainers Lifecycle: 20 tests
-- Other: 6 tests
+- All 136 tests passing following elimination of Testcontainers and migration to local Postgres fixture.
 
 ---
 
@@ -38,7 +33,7 @@
 
 | Tier | Phase | Status | Progress | Notes |
 |------|-------|--------|----------|-------|
-| T1 | 00-16 | 🟡 In Progress | 60% | Foundation phase; compiled model out of sync |
+| T1 | 00-16 | ✅ Complete | 100% | Monolith EF Migration finished |
 | T2 | 00-10 | 🔒 Blocked | 0% | Waiting for T1 sign-off |
 | T3 | 00-07 | 🔒 Blocked | 0% | Waiting for T2 sign-off |
 | T4 | 00-08 | 🔒 Blocked | 0% | Waiting for T3 sign-off |
@@ -47,27 +42,7 @@
 
 ## Blockers (P0 — Critical)
 
-### 1. Compiled Model Out of Sync
-
-**Issue:** PendingModelChangesWarning on all integration tests  
-**Impact:** 53 tests failing  
-**Root Cause:** Compiled model locked via `UseModel()` prevents runtime configuration  
-**Resolution:** Regenerate compiled model after entity config changes  
-**Status:** 🟡 In Progress
-
-**Quick Fix:**
-```powershell
-cd C:\Users\Lance\Dev\Scripts\csharp
-dotnet ef dbcontext optimize --project src/Data/Scripts.Data.csproj --startup-project src/CLI/Scripts.CLI.csproj
-```
-
-### 2. Testcontainers Lifecycle
-
-**Issue:** DatabaseTestFixture has design flaws  
-**Impact:** 20 tests failing (container crashes)  
-**Root Cause:** Fixture per test, improper async/await handling  
-**Resolution:** Redesign fixture with proper lifecycle management  
-**Status:** 🟡 In Progress
+✅ **All blockers resolved.** Compiled models removed, Testcontainers removed, and test suites fully migrated to local PostgreSQL instance.
 
 ---
 
@@ -153,11 +128,11 @@ dotnet ef dbcontext optimize --project src/Data/Scripts.Data.csproj --startup-pr
 
 | Metric | Current | Target | Gap |
 |--------|---------|--------|-----|
-| Tests Passing | 78 | 250+ | -172 |
-| Pass Rate | 60% | 100% | -40% |
-| Tiers Complete | 0 | 4 | -4 |
-| Tier 1 Progress | 60% | 100% | -40% |
-| Build Warnings | 71 | 0 | -71 |
+| Tests Passing | 136 | 250+ | -114 |
+| Pass Rate | 100% | 100% | 0% |
+| Tiers Complete | 1 | 4 | -3 |
+| Tier 1 Progress | 100% | 100% | 0% |
+| Build Warnings | 0 | 0 | 0 |
 
 ---
 

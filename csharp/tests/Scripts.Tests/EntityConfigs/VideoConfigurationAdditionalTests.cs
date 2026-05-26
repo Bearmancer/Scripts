@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using CSharpScripts.Data;
 using CSharpScripts.Data.Entities;
@@ -11,7 +11,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Video_CanInsertAndRetrieve()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var video = new Video
 		{
@@ -37,7 +37,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Video_UrlIsUnique()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var video1 = new Video
 		{
@@ -72,7 +72,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Video_CanQueryByChannelName()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var video1 = new Video
 		{
@@ -109,7 +109,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Video_CanQueryByUploadDate()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var today = DateOnly.FromDateTime(DateTime.UtcNow);
 		var yesterday = today.AddDays(-1);
@@ -149,7 +149,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 	[Test]
 	public async Task Video_CanUpdateMetadata()
 	{
-		var context = Fixture.GetContext();
+		await using var context = Fixture.GetContext();
 
 		var video = new Video
 		{
