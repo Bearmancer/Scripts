@@ -22,4 +22,3 @@ internal sealed class FiberyEntityConfiguration : IEntityTypeConfiguration<Fiber
 			.HasDatabaseName(name: "idx_fibery_entities_fibery_id_type");
 	}
 }
-

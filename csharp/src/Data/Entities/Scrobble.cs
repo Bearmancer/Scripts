@@ -14,4 +14,3 @@ public sealed class Scrobble
 
 	public Track Track { get; set; } = null!;
 }
-

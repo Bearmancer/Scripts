@@ -89,7 +89,6 @@ def create_output_directory(directory: Path, suffix: str) -> Path:
 def calculate_image_size(path: Path) -> None:
 	"""Report FLAC files with embedded artwork larger than 1MB."""
 
-
 	exif_tool = os.getenv("EXIFTOOL_PATH", "")
 	if not exif_tool:
 		raise ValueError(
@@ -283,7 +282,8 @@ def calculate_gain(dff_file: Path, target_headroom_db: float = -0.5) -> float:
 	error: Any
 	try:
 		_, error = (
-			ffmpeg.input(str(dff_file))
+			ffmpeg
+			.input(str(dff_file))
 			.audio.filter("volumedetect")
 			.output("null", format="null")
 			.run(capture_stderr=True)
@@ -430,7 +430,8 @@ def convert_to_mp3(directory: Path) -> None:
 
 		try:
 			(
-				ffmpeg.input(str(f))
+				ffmpeg
+				.input(str(f))
 				.output(
 					str(output), acodec="libmp3lame", audio_bitrate="320k", format="mp3"
 				)

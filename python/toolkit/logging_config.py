@@ -31,13 +31,11 @@ class JsonFileHandler(logging.Handler):
 		self._handle_stale_lock()
 		self._write_lock()
 
-		self._append_entry(
-			{
-				"timestamp": self.started_at,
-				"type": "session_start",
-				"session_id": self.session_id,
-			}
-		)
+		self._append_entry({
+			"timestamp": self.started_at,
+			"type": "session_start",
+			"session_id": self.session_id,
+		})
 
 		atexit.register(self.close)
 
@@ -62,13 +60,11 @@ class JsonFileHandler(logging.Handler):
 
 	def close(self) -> None:
 		if not self.session_closed:
-			self._append_entry(
-				{
-					"timestamp": datetime.now(UTC).isoformat(),
-					"type": "session_end",
-					"session_id": self.session_id,
-				}
-			)
+			self._append_entry({
+				"timestamp": datetime.now(UTC).isoformat(),
+				"type": "session_end",
+				"session_id": self.session_id,
+			})
 			self._delete_lock()
 			self.session_closed = True
 		super().close()
@@ -84,14 +80,12 @@ class JsonFileHandler(logging.Handler):
 			return
 		stale_session_id, stale_started_at = parts
 
-		self._append_entry(
-			{
-				"timestamp": datetime.now(UTC).isoformat(),
-				"type": "session_crash",
-				"session_id": stale_session_id,
-				"started_at": stale_started_at,
-			}
-		)
+		self._append_entry({
+			"timestamp": datetime.now(UTC).isoformat(),
+			"type": "session_crash",
+			"session_id": stale_session_id,
+			"started_at": stale_started_at,
+		})
 		self._delete_lock()
 
 	def _write_lock(self) -> None:

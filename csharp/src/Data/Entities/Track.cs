@@ -16,4 +16,3 @@ public sealed class Track
 	public Artist Artist { get; set; } = null!;
 	public ICollection<Scrobble> Scrobbles { get; init; } = new List<Scrobble>();
 }
-

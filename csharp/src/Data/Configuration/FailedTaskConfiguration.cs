@@ -21,4 +21,3 @@ internal sealed class FailedTaskConfiguration : IEntityTypeConfiguration<FailedT
 		b.HasIndex(static e => e.Timestamp).HasDatabaseName(name: "idx_failed_tasks_timestamp");
 	}
 }
-

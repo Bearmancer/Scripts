@@ -14,4 +14,3 @@ public sealed class Album
 	public Artist Artist { get; set; } = null!;
 	public ICollection<Track> Tracks { get; init; } = new List<Track>();
 }
-

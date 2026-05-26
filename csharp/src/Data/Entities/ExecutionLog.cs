@@ -14,4 +14,3 @@ public sealed class ExecutionLog
 	public JsonDocument Payload { get; set; } = JsonDocument.Parse("{}");
 	public int ExitCode { get; set; }
 }
-

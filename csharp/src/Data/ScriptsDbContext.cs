@@ -42,10 +42,11 @@ internal sealed class ScriptsDbContext : DbContext
 					string
 				>(
 					v => v.RootElement.ToString(),
-					v => System.Text.Json.JsonDocument.Parse(
-						v,
-						new System.Text.Json.JsonDocumentOptions()
-					)
+					v =>
+						System.Text.Json.JsonDocument.Parse(
+							v,
+							new System.Text.Json.JsonDocumentOptions()
+						)
 				);
 
 			foreach (var entityType in mb.Model.GetEntityTypes())
@@ -57,4 +58,3 @@ internal sealed class ScriptsDbContext : DbContext
 		}
 	}
 }
-

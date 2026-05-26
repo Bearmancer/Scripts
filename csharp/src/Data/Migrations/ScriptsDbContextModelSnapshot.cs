@@ -10,456 +10,408 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace CSharpScripts.src.Data.Migrations
 {
-    [DbContext(typeof(ScriptsDbContext))]
-    partial class ScriptsDbContextModelSnapshot : ModelSnapshot
-    {
-        protected override void BuildModel(ModelBuilder modelBuilder)
-        {
+	[DbContext(typeof(ScriptsDbContext))]
+	partial class ScriptsDbContextModelSnapshot : ModelSnapshot
+	{
+		protected override void BuildModel(ModelBuilder modelBuilder)
+		{
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+			modelBuilder
+				.HasAnnotation("ProductVersion", "10.0.8")
+				.HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+			NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Album", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Album",
+				b =>
+				{
+					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArtistId")
-                        .HasColumnType("integer");
+					b.Property<int>("ArtistId").HasColumnType("integer");
 
-                    b.Property<DateOnly?>("ReleaseDate")
-                        .HasColumnType("date");
+					b.Property<DateOnly?>("ReleaseDate").HasColumnType("date");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Title").IsRequired().HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("ArtistId");
+					b.HasIndex("ArtistId");
 
-                    b.HasIndex("ReleaseDate")
-                        .HasDatabaseName("idx_albums_release_date");
+					b.HasIndex("ReleaseDate").HasDatabaseName("idx_albums_release_date");
 
-                    b.HasIndex("Title")
-                        .HasDatabaseName("idx_albums_title_trgm")
-                        .HasFilter("true");
+					b.HasIndex("Title").HasDatabaseName("idx_albums_title_trgm").HasFilter("true");
 
-                    b.HasIndex("ArtistId", "Title")
-                        .IsUnique()
-                        .HasDatabaseName("idx_albums_title");
+					b.HasIndex("ArtistId", "Title").IsUnique().HasDatabaseName("idx_albums_title");
 
-                    b.ToTable("albums", (string)null);
-                });
+					b.ToTable("albums", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Artist", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Artist",
+				b =>
+				{
+					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<JsonDocument>("Metadata")
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("Metadata").HasColumnType("jsonb");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Name").IsRequired().HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("idx_artists_name_trgm")
-                        .HasFilter("true");
+					b.HasIndex("Name")
+						.IsUnique()
+						.HasDatabaseName("idx_artists_name_trgm")
+						.HasFilter("true");
 
-                    b.ToTable("artists", (string)null);
-                });
+					b.ToTable("artists", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.ExecutionLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.ExecutionLog",
+				b =>
+				{
+					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(
+						b.Property<int>("Id")
+					);
 
-                    b.Property<int>("ExitCode")
-                        .HasColumnType("integer");
+					b.Property<int>("ExitCode").HasColumnType("integer");
 
-                    b.Property<JsonDocument>("Payload")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("Payload").IsRequired().HasColumnType("jsonb");
 
-                    b.Property<string>("SessionId")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("SessionId").IsRequired().HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+					b.Property<DateTimeOffset>("Timestamp")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("timestamptz")
+						.HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("SessionId")
-                        .HasDatabaseName("idx_execution_logs_session_id");
+					b.HasIndex("SessionId").HasDatabaseName("idx_execution_logs_session_id");
 
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("idx_execution_logs_timestamp");
+					b.HasIndex("Timestamp").HasDatabaseName("idx_execution_logs_timestamp");
 
-                    b.ToTable("execution_logs", (string)null);
-                });
+					b.ToTable("execution_logs", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.FailedTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.FailedTask",
+				b =>
+				{
+					b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
 
-                    b.Property<string>("ErrorMessage")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("ErrorMessage").IsRequired().HasColumnType("text");
 
-                    b.Property<string>("TaskName")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("TaskName").IsRequired().HasColumnType("text");
 
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+					b.Property<DateTimeOffset>("Timestamp")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("timestamptz")
+						.HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("TaskName")
-                        .HasDatabaseName("idx_failed_tasks_task_name");
+					b.HasIndex("TaskName").HasDatabaseName("idx_failed_tasks_task_name");
 
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("idx_failed_tasks_timestamp");
+					b.HasIndex("Timestamp").HasDatabaseName("idx_failed_tasks_timestamp");
 
-                    b.ToTable("failed_tasks", (string)null);
-                });
+					b.ToTable("failed_tasks", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.FiberyEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.FiberyEntity",
+				b =>
+				{
+					b.Property<Guid>("Id")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("uuid")
+						.HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)");
+					b.Property<string>("EntityType").IsRequired().HasColumnType("varchar(100)");
 
-                    b.Property<string>("FiberyId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+					b.Property<string>("FiberyId").IsRequired().HasColumnType("varchar(255)");
 
-                    b.Property<JsonDocument>("RawData")
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("RawData").HasColumnType("jsonb");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("EntityType")
-                        .HasDatabaseName("idx_fibery_entities_entity_type");
+					b.HasIndex("EntityType").HasDatabaseName("idx_fibery_entities_entity_type");
 
-                    b.HasIndex("FiberyId", "EntityType")
-                        .IsUnique()
-                        .HasDatabaseName("idx_fibery_entities_fibery_id_type");
+					b.HasIndex("FiberyId", "EntityType")
+						.IsUnique()
+						.HasDatabaseName("idx_fibery_entities_fibery_id_type");
 
-                    b.ToTable("fibery_entities", (string)null);
-                });
+					b.ToTable("fibery_entities", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.ReleaseProgress", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.ReleaseProgress",
+				b =>
+				{
+					b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(
+						b.Property<long>("Id")
+					);
 
-                    b.Property<string>("Artist")
-                        .HasColumnType("text");
+					b.Property<string>("Artist").HasColumnType("text");
 
-                    b.Property<string>("Composer")
-                        .HasColumnType("text");
+					b.Property<string>("Composer").HasColumnType("text");
 
-                    b.Property<string>("Conductor")
-                        .HasColumnType("text");
+					b.Property<string>("Conductor").HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+					b.Property<DateTime>("CreatedAt")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("timestamptz")
+						.HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("DiscNumber")
-                        .HasColumnType("integer");
+					b.Property<int>("DiscNumber").HasColumnType("integer");
 
-                    b.Property<string>("Duration")
-                        .HasColumnType("text");
+					b.Property<string>("Duration").HasColumnType("text");
 
-                    b.Property<string>("Orchestra")
-                        .HasColumnType("text");
+					b.Property<string>("Orchestra").HasColumnType("text");
 
-                    b.Property<string>("RecordingId")
-                        .HasColumnType("text");
+					b.Property<string>("RecordingId").HasColumnType("text");
 
-                    b.Property<string>("RecordingVenue")
-                        .HasColumnType("text");
+					b.Property<string>("RecordingVenue").HasColumnType("text");
 
-                    b.Property<int?>("RecordingYear")
-                        .HasColumnType("integer");
+					b.Property<int?>("RecordingYear").HasColumnType("integer");
 
-                    b.Property<string>("ReleaseId")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("ReleaseId").IsRequired().HasColumnType("text");
 
-                    b.Property<JsonDocument>("Soloists")
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("Soloists").HasColumnType("jsonb");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Title").IsRequired().HasColumnType("text");
 
-                    b.Property<int>("TrackNumber")
-                        .HasColumnType("integer");
+					b.Property<int>("TrackNumber").HasColumnType("integer");
 
-                    b.Property<string>("WorkName")
-                        .HasColumnType("text");
+					b.Property<string>("WorkName").HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("ReleaseId", "DiscNumber", "TrackNumber")
-                        .IsUnique()
-                        .HasDatabaseName("idx_release_progress_track");
+					b.HasIndex("ReleaseId", "DiscNumber", "TrackNumber")
+						.IsUnique()
+						.HasDatabaseName("idx_release_progress_track");
 
-                    b.ToTable("release_progress", (string)null);
-                });
+					b.ToTable("release_progress", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Scrobble", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Scrobble",
+				b =>
+				{
+					b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Platform")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)");
+					b.Property<string>("Platform").IsRequired().HasColumnType("varchar(50)");
 
-                    b.Property<DateTimeOffset>("ScrobbledAt")
-                        .HasColumnType("timestamptz");
+					b.Property<DateTimeOffset>("ScrobbledAt").HasColumnType("timestamptz");
 
-                    b.Property<int>("TrackId")
-                        .HasColumnType("integer");
+					b.Property<int>("TrackId").HasColumnType("integer");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("Platform")
-                        .HasDatabaseName("idx_scrobbles_platform");
+					b.HasIndex("Platform").HasDatabaseName("idx_scrobbles_platform");
 
-                    b.HasIndex("ScrobbledAt")
-                        .HasDatabaseName("idx_scrobbles_scrobbled_at");
+					b.HasIndex("ScrobbledAt").HasDatabaseName("idx_scrobbles_scrobbled_at");
 
-                    b.HasIndex("TrackId");
+					b.HasIndex("TrackId");
 
-                    b.HasIndex("TrackId", "ScrobbledAt")
-                        .IsUnique()
-                        .HasDatabaseName("idx_scrobbles_timestamp");
+					b.HasIndex("TrackId", "ScrobbledAt")
+						.IsUnique()
+						.HasDatabaseName("idx_scrobbles_timestamp");
 
-                    b.ToTable("scrobbles", (string)null);
-                });
+					b.ToTable("scrobbles", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.SourceRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.SourceRecord",
+				b =>
+				{
+					b.Property<Guid>("Id")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("uuid")
+						.HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("EntityType").IsRequired().HasColumnType("text");
 
-                    b.Property<JsonDocument>("RawData")
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("RawData").HasColumnType("jsonb");
 
-                    b.Property<string>("SourceId")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("SourceId").IsRequired().HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("EntityType")
-                        .HasDatabaseName("idx_source_records_entity_type");
+					b.HasIndex("EntityType").HasDatabaseName("idx_source_records_entity_type");
 
-                    b.HasIndex("SourceId")
-                        .HasDatabaseName("idx_source_records_source_id");
+					b.HasIndex("SourceId").HasDatabaseName("idx_source_records_source_id");
 
-                    b.HasIndex("SourceId", "EntityType")
-                        .IsUnique()
-                        .HasDatabaseName("idx_source_records_source_entity_type");
+					b.HasIndex("SourceId", "EntityType")
+						.IsUnique()
+						.HasDatabaseName("idx_source_records_source_entity_type");
 
-                    b.ToTable("source_records", (string)null);
-                });
+					b.ToTable("source_records", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Track", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Track",
+				b =>
+				{
+					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AlbumId")
-                        .HasColumnType("integer");
+					b.Property<int>("AlbumId").HasColumnType("integer");
 
-                    b.Property<int>("ArtistId")
-                        .HasColumnType("integer");
+					b.Property<int>("ArtistId").HasColumnType("integer");
 
-                    b.Property<int?>("DurationSeconds")
-                        .HasColumnType("integer");
+					b.Property<int?>("DurationSeconds").HasColumnType("integer");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Title").IsRequired().HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("AlbumId");
+					b.HasIndex("AlbumId");
 
-                    b.HasIndex("ArtistId");
+					b.HasIndex("ArtistId");
 
-                    b.HasIndex("Title")
-                        .HasDatabaseName("idx_tracks_title_trgm")
-                        .HasFilter("true");
+					b.HasIndex("Title").HasDatabaseName("idx_tracks_title_trgm").HasFilter("true");
 
-                    b.HasIndex("ArtistId", "Title")
-                        .IsUnique()
-                        .HasDatabaseName("idx_tracks_artist_title");
+					b.HasIndex("ArtistId", "Title")
+						.IsUnique()
+						.HasDatabaseName("idx_tracks_artist_title");
 
-                    b.ToTable("tracks", (string)null);
-                });
+					b.ToTable("tracks", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Video", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Video",
+				b =>
+				{
+					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+					NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ChannelName")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("ChannelName").IsRequired().HasColumnType("text");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Description").IsRequired().HasColumnType("text");
 
-                    b.Property<JsonDocument>("Metadata")
-                        .HasColumnType("jsonb");
+					b.Property<JsonDocument>("Metadata").HasColumnType("jsonb");
 
-                    b.Property<DateTimeOffset?>("SyncedAt")
-                        .HasColumnType("timestamptz");
+					b.Property<DateTimeOffset?>("SyncedAt").HasColumnType("timestamptz");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Title").IsRequired().HasColumnType("text");
 
-                    b.Property<DateOnly?>("UploadDate")
-                        .HasColumnType("date");
+					b.Property<DateOnly?>("UploadDate").HasColumnType("date");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text");
+					b.Property<string>("Url").IsRequired().HasColumnType("text");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("ChannelName")
-                        .HasDatabaseName("idx_videos_channel");
+					b.HasIndex("ChannelName").HasDatabaseName("idx_videos_channel");
 
-                    b.HasIndex("Title")
-                        .HasDatabaseName("idx_videos_title_trgm")
-                        .HasFilter("true");
+					b.HasIndex("Title").HasDatabaseName("idx_videos_title_trgm").HasFilter("true");
 
-                    b.HasIndex("UploadDate")
-                        .HasDatabaseName("idx_videos_upload_date");
+					b.HasIndex("UploadDate").HasDatabaseName("idx_videos_upload_date");
 
-                    b.HasIndex("Url")
-                        .IsUnique()
-                        .HasDatabaseName("idx_videos_url");
+					b.HasIndex("Url").IsUnique().HasDatabaseName("idx_videos_url");
 
-                    b.ToTable("videos", (string)null);
-                });
+					b.ToTable("videos", (string)null);
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Album", b =>
-                {
-                    b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
-                        .WithMany("Albums")
-                        .HasForeignKey("ArtistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Album",
+				b =>
+				{
+					b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
+						.WithMany("Albums")
+						.HasForeignKey("ArtistId")
+						.OnDelete(DeleteBehavior.Cascade)
+						.IsRequired();
 
-                    b.Navigation("Artist");
-                });
+					b.Navigation("Artist");
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Scrobble", b =>
-                {
-                    b.HasOne("CSharpScripts.Data.Entities.Track", "Track")
-                        .WithMany("Scrobbles")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Scrobble",
+				b =>
+				{
+					b.HasOne("CSharpScripts.Data.Entities.Track", "Track")
+						.WithMany("Scrobbles")
+						.HasForeignKey("TrackId")
+						.OnDelete(DeleteBehavior.Cascade)
+						.IsRequired();
 
-                    b.Navigation("Track");
-                });
+					b.Navigation("Track");
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Track", b =>
-                {
-                    b.HasOne("CSharpScripts.Data.Entities.Album", "Album")
-                        .WithMany("Tracks")
-                        .HasForeignKey("AlbumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Track",
+				b =>
+				{
+					b.HasOne("CSharpScripts.Data.Entities.Album", "Album")
+						.WithMany("Tracks")
+						.HasForeignKey("AlbumId")
+						.OnDelete(DeleteBehavior.Cascade)
+						.IsRequired();
 
-                    b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
-                        .WithMany("Tracks")
-                        .HasForeignKey("ArtistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+					b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
+						.WithMany("Tracks")
+						.HasForeignKey("ArtistId")
+						.OnDelete(DeleteBehavior.Cascade)
+						.IsRequired();
 
-                    b.Navigation("Album");
+					b.Navigation("Album");
 
-                    b.Navigation("Artist");
-                });
+					b.Navigation("Artist");
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Album", b =>
-                {
-                    b.Navigation("Tracks");
-                });
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Album",
+				b =>
+				{
+					b.Navigation("Tracks");
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Artist", b =>
-                {
-                    b.Navigation("Albums");
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Artist",
+				b =>
+				{
+					b.Navigation("Albums");
 
-                    b.Navigation("Tracks");
-                });
+					b.Navigation("Tracks");
+				}
+			);
 
-            modelBuilder.Entity("CSharpScripts.Data.Entities.Track", b =>
-                {
-                    b.Navigation("Scrobbles");
-                });
+			modelBuilder.Entity(
+				"CSharpScripts.Data.Entities.Track",
+				b =>
+				{
+					b.Navigation("Scrobbles");
+				}
+			);
 #pragma warning restore 612, 618
-        }
-    }
+		}
+	}
 }
