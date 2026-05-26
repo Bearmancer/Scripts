@@ -401,7 +401,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 	private static void ShowYouTubeStatus()
 	{
 		Console.Info("=== YouTube ===");
-		var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeSyncFile);
+		var stateFile = Combine(Paths.StateDirectory, StateManager.YoutubeSyncFile);
 		var cached = File.Exists(stateFile);
 
 		if (cached)

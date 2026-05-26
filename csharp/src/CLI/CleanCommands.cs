@@ -101,7 +101,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 	{
 		Console.Info("Purging Last.fm...");
 
-		FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
+		FetchState state = StateManager.LoadStateAsync<FetchState>(StateManager.LastFmSyncFile).GetAwaiter().GetResult();
 		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();
@@ -116,9 +116,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 	{
 		Console.Info("Purging YouTube...");
 
-		YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
-			StateManager.YouTubeSyncFile
-		);
+		YouTubeFetchState state = StateManager.LoadStateAsync<YouTubeFetchState>(StateManager.YoutubeSyncFile).GetAwaiter().GetResult();
 		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();
