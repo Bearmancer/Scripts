@@ -13,10 +13,7 @@ internal static class AzureCredentialManager
 		try
 		{
 			var credential = new DefaultAzureCredential(
-				new DefaultAzureCredentialOptions
-				{
-					ExcludeInteractiveBrowserCredential = true,
-				}
+				new DefaultAzureCredentialOptions { ExcludeInteractiveBrowserCredential = true }
 			);
 
 			var context = new TokenRequestContext(scopes: [CognitiveServicesScope]);
@@ -66,4 +63,3 @@ internal static class AzureCredentialManager
 		}
 	}
 }
-

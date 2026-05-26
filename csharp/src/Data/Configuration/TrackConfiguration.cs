@@ -39,4 +39,3 @@ internal sealed class TrackConfiguration : IEntityTypeConfiguration<Track>
 			.HasForeignKey(static t => t.AlbumId);
 	}
 }
-

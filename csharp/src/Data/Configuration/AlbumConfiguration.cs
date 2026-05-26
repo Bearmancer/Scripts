@@ -33,4 +33,3 @@ internal sealed class AlbumConfiguration : IEntityTypeConfiguration<Album>
 			.HasForeignKey(static a => a.ArtistId);
 	}
 }
-

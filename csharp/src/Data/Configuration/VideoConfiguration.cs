@@ -28,4 +28,3 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 			.HasFilter("true");
 	}
 }
-

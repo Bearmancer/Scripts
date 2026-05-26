@@ -141,7 +141,8 @@ def process_tracks(
 				ss=f"{track.start_sec:.6f}",
 			)
 			(
-				stream.audio.filter("volume", volume=f"{volume_adjustment}dB")
+				stream.audio
+				.filter("volume", volume=f"{volume_adjustment}dB")
 				.output(
 					str(output_path),
 					t=f"{track.duration:.6f}" if track.duration else "0",

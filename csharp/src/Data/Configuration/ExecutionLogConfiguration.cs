@@ -22,4 +22,3 @@ internal sealed class ExecutionLogConfiguration : IEntityTypeConfiguration<Execu
 		b.HasIndex(static e => e.Timestamp).HasDatabaseName(name: "idx_execution_logs_timestamp");
 	}
 }
-

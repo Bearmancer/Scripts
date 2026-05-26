@@ -1,5 +1,9 @@
 namespace CSharpScripts.Data.Entities;
 
+/// <summary>
+/// Represents a source record for data integration tracking.
+/// RawData is stored as JSONB for flexible schema evolution.
+/// </summary>
 internal sealed record SourceRecord
 {
 	public Guid Id { get; set; }

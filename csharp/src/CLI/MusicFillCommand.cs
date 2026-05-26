@@ -368,7 +368,10 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 				}
 				catch (Exception ex)
 				{
-					Log.Warning("Transient search failure in MusicFillCommand: {Message}", ex.Message);
+					Log.Warning(
+						"Transient search failure in MusicFillCommand: {Message}",
+						ex.Message
+					);
 				}
 			})
 		);

@@ -10,7 +10,12 @@ internal sealed class ReleaseProgressConfiguration : IEntityTypeConfiguration<Re
 		b.ToTable(name: "release_progress");
 		b.HasKey(static e => e.Id);
 		b.Property(static e => e.Id).ValueGeneratedOnAdd();
-		b.HasIndex(static e => new { e.ReleaseId, e.DiscNumber, e.TrackNumber })
+		b.HasIndex(static e => new
+			{
+				e.ReleaseId,
+				e.DiscNumber,
+				e.TrackNumber,
+			})
 			.IsUnique()
 			.HasDatabaseName(name: "idx_release_progress_track");
 		b.Property(static e => e.ReleaseId).HasColumnType(typeName: "text");

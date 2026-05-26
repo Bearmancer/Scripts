@@ -79,7 +79,10 @@ internal static class YouTubeChangeDetector
 		List<string> modifiedIds = [];
 
 		Log.Debug(messageTemplate: "New playlist IDs (not in snapshots): {0}", newIds.Count);
-		Log.Debug(messageTemplate: "Deleted playlist IDs (in snapshots but not API): {0}", deletedIds.Count);
+		Log.Debug(
+			messageTemplate: "Deleted playlist IDs (in snapshots but not API): {0}",
+			deletedIds.Count
+		);
 
 		HashSet<string> newIdsSet = newIds.ToHashSet();
 
@@ -111,10 +114,16 @@ internal static class YouTubeChangeDetector
 			Log.Information(messageTemplate: "New playlists: {0}", changes.NewPlaylistIds.Count);
 
 		if (changes.DeletedPlaylistIds.Count > 0)
-			Log.Information(messageTemplate: "Deleted playlists: {0}", changes.DeletedPlaylistIds.Count);
+			Log.Information(
+				messageTemplate: "Deleted playlists: {0}",
+				changes.DeletedPlaylistIds.Count
+			);
 
 		if (changes.ModifiedPlaylistIds.Count > 0)
-			Log.Information(messageTemplate: "Modified playlists: {0}", changes.ModifiedPlaylistIds.Count);
+			Log.Information(
+				messageTemplate: "Modified playlists: {0}",
+				changes.ModifiedPlaylistIds.Count
+			);
 	}
 
 	internal static OptimizedChanges DetectOptimizedChanges(
@@ -175,7 +184,7 @@ internal static class YouTubeChangeDetector
 					(true, true) => "etag+count",
 					(true, false) => "etag only (likely reorder)",
 					(false, true) => "count only",
-					_ => "unknown"
+					_ => "unknown",
 				};
 				Log.Debug(messageTemplate: "  MODIFIED ({0}): {1}", reason, summary.Title);
 			}
@@ -225,7 +234,8 @@ internal static class YouTubeChangeDetector
 		Dictionary<string, PlaylistSnapshot> snapshots
 	)
 	{
-		Dictionary<string, PlaylistSummary> summaryLookup = summaries.ToDictionary(s => s.Id,
+		Dictionary<string, PlaylistSummary> summaryLookup = summaries.ToDictionary(
+			s => s.Id,
 			s => s
 		);
 

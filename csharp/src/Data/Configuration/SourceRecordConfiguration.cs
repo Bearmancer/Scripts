@@ -25,4 +25,3 @@ internal sealed class SourceRecordConfiguration : IEntityTypeConfiguration<Sourc
 			.HasDatabaseName(name: "idx_source_records_source_entity_type");
 	}
 }
-

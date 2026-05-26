@@ -13,4 +13,3 @@ public sealed class Artist
 	public ICollection<Album> Albums { get; init; } = new List<Album>();
 	public ICollection<Track> Tracks { get; init; } = new List<Track>();
 }
-

@@ -26,4 +26,3 @@ internal sealed class ScrobbleConfiguration : IEntityTypeConfiguration<Scrobble>
 			.HasForeignKey(static s => s.TrackId);
 	}
 }
-

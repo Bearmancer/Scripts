@@ -15,4 +15,3 @@ public sealed class Video
 	public DateTimeOffset? SyncedAt { get; set; }
 	public System.Text.Json.JsonDocument? Metadata { get; set; }
 }
-

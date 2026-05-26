@@ -11,4 +11,3 @@ public sealed class FailedTask
 	public string ErrorMessage { get; set; } = string.Empty;
 	public DateTimeOffset Timestamp { get; set; }
 }
-
