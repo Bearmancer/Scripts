@@ -194,6 +194,46 @@ We target **EF Core 10 LTS** (Nov 2025 – Nov 2028) with Npgsql 10. Do NOT use 
 | `MaxByAsync` / `MinByAsync`   | `OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync()` |
 | `EF.Functions.JsonPathExists` | `EF.Functions.JsonContains()` / `@>` Npgsql operator      |
 
+### EF10 Query Pattern Code Examples
+
+**MaxBy → OrderByDescending + FirstOrDefaultAsync**
+```csharp
+// EF11 (FORBIDDEN — will not compile):
+var latest = await context.Scrobbles.MaxByAsync(s => s.ScrobbledAt, ct);
+
+// EF10 (REQUIRED):
+var latest = await context.Scrobbles
+    .OrderByDescending(s => s.ScrobbledAt)
+    .FirstOrDefaultAsync(ct);
+```
+
+**MinBy → OrderBy + FirstOrDefaultAsync**
+```csharp
+// EF11 (FORBIDDEN — will not compile):
+var earliest = await context.Scrobbles.MinByAsync(s => s.ScrobbledAt, ct);
+
+// EF10 (REQUIRED):
+var earliest = await context.Scrobbles
+    .OrderBy(s => s.ScrobbledAt)
+    .FirstOrDefaultAsync(ct);
+```
+
+**JsonPathExists → JsonContains**
+```csharp
+// EF11 (FORBIDDEN — will not compile):
+var artists = await context.Artists
+    .Where(a => EF.Functions.JsonPathExists(a.Metadata, "$.genre"))
+    .ToListAsync(ct);
+
+// EF10 (REQUIRED):
+var artists = await context.Artists
+    .Where(a => EF.Functions.JsonContains(a.Metadata, """{"genre":"classical"}"""))
+    .ToListAsync(ct);
+```
+
+**Guard test located at:** `csharp/tests/Scripts.Tests/Guards/Ef11ForbiddenPatternsTests.cs`
+These regression tests fail the build if any EF11-only API is introduced.
+
 **EF10 features available:**
 - `LeftJoin` / `RightJoin` operators (Npgsql-native)
 - Named query filters (filter by `platform` enum)
@@ -272,9 +312,9 @@ Each tier must reach **sign-off** (all tests green, `dotnet build` clean) before
 
 ## 11. Current Status
 
-**Last Updated:** 2026-05-26  
-**Test Status:** 136 passing, 0 failing (100% pass rate)  
-**Tier 1 Progress:** 60% complete  
-**Blocker:** None. Next step: T1-07 (StateManager migration to EF).
+**Last Updated:** 2026-05-27  
+**Test Status:** 155 passing, 0 failing (100% pass rate)  
+**Tier 1 Progress:** 70% complete  
+**Blocker:** None. Next step: T1-08 (Release cache EF wiring). Tier 2 modularization remains blocked until T1 sign-off.
 
 See `AI/plans/CURRENT_STATUS.md` for detailed status, blockers, and next action.

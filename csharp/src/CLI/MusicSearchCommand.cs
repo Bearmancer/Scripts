@@ -1,5 +1,7 @@
 namespace CSharpScripts.CLI;
 
+using CSharpScripts.Data.Persistence;
+
 #region JSON Configuration
 
 file static class JsonOptions
@@ -779,14 +781,18 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			}
 		);
 
+		var connStr = Environment.GetEnvironmentVariable("PGCONNSTR") 
+			?? throw new InvalidOperationException("PGCONNSTR environment variable is not set.");
+		var progressService = new ReleaseProgressService(new CommandDbContextFactory(connStr));
+
 		if (fresh)
 		{
-			ReleaseProgressCache.Delete(releaseId);
+			await progressService.DeleteAsync(releaseId, ct);
 			StateManager.DeleteReleaseCache(releaseId);
 			Console.Info("Cleared cached state for fresh fetch");
 		}
 
-		List<TrackInfo> enrichedTracks = ReleaseProgressCache.Load(releaseId);
+		List<TrackInfo> enrichedTracks = await progressService.LoadAsync(releaseId, ct);
 		var startIndex = enrichedTracks.Count;
 		var resumeSource = "none";
 
@@ -929,7 +935,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 							ct
 						);
 						enrichedTracks.Add(enriched);
-						ReleaseProgressCache.AppendTrack(releaseId, enriched);
+						await progressService.AppendTrackAsync(releaseId, enriched, ct);
 						completed++;
 
 						(string Header, string Detail) info = FormatTrackDetail(enriched);
@@ -993,11 +999,22 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			MusicExporter.ExportWorksToCSV(releaseTitle, works);
 
 			StateManager.DeleteReleaseCache(releaseId);
-			ReleaseProgressCache.Delete(releaseId);
+			await progressService.DeleteAsync(releaseId, CancellationToken.None);
 		}
 
 		return enrichedTracks;
 	}
 
 	#endregion
+
+	private sealed class CommandDbContextFactory(string connectionString) : IDbContextFactory<ScriptsDbContext>
+	{
+		public ScriptsDbContext CreateDbContext()
+		{
+			var options = new DbContextOptionsBuilder<ScriptsDbContext>()
+				.UseNpgsql(connectionString)
+				.Options;
+			return new ScriptsDbContext(options);
+		}
+	}
 }

@@ -172,3 +172,24 @@ generated_code = true
 
 [**/bin/**]
 generated_code = true
+
+# ──────────────────────────────────────────────────────────
+# EF10 Query Pattern Enforcement
+# EF11-only APIs (MaxByAsync, MinByAsync, JsonPathExists)
+# are FORBIDDEN. Guard tests at:
+#   csharp/tests/Scripts.Tests/Guards/Ef11ForbiddenPatternsTests.cs
+#
+# EF10 replacements:
+#   MaxByAsync → OrderByDescending + FirstOrDefaultAsync
+#   MinByAsync → OrderBy + FirstOrDefaultAsync
+#   JsonPathExists → EF.Functions.JsonContains / Npgsql @>
+# ──────────────────────────────────────────────────────────
+
+[*.cs]
+
+# Enforce EF10-compatible query patterns through IDE code style
+# Prefer FirstOrDefaultAsync over MaxBy/MinBy (EF10 compatible)
+dotnet_style_prefer_collection_expression = true:suggestion
+
+# Discourage use of EF Functions extensions that may be EF11-only
+# Guard tests in Ef11ForbiddenPatternsTests.cs provide build-time enforcement

@@ -2,12 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement tier plans task-by-task.
 
-**Goal:** Migrate monolithic C# project to PostgreSQL (EF Core 10), THEN split into an 8-project modular solution + hardening.
+**Goal:** Finish the EF Core 10 migration in the monolith first. Modularization and hardening begin only after Tier 1 sign-off.
 
 **Strategy:** 
-1. **Delineation:** Keep the migration to EF Core (Tier 1) strictly separated from the modularization effort (Tier 2). 
+1. **Delineation:** Keep Tier 1 EF Core work strictly separated from modularization. Tier 2 does not start until T1 sign-off.
 2. **Monolith First:** Execute Tier 1 entirely within the existing monolithic architecture to minimize compilation errors and isolate database logic changes.
 3. **TDD:** Test-Driven Development (TDD) at every step. No production code without a failing test first.
+
+**Active workstream:** Tier 1 EF Core migration only. Tier 2 modularization, Tier 3 domain isolation, and Tier 4 hardening remain blocked until their predecessor tiers sign off.
 
 **Execution order is strictly sequential by tier.** Each tier's sign-off gates the next tier.
 
@@ -18,7 +20,7 @@
 | Tier | Directory                   | Phases | Focus                                              | Status  |
 | ---- | --------------------------- | ------ | -------------------------------------------------- | ------- |
 | T1   | `tier-1-ef-migration/`      | 00–16  | **Monolith:** EF Core + Postgres migration         | ⏳ Ready |
-| T2   | `tier-2-cpm-split/`         | 00–10  | **Modularization:** CPM + 8-project split          | 🔒 T1   |
+| T2   | `tier-2-cpm-split/`         | 00–10  | **Modularization:** CPM + 8-project split          | 🔒 T1 sign-off |
 | T3   | `tier-3-domain/`            | 00–07  | **Refinement:** Domain isolation, DateTimeOffset   | 🔒 T2   |
 | T4   | `tier-4-hardening/`         | 00–08  | DI, integration, quality, tooling, security        | 🔒 T3   |
 
@@ -192,7 +194,7 @@ These rules apply to every agent executing any plan in any tier.
 | [04-entity-configurations.md](tier-1-ef-migration/04-entity-configurations.md) | Indexes, keys, identity columns | ⏳ |
 | [05-migrations.md](tier-1-ef-migration/05-migrations.md) | unaccent, trigram, functional indexes | ⏳ |
 | [06-repositories.md](tier-1-ef-migration/06-repositories.md) | Repository interfaces + implementations | ⏳ |
-| [07-state-manager.md](tier-1-ef-migration/07-state-manager.md) | JSON file state → EF Core + Sheets fallback | ⏳ |
+| [07-state-manager.md](tier-1-ef-migration/07-state-manager.md) | JSON file state → Data/State namespace | ✅ |
 | [08-release-cache.md](tier-1-ef-migration/08-release-cache.md) | CSV cache → EF Core | ⏳ |
 | [09-sync-service-updates.md](tier-1-ef-migration/09-sync-service-updates.md) | ILike, ExecuteUpdate/Delete in sync | ⏳ |
 | [10-ef10-queries.md](tier-1-ef-migration/10-ef10-queries.md) | Replace EF11-only features with EF10 equivalents | ⏳ |

@@ -4,6 +4,10 @@
 **Status:** ✅ Spec Created  
 **Total Tasks:** 45 (across 4 tiers)
 
+**Execution Order:** Tier 1 EF work is active now. Tier 2 modularization begins only after T1 sign-off; Tier 3 and Tier 4 remain blocked behind their predecessor tiers.
+
+**Legend:** `[x]` complete, `[-]` in progress, `[~]` not started.
+
 ---
 
 ## Tier 1: EF Foundation (16 tasks)
@@ -15,17 +19,17 @@ See [Tier 1 Plan](../../plans/tier-1-ef-migration/INDEX.md)
 - [-] T1-02: Entity Refactoring
 - [~] T1-03: DbContext Configuration
 - [~] T1-04: Entity Configurations
-- [~] T1-05: Database Migrations
-- [~] T1-06: Repository Pattern
-- [~] T1-07: State Manager Migration
+- [x] T1-05: Database Migrations
+- [x] T1-06: Repository Pattern
+- [x] T1-07: State Manager Migration
 - [~] T1-08: Release Cache Migration
 - [~] T1-09: Sync Service Updates
 - [~] T1-10: EF10 Query Upgrades
-- [~] T1-11: Compiled Model
+- [x] T1-11: Compiled Model
 - [~] T1-12: Logging Relocation
 - [~] T1-13: Lingua Migration
-- [~] T1-14: Resilience Policies
-- [~] T1-15: Testcontainers
+- [x] T1-14: Resilience Policies
+- [x] T1-15: Testcontainers
 - [~] T1-16: Sign-off
 
 **Success Criteria:**

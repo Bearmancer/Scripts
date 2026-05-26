@@ -1,8 +1,8 @@
 # EF Core 10 Migration — Current Status
 
 **Last Updated:** 2026-05-27
-**Status:** ~65% Complete (Tier 1 EF work in progress, modularization tracked separately)
-**Next Action:** T1-07 (StateManager — file I/O remains, no EF migration yet)
+**Status:** ~80% Complete (Tier 1 EF work in progress; modularization begins only after T1 sign-off)
+**Next Action:** T1-12 (Logging relocation)
 
 ---
 
@@ -10,23 +10,23 @@
 
 | Metric      | Value      | Target |
 | ----------- | ---------- | ------ |
-| Total Tests | 136        | 250+   |
-| Passing     | 136 (100%) | 100%   |
+| Total Tests | 170        | 250+   |
+| Passing     | 170 (100%) | 100%   |
 | Failing     | 0          | 0      |
 | Pass Rate   | 100%       | 100%   |
 
 ---
 
-## Two Concurrent Tracks
+## EF-First Sequencing
 
-The work has two independent concerns that must not be conflated:
+The work is intentionally sequential. Tier 1 is the only active workstream right now; Tier 2 modularization starts only after T1 sign-off.
 
 | Track                   | Scope                                   | Status        | Gate           |
 | ----------------------- | --------------------------------------- | ------------- | -------------- |
 | **T1 — EF Core**        | Database layer only (monolith)          | 🟡 In Progress | T1-16 sign-off |
-| **T2 — Modularization** | 8-project split, CPM, namespace cleanup | 🔒 Blocked     | T1 sign-off    |
+| **T2 — Modularization** | 8-project split, CPM, namespace cleanup (post-T1) | 🔒 Blocked     | T1 sign-off    |
 
-**Key rule:** T1 plans must not contain modularization steps. Modularization is T2.
+**Key rule:** T1 plans must not contain modularization steps. Modularization is T2 and remains blocked until T1 sign-off.
 The duplicate `Core/` vs `Infrastructure/` classes are a T2 concern — they exist intentionally
 during T1 because the split hasn't happened yet.
 
@@ -36,7 +36,19 @@ during T1 because the split hasn't happened yet.
 
 | Tier | Phases | Status        | Progress | Notes                                          |
 | ---- | ------ | ------------- | -------- | ---------------------------------------------- |
-| T1   | 00–16  | 🟡 In Progress | ~65%     | 00–06, 11, 14, 15 done. 07–10, 12, 13 pending. |
+| T1   | 00–16  | 🟡 In Progress | ~80%     | 00–11, 14, 15 done. 12, 13 pending. |
+| T2   | 00–10  | 🔒 Blocked     | 0%       | Waiting for T1 sign-off                        |
+| T3   | 00–07  | 🔒 Blocked     | 0%       | Waiting for T2 sign-off                        |
+| T4   | 00–08  | 🔒 Blocked     | 0%       | Waiting for T3 sign-off                        |
+
+---
+
+## T1 Phase Status (EF Core only)
+
+| Phase | Task                  | Status        | Notes                                                                                                                      |
+| ----- | --------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| T1-00 | Environment preflight | ✅ Done        | Docker, PGCONNSTR, CanConnectAsync                                                                                         |
+| T1-01 | Entity extraction     | ✅ Done        | 8 entities in Data/Entities/                                                                                               |
 | T2   | 00–10  | 🔒 Blocked     | 0%       | Waiting for T1 sign-off                        |
 | T3   | 00–07  | 🔒 Blocked     | 0%       | Waiting for T2 sign-off                        |
 | T4   | 00–08  | 🔒 Blocked     | 0%       | Waiting for T3 sign-off                        |
@@ -54,29 +66,16 @@ during T1 because the split hasn't happened yet.
 | T1-04 | Entity configurations | ✅ Done        | 10 configs in Data/Configuration/                                                                                          |
 | T1-05 | Migrations            | ✅ Done        | 6 migrations, snapshot current                                                                                             |
 | T1-06 | Repositories          | ✅ Done        | 5 repos + interfaces + ResilienceFactory                                                                                   |
-| T1-07 | StateManager → EF     | ❌ Not started | StateManager.cs still pure file I/O                                                                                        |
-| T1-08 | Release cache → EF    | 🟡 Partial     | ReleaseProgressService exists; MusicSearchCommand still calls old ReleaseProgressCache (live .cs file in Core/Persistence) |
-| T1-09 | Sync service EF10     | ❌ Not started | LastFmService has no IDbContextFactory                                                                                     |
-| T1-10 | EF10 query guards     | ❌ Not started | Guard tests not yet written                                                                                                |
+| T1-07 | StateManager → EF     | ✅ Done        | Single StateManager remains in Data/State; full suite verified 155 passing                                                |
+| T1-08 | Release cache → EF    | ✅ Done        | ReleaseProgressService wired in MusicSearchCommand, CSV cache deleted                                                      |
+| T1-09 | Sync service EF10     | ✅ Done        | LastFmService has IDbContextFactory, PostgresService deleted                                                               |
+| T1-10 | EF10 query guards     | ✅ Done        | Guard tests written and passing                                                                                            |
 | T1-11 | Compiled model        | ✅ Done        | CompiledModelTests pass                                                                                                    |
 | T1-12 | Logging relocation    | ❌ Not started | LogDirectory still points to ProjectRoot/logs                                                                              |
 | T1-13 | Lingua migration      | ❌ Not started | LanguageIdentifier.cs excluded from build                                                                                  |
 | T1-14 | Resilience policies   | ✅ Done        | EnableRetryOnFailure + RepositoryResilienceFactory                                                                         |
 | T1-15 | Testcontainers        | ✅ Done        | DatabaseTestFixture uses local Postgres                                                                                    |
-| T1-16 | Sign-off              | ❌ Blocked     | Waiting on 07–10, 12, 13                                                                                                   |
-
----
-
-## T1-08 Broken State (Critical)
-
-`MusicSearchCommand.cs` still calls `ReleaseProgressCache.Delete/Load/AppendTrack`.
-The live class `Core/Persistence/ReleaseProgressCache.cs` still exists (CSV-based).
-`ReleaseProgressService.cs` (EF-backed) exists but is not wired into MusicSearchCommand.
-
-Resolution path:
-1. Complete T1-07 (StateManager) first
-2. Wire MusicSearchCommand to ReleaseProgressService (T1-08 Task 5)
-3. Delete Core/Persistence/ReleaseProgressCache.cs after wiring confirmed
+| T1-16 | Sign-off              | ❌ Blocked     | Waiting on 12, 13                                                                                                   |
 
 ---
 
@@ -91,17 +90,15 @@ Deleted:
 - `src/Hierarchy/ParkSquare.Discogs.hierarchy.txt`
 
 Remaining known stray:
-- `src/Services/PostgresService.cs` — orphan, no callers, has 6 pragma suppresses. Delete in T1-09.
-- `src/Core/Persistence/ReleaseProgressCache.cs` — live CSV class, still called by MusicSearchCommand. Delete after T1-08 wiring.
-- `src/Core/Persistence/` directory — will be empty after above deletion.
+- `src/Core/Persistence/` directory — now contains only backup files.
 
 ---
 
-## Path of Least Resistance: Two Concurrent Tracks
+## EF First, Then Modularization
 
 ### The Problem
 
-T1 (EF Core) and T2 (modularization) are sequential in the plan but the codebase
+T1 (EF Core) and T2 (modularization) are sequential in the plan, but the codebase
 already has partial T2 artifacts: `Core/` and `Infrastructure/` contain duplicate
 classes (`Paths`, `Resilience`, `StringExtensions`, `SyncProgress`, `UI/Console`).
 These duplicates are intentional — they exist because the monolith hasn't been split yet.
@@ -142,25 +139,7 @@ Infrastructure, they'll find nothing to move.
 ### Execution Order (No Change)
 
 T1 → T2 → T3 → T4. Sequential. No parallelism between tiers.
-The "two concurrent tracks" framing means: T1 is EF-only, T2 is modularization-only.
-They don't run at the same time — they run in sequence with clean handoff.
-
----
-
-## Next Immediate Actions
-
-1. **T1-07**: Migrate StateManager to `Data/State/` namespace (file already there, namespace already correct — verify tests pass, then delete Core/Persistence duplicate)
-2. **T1-08**: Wire MusicSearchCommand to ReleaseProgressService, then delete Core/Persistence/ReleaseProgressCache.cs
-3. **T1-09**: Inject IDbContextFactory into LastFmService, delete PostgresService.cs orphan
-4. **T1-10**: Write EF11 guard tests (should pass immediately — no EF11 patterns exist)
-5. **T1-12**: Relocate LogDirectory, add Ben.Demystifier, remove ServiceType.Sheets
-6. **T1-13**: Rewrite LanguageIdentifier with Lingua
-
----
-
-## Build Warnings (Current)
-
-The monolith has ~35 warnings from `Infrastructure/` files (CA1062, CA1002, CA1063, etc.).
+T1 is the only active tier right now. T2 begins only after T1 sign-off, then T3 and T4 follow in order.
 These are **T2 concerns** — they will be resolved when Infrastructure files move to their
 proper projects with correct visibility modifiers. Do not fix them in T1.
 

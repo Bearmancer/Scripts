@@ -4,7 +4,7 @@ using Scrobble = CSharpScripts.Models.Scrobble;
 
 namespace CSharpScripts.Services.Sync.LastFm;
 
-internal sealed class LastFmService(string apiKey, string username)
+internal sealed class LastFmService(string apiKey, string username, IDbContextFactory<ScriptsDbContext> contextFactory)
 {
 	private const int PerPage = 200;
 
@@ -177,4 +177,12 @@ internal sealed class LastFmService(string apiKey, string username)
 		fetchAfter is { } ? 1
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
+
+	internal async Task<CSharpScripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
+	{
+		await using var context = await contextFactory.CreateDbContextAsync(ct);
+		return await context.Artists
+			.AsNoTracking()
+			.FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name), ct);
+	}
 }
