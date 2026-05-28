@@ -1,3 +1,5 @@
+import concurrent.futures
+import os
 import re
 import shutil
 import subprocess
@@ -86,6 +88,36 @@ def create_output_directory(directory: Path, suffix: str) -> Path:
 	return destination
 
 
+def _check_image_size(flac_file: Path, exif_tool: str) -> Path | None:
+	try:
+		result = subprocess.run(
+			[exif_tool, "-PictureLength", "-s", "-s", "-s", str(flac_file)],
+			capture_output=True,
+			text=True,
+		)
+	except subprocess.CalledProcessError as e:
+		logger.error(f"exiftool failed for {flac_file.name} (exit {e.returncode})")
+		if e.stderr:
+			logger.error(f"stderr: {e.stderr[:200]}")
+		raise FileOperationError(
+			f"Failed to check artwork size for {flac_file.name}", flac_file
+		) from e
+	except OSError as e:
+		logger.error(f"Failed to check artwork size for {flac_file.name}: {e}")
+		raise FileOperationError(
+			f"Failed to check artwork size for {flac_file.name}", flac_file
+		) from e
+
+	if not result.stdout.strip():
+		return None
+
+	image_size_kb = round(int(result.stdout.strip()) / 1024, 2)
+
+	if image_size_kb > 1024:
+		logger.warning(f"{flac_file.name}: {image_size_kb} KB")
+		return flac_file
+	return None
+
 def calculate_image_size(path: Path) -> None:
 	"""Report FLAC files with embedded artwork larger than 1MB."""
 
@@ -97,34 +129,16 @@ def calculate_image_size(path: Path) -> None:
 		)
 	problematic_files: list[Path] = []
 
-	for flac_file in path.glob("*.flac"):
-		try:
-			result = subprocess.run(
-				[exif_tool, "-PictureLength", "-s", "-s", "-s", str(flac_file)],
-				capture_output=True,
-				text=True,
-			)
-		except subprocess.CalledProcessError as e:
-			logger.error(f"exiftool failed for {flac_file.name} (exit {e.returncode})")
-			if e.stderr:
-				logger.error(f"stderr: {e.stderr[:200]}")
-			raise FileOperationError(
-				f"Failed to check artwork size for {flac_file.name}", flac_file
-			) from e
-		except OSError as e:
-			logger.error(f"Failed to check artwork size for {flac_file.name}: {e}")
-			raise FileOperationError(
-				f"Failed to check artwork size for {flac_file.name}", flac_file
-			) from e
+	flac_files = list(path.glob("*.flac"))
+	if not flac_files:
+		return
 
-		if not result.stdout.strip():
-			continue
-
-		image_size_kb = round(int(result.stdout.strip()) / 1024, 2)
-
-		if image_size_kb > 1024:
-			logger.warning(f"{flac_file.name}: {image_size_kb} KB")
-			problematic_files.append(flac_file)
+	with concurrent.futures.ThreadPoolExecutor() as executor:
+		futures = [executor.submit(_check_image_size, f, exif_tool) for f in flac_files]
+		for future in concurrent.futures.as_completed(futures):
+			res = future.result()
+			if res is not None:
+				problematic_files.append(res)
 
 	if problematic_files:
 		logger.warning(f"Found {len(problematic_files)} files with artwork > 1MB")
