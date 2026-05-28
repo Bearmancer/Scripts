@@ -43,7 +43,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 
 			if (fetchAfter is { })
 			{
-				List<Scrobble> freshScrobbles = [with(capacity: batch.Count)];
+				List<Scrobble> freshScrobbles = [];
 				foreach (var track in batch)
 				{
 					if (track.PlayedAt > fetchAfter)
@@ -119,7 +119,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 	{
 		HashSet<DateTimeOffset?> existingTimes = [];
 		existingTimes.UnionWith(existing.Select(s => s.PlayedAt));
-		List<Scrobble> merged = [with(existing.Count + newOnes.Count)];
+		List<Scrobble> merged = [];
 		foreach (var newScrobble in newOnes)
 		{
 			if (!existingTimes.Contains(item: newScrobble.PlayedAt))
@@ -148,7 +148,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 			return null;
 		}
 
-		List<Scrobble> result = [with(capacity: response.Count)];
+		List<Scrobble> result = [];
 		foreach (var track in response)
 		{
 			result.Add(

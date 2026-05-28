@@ -13,7 +13,7 @@ internal static class YouTubeTranslationService
 		return await TranslationService.WithContainerAsync(
 			async token =>
 			{
-				List<YouTubeVideo> result = [with(capacity: videos.Count)];
+				List<YouTubeVideo> result = [];
 
 				foreach (YouTubeVideo video in videos)
 				{

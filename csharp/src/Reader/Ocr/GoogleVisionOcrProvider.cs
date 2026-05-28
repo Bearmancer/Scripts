@@ -65,7 +65,7 @@ internal sealed class GoogleVisionOcrProvider : IOcrProvider
 		var totalPages = doc.NumberOfPages;
 
 		var chunkCount = (totalPages + MaxPagesPerRequest - 1) / MaxPagesPerRequest;
-		List<byte[]> chunks = [with(capacity: chunkCount)];
+		List<byte[]> chunks = [];
 		for (var start = 1; start <= totalPages; start += MaxPagesPerRequest)
 		{
 			var end = Math.Min(start + MaxPagesPerRequest - 1, val2: totalPages);

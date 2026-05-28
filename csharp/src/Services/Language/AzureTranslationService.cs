@@ -68,7 +68,7 @@ internal static class AzureTranslationService
 			)
 			.ConfigureAwait(continueOnCapturedContext: false);
 
-		List<TranslationResult> results = [with(capacity: response.Value.Count)];
+		List<TranslationResult> results = [];
 		foreach (TranslatedTextItem item in response.Value)
 		{
 			var detectedLanguage = item.DetectedLanguage?.Language ?? sourceLanguage ?? "unknown";

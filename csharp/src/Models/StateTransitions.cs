@@ -32,23 +32,9 @@ internal static class StateTransitions
 
 		public YouTubeFetchState RemovePlaylistSnapshot(string playlistId)
 		{
-			Dictionary<string, PlaylistSnapshot> updated =
-			[
-				with(dictionary: state.PlaylistSnapshots),
-			];
-			updated.Remove(key: playlistId);
+			Dictionary<string, PlaylistSnapshot> updated = new(state.PlaylistSnapshots);
+			updated.Remove(playlistId);
 			return state with { PlaylistSnapshots = updated, LastUpdated = DateTimeOffset.UtcNow };
 		}
-	}
-
-	extension(FetchState state)
-	{
-		public FetchState MarkFetchComplete() => state with { FetchComplete = true };
-
-		public FetchState WithSpreadsheetId(string spreadsheetId) =>
-			state with
-			{
-				SpreadsheetId = spreadsheetId,
-			};
 	}
 }

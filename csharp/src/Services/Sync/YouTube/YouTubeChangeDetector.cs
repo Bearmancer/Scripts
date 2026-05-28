@@ -21,15 +21,15 @@ internal static class YouTubeChangeDetector
 		HashSet<string> currentSet = currentVideoIds.ToHashSet();
 		HashSet<string> storedSet = storedVideoIds.ToHashSet();
 
-		List<string> addedIds = [with(capacity: currentVideoIds.Count)];
+		List<string> addedIds = [];
 		foreach (var id in currentVideoIds)
 		{
 			if (!storedSet.Contains(item: id))
 				addedIds.Add(item: id);
 		}
 
-		List<string> removedIds = [with(capacity: storedVideoIds.Count)];
-		List<int> removedIndices = [with(capacity: storedVideoIds.Count)];
+		List<string> removedIds = [];
+		List<int> removedIndices = [];
 		for (var i = 0; i < storedVideoIds.Count; i++)
 		{
 			var storedId = storedVideoIds[index: i];
@@ -143,8 +143,8 @@ internal static class YouTubeChangeDetector
 
 		List<string> newIds = [.. currentIds.Except(second: previousIds)];
 		List<string> deletedIds = [.. previousIds.Except(second: currentIds)];
-		List<string> modifiedIds = [with(capacity: currentSummaries.Count)];
-		List<PlaylistRename> renamed = [with(capacity: currentSummaries.Count)];
+		List<string> modifiedIds = [];
+		List<PlaylistRename> renamed = [];
 
 		Log.Debug(messageTemplate: "New playlist IDs: {0}", newIds.Count);
 		Log.Debug(messageTemplate: "Deleted playlist IDs: {0}", deletedIds.Count);
