@@ -2,7 +2,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
-namespace CSharpScripts.Reader.Extraction;
+namespace CSharpScripts.Services.Read;
 
 internal static partial class HtmlCleanupHelper
 {
@@ -38,7 +38,7 @@ internal static partial class HtmlCleanupHelper
 		foreach (
 			IElement tag in doc.QuerySelectorAll(
 				"[class*='ad-'], [class*='advertisement'], [id*='ad-'], "
-				+ "[class*='promo'], [class*='sponsor'], aside[class*='promo']"
+					+ "[class*='promo'], [class*='sponsor'], aside[class*='promo']"
 			)
 		)
 			tag.Remove();

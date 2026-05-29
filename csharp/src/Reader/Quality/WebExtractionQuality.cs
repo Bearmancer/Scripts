@@ -4,5 +4,5 @@ internal enum WebExtractionQuality
 {
 	Unknown,
 	Ready,
-	Incomplete
+	Incomplete,
 }

@@ -1,18 +1,21 @@
 using Azure;
 using Azure.AI.Translation.Text;
+using Azure.Identity;
 
 namespace CSharpScripts.Services.Language;
 
 internal static class AzureTranslationService
 {
-	private static readonly string? ApiKey = Secrets.AzureTranslatorKey;
-	private static readonly string Region = Secrets.AzureTranslatorRegion;
-
-	private static readonly TextTranslationClient? Client = ApiKey is null
+	private static readonly TextTranslationClient? Client = string.IsNullOrWhiteSpace(
+		Secrets.AzureTranslatorEndpoint
+	)
 		? null
-		: new TextTranslationClient(new AzureKeyCredential(key: ApiKey), region: Region);
+		: new TextTranslationClient(
+			new DefaultAzureCredential(),
+			new Uri(Secrets.AzureTranslatorEndpoint)
+		);
 
-	internal static bool IsConfigured => ApiKey is { };
+	internal static bool IsConfigured => Client is not null;
 
 	internal static async Task<TranslationResult?> TranslateAsync(
 		string text,
@@ -24,7 +27,12 @@ internal static class AzureTranslationService
 			return null;
 
 		Response<IReadOnlyList<TranslatedTextItem>> response = await Client
-			.TranslateAsync(targetLanguage: "en", [text], sourceLanguage: sourceLanguage, cancellationToken: ct)
+			.TranslateAsync(
+				targetLanguage: "en",
+				[text],
+				sourceLanguage: sourceLanguage,
+				cancellationToken: ct
+			)
 			.ConfigureAwait(continueOnCapturedContext: false);
 
 		TranslatedTextItem item = response.Value[0];
@@ -33,7 +41,10 @@ internal static class AzureTranslationService
 
 		return translatedText is null
 			? null
-			: new TranslationResult(Translation: translatedText, DetectedLanguage: detectedLanguage);
+			: new TranslationResult(
+				Translation: translatedText,
+				DetectedLanguage: detectedLanguage
+			);
 	}
 
 	internal static async Task<IReadOnlyList<TranslationResult>> TranslateBatchAsync(

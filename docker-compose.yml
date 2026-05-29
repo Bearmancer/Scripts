@@ -11,8 +11,7 @@ services:
         ports:
             - "5432:5432"
         volumes:
-            - postgres_data:/var/lib/postgresql/data
-            - ./.kilo/references/init_schema.sql:/docker-entrypoint-initdb.d/init.sql
+            - postgres_data:/var/lib/postgresql
         restart: unless-stopped
         healthcheck:
             test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lance} -d ${POSTGRES_DB:-pg_db}" ]

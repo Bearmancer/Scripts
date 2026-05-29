@@ -22,7 +22,11 @@ internal sealed class LocalImageExtractor(
 
 		var name = Path.GetFileName(path: filePath);
 		var mimeType = name.GetImageMimeType();
-		DocumentPageResult result = await OcrImageWithFallbackAsync(name: name, bytes: bytes, mimeType: mimeType);
+		DocumentPageResult result = await OcrImageWithFallbackAsync(
+			name: name,
+			bytes: bytes,
+			mimeType: mimeType
+		);
 		Ui.Ok(
 			$"  → {result.BodyBlocks.Count} blocks, {result.SkippedHeadersFooters} headers/footers stripped"
 		);
@@ -31,7 +35,9 @@ internal sealed class LocalImageExtractor(
 		{
 			Title = Path.GetFileNameWithoutExtension(path: filePath),
 			BodyHtml = BuildBodyHtml(blocks: result.BodyBlocks),
-			SourceUrl = new Uri($"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}")
+			SourceUrl = new Uri(
+				$"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}"
+			),
 		};
 	}
 
@@ -64,12 +70,14 @@ internal sealed class LocalImageExtractor(
 			}
 		}
 
-		Log.Information(messageTemplate: "Google Document AI: {Name} ({Bytes} bytes)...", name, bytes.Length);
-		return await new DocumentAiOcrProvider(processorName: Secrets.GoogleDocumentAiProcessorName).OcrImageAsync(
-			imageBytes: bytes,
-			mimeType: mimeType,
-			ct: ct
+		Log.Information(
+			messageTemplate: "Google Document AI: {Name} ({Bytes} bytes)...",
+			name,
+			bytes.Length
 		);
+		return await new DocumentAiOcrProvider(
+			processorName: Secrets.GoogleDocumentAiProcessorName
+		).OcrImageAsync(imageBytes: bytes, mimeType: mimeType, ct: ct);
 	}
 
 	private static string BuildBodyHtml(IReadOnlyList<string> blocks)

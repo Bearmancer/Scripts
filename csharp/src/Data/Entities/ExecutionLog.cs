@@ -1,10 +1,16 @@
+using System.Text.Json;
+
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record ExecutionLog
+/// <summary>
+/// Records a CLI execution session. Payload is JSONB for flexible structured metadata.
+/// Id is SERIAL (auto-increment int) — high frequency writes expected.
+/// </summary>
+public sealed class ExecutionLog
 {
 	public int Id { get; set; }
-	public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
-	public string? SessionId { get; set; }
-	public JsonDocument? Payload { get; set; }
-	public int? ExitCode { get; set; }
+	public DateTimeOffset Timestamp { get; set; }
+	public string SessionId { get; set; } = string.Empty;
+	public JsonDocument Payload { get; set; } = JsonDocument.Parse("{}");
+	public int ExitCode { get; set; }
 }

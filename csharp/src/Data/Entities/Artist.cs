@@ -1,13 +1,15 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
+using System.Text.Json;
+
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record Artist
+/// <summary>
+/// Represents a music artist. Metadata is stored as JSONB (configured in ArtistConfiguration).
+/// </summary>
+public sealed class Artist
 {
-	public int Id { get; init; }
-	public string Name { get; init; } = null!;
-	public string? Mbid { get; init; }
-	public JsonDocument? Metadata { get; init; }
-
-	public ICollection<Album> Albums { get; } = [];
-	public ICollection<Track> Tracks { get; } = [];
+	public int Id { get; set; }
+	public string Name { get; set; } = string.Empty;
+	public JsonDocument? Metadata { get; set; }
+	public ICollection<Album> Albums { get; init; } = new List<Album>();
+	public ICollection<Track> Tracks { get; init; } = new List<Track>();
 }

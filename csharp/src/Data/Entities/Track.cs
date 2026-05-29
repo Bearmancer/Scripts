@@ -1,16 +1,18 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record Track
+/// <summary>
+/// Represents a music track belonging to an album and artist.
+/// Duration is stored in seconds (integer) for simplicity.
+/// </summary>
+public sealed class Track
 {
-	public int Id { get; init; }
-	public int ArtistId { get; init; }
-	public int? AlbumId { get; init; }
-	public string Title { get; init; } = null!;
-	public int? Duration { get; init; }
-	public string? Mbid { get; init; }
+	public int Id { get; set; }
+	public int AlbumId { get; set; }
+	public int ArtistId { get; set; }
+	public string Title { get; set; } = string.Empty;
+	public int? DurationSeconds { get; set; }
 
-	public Artist Artist { get; init; } = null!;
-	public Album? Album { get; init; }
-	public ICollection<Scrobble> Scrobbles { get; } = [];
+	public Album Album { get; set; } = null!;
+	public Artist Artist { get; set; } = null!;
+	public ICollection<Scrobble> Scrobbles { get; init; } = new List<Scrobble>();
 }

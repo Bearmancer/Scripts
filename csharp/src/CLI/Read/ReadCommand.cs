@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Services.Read;
 using CSharpScripts.Services.Read.Ocr;
 using CSharpScripts.Services.Read.Validation;
@@ -7,7 +7,7 @@ namespace CSharpScripts.CLI.Read;
 
 internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -20,7 +20,6 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 				ArticleContent content;
 				AzureDocumentIntelligenceOptions azureDocumentIntelligence = new(
 					Endpoint: settings.AzureDocumentIntelligenceEndpoint,
-					ApiKey: settings.AzureDocumentIntelligenceKey,
 					ModelId: settings.AzureDocumentIntelligenceModel
 				);
 
@@ -59,7 +58,9 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 					)
 				)
 				{
-					var isJstor = settings.Source.ContainsIgnoreCase(substring: "jstor.org/stable/");
+					var isJstor = settings.Source.ContainsIgnoreCase(
+						substring: "jstor.org/stable/"
+					);
 					Ui.Info(
 						isJstor
 							? "JSTOR article detected — using PDF-based extraction."
@@ -152,12 +153,6 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 			description: "Azure Document Intelligence endpoint (optional; defaults to the repo's Karajan OCR resource, env var fallback still works)"
 		)]
 		public string? AzureDocumentIntelligenceEndpoint { get; init; }
-
-		[CommandOption(template: "--azure-docintel-key")]
-		[Description(
-			description: "Azure Document Intelligence API key (pass directly or via env var)"
-		)]
-		public string? AzureDocumentIntelligenceKey { get; init; }
 
 		[CommandOption(template: "--azure-docintel-model")]
 		[Description(

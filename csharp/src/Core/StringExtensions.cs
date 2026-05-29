@@ -35,7 +35,8 @@ internal static class StringExtensions
 		internal string GetImageMimeType() =>
 			value.EndsWithIgnoreCase(suffix: ".png") ? "image/png"
 			: value.EndsWithIgnoreCase(suffix: ".gif") ? "image/gif"
-			: value.EndsWithIgnoreCase(suffix: ".jpg") || value.EndsWithIgnoreCase(suffix: ".jpeg") ? "image/jpeg"
+			: value.EndsWithIgnoreCase(suffix: ".jpg") || value.EndsWithIgnoreCase(suffix: ".jpeg")
+				? "image/jpeg"
 			: value.EndsWithIgnoreCase(suffix: ".webp") ? "image/webp"
 			: value.EndsWithIgnoreCase(suffix: ".svg") ? "image/svg+xml"
 			: "application/octet-stream";
@@ -66,7 +67,9 @@ internal static class StringExtensions
 							ReadOnlySpan<char> invalidChars = Path.GetInvalidFileNameChars()
 								.AsSpan();
 							for (var i = 0; i < src.Length; i++)
-								span[index: i] = invalidChars.Contains(src[index: i]) ? '_' : src[index: i];
+								span[index: i] = invalidChars.Contains(src[index: i])
+									? '_'
+									: src[index: i];
 						}
 					)
 					.Trim()

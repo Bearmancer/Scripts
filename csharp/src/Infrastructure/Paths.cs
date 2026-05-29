@@ -7,7 +7,8 @@ public static class Paths
 	public static readonly string StateDirectory = Combine(ProjectRoot, "state");
 	public static readonly string DumpsDirectory = Combine(StateDirectory, "dump");
 	public static readonly string CacheDirectory = Combine(StateDirectory, "cache");
-	public static readonly string ExportsDirectory = @"C:\Users\Lance\Google Drive\My Drive\Spreadsheets\Boxed Sets";
+	public static readonly string ExportsDirectory =
+		@"C:\Users\Lance\Google Drive\My Drive\Spreadsheets\Boxed Sets";
 
 	private static string FindAncestorContaining(string marker)
 	{

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace CSharpScripts.Data;
 
@@ -10,8 +10,11 @@ internal static class TextNormalizer
 		var stripped = new string([
 			.. normalised.Where(static c =>
 				CharUnicodeInfo.GetUnicodeCategory(ch: c) != UnicodeCategory.NonSpacingMark
-			)
+			),
 		]);
-		return stripped.Normalize(normalizationForm: NormalizationForm.FormC).ToLowerInvariant().Trim();
+		return stripped
+			.Normalize(normalizationForm: NormalizationForm.FormC)
+			.ToLowerInvariant()
+			.Trim();
 	}
 }

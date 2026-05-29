@@ -13,10 +13,11 @@ public static class DateTimeFormats
 
 public static class TimeZoneHelper
 {
-	private static readonly TimeZoneInfo Ist = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+	private static readonly TimeZoneInfo Ist = TimeZoneInfo.FindSystemTimeZoneById(
+		"India Standard Time"
+	);
 
-	public static DateTimeOffset ToIst(DateTimeOffset utc) =>
-		TimeZoneInfo.ConvertTime(utc, Ist);
+	public static DateTimeOffset ToIst(DateTimeOffset utc) => TimeZoneInfo.ConvertTime(utc, Ist);
 
 	public static string FormatIst(DateTimeOffset utc, string format = DateTimeFormats.Iso8601) =>
 		ToIst(utc).ToString(format, CultureInfo.InvariantCulture);

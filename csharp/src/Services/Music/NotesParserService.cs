@@ -50,7 +50,9 @@ internal static partial class NotesParserService
 				foreach (Match dm in DatePattern().Matches(input: line))
 				{
 					var dateText = dm.Value.Trim();
-					recordingDates.Add(new RecordingDate(Description: line, TryParseDate(text: dateText)));
+					recordingDates.Add(
+						new RecordingDate(Description: line, TryParseDate(text: dateText))
+					);
 				}
 			}
 
@@ -59,7 +61,9 @@ internal static partial class NotesParserService
 				var trackRef = m.Groups[groupname: "ref"].Value.Trim();
 				var annotation = m.Groups[groupname: "annotation"].Value.Trim();
 				if (!IsNullOrEmpty(value: annotation))
-					trackAnnotations.Add(new TrackAnnotation(TrackReference: trackRef, Annotation: annotation));
+					trackAnnotations.Add(
+						new TrackAnnotation(TrackReference: trackRef, Annotation: annotation)
+					);
 			}
 		}
 

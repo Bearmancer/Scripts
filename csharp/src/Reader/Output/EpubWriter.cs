@@ -7,23 +7,23 @@ namespace CSharpScripts.Services.Read;
 internal static partial class EpubWriter
 {
 	private const string JstorCss = """
-	                                body {
-	                                    font-family: Georgia, 'Times New Roman', serif;
-	                                    padding: 1.5em;
-	                                    line-height: 1.8;
-	                                    color: #222;
-	                                    max-width: 40em;
-	                                    margin: 0 auto;
-	                                }
-	                                h1 { font-size: 1.6em; margin-bottom: 0.2em; line-height: 1.3; }
-	                                .meta { font-size: 0.9em; color: #555; margin-bottom: 1.5em; border-bottom: 1px solid #ccc; padding-bottom: 1em; }
-	                                .meta .authors { font-style: italic; }
-	                                .meta .journal { margin-top: 0.3em; }
-	                                .abstract { font-size: 0.95em; background: #f7f7f7; border-left: 3px solid #888; padding: 0.8em 1em; margin-bottom: 1.5em; }
-	                                .page-break { page-break-before: always; margin-top: 2em; padding-top: 1em; border-top: 1px dotted #bbb; }
-	                                p { margin: 0.6em 0; text-align: justify; }
-	                                img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
-	                                """;
+		body {
+		    font-family: Georgia, 'Times New Roman', serif;
+		    padding: 1.5em;
+		    line-height: 1.8;
+		    color: #222;
+		    max-width: 40em;
+		    margin: 0 auto;
+		}
+		h1 { font-size: 1.6em; margin-bottom: 0.2em; line-height: 1.3; }
+		.meta { font-size: 0.9em; color: #555; margin-bottom: 1.5em; border-bottom: 1px solid #ccc; padding-bottom: 1em; }
+		.meta .authors { font-style: italic; }
+		.meta .journal { margin-top: 0.3em; }
+		.abstract { font-size: 0.95em; background: #f7f7f7; border-left: 3px solid #888; padding: 0.8em 1em; margin-bottom: 1.5em; }
+		.page-break { page-break-before: always; margin-top: 2em; padding-top: 1em; border-top: 1px dotted #bbb; }
+		p { margin: 0.6em 0; text-align: justify; }
+		img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+		""";
 
 	private const string StandardCss =
 		"body{font-family:sans-serif;padding:10px}"
@@ -31,15 +31,17 @@ internal static partial class EpubWriter
 		+ "p{line-height:1.6}";
 
 	private const string ContainerXml = """
-	                                    <?xml version="1.0"?>
-	                                    <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-	                                      <rootfiles>
-	                                        <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-	                                      </rootfiles>
-	                                    </container>
-	                                    """;
+		<?xml version="1.0"?>
+		<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+		  <rootfiles>
+		    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+		  </rootfiles>
+		</container>
+		""";
 
-	private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+	private static readonly Encoding Utf8NoBom = new UTF8Encoding(
+		encoderShouldEmitUTF8Identifier: false
+	);
 
 	[GeneratedRegex(pattern: @"[^\w]")]
 	private static partial Regex NonWordRegex();
@@ -59,7 +61,12 @@ internal static partial class EpubWriter
 		using FileStream fs = new(path: outputPath, mode: FileMode.Create);
 		using ZipArchive zip = new(stream: fs, mode: ZipArchiveMode.Create);
 
-		WriteText(zip: zip, path: "mimetype", content: "application/epub+zip", level: CompressionLevel.NoCompression);
+		WriteText(
+			zip: zip,
+			path: "mimetype",
+			content: "application/epub+zip",
+			level: CompressionLevel.NoCompression
+		);
 		WriteText(zip: zip, path: "META-INF/container.xml", content: ContainerXml);
 		WriteText(zip: zip, path: "OEBPS/style/nav.css", isJstor ? JstorCss : StandardCss);
 		WriteText(zip: zip, path: "OEBPS/nav.xhtml", BuildNavXhtml(escapedTitle: escapedTitle));
@@ -68,36 +75,51 @@ internal static partial class EpubWriter
 		WriteText(
 			zip: zip,
 			path: "OEBPS/chap_1.xhtml",
-			BuildChapterXhtml(content: content, escapedTitle: escapedTitle, authorString: authorString, includeMetaHeader: isJstor)
+			BuildChapterXhtml(
+				content: content,
+				escapedTitle: escapedTitle,
+				authorString: authorString,
+				includeMetaHeader: isJstor
+			)
 		);
 		WriteText(
 			zip: zip,
 			path: "OEBPS/content.opf",
-			BuildContentOpf(content: content, bookId: bookId, escapedTitle: escapedTitle, authorString: authorString)
+			BuildContentOpf(
+				content: content,
+				bookId: bookId,
+				escapedTitle: escapedTitle,
+				authorString: authorString
+			)
 		);
-		WriteText(zip: zip, path: "OEBPS/toc.ncx", BuildTocNcx(bookId: bookId, escapedTitle: escapedTitle));
+		WriteText(
+			zip: zip,
+			path: "OEBPS/toc.ncx",
+			BuildTocNcx(bookId: bookId, escapedTitle: escapedTitle)
+		);
 	}
 
-	public static string SanitizeFilename(string title) => NonWordRegex().Replace(input: title, replacement: "_");
+	public static string SanitizeFilename(string title) =>
+		NonWordRegex().Replace(input: title, replacement: "_");
 
 	private static string BuildNavXhtml(string escapedTitle) =>
 		$"""
-		 <?xml version="1.0" encoding="utf-8"?>
-		 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
-		 <head>
-		   <title>Navigation</title>
-		   <link href="style/nav.css" rel="stylesheet" type="text/css"/>
-		 </head>
-		 <body>
-		   <nav epub:type="toc" id="toc">
-		     <h1>Table of Contents</h1>
-		     <ol>
-		       <li><a href="chap_1.xhtml">{escapedTitle}</a></li>
-		     </ol>
-		   </nav>
-		 </body>
-		 </html>
-		 """;
+			<?xml version="1.0" encoding="utf-8"?>
+			<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+			<head>
+			  <title>Navigation</title>
+			  <link href="style/nav.css" rel="stylesheet" type="text/css"/>
+			</head>
+			<body>
+			  <nav epub:type="toc" id="toc">
+			    <h1>Table of Contents</h1>
+			    <ol>
+			      <li><a href="chap_1.xhtml">{escapedTitle}</a></li>
+			    </ol>
+			  </nav>
+			</body>
+			</html>
+			""";
 
 	private static void WriteAssets(ZipArchive zip, ArticleContent content)
 	{
@@ -124,18 +146,18 @@ internal static partial class EpubWriter
 		body.AppendLine(value: content.BodyHtml);
 
 		return $"""
-		        <?xml version="1.0" encoding="utf-8"?>
-		        <!DOCTYPE html>
-		        <html xmlns="http://www.w3.org/1999/xhtml">
-		        <head>
-		          <title>{escapedTitle}</title>
-		          <link href="style/nav.css" rel="stylesheet" type="text/css"/>
-		        </head>
-		        <body>
-		          {body}
-		        </body>
-		        </html>
-		        """;
+			<?xml version="1.0" encoding="utf-8"?>
+			<!DOCTYPE html>
+			<html xmlns="http://www.w3.org/1999/xhtml">
+			<head>
+			  <title>{escapedTitle}</title>
+			  <link href="style/nav.css" rel="stylesheet" type="text/css"/>
+			</head>
+			<body>
+			  {body}
+			</body>
+			</html>
+			""";
 	}
 
 	private static void AppendMetaHeader(
@@ -185,7 +207,8 @@ internal static partial class EpubWriter
 	{
 		var imageManifest = Join(
 			separator: "\n    ",
-			content.Images.Keys.Select(k => $"""<item id="{k}" href="images/{k}" media-type="{ResolveMediaType(filename: k)}" />"""
+			content.Images.Keys.Select(k =>
+				$"""<item id="{k}" href="images/{k}" media-type="{ResolveMediaType(filename: k)}" />"""
 			)
 		);
 
@@ -201,51 +224,51 @@ internal static partial class EpubWriter
 			: $"<dc:date>{WebUtility.HtmlEncode(value: content.PublicationDate)}</dc:date>";
 
 		return $"""
-		        <?xml version="1.0" encoding="utf-8"?>
-		        <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid_id">
-		          <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-		            <dc:title>{escapedTitle}</dc:title>
-		            <dc:language>en</dc:language>
-		            <dc:identifier id="uuid_id">{bookId}</dc:identifier>
-		            <dc:creator>{authorString}</dc:creator>
-		            <meta property="dcterms:modified">{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}</meta>
-		            {sourceTag}
-		            {publisherTag}
-		            {dateTag}
-		          </metadata>
-		          <manifest>
-		            <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
-		            <item id="chap_1" href="chap_1.xhtml" media-type="application/xhtml+xml"/>
-		            <item id="css" href="style/nav.css" media-type="text/css"/>
-		            <item id="toc" href="toc.ncx" media-type="application/x-dtbnc+xml"/>
-		            {imageManifest}
-		          </manifest>
-		          <spine toc="toc">
-		            <itemref idref="chap_1"/>
-		          </spine>
-		        </package>
-		        """;
+			<?xml version="1.0" encoding="utf-8"?>
+			<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uuid_id">
+			  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+			    <dc:title>{escapedTitle}</dc:title>
+			    <dc:language>en</dc:language>
+			    <dc:identifier id="uuid_id">{bookId}</dc:identifier>
+			    <dc:creator>{authorString}</dc:creator>
+			    <meta property="dcterms:modified">{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}</meta>
+			    {sourceTag}
+			    {publisherTag}
+			    {dateTag}
+			  </metadata>
+			  <manifest>
+			    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+			    <item id="chap_1" href="chap_1.xhtml" media-type="application/xhtml+xml"/>
+			    <item id="css" href="style/nav.css" media-type="text/css"/>
+			    <item id="toc" href="toc.ncx" media-type="application/x-dtbnc+xml"/>
+			    {imageManifest}
+			  </manifest>
+			  <spine toc="toc">
+			    <itemref idref="chap_1"/>
+			  </spine>
+			</package>
+			""";
 	}
 
 	private static string BuildTocNcx(string bookId, string escapedTitle) =>
 		$"""
-		 <?xml version="1.0" encoding="UTF-8"?>
-		 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
-		   <head>
-		     <meta name="dtb:uid" content="{bookId}"/>
-		     <meta name="dtb:depth" content="1"/>
-		     <meta name="dtb:totalPageCount" content="0"/>
-		     <meta name="dtb:maxPageNumber" content="0"/>
-		   </head>
-		   <docTitle><text>{escapedTitle}</text></docTitle>
-		   <navMap>
-		     <navPoint id="navPoint-1" playOrder="1">
-		       <navLabel><text>{escapedTitle}</text></navLabel>
-		       <content src="chap_1.xhtml"/>
-		     </navPoint>
-		   </navMap>
-		 </ncx>
-		 """;
+			<?xml version="1.0" encoding="UTF-8"?>
+			<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+			  <head>
+			    <meta name="dtb:uid" content="{bookId}"/>
+			    <meta name="dtb:depth" content="1"/>
+			    <meta name="dtb:totalPageCount" content="0"/>
+			    <meta name="dtb:maxPageNumber" content="0"/>
+			  </head>
+			  <docTitle><text>{escapedTitle}</text></docTitle>
+			  <navMap>
+			    <navPoint id="navPoint-1" playOrder="1">
+			      <navLabel><text>{escapedTitle}</text></navLabel>
+			      <content src="chap_1.xhtml"/>
+			    </navPoint>
+			  </navMap>
+			</ncx>
+			""";
 
 	private static string ResolveMediaType(string filename)
 	{
@@ -257,7 +280,7 @@ internal static partial class EpubWriter
 			".gif" => "image/gif",
 			".svg" => "image/svg+xml",
 			".webp" => "image/webp",
-			_ => "application/octet-stream"
+			_ => "application/octet-stream",
 		};
 	}
 
@@ -275,7 +298,11 @@ internal static partial class EpubWriter
 
 	private static void WriteBinary(ZipArchive zip, string path, byte[] data)
 	{
-		using Stream stream = zip.CreateEntry(entryName: path, compressionLevel: CompressionLevel.Optimal).Open();
+		using Stream stream = zip.CreateEntry(
+				entryName: path,
+				compressionLevel: CompressionLevel.Optimal
+			)
+			.Open();
 		stream.Write(buffer: data);
 	}
 }

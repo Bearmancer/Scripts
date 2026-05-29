@@ -107,13 +107,7 @@ public static class Logger
 		if (ActiveService == null || FileLevel > level)
 			return;
 
-		WriteJsonEntry(
-			ActiveService.Value,
-			level,
-			eventName,
-			data ?? [],
-			SessionId
-		);
+		WriteJsonEntry(ActiveService.Value, level, eventName, data ?? [], SessionId);
 	}
 
 	public static void Message(LogLevel level, string text)
@@ -168,11 +162,7 @@ public static class Logger
 	public static void PlaylistRenamed(string oldTitle, string newTitle) =>
 		Event(
 			"PlaylistRenamed",
-			new Dictionary<string, object>
-			{
-				["OldTitle"] = oldTitle,
-				["NewTitle"] = newTitle,
-			}
+			new Dictionary<string, object> { ["OldTitle"] = oldTitle, ["NewTitle"] = newTitle }
 		);
 
 	public static void PlaylistDeleted(string title, int videoCount) =>
@@ -184,11 +174,7 @@ public static class Logger
 	public static void ScrobblesProcessed(int fetched, int written) =>
 		Event(
 			"ScrobblesProcessed",
-			new Dictionary<string, object>
-			{
-				["Fetched"] = fetched,
-				["Written"] = written,
-			}
+			new Dictionary<string, object> { ["Fetched"] = fetched, ["Written"] = written }
 		);
 
 	public static void ApiError(string api, string error, int? statusCode = null)
@@ -203,11 +189,7 @@ public static class Logger
 	public static void NetworkError(string operation, string error) =>
 		Event(
 			"NetworkError",
-			new Dictionary<string, object>
-			{
-				["Operation"] = operation,
-				["Error"] = error,
-			},
+			new Dictionary<string, object> { ["Operation"] = operation, ["Error"] = error },
 			LogLevel.Error
 		);
 
@@ -231,12 +213,9 @@ public static class Logger
 			LogEntry? entry = null;
 			try
 			{
-				entry = JsonSerializer.Deserialize<LogEntry>(
-					line,
-					StateManager.JsonCompact
-				);
+				entry = JsonSerializer.Deserialize<LogEntry>(line, StateManager.JsonCompact);
 			}
-			catch
+			catch (JsonException)
 			{
 				continue;
 			}
@@ -258,11 +237,7 @@ public static class Logger
 
 		foreach ((var crashedId, var startTime) in openSessions)
 		{
-			Console.Warning(
-				"Detected crashed session {0} started at {1}",
-				crashedId,
-				startTime
-			);
+			Console.Warning("Detected crashed session {0} started at {1}", crashedId, startTime);
 
 			AppendJsonLine(
 				logPath,

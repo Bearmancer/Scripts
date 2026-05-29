@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Dynamic;
 
 namespace CSharpScripts.CLI.Music;
@@ -9,7 +9,7 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 	private const double CostPerMillionChars = 10.0;
 	private const int FreeMonthlyChars = 2_000_000;
 
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -48,7 +48,8 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 
 				var headers = GetHeaders(records[index: 0]);
 				if (
-					!headers.Contains(value: settings.Column,
+					!headers.Contains(
+						value: settings.Column,
 						comparer: StringComparer.OrdinalIgnoreCase
 					)
 				)
@@ -63,15 +64,14 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 					);
 				}
 
-				var actualColumn = headers.First(h => h.EqualsIgnoreCase(other: settings.Column)
-				);
+				var actualColumn = headers.First(h => h.EqualsIgnoreCase(other: settings.Column));
 
 				List<string> allTitles =
 				[
-					.. records.Select(r => GetField(record: r, column: actualColumn)
-					).Where(t => !IsNullOrWhiteSpace(value: t)
-					).Distinct(comparer: StringComparer.OrdinalIgnoreCase
-					)
+					.. records
+						.Select(r => GetField(record: r, column: actualColumn))
+						.Where(t => !IsNullOrWhiteSpace(value: t))
+						.Distinct(comparer: StringComparer.OrdinalIgnoreCase),
 				];
 
 				Ui.Info(
@@ -87,8 +87,9 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 
 				List<string> toTranslate =
 				[
-					.. allTitles.Where(t => !cachedTranslations.ContainsKey(key: t) && !IsAsciiOnly(text: t)
-					)
+					.. allTitles.Where(t =>
+						!cachedTranslations.ContainsKey(key: t) && !IsAsciiOnly(text: t)
+					),
 				];
 
 				var totalChars = toTranslate.Sum(t => t.Length);
@@ -164,9 +165,9 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 		if (files.Length > 1)
 		{
 			return AnsiConsole.Prompt(
-				new SelectionPrompt<string>().Title(title: "Select CSV file:"
-				).AddChoices(choices: files
-				)
+				new SelectionPrompt<string>()
+					.Title(title: "Select CSV file:")
+					.AddChoices(choices: files)
 			);
 		}
 
@@ -186,7 +187,7 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 				TrimOptions = TrimOptions.Trim,
 				IgnoreBlankLines = true,
 				MissingFieldFound = null,
-				HeaderValidated = null
+				HeaderValidated = null,
 			}
 		);
 
@@ -248,8 +249,10 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 		if (toTranslate.Count == 0)
 			return results;
 
-		await AnsiConsole.Progress()
-			.Columns(new TaskDescriptionColumn(),
+		await AnsiConsole
+			.Progress()
+			.Columns(
+				new TaskDescriptionColumn(),
 				new ProgressBarColumn(),
 				new PercentageColumn(),
 				new RemainingTimeColumn()
@@ -265,8 +268,7 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 				{
 					List<string> batch =
 					[
-						.. toTranslate.Skip(count: i).Take(count: AzureBatchLimit
-						)
+						.. toTranslate.Skip(count: i).Take(count: AzureBatchLimit),
 					];
 
 					IReadOnlyList<TranslationResult> batchResults =
@@ -310,7 +312,8 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 		string[] originalHeaders
 	)
 	{
-		var allHeaders = originalHeaders.Contains(value: "TranslatedTitle",
+		var allHeaders = originalHeaders.Contains(
+			value: "TranslatedTitle",
 			comparer: StringComparer.OrdinalIgnoreCase
 		)
 			? originalHeaders
@@ -339,8 +342,7 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 			return;
 		}
 
-		SpectreTable table = new SpectreTable().AddColumn(column: "Title (non-ASCII)"
-		);
+		SpectreTable table = new SpectreTable().AddColumn(column: "Title (non-ASCII)");
 
 		foreach (var title in toTranslate.Take(count: 50))
 			table.AddRow(Markup.Escape(text: title));

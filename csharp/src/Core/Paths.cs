@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Core;
+namespace CSharpScripts.Core;
 
 internal static class Paths
 {
@@ -6,7 +6,12 @@ internal static class Paths
 		@"C:\Users\Lance\Google Drive\My Drive\Spreadsheets\Boxed Sets";
 
 	public static readonly string ProjectRoot = FindAncestorContaining(marker: ".git");
-	public static readonly string LogDirectory = Path.Combine(path1: ProjectRoot, path2: "logs");
+	public static readonly string LogDirectory = Path.Combine(
+		path1: Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+		path2: ".cache",
+		path3: "logs",
+		path4: "scripts"
+	);
 	public static readonly string StateDirectory = Path.Combine(path1: ProjectRoot, path2: "state");
 
 	public static readonly string DumpsDirectory = Path.Combine(

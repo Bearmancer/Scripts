@@ -1,7 +1,11 @@
 global using System.Collections.Frozen;
+global using System.ComponentModel;
 global using System.Diagnostics;
 global using static System.Environment;
 global using System.Globalization;
+global using static System.IO.Directory;
+global using static System.IO.File;
+global using static System.IO.Path;
 global using static System.String;
 global using static System.StringComparison;
 global using System.Text.Json;
@@ -10,12 +14,20 @@ global using System.Text.RegularExpressions;
 global using CSharpScripts.Core;
 global using CSharpScripts.Core.Auth;
 global using CSharpScripts.Data;
+global using CSharpScripts.Data.State;
 global using CSharpScripts.Models;
 global using CSharpScripts.Services.Language;
 global using CsvHelper;
 global using CsvHelper.Configuration;
+global using Google.Apis.Auth.OAuth2;
+global using Google.Apis.Drive.v3;
+global using Google.Apis.Services;
+global using Google.Apis.Sheets.v4;
+global using Google.Apis.Sheets.v4.Data;
 global using MetaBrainz.MusicBrainz.Interfaces.Entities;
 global using Microsoft.EntityFrameworkCore;
+global using Polly;
+global using Polly.Retry;
 global using RestSharp;
 global using Serilog;
 global using Serilog.Events;
@@ -28,3 +40,5 @@ global using SearchResult = CSharpScripts.Models.SearchResult;
 global using SpectreColor = Spectre.Console.Color;
 global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;
+
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Scripts.Tests")]

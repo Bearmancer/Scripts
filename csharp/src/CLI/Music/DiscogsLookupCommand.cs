@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Services.Music;
 
 namespace CSharpScripts.CLI.Music;
 
 internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken

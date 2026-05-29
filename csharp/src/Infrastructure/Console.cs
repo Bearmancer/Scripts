@@ -450,7 +450,7 @@ public static class Console
 			object?[] safeArgs = [.. args.Select(static a => a ?? "null")];
 			return string.Format(message, safeArgs);
 		}
-		catch
+		catch (FormatException)
 		{
 			return message;
 		}

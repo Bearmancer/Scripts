@@ -8,8 +8,7 @@ internal sealed class ScriptsDbContextFactory : IDesignTimeDbContextFactory<Scri
 	{
 		DbContextOptionsBuilder<ScriptsDbContext> optionsBuilder = new();
 		var connStr =
-			GetEnvironmentVariable(variable: "PGCONNSTR")
-			?? "Host=localhost;Database=dummy;Username=dummy;Password=dummy";
+			GetEnvironmentVariable(variable: "PGCONNSTR") ?? Variables.DefaultConnectionString;
 
 		optionsBuilder.UseNpgsql(connectionString: connStr);
 		return new ScriptsDbContext(options: optionsBuilder.Options);

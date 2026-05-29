@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Serilog.Context;
 using Serilog.Core;
 using Serilog.Core.Enrichers;
@@ -9,10 +10,9 @@ internal enum ServiceType
 {
 	LastFm,
 	YouTube,
-	Sheets,
 	Music,
 	Read,
-	Cloud
+	Cloud,
 }
 
 internal static class Log
@@ -23,14 +23,15 @@ internal static class Log
 #pragma warning disable CA1810
 	static Log()
 	{
+		Directory.CreateDirectory(path: Paths.LogDirectory);
+
 		ServiceLoggers = new Dictionary<ServiceType, ILogger>
 		{
 			[key: ServiceType.LastFm] = BuildServiceLogger(filename: "lastfm.jsonl"),
 			[key: ServiceType.YouTube] = BuildServiceLogger(filename: "youtube.jsonl"),
 			[key: ServiceType.Music] = BuildServiceLogger(filename: "music.jsonl"),
-			[key: ServiceType.Sheets] = BuildServiceLogger(filename: "sheets.jsonl"),
 			[key: ServiceType.Read] = BuildServiceLogger(filename: "read.jsonl"),
-			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl")
+			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl"),
 		}.ToFrozenDictionary();
 	}
 #pragma warning restore CA1810
@@ -57,6 +58,9 @@ internal static class Log
 				rollingInterval: RollingInterval.Infinite,
 				shared: true
 			)
+			.WriteTo.Console(
+				outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+			)
 			.CreateLogger();
 
 	internal static Logger BuildAppLogger(string filename) =>
@@ -72,6 +76,9 @@ internal static class Log
 				rollingInterval: RollingInterval.Day,
 				retainedFileCountLimit: 30,
 				shared: true
+			)
+			.WriteTo.Console(
+				outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] {Message:lj}{NewLine}{Exception}"
 			)
 			.CreateLogger();
 
@@ -106,13 +113,13 @@ internal static class Log
 		ActiveLogger.Error(messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void Error(Exception ex, string messageTemplate, params object?[] args) =>
-		ActiveLogger.Error(exception: ex, messageTemplate: messageTemplate, propertyValues: args);
+		ActiveLogger.Error(exception: ex.Demystify(), messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void Fatal(string messageTemplate, params object?[] args) =>
 		ActiveLogger.Fatal(messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void Fatal(Exception ex, string messageTemplate, params object?[] args) =>
-		ActiveLogger.Fatal(exception: ex, messageTemplate: messageTemplate, propertyValues: args);
+		ActiveLogger.Fatal(exception: ex.Demystify(), messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void ApiRequest(string api, string method, string url) =>
 		ActiveLogger.Debug(
@@ -125,8 +132,8 @@ internal static class Log
 	public static void ApiResponse(string api, int statusCode, TimeSpan elapsed) =>
 		ActiveLogger.Write(
 			statusCode >= 500 ? LogEventLevel.Error
-			: statusCode >= 400 ? LogEventLevel.Warning
-			: LogEventLevel.Debug,
+				: statusCode >= 400 ? LogEventLevel.Warning
+				: LogEventLevel.Debug,
 			messageTemplate: "ApiResponse {Api} {StatusCode} in {ElapsedMs}ms",
 			propertyValue0: api,
 			propertyValue1: statusCode,

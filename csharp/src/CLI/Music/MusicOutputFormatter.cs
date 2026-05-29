@@ -1,5 +1,3 @@
-﻿namespace CSharpScripts.CLI.Music;
+namespace CSharpScripts.CLI.Music;
 
-internal static class MusicOutputFormatter
-{
-}
+internal static class MusicOutputFormatter { }

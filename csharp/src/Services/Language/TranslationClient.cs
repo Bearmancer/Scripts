@@ -39,7 +39,7 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 		[key: "ukr"] = "uk",
 		[key: "vie"] = "vi",
 		[key: "tha"] = "th",
-		[key: "ind"] = "id"
+		[key: "ind"] = "id",
 	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	public static string ToIso639_1(string iso6393) =>
@@ -110,7 +110,11 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 
 				if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
 				{
-					Log.Debug(messageTemplate: "LibreTranslate unavailable, attempt {0}/{1}", attempt, MaxRetries);
+					Log.Debug(
+						messageTemplate: "LibreTranslate unavailable, attempt {0}/{1}",
+						attempt,
+						MaxRetries
+					);
 					await Task.Delay(1000 * attempt, cancellationToken: ct);
 					continue;
 				}
@@ -124,7 +128,11 @@ internal sealed class TranslationClient(string libreTranslateUrl)
 			}
 			catch (TaskCanceledException) when (!ct.IsCancellationRequested)
 			{
-				Log.Debug(messageTemplate: "Translation timeout, attempt {0}/{1}", attempt, MaxRetries);
+				Log.Debug(
+					messageTemplate: "Translation timeout, attempt {0}/{1}",
+					attempt,
+					MaxRetries
+				);
 				if (attempt < MaxRetries)
 					await Task.Delay(500 * attempt, cancellationToken: ct);
 			}

@@ -1,4 +1,4 @@
-﻿using ParkSquare.Discogs;
+using ParkSquare.Discogs;
 using ParkSquare.Discogs.Dto;
 
 namespace CSharpScripts.Services.Music;
@@ -52,11 +52,13 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100)
+						PageSize = Math.Min(val1: maxResults, val2: 100),
 					}
 				);
 
-				List<SearchResult> result = results.Results.Take(count: maxResults).Select(static r => new SearchResult(
+				List<SearchResult> result = results
+					.Results.Take(count: maxResults)
+					.Select(static r => new SearchResult(
 						Source: MusicSource.Discogs,
 						(r.ReleaseId > 0 ? r.ReleaseId : r.MasterId).ToString()!,
 						r.Title ?? "",
@@ -72,8 +74,8 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 						Disambiguation: null,
 						r.Genre?.ToList(),
 						r.Style?.ToList()
-					)
-				).ToList();
+					))
+					.ToList();
 				Log.Debug(messageTemplate: "SearchAsync exit {Count}", result.Count);
 				return result;
 			},
@@ -148,10 +150,12 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 		string? Conductor,
 		string? Orchestra,
 		List<string> Soloists
-		) ExtractExtraArtists(List<DiscogsArtistRef> extraArtists)
+	) ExtractExtraArtists(List<DiscogsArtistRef> extraArtists)
 	{
 		var composer = extraArtists
-			.FirstOrDefault(static a => a.Role?.ContainsIgnoreCase(substring: "Composed By") == true)
+			.FirstOrDefault(static a =>
+				a.Role?.ContainsIgnoreCase(substring: "Composed By") == true
+			)
 			?.Name;
 		var conductor = extraArtists
 			.FirstOrDefault(static a => a.Role?.ContainsIgnoreCase(substring: "Conductor") == true)
@@ -161,11 +165,13 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 			?.Name;
 		List<string> soloists =
 		[
-			.. extraArtists.Where(static a =>
-				a.Role?.ContainsIgnoreCase(substring: "Soloist") == true
-				|| a.Role?.ContainsIgnoreCase(substring: "Performer") == true
-			).Select(static a => a.Name
-			).Distinct()
+			.. extraArtists
+				.Where(static a =>
+					a.Role?.ContainsIgnoreCase(substring: "Soloist") == true
+					|| a.Role?.ContainsIgnoreCase(substring: "Performer") == true
+				)
+				.Select(static a => a.Name)
+				.Distinct(),
 		];
 
 		return (composer, conductor, orchestra, soloists);
@@ -190,8 +196,8 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 			if (
 				track.Position.StartsWithIgnoreCase($"{discNum + 1}-", comparisonType: Ordinal)
 				|| discNum == 1
-				&& track.Position.StartsWithIgnoreCase(prefix: "1-", comparisonType: Ordinal)
-				&& trackNum > 0
+					&& track.Position.StartsWithIgnoreCase(prefix: "1-", comparisonType: Ordinal)
+					&& trackNum > 0
 			)
 			{
 				discNum++;
@@ -256,7 +262,7 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 			Track = track,
 			Year = year,
 			Label = label,
-			Genre = genre
+			Genre = genre,
 		};
 
 		return await ExecuteSafeListAsync(
@@ -267,12 +273,14 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100)
+						PageSize = Math.Min(val1: maxResults, val2: 100),
 					}
 				);
 
-				return results.Results.Take(count: maxResults).Select(selector: DiscogsMapper.MapSearchResult
-				).ToList();
+				return results
+					.Results.Take(count: maxResults)
+					.Select(selector: DiscogsMapper.MapSearchResult)
+					.ToList();
 			},
 			ct: ct
 		);
@@ -343,9 +351,9 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 
 				Dictionary<string, List<Tracklist>> mediaDict = release.Tracklist.SplitMedia();
 
-				Dictionary<string, List<DiscogsTrack>> result = mediaDict.ToDictionary(static kvp => kvp.Key,
-					static kvp =>
-						kvp.Value.Select(selector: DiscogsMapper.MapTrack).ToList()
+				Dictionary<string, List<DiscogsTrack>> result = mediaDict.ToDictionary(
+					static kvp => kvp.Key,
+					static kvp => kvp.Value.Select(selector: DiscogsMapper.MapTrack).ToList()
 				);
 				Log.Debug(messageTemplate: "GetTracksByMediaAsync exit {Count}", result.Count);
 				return result;
@@ -381,7 +389,11 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 		CancellationToken ct = default
 	)
 	{
-		Log.Debug(messageTemplate: "GetVersionsAsync entry {MasterId} {MaxResults}", masterId, maxResults);
+		Log.Debug(
+			messageTemplate: "GetVersionsAsync entry {MasterId} {MaxResults}",
+			masterId,
+			maxResults
+		);
 		return await ExecuteSafeListAsync(
 			async () =>
 			{
@@ -390,12 +402,14 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 					new PageOptions
 					{
 						PageNumber = 1,
-						PageSize = Math.Min(val1: maxResults, val2: 100)
+						PageSize = Math.Min(val1: maxResults, val2: 100),
 					}
 				);
 
-				List<DiscogsVersion> versions = results.Versions.Take(count: maxResults).Select(selector: DiscogsMapper.MapVersion
-				).ToList();
+				List<DiscogsVersion> versions = results
+					.Versions.Take(count: maxResults)
+					.Select(selector: DiscogsMapper.MapVersion)
+					.ToList();
 				Log.Debug(messageTemplate: "GetVersionsAsync exit {Count}", versions.Count);
 				return versions;
 			},
@@ -407,7 +421,11 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 	{
 		try
 		{
-			return await Resilience.ExecuteMusicApiAsync(service: "Discogs", action: action, ct: ct);
+			return await Resilience.ExecuteMusicApiAsync(
+				service: "Discogs",
+				action: action,
+				ct: ct
+			);
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{

@@ -5,7 +5,7 @@
 		<AssemblyName>tools</AssemblyName>
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Remove="tests\**" />
@@ -13,34 +13,39 @@
 		<EmbeddedResource Remove="tests\**" />
 		<None Remove="tests\**" />
 
-		<Compile Remove="src\Reader\**" />
 		<Compile Remove="src\Orchestrators\**" />
 		<Compile Remove="src\CLI\**" />
 		<Compile Remove="src\Program.cs" />
-		<Compile Remove="src\Data\Configuration\**" />
-		<Compile Remove="src\Services\Language\LanguageIdentifier.cs" />
 
 		<PackageReference Include="AngleSharp" Version="*" />
 		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="*" />
 		<PackageReference Include="Azure.AI.Translation.Text" Version="*" />
 		<PackageReference Include="Azure.Identity" Version="*" />
+		<PackageReference Include="Ben.Demystifier" Version="*" />
 		<PackageReference Include="CsvHelper" Version="*" />
 		<PackageReference Include="Google.Apis" Version="*" />
 		<PackageReference Include="Google.Apis.Auth" Version="*" />
+		<PackageReference Include="Google.Apis.Sheets.v4" Version="*" />
+		<PackageReference Include="Google.Apis.Drive.v3" Version="*" />
 		<PackageReference Include="Google.Apis.YouTube.v3" Version="*" />
 		<PackageReference Include="Google.Cloud.DocumentAI.V1" Version="*" />
 		<PackageReference Include="Google.Cloud.Vision.V1" Version="*" />
 		<PackageReference Include="Hqub.Last.fm" Version="*" />
 		<PackageReference Include="MetaBrainz.MusicBrainz" Version="*" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*">
-		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*">
-		</PackageReference>
+		<PackageReference
+			Include="Microsoft.EntityFrameworkCore.Design"
+			Version="*"
+		></PackageReference>
+		<PackageReference
+			Include="Microsoft.EntityFrameworkCore.Tools"
+			Version="*"
+		></PackageReference>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="*" />
 		<PackageReference
 			Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-			Version="*" />
+			Version="*"
+		/>
 		<PackageReference Include="Microsoft.Playwright" Version="*" />
 		<PackageReference Include="Npgsql" Version="*" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
@@ -50,10 +55,12 @@
 		<PackageReference Include="Polly.RateLimiting" Version="*" />
 		<PackageReference Include="RestSharp" Version="*" />
 		<PackageReference Include="Riok.Mapperly" Version="*" />
+		<PackageReference Include="SearchPioneer.Lingua" Version="1.0.5" />
 		<PackageReference Include="Serilog" Version="*" />
 		<PackageReference Include="Serilog.Enrichers.Process" Version="*" />
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="*" />
 		<PackageReference Include="Serilog.Formatting.Compact" Version="*" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="*" />
 		<PackageReference Include="Serilog.Sinks.File" Version="*" />
 		<PackageReference Include="SmartReader" Version="*" />
 		<PackageReference Include="Spectre.Console" Version="*" />

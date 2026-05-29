@@ -87,7 +87,7 @@ internal sealed class JstorExtractor
 			AbstractText = AbstractText,
 			SourceUrl = new Uri(uriString: LandingUrl),
 			BodyHtml = BuildBodyHtml(pdfPages: pdfPages),
-			OriginalPdf = pdfBytes
+			OriginalPdf = pdfBytes,
 		};
 	}
 
@@ -101,7 +101,7 @@ internal sealed class JstorExtractor
 				new PageGotoOptions
 				{
 					WaitUntil = WaitUntilState.NetworkIdle,
-					Timeout = NavigationTimeoutMs
+					Timeout = NavigationTimeoutMs,
 				}
 			);
 		}
@@ -157,16 +157,18 @@ internal sealed class JstorExtractor
 
 		Authors =
 		[
-			.. doc.QuerySelectorAll(selectors: "meta[name='citation_author']").Select(m => m.GetAttribute(name: "content") ?? ""
-			).Where(a => !IsNullOrWhiteSpace(value: a)
-			)
+			.. doc.QuerySelectorAll(selectors: "meta[name='citation_author']")
+				.Select(m => m.GetAttribute(name: "content") ?? "")
+				.Where(a => !IsNullOrWhiteSpace(value: a)),
 		];
 
 		Journal = MetaContent(doc: doc, name: "citation_journal_title") ?? "";
 		PublicationDate = MetaContent(doc: doc, name: "citation_publication_date") ?? "";
 		Doi = MetaContent(doc: doc, name: "citation_doi") ?? "";
 		AbstractText =
-			doc.QuerySelector(selectors: ".abstract, [data-qa='abstract'], .article-paragraph-abstract")
+			doc.QuerySelector(
+					selectors: ".abstract, [data-qa='abstract'], .article-paragraph-abstract"
+				)
 				?.TextContent?.Trim()
 			?? "";
 	}
@@ -183,7 +185,9 @@ internal sealed class JstorExtractor
 	private void PrintMetadata()
 	{
 		Ui.Info($"Title   : {Title}");
-		Ui.Info($"Authors : {(Authors.Count > 0 ? Join(separator: "; ", values: Authors) : "Unknown")}");
+		Ui.Info(
+			$"Authors : {(Authors.Count > 0 ? Join(separator: "; ", values: Authors) : "Unknown")}"
+		);
 		Ui.Info($"Journal : {Journal}");
 		Ui.Info($"Date    : {PublicationDate}");
 		Ui.Info($"DOI     : {Doi}");
@@ -213,11 +217,7 @@ internal sealed class JstorExtractor
 		}
 		catch (Exception ex) when (ex is not InvalidOperationException)
 		{
-			Log.Warning(
-				messageTemplate: ex,
-				"Playwright download failed ({Message}), trying HTTP fallback...",
-				ex.Message
-			);
+			Log.Error(ex, "Playwright download failed, trying HTTP fallback...");
 			Ui.Warn($"Playwright download failed ({ex.Message}), trying HTTP fallback...");
 			return await DownloadPdfViaHttpAsync(pdfUrl: pdfUrl);
 		}
@@ -226,24 +226,29 @@ internal sealed class JstorExtractor
 	private async Task<byte[]> DownloadPdfViaHttpAsync(string pdfUrl)
 	{
 		IReadOnlyList<BrowserContextCookiesResult> cookies = await BrowserContext.CookiesAsync([
-			"https://www.jstor.org"
+			"https://www.jstor.org",
 		]);
 		using HttpClientHandler handler = new()
 		{
 			CheckCertificateRevocationList = true,
-			CookieContainer = new CookieContainer()
+			CookieContainer = new CookieContainer(),
 		};
 
 		foreach (BrowserContextCookiesResult cookie in cookies)
 		{
 			handler.CookieContainer.Add(
-				new NetCookie(name: cookie.Name, value: cookie.Value, path: cookie.Path, domain: cookie.Domain)
+				new NetCookie(
+					name: cookie.Name,
+					value: cookie.Value,
+					path: cookie.Path,
+					domain: cookie.Domain
+				)
 			);
 		}
 
 		using HttpClient httpClient = new(handler: handler)
 		{
-			Timeout = TimeSpan.FromMilliseconds(milliseconds: DownloadTimeoutMs)
+			Timeout = TimeSpan.FromMilliseconds(milliseconds: DownloadTimeoutMs),
 		};
 		httpClient.DefaultRequestHeaders.Add(
 			name: "User-Agent",
@@ -251,7 +256,10 @@ internal sealed class JstorExtractor
 		);
 		httpClient.DefaultRequestHeaders.Add(name: "Referer", value: LandingUrl);
 
-		HttpResponseMessage response = await httpClient.GetAsync(new Uri(uriString: pdfUrl), cancellationToken: Ct);
+		HttpResponseMessage response = await httpClient.GetAsync(
+			new Uri(uriString: pdfUrl),
+			cancellationToken: Ct
+		);
 		response.EnsureSuccessStatusCode();
 
 		var pdfBytes = await response.Content.ReadAsByteArrayAsync();

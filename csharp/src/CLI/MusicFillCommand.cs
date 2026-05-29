@@ -332,11 +332,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 
 		tasks.Add(async () =>
 		{
-			List<SearchResult> mbResults = await mbService.SearchAsync(
-				query,
-				maxResults: 5,
-				ct
-			);
+			List<SearchResult> mbResults = await mbService.SearchAsync(query, maxResults: 5, ct);
 			ExtractSuggestions(
 				results: mbResults,
 				record: record,
@@ -370,8 +366,12 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 				{
 					await t();
 				}
-				catch
-				{ /* ignore transient search failures */
+				catch (Exception ex)
+				{
+					Log.Warning(
+						"Transient search failure in MusicFillCommand: {Message}",
+						ex.Message
+					);
 				}
 			})
 		);

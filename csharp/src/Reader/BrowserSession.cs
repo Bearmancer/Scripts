@@ -1,4 +1,4 @@
-﻿using Microsoft.Playwright;
+using Microsoft.Playwright;
 
 namespace CSharpScripts.Services.Read;
 
@@ -38,7 +38,7 @@ internal sealed class BrowserSession : IAsyncDisposable
 		{
 			Headless = false,
 			ViewportSize = new ViewportSize { Width = ViewportWidth, Height = ViewportHeight },
-			AcceptDownloads = true
+			AcceptDownloads = true,
 		};
 
 		if (!IsNullOrEmpty(value: extensionPath))
@@ -46,7 +46,7 @@ internal sealed class BrowserSession : IAsyncDisposable
 			options.Args =
 			[
 				$"--disable-extensions-except={extensionPath}",
-				$"--load-extension={extensionPath}"
+				$"--load-extension={extensionPath}",
 			];
 		}
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Services.Music;
 
 namespace CSharpScripts.CLI.Music;
@@ -19,16 +19,20 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 
 		if (files.Length == 1)
 		{
-			Ui.Info(message: "Auto-detected input file for {0}: {1}", EnrichSuggestCommand, files[0]);
+			Ui.Info(
+				message: "Auto-detected input file for {0}: {1}",
+				EnrichSuggestCommand,
+				files[0]
+			);
 			return files[0];
 		}
 
 		if (files.Length > 1)
 		{
 			return AnsiConsole.Prompt(
-				new SelectionPrompt<string>().Title(title: "Select input file:"
-				).AddChoices(choices: files
-				)
+				new SelectionPrompt<string>()
+					.Title(title: "Select input file:")
+					.AddChoices(choices: files)
 			);
 		}
 
@@ -43,7 +47,7 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 			Path.GetFileNameWithoutExtension(path: inputFile) + "-enriched.csv"
 		);
 
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -67,14 +71,19 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 				if (!File.Exists(path: inputFile))
 				{
 					Ui.Error(message: "File not found: {0}", inputFile);
-					throw new FileNotFoundException(message: "Input file not found", fileName: inputFile);
+					throw new FileNotFoundException(
+						message: "Input file not found",
+						fileName: inputFile
+					);
 				}
 
 				var discogsToken = Secrets.DiscogsToken;
 				if (IsNullOrEmpty(value: discogsToken))
 					Ui.Warn(message: "DISCOGS_USER_TOKEN not set - Discogs fallback disabled");
 
-				List<RecordingInput> records = RecordingEnrichmentService.ReadRecordings(filePath: inputFile);
+				List<RecordingInput> records = RecordingEnrichmentService.ReadRecordings(
+					filePath: inputFile
+				);
 				Ui.Info(
 					message: "{0} loaded {1} recordings from {2}",
 					EnrichSuggestCommand,
@@ -91,13 +100,19 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 					? null
 					: new DiscogsService(token: discogsToken);
 
-				var output = DetermineOutputPath(inputFile: inputFile, explicitOutput: settings.OutputFile);
+				var output = DetermineOutputPath(
+					inputFile: inputFile,
+					explicitOutput: settings.OutputFile
+				);
 
 				using StreamWriter writer = new(path: output);
 				writer.AutoFlush = true;
 				using CsvWriter csv = new(
 					writer: writer,
-					new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture) { Delimiter = "," }
+					new CsvConfiguration(cultureInfo: CultureInfo.InvariantCulture)
+					{
+						Delimiter = ",",
+					}
 				);
 
 				csv.Context.RegisterClassMap<EnrichOutputRowMap>();
@@ -152,7 +167,9 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 								if (!IsNullOrEmpty(value: best.Label))
 									found.Add($"Label: [cyan]{Markup.Escape(text: best.Label)}[/]");
 								if (!IsNullOrEmpty(value: best.CatalogNumber))
-									found.Add($"Cat: [cyan]{Markup.Escape(text: best.CatalogNumber)}[/]");
+									found.Add(
+										$"Cat: [cyan]{Markup.Escape(text: best.CatalogNumber)}[/]"
+									);
 								if (!IsNullOrEmpty(value: best.Year))
 									found.Add($"Year: [cyan]{best.Year}[/]");
 
@@ -190,7 +207,12 @@ internal sealed class MusicEnrichCommand : BaseAsyncCommand<MusicEnrichCommand.S
 
 							await writer.FlushAsync(cancellationToken: cancellationToken);
 
-							results.Add(new RecordingWithSuggestions(Original: record, Suggestions: suggestions));
+							results.Add(
+								new RecordingWithSuggestions(
+									Original: record,
+									Suggestions: suggestions
+								)
+							);
 							task.Increment(value: 1);
 						}
 					});

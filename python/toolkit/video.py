@@ -62,7 +62,8 @@ def extract_chapters(video_files: list[Path]) -> None:
 
 			try:
 				(
-					ffmpeg.input(
+					ffmpeg
+					.input(
 						str(video_file),
 						ss=chapter["start_time"],
 						to=chapter["end_time"],
@@ -296,7 +297,8 @@ def create_gif(
 	"""Create a single GIF and return its size in MiB."""
 	try:
 		(
-			ffmpeg.input(str(input_path), ss=start, t=duration)
+			ffmpeg
+			.input(str(input_path), ss=start, t=duration)
 			.filter("fps", fps=fps)
 			.filter("scale", scale, -1, flags="lanczos")
 			.output(str(output_path), format="gif", gifflags="+transdiff", y=True)

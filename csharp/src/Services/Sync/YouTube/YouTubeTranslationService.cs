@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Services.Sync.YouTube;
+namespace CSharpScripts.Services.Sync.YouTube;
 
 internal static class YouTubeTranslationService
 {
@@ -66,15 +66,16 @@ internal static class YouTubeTranslationService
 			return;
 		}
 
-		SpectreTable table = new SpectreTable().Border(border: TableBorder.Rounded
-		).AddColumn(column: "Original Title"
-		).AddColumn(column: "Translated Title"
-		).AddColumn(column: "Language"
-		);
+		SpectreTable table = new SpectreTable()
+			.Border(border: TableBorder.Rounded)
+			.AddColumn(column: "Original Title")
+			.AddColumn(column: "Translated Title")
+			.AddColumn(column: "Language");
 
 		foreach (YouTubeVideo video in translated)
 		{
-			table.AddRow(Markup.Escape(text: video.Title),
+			table.AddRow(
+				Markup.Escape(text: video.Title),
 				Markup.Escape(video.TranslatedTitle ?? "-"),
 				Markup.Escape(video.DetectedLanguage ?? "-")
 			);

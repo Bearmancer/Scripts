@@ -158,7 +158,7 @@ internal static class Ui
 		var yearDisplay = IsNullOrEmpty(value: year) ? Dim(text: "-") : Cyan(text: year);
 
 		AnsiConsole.MarkupLine(
-			$"    {Colored(color: confColor, $"{confidence,3}%")} Label: {labelDisplay} │ Cat: {catDisplay} │ Year: {yearDisplay} {Dim($"({source})")}"
+			$"    {Colored(color: confColor, $"{confidence, 3}%")} Label: {labelDisplay} │ Cat: {catDisplay} │ Year: {yearDisplay} {Dim($"({source})")}"
 		);
 	}
 
@@ -210,7 +210,7 @@ internal static class Ui
 			>= 75 => "green",
 			>= 50 => "yellow",
 			>= 25 => "blue",
-			_ => "cyan"
+			_ => "cyan",
 		};
 
 	public static string TaskTitle(string title) => Colored(color: "cyan", text: title);
@@ -247,14 +247,16 @@ internal static class Ui
 		bool hideCompleted = false
 	)
 	{
-		SpectreProgress progress = AnsiConsole.Progress().AutoClear(enabled: autoClear).HideCompleted(enabled: hideCompleted
-		);
+		SpectreProgress progress = AnsiConsole
+			.Progress()
+			.AutoClear(enabled: autoClear)
+			.HideCompleted(enabled: hideCompleted);
 
 		List<ProgressColumn> columns =
 		[
 			new FixedWidthDescriptionColumn(width: descriptionWidth),
 			new ProgressBarColumn(),
-			new PercentageColumn()
+			new PercentageColumn(),
 		];
 
 		if (showRemaining)
@@ -270,11 +272,15 @@ internal static class Ui
 		Spinner? spinner = null
 	)
 	{
-		return AnsiConsole.Progress().AutoClear(enabled: autoClear).Columns(new TaskDescriptionColumn(),
-			new ProgressBarColumn(),
-			new PercentageColumn(),
-			new SpinnerColumn(spinner ?? Spinner.Known.Dots)
-		);
+		return AnsiConsole
+			.Progress()
+			.AutoClear(enabled: autoClear)
+			.Columns(
+				new TaskDescriptionColumn(),
+				new ProgressBarColumn(),
+				new PercentageColumn(),
+				new SpinnerColumn(spinner ?? Spinner.Known.Dots)
+			);
 	}
 
 	public static void Link(string url, string text)
@@ -333,8 +339,9 @@ internal static class Ui
 
 	public static void TranslationSummary(Dictionary<string, int> languageCounts)
 	{
-		IEnumerable<string> parts = languageCounts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key.ToUpperInvariant()}: {kv.Value}"
-		);
+		IEnumerable<string> parts = languageCounts
+			.OrderByDescending(kv => kv.Value)
+			.Select(kv => $"{kv.Key.ToUpperInvariant()}: {kv.Value}");
 		Info(message: "Languages: {0}", Join(separator: ", ", values: parts));
 	}
 
@@ -385,7 +392,8 @@ file sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
 				.Replace(oldValue: "\r", newValue: "")
 				.Trim()
 			?? "";
-		return new Markup(text: text).Overflow(overflow: Overflow.Ellipsis).Justify(alignment: Alignment
-		);
+		return new Markup(text: text)
+			.Overflow(overflow: Overflow.Ellipsis)
+			.Justify(alignment: Alignment);
 	}
 }

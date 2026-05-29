@@ -56,10 +56,7 @@ public sealed class SyncAllCommand : AsyncCommand<SyncAllCommand.Settings>
 	{
 		Logger.Start(ServiceType.LastFm);
 		return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-			await new ScrobbleSyncOrchestrator(
-				null,
-				Program.cts.Token
-			).ExecuteAsync()
+			await new ScrobbleSyncOrchestrator(null, Program.cts.Token).ExecuteAsync()
 		);
 	}
 
@@ -324,10 +321,7 @@ public sealed class SyncLastFmCommand : AsyncCommand<SyncLastFmCommand.Settings>
 		Logger.Start(ServiceType.LastFm);
 
 		return await SyncYouTubeCommand.ExecuteWithErrorHandlingAsync(async () =>
-			await new ScrobbleSyncOrchestrator(
-				sinceDate,
-				Program.cts.Token
-			).ExecuteAsync()
+			await new ScrobbleSyncOrchestrator(sinceDate, Program.cts.Token).ExecuteAsync()
 		);
 	}
 
@@ -359,8 +353,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 		CancellationToken cancellationToken
 	)
 	{
-		var checkLastFm =
-			IsNullOrEmpty(settings.Service) || settings.Service.Equals("lastfm");
+		var checkLastFm = IsNullOrEmpty(settings.Service) || settings.Service.Equals("lastfm");
 		var checkYouTube =
 			IsNullOrEmpty(settings.Service)
 			|| settings.Service.Equals("yt")
@@ -386,16 +379,11 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 		{
 			var json = ReadAllText(stateFile);
 			FetchState state =
-				JsonSerializer.Deserialize<FetchState>(
-					json,
-					StateManager.JsonIndented
-				) ?? new FetchState();
+				JsonSerializer.Deserialize<FetchState>(json, StateManager.JsonIndented)
+				?? new FetchState();
 			Console.Info("Scrobbles: {0}", state.TotalFetched);
 			Console.Info("Cached: Yes");
-			Console.Info(
-				"Last sync: {0}",
-				state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss")
-			);
+			Console.Info("Last sync: {0}", state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss"));
 			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}
 		else
@@ -413,17 +401,15 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 	private static void ShowYouTubeStatus()
 	{
 		Console.Info("=== YouTube ===");
-		var stateFile = Combine(Paths.StateDirectory, StateManager.YouTubeSyncFile);
+		var stateFile = Combine(Paths.StateDirectory, StateManager.YoutubeSyncFile);
 		var cached = File.Exists(stateFile);
 
 		if (cached)
 		{
 			var json = ReadAllText(stateFile);
 			YouTubeFetchState state =
-				JsonSerializer.Deserialize<YouTubeFetchState>(
-					json,
-					StateManager.JsonIndented
-				) ?? new YouTubeFetchState();
+				JsonSerializer.Deserialize<YouTubeFetchState>(json, StateManager.JsonIndented)
+				?? new YouTubeFetchState();
 			var totalVideos = state.PlaylistSnapshots.Values.Sum(s => s.VideoIds.Count);
 			var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{state.SpreadsheetId}";
 
@@ -436,10 +422,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 				totalVideos
 			);
 			Console.Info("Cached: Yes");
-			Console.Info(
-				"Last sync: {0}",
-				state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss")
-			);
+			Console.Info("Last sync: {0}", state.LastUpdated.ToString("yyyy/MM/dd HH:mm:ss"));
 			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}
 		else

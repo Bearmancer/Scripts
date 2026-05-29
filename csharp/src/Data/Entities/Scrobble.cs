@@ -1,12 +1,16 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record Scrobble
+/// <summary>
+/// Records a single music play event (scrobble) from a streaming platform.
+/// Id is long (BIGINT) to handle high-volume scrobble history.
+/// Platform is stored as a string (e.g., "lastfm", "spotify").
+/// </summary>
+public sealed class Scrobble
 {
-	public long Id { get; init; }
-	public int TrackId { get; init; }
-	public DateTimeOffset ScrobbledAt { get; init; }
-	public string Platform { get; init; } = null!;
+	public long Id { get; set; }
+	public int TrackId { get; set; }
+	public DateTimeOffset ScrobbledAt { get; set; }
+	public string Platform { get; set; } = string.Empty;
 
-	public Track Track { get; init; } = null!;
+	public Track Track { get; set; } = null!;
 }

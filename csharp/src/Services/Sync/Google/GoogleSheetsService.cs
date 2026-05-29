@@ -1,3 +1,8 @@
+using CSharpScripts.Infrastructure;
+using Google.Apis.Drive.v3.Data;
+using Console = CSharpScripts.Infrastructure.Console;
+using Resilience = CSharpScripts.Infrastructure.Resilience;
+
 namespace CSharpScripts.Services.Sync.Google;
 
 public class GoogleSheetsService : IDisposable
@@ -235,10 +240,7 @@ public class GoogleSheetsService : IDisposable
 		};
 		Resilience.Execute(
 			"Sheets.BatchUpdate.DeleteSheet",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(request, spreadsheetId)
-					.Execute()
+			() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 		);
 		InvalidateCache(spreadsheetId);
 	}
@@ -349,10 +351,7 @@ public class GoogleSheetsService : IDisposable
 		};
 		Resilience.Execute(
 			"Sheets.BatchUpdate.Rename",
-			() =>
-				service
-					.Spreadsheets.BatchUpdate(request, spreadsheetId)
-					.Execute()
+			() => service.Spreadsheets.BatchUpdate(request, spreadsheetId).Execute()
 		);
 		InvalidateCache(spreadsheetId);
 		Console.Debug("Renamed sheet '{0}' to '{1}'", oldName, newName);
@@ -1175,10 +1174,7 @@ public class GoogleSheetsService : IDisposable
 		request.Q = query;
 		request.Fields = "files(id, name, webViewLink)";
 
-		FileList response = Resilience.Execute(
-			"Drive.Files.List",
-			() => request.Execute()
-		);
+		FileList response = Resilience.Execute("Drive.Files.List", () => request.Execute());
 
 		return response
 				.Files?.Select(f => (f.Id, f.WebViewLink ?? GetSpreadsheetUrl(f.Id)))

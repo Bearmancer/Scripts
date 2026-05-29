@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.Services.Read.Validation;
+namespace CSharpScripts.Services.Read.Validation;
 
 internal static class CalibreClient
 {
@@ -10,13 +10,13 @@ internal static class CalibreClient
 	{
 		Ui.Info($"Calibre: adding {epubPath} to library {library}...");
 
-		ProcessStartInfo startInfo = new
+		ProcessStartInfo startInfo = new()
 		{
 			FileName = "calibredb",
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
-			CreateNoWindow = true
+			CreateNoWindow = true,
 		};
 		startInfo.ArgumentList.Add(item: "add");
 		startInfo.ArgumentList.Add(item: epubPath);
@@ -43,7 +43,7 @@ internal static class CalibreClient
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Warning(messageTemplate: ex, "Calibre not available. Skipping ingestion.");
+			Log.Error(ex, "Calibre not available. Skipping ingestion.");
 		}
 	}
 }

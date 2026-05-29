@@ -38,7 +38,9 @@ internal sealed class LocalPdfExtractor(
 			Title = title,
 			BodyHtml = cleanedHtml,
 			OriginalPdf = pdfBytes,
-			SourceUrl = new Uri($"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}")
+			SourceUrl = new Uri(
+				$"file:///{Path.GetFullPath(path: filePath).Replace(oldChar: '\\', newChar: '/')}"
+			),
 		};
 	}
 
@@ -54,7 +56,7 @@ internal sealed class LocalPdfExtractor(
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
-				Log.Warning(messageTemplate: ex, "Azure Document Intelligence failed for PDF");
+				Log.Error(ex, "Azure Document Intelligence failed for PDF");
 			}
 		}
 
@@ -64,7 +66,7 @@ internal sealed class LocalPdfExtractor(
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Warning(messageTemplate: ex, "Google Vision failed. Attempting Tesseract fallback...");
+			Log.Error(ex, "Google Vision failed. Attempting Tesseract fallback...");
 			return await new TesseractOcrProvider().OcrPdfAsync(pdfBytes: pdfBytes, ct: ct);
 		}
 	}
@@ -93,8 +95,9 @@ internal sealed class LocalPdfExtractor(
 			? "<p><em>No content extracted.</em></p>"
 			: Join(
 				separator: "\n",
-				HtmlCleanupHelper.SplitIntoParagraphs(text: rawText).Select(p => $"<p>{WebUtility.HtmlEncode(value: p)}</p>"
-				)
+				HtmlCleanupHelper
+					.SplitIntoParagraphs(text: rawText)
+					.Select(p => $"<p>{WebUtility.HtmlEncode(value: p)}</p>")
 			);
 
 	private static PdfContentQuality ClassifyPdfContentQuality(string bodyHtml)
@@ -106,7 +109,7 @@ internal sealed class LocalPdfExtractor(
 			< 500 => PdfContentQuality.Poor,
 			< 2000 => PdfContentQuality.Fair,
 			< 10000 => PdfContentQuality.Good,
-			_ => PdfContentQuality.Excellent
+			_ => PdfContentQuality.Excellent,
 		};
 	}
 }

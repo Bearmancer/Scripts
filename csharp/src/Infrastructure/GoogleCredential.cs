@@ -1,12 +1,14 @@
 namespace CSharpScripts.Infrastructure;
 
+using Google.Apis.YouTube.v3;
+
 public static class GoogleCredentials
 {
 	private static readonly string[] Scopes =
 	[
 		SheetsService.Scope.Spreadsheets,
 		DriveService.Scope.Drive,
-		YouTubeServiceApi.Scope.YoutubeReadonly,
+		YouTubeService.Scope.YoutubeReadonly,
 	];
 
 	private static UserCredential? CachedCredential { get; set; }
@@ -23,7 +25,6 @@ public static class GoogleCredentials
 	{
 		if (CachedCredential is not null)
 		{
-			// Check if token is expired or about to expire
 			if (CachedCredential.Token.IsStale)
 			{
 				Console.Info("Google token expired, refreshing...");

@@ -22,8 +22,9 @@ internal sealed record YouTubeVideo(
 	public string DisplayDescription => TranslatedDescription ?? Description;
 
 	public bool NeedsTranslation =>
-		DetectedLanguage is { } && !DetectedLanguage.EqualsIgnoreCase(other: "eng")
-		                        && TranslatedTitle is null;
+		DetectedLanguage is { }
+		&& !DetectedLanguage.EqualsIgnoreCase(other: "eng")
+		&& TranslatedTitle is null;
 
 	public YouTubeVideo WithTranslation(
 		string translatedTitle,
@@ -35,7 +36,7 @@ internal sealed record YouTubeVideo(
 			DetectedLanguage = detectedLanguage,
 			TranslatedTitle = translatedTitle,
 			TranslatedDescription = translatedDescription,
-			TranslatedAt = DateTimeOffset.UtcNow
+			TranslatedAt = DateTimeOffset.UtcNow,
 		};
 
 	public YouTubeVideo WithoutTranslation() =>
@@ -43,7 +44,7 @@ internal sealed record YouTubeVideo(
 		{
 			TranslatedTitle = null,
 			TranslatedDescription = null,
-			TranslatedAt = null
+			TranslatedAt = null,
 		};
 }
 

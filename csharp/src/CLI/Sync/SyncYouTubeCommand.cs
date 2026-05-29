@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Orchestrators;
 
 namespace CSharpScripts.CLI.Sync;
 
 internal sealed class SyncYouTubeCommand : BaseAsyncCommand<SyncYouTubeCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken

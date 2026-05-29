@@ -71,8 +71,7 @@ internal static class TranslationService
 }
 
 internal record LibreTranslateResponse(
-	[property: JsonPropertyName(name: "translatedText")]
-	string TranslatedText
+	[property: JsonPropertyName(name: "translatedText")] string TranslatedText
 );
 
 internal record TranslationResult(string Translation, string DetectedLanguage);

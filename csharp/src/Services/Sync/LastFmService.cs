@@ -4,7 +4,7 @@ using Scrobble = CSharpScripts.Models.Scrobble;
 
 namespace CSharpScripts.Services.Sync.LastFm;
 
-internal sealed class LastFmService(string apiKey, string username)
+internal sealed class LastFmService(string apiKey, string username, IDbContextFactory<ScriptsDbContext> contextFactory)
 {
 	private const int PerPage = 200;
 
@@ -127,7 +127,10 @@ internal sealed class LastFmService(string apiKey, string username)
 		}
 
 		merged.AddRange(collection: existing);
-		await StateManager.SaveStateAsync(fileName: StateManager.LastFmScrobblesFile, state: merged);
+		await StateManager.SaveStateAsync(
+			fileName: StateManager.LastFmScrobblesFile,
+			state: merged
+		);
 	}
 
 	private async Task<List<Scrobble>?> FetchPageAsync(int page, CancellationToken ct)
@@ -151,7 +154,7 @@ internal sealed class LastFmService(string apiKey, string username)
 			result.Add(
 				new Scrobble(
 					track.Name
-					?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
+						?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
 					track.Artist?.Name ?? "",
 					track.Album?.Name ?? "",
 					PlayedAt: track.Date
@@ -163,7 +166,9 @@ internal sealed class LastFmService(string apiKey, string username)
 	}
 
 	internal static async Task<List<Scrobble>> LoadScrobblesAsync() =>
-		await StateManager.LoadStateAsync<List<Scrobble>>(fileName: StateManager.LastFmScrobblesFile);
+		await StateManager.LoadStateAsync<List<Scrobble>>(
+			fileName: StateManager.LastFmScrobblesFile
+		);
 
 	public static void DeleteScrobblesCache() =>
 		StateManager.Delete(fileName: StateManager.LastFmScrobblesFile);
@@ -172,4 +177,12 @@ internal sealed class LastFmService(string apiKey, string username)
 		fetchAfter is { } ? 1
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
+
+	internal async Task<CSharpScripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
+	{
+		await using var context = await contextFactory.CreateDbContextAsync(ct);
+		return await context.Artists
+			.AsNoTracking()
+			.FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name), ct);
+	}
 }

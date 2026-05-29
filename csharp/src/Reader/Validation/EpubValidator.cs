@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace CSharpScripts.Services.Read.Validation;
 
@@ -11,13 +11,13 @@ internal static class EpubValidator
 	{
 		Ui.Info($"EPUBCheck: validating {epubPath}...");
 
-		ProcessStartInfo startInfo = new
+		ProcessStartInfo startInfo = new()
 		{
 			FileName = "epubcheck",
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
-			CreateNoWindow = true
+			CreateNoWindow = true,
 		};
 		startInfo.ArgumentList.Add(item: epubPath);
 
@@ -46,11 +46,11 @@ internal static class EpubValidator
 		}
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
-			Log.Warning(messageTemplate: ex, "EPUBCheck not available. Skipping validation.");
+			Log.Error(ex, "EPUBCheck not available. Skipping validation.");
 			return new EpubValidationResult(Skipped: true, Passed: true, Output: "");
 		}
 
-		var combined = output + errors;
+		var combined = output.ToString() + errors.ToString();
 		var hasFatal = combined.Contains(value: "FATAL") || combined.Contains(value: "ERROR(S)");
 		var passed = process.ExitCode == 0 && !hasFatal;
 

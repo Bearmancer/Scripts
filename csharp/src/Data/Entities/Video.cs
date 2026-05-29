@@ -1,15 +1,17 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 namespace CSharpScripts.Data.Entities;
 
-internal sealed record Video
+/// <summary>
+/// Represents a YouTube video tracked in a playlist.
+/// IsDeleted uses soft-delete to preserve history of removed videos.
+/// </summary>
+public sealed class Video
 {
-	public long Id { get; init; }
-	public string Url { get; init; } = null!;
-	public string Title { get; init; } = null!;
-	public string? Description { get; init; }
-	public string ChannelName { get; init; } = null!;
-	public DateOnly UploadDate { get; init; }
-	public DateTimeOffset SyncedAt { get; init; }
-
-	public Dictionary<string, string> Metadata { get; init; } = [];
+	public int Id { get; set; }
+	public string Url { get; set; } = string.Empty;
+	public string Title { get; set; } = string.Empty;
+	public string Description { get; set; } = string.Empty;
+	public string ChannelName { get; set; } = string.Empty;
+	public DateOnly? UploadDate { get; set; }
+	public DateTimeOffset? SyncedAt { get; set; }
+	public System.Text.Json.JsonDocument? Metadata { get; set; }
 }

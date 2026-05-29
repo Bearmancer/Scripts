@@ -17,10 +17,7 @@ public sealed class CleanLocalCommand : Command<CleanLocalCommand.Settings>
 
 		if (!cleanLastFm && !cleanYouTube)
 		{
-			Console.Warning(
-				"Invalid service: {0}. Use: yt, lastfm, or all",
-				settings.Service
-			);
+			Console.Warning("Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
 			return 1;
 		}
 
@@ -74,10 +71,7 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 
 		if (!purgeLastFm && !purgeYouTube)
 		{
-			Console.Warning(
-				"Invalid service: {0}. Use: yt, lastfm, or all",
-				settings.Service
-			);
+			Console.Warning("Invalid service: {0}. Use: yt, lastfm, or all", settings.Service);
 			return 1;
 		}
 
@@ -107,7 +101,10 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 	{
 		Console.Info("Purging Last.fm...");
 
-		FetchState state = StateManager.Load<FetchState>(StateManager.LastFmSyncFile);
+		FetchState state = StateManager
+			.LoadStateAsync<FetchState>(StateManager.LastFmSyncFile)
+			.GetAwaiter()
+			.GetResult();
 		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();
@@ -122,9 +119,10 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 	{
 		Console.Info("Purging YouTube...");
 
-		YouTubeFetchState state = StateManager.Load<YouTubeFetchState>(
-			StateManager.YouTubeSyncFile
-		);
+		YouTubeFetchState state = StateManager
+			.LoadStateAsync<YouTubeFetchState>(StateManager.YoutubeSyncFile)
+			.GetAwaiter()
+			.GetResult();
 		if (!IsNullOrEmpty(state.SpreadsheetId))
 		{
 			sheets ??= new GoogleSheetsService();

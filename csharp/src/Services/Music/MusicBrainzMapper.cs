@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace CSharpScripts.Services.Music;
 
@@ -23,7 +23,7 @@ internal static class MusicBrainzMapper
 			"bass",
 			"bass-baritone",
 			"narrator",
-			"speaker"
+			"speaker",
 		],
 		comparer: StringComparer.OrdinalIgnoreCase
 	);
@@ -60,7 +60,7 @@ internal static class MusicBrainzMapper
 			"guitar",
 			"percussion",
 			"timpani",
-			"soloist"
+			"soloist",
 		],
 		comparer: StringComparer.OrdinalIgnoreCase
 	);
@@ -130,7 +130,9 @@ internal static class MusicBrainzMapper
 							artist.Name ?? "",
 							Role: rel.Type,
 							ArtistId: artist.Id,
-							rel.Attributes is { } attrs ? Join(separator: ", ", values: attrs) : null
+							rel.Attributes is { } attrs
+								? Join(separator: ", ", values: attrs)
+								: null
 						)
 					);
 				}
@@ -141,7 +143,13 @@ internal static class MusicBrainzMapper
 		if (r.LabelInfo is { } labelInfo)
 		{
 			foreach (ILabelInfo li in labelInfo)
-				labels.Add(new MusicBrainzLabel(Id: li.Label?.Id, Name: li.Label?.Name, CatalogNumber: li.CatalogNumber));
+				labels.Add(
+					new MusicBrainzLabel(
+						Id: li.Label?.Id,
+						Name: li.Label?.Name,
+						CatalogNumber: li.CatalogNumber
+					)
+				);
 		}
 
 		return new MusicBrainzRelease(
@@ -179,7 +187,9 @@ internal static class MusicBrainzMapper
 			Country: a.Country,
 			Area: a.Area?.Name,
 			Disambiguation: a.Disambiguation,
-			a.LifeSpan?.Begin?.NearestDate is DateTime b ? DateOnly.FromDateTime(dateTime: b) : null,
+			a.LifeSpan?.Begin?.NearestDate is DateTime b
+				? DateOnly.FromDateTime(dateTime: b)
+				: null,
 			a.LifeSpan?.End?.NearestDate is DateTime e ? DateOnly.FromDateTime(dateTime: e) : null,
 			Ended: a.LifeSpan?.Ended,
 			ExtractNames(items: a.Aliases, al => al.Name),
@@ -192,8 +202,7 @@ internal static class MusicBrainzMapper
 
 	internal static MusicBrainzRecording MapRecording(IRecording r)
 	{
-		IRelationship? workRelationship = r.Relationships?.FirstOrDefault(rel =>
-			rel.Work is { });
+		IRelationship? workRelationship = r.Relationships?.FirstOrDefault(rel => rel.Work is { });
 		var workName = workRelationship?.Work?.Title;
 		Guid? workId = workRelationship?.Work?.Id;
 
@@ -210,9 +219,19 @@ internal static class MusicBrainzMapper
 				if (relType is null)
 					continue;
 
-				TryExtractConductor(rel: rel, relType: relType, conductor: ref conductor, recordingDate: ref recordingDate);
+				TryExtractConductor(
+					rel: rel,
+					relType: relType,
+					conductor: ref conductor,
+					recordingDate: ref recordingDate
+				);
 				TryExtractOrchestra(rel: rel, relType: relType, orchestra: ref orchestra);
-				TryExtractVenue(rel: rel, relType: relType, recordingVenue: ref recordingVenue, recordingDate: ref recordingDate);
+				TryExtractVenue(
+					rel: rel,
+					relType: relType,
+					recordingVenue: ref recordingVenue,
+					recordingDate: ref recordingDate
+				);
 			}
 		}
 
@@ -222,7 +241,9 @@ internal static class MusicBrainzMapper
 			Artist: r.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
 			FormatArtistCredit(credits: r.ArtistCredit),
 			Length: r.Length,
-			r.FirstReleaseDate?.NearestDate is DateTime dt ? DateOnly.FromDateTime(dateTime: dt) : null,
+			r.FirstReleaseDate?.NearestDate is DateTime dt
+				? DateOnly.FromDateTime(dateTime: dt)
+				: null,
 			IsVideo: r.Video,
 			Disambiguation: r.Disambiguation,
 			r.Isrcs?.ToList() ?? [],
@@ -248,7 +269,10 @@ internal static class MusicBrainzMapper
 		ref DateOnly? recordingDate
 	)
 	{
-		if (relType.EqualsIgnoreCase(other: "conductor", comparisonType: Ordinal) && rel.Artist is { } conductorArtist)
+		if (
+			relType.EqualsIgnoreCase(other: "conductor", comparisonType: Ordinal)
+			&& rel.Artist is { } conductorArtist
+		)
 		{
 			conductor = conductorArtist.Name;
 			if (recordingDate is null && rel.Begin?.NearestDate is DateTime beginDate)
@@ -266,18 +290,18 @@ internal static class MusicBrainzMapper
 			(
 				relType
 					is "orchestra"
-					or "performing orchestra"
-					or "ensemble"
-					or "choir"
-					or "philharmonic"
+						or "performing orchestra"
+						or "ensemble"
+						or "choir"
+						or "philharmonic"
 				|| relType.EqualsIgnoreCase(other: "instrument", comparisonType: Ordinal)
-				&& rel.Artist?.Name is { } name
-				&& (
-					name.ContainsIgnoreCase(substring: "Orchestra")
-					|| name.ContainsIgnoreCase(substring: "Philharmonic")
-					|| name.ContainsIgnoreCase(substring: "Symphony")
-					|| name.ContainsIgnoreCase(substring: "Choir")
-				)
+					&& rel.Artist?.Name is { } name
+					&& (
+						name.ContainsIgnoreCase(substring: "Orchestra")
+						|| name.ContainsIgnoreCase(substring: "Philharmonic")
+						|| name.ContainsIgnoreCase(substring: "Symphony")
+						|| name.ContainsIgnoreCase(substring: "Choir")
+					)
 			) && rel.Artist is { } orchestraArtist
 		)
 			orchestra = orchestraArtist.Name;
@@ -305,7 +329,9 @@ internal static class MusicBrainzMapper
 			Artist: r.ArtistCredit?.FirstOrDefault()?.Artist?.Name,
 			FormatArtistCredit(credits: r.ArtistCredit),
 			Length: r.Length,
-			r.FirstReleaseDate?.NearestDate is DateTime dt ? DateOnly.FromDateTime(dateTime: dt) : null,
+			r.FirstReleaseDate?.NearestDate is DateTime dt
+				? DateOnly.FromDateTime(dateTime: dt)
+				: null,
 			IsVideo: r.Video,
 			Disambiguation: r.Disambiguation,
 			r.Isrcs?.ToList() ?? [],

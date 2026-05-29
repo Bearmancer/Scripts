@@ -94,15 +94,9 @@ public sealed class SyncProgressTracker
 	public void UpdateVideoProgress(int videosProcessed)
 	{
 		if (videosProcessed < 0)
-			throw new ArgumentOutOfRangeException(
-				nameof(videosProcessed),
-				"Cannot be negative"
-			);
+			throw new ArgumentOutOfRangeException(nameof(videosProcessed), "Cannot be negative");
 		if (videosProcessed > CurrentPlaylistTotalVideos)
-			throw new ArgumentOutOfRangeException(
-				nameof(videosProcessed),
-				"Cannot exceed total"
-			);
+			throw new ArgumentOutOfRangeException(nameof(videosProcessed), "Cannot exceed total");
 
 		var delta = videosProcessed - CurrentPlaylistVideosProcessed;
 		CurrentPlaylistVideosProcessed = videosProcessed;

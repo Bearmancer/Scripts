@@ -34,8 +34,7 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 		return name[..(MAX_NAME_LENGTH - 3)] + "...";
 	}
 
-	private static string BuildProgressBar(double percent) =>
-		Console.WideProgressBar(percent);
+	private static string BuildProgressBar(double percent) => Console.WideProgressBar(percent);
 
 	private static string GetBarColor(double percent) => Console.ProgressColor(percent);
 

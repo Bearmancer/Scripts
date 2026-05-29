@@ -49,10 +49,25 @@ internal static partial class DiscogsMapper
 		TimeSpan.TryParse(s: duration, out TimeSpan result) ? result : null;
 
 	internal static DiscogsArtistRef MapArtistRef(Artist a) =>
-		new(Id: a.Id, a.Name ?? "", Anv: a.Alias, Join: a.Join, Role: a.Role, Tracks: a.Tracks, ResourceUrl: a.ResourceUrl);
+		new(
+			Id: a.Id,
+			a.Name ?? "",
+			Anv: a.Alias,
+			Join: a.Join,
+			Role: a.Role,
+			Tracks: a.Tracks,
+			ResourceUrl: a.ResourceUrl
+		);
 
 	internal static DiscogsImage MapImage(Image i) =>
-		new(i.Type ?? "", Uri: i.Uri, Uri150: i.UriSmall, Width: i.Width, Height: i.Height, ResourceUrl: i.ResourceUrl);
+		new(
+			i.Type ?? "",
+			Uri: i.Uri,
+			Uri150: i.UriSmall,
+			Width: i.Width,
+			Height: i.Height,
+			ResourceUrl: i.ResourceUrl
+		);
 
 	internal static partial DiscogsLabel MapLabel(Label l);
 
@@ -83,7 +98,9 @@ internal static partial class DiscogsMapper
 			RatingCount: c.Rating?.Count,
 			Status: c.Status,
 			DataQuality: c.DataQuality,
-			c.Submitter is { } s ? new DiscogsSubmitter(s.Username ?? "", ResourceUrl: s.ResourceUrl) : null
+			c.Submitter is { } s
+				? new DiscogsSubmitter(s.Username ?? "", ResourceUrl: s.ResourceUrl)
+				: null
 		);
 
 	internal static DiscogsSearchResult MapSearchResult(ParkSquare.Discogs.Dto.SearchResult r) =>
@@ -217,7 +234,10 @@ internal static partial class DiscogsMapper
 	internal static int? ExtractYearFromLine(string line)
 	{
 		Match recordedMatch = RecordedYearRegexField.Match(input: line);
-		if (recordedMatch.Success && int.TryParse(s: recordedMatch.Groups[groupnum: 1].Value, out var y1))
+		if (
+			recordedMatch.Success
+			&& int.TryParse(s: recordedMatch.Groups[groupnum: 1].Value, out var y1)
+		)
 			return y1;
 
 		Match yearMatch = YearRegexField.Match(input: line);

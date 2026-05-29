@@ -56,10 +56,7 @@ public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
 				{
 					Console.Rule(msg.Subject);
 					Console.KeyValue("From", msg.From?.Address ?? "");
-					Console.KeyValue(
-						"Date",
-						msg.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss")
-					);
+					Console.KeyValue("Date", msg.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss"));
 					Console.KeyValue("ID", msg.Id);
 
 					MailTmMessage full = await service.ReadMessageAsync(msg.Id);
@@ -83,10 +80,7 @@ public sealed class MailCheckCommand : AsyncCommand<MailCheckCommand.Settings>
 			Console.Dim(
 				$"No messages yet. Waiting {settings.WaitSeconds}s... (timeout at {deadline:HH:mm:ss})"
 			);
-			await Task.Delay(
-				TimeSpan.FromSeconds(settings.WaitSeconds.Value),
-				cancellationToken
-			);
+			await Task.Delay(TimeSpan.FromSeconds(settings.WaitSeconds.Value), cancellationToken);
 		}
 
 		return 0;

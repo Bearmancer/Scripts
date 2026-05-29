@@ -49,7 +49,7 @@ internal static partial class TranslationNormalizer
 		[key: "Kodaly"] = "Kodály",
 
 		[key: "Vineyard"] = "Weinberg",
-		[key: "Dull"] = "Dutilleux"
+		[key: "Dull"] = "Dutilleux",
 	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	private static readonly FrozenDictionary<string, string> MistranslationCorrections =
@@ -62,7 +62,7 @@ internal static partial class TranslationNormalizer
 			[key: "Stringserenade"] = "Serenade for Strings",
 			[key: "order recording"] = "orchestral version",
 			[key: "hr Symphony Orchestra"] = "Frankfurt Radio Symphony",
-			[key: "hr symphony orchestra"] = "Frankfurt Radio Symphony"
+			[key: "hr symphony orchestra"] = "Frankfurt Radio Symphony",
 		}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	private static readonly FrozenDictionary<string, string> MusicalTerms = new Dictionary<
@@ -127,26 +127,26 @@ internal static partial class TranslationNormalizer
 
 		[key: "Concerto per pianoforte"] = "Piano Concerto",
 		[key: "Concerto per violino"] = "Violin Concerto",
-		[key: "Sinfonia"] = "Symphony"
+		[key: "Sinfonia"] = "Symphony",
 	}.ToFrozenDictionary(comparer: StringComparer.OrdinalIgnoreCase);
 
 	private static readonly (
 		Regex Regex,
 		string Original,
 		string Replacement
-		)[] MistranslationRegexes = BuildRegexPatterns(source: MistranslationCorrections);
+	)[] MistranslationRegexes = BuildRegexPatterns(source: MistranslationCorrections);
 
 	private static readonly (
 		Regex Regex,
 		string Original,
 		string Replacement
-		)[] ComposerNameRegexes = BuildRegexPatterns(source: ComposerNameVariants);
+	)[] ComposerNameRegexes = BuildRegexPatterns(source: ComposerNameVariants);
 
 	private static readonly (
 		Regex Regex,
 		string Original,
 		string Replacement
-		)[] MusicalTermRegexes = BuildRegexPatterns(source: MusicalTerms);
+	)[] MusicalTermRegexes = BuildRegexPatterns(source: MusicalTerms);
 
 	[GeneratedRegex(
 		pattern: @"\b(\d+)(?:st|nd|rd|th)\s+(Symphony|Concerto|Sonata|Quartet|Quintet|Trio|Suite)",

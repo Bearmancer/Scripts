@@ -1,0 +1,8 @@
+{
+  "specType": "feature",
+  "workflowType": "requirements-first",
+  "featureName": "ef-core-10-migration-continuation",
+  "createdAt": "2026-05-25T00:00:00Z",
+  "lastUpdated": "2026-05-25T00:00:00Z",
+  "description": "Migrate monolithic C# project to PostgreSQL (EF Core 10) + 8-project modular solution + hardening across 4 tiers (45 sequenced phases)"
+}

@@ -1,4 +1,4 @@
-﻿namespace CSharpScripts.CLI;
+namespace CSharpScripts.CLI;
 
 internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 	where TSettings : CommandSettings
@@ -32,13 +32,21 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 		}
 		catch (HttpRequestException ex)
 		{
-			Log.Error(ex: ex, messageTemplate: "HttpRequestException {Summary}", FormatException(ex: ex));
+			Log.Error(
+				ex: ex,
+				messageTemplate: "HttpRequestException {Summary}",
+				FormatException(ex: ex)
+			);
 			Ui.Exception(ex: ex);
 			return 1;
 		}
 		catch (InvalidOperationException ex)
 		{
-			Log.Error(ex: ex, messageTemplate: "InvalidOperationException {Summary}", FormatException(ex: ex));
+			Log.Error(
+				ex: ex,
+				messageTemplate: "InvalidOperationException {Summary}",
+				FormatException(ex: ex)
+			);
 			Ui.Exception(ex: ex);
 			return 1;
 		}

@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CSharpScripts.Services.Language;
@@ -16,7 +16,7 @@ internal static class TranslationCache
 
 	private static readonly JsonSerializerOptions SerializerOptions = new()
 	{
-		WriteIndented = false
+		WriteIndented = false,
 	};
 
 	internal static async Task<string?> GetCachedAsync(
@@ -93,10 +93,10 @@ internal static class TranslationCache
 
 		await using FileStream stream = File.OpenRead(path: CachePath);
 		return await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(
-			utf8Json: stream,
-			options: SerializerOptions,
-			cancellationToken: ct
-		) ?? [];
+				utf8Json: stream,
+				options: SerializerOptions,
+				cancellationToken: ct
+			) ?? [];
 	}
 
 	private static async Task SaveAsync(Dictionary<string, string> cache, CancellationToken ct)

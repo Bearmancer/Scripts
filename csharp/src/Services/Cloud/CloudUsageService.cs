@@ -21,7 +21,7 @@ internal static class CloudUsageService
 			GetEnvironmentVariable(variable: "AZURE_SUBSCRIPTION_ID")
 			?? throw new InvalidOperationException(
 				"AZURE_SUBSCRIPTION_ID environment variable is not set. "
-				+ "Run 'az login' and set AZURE_SUBSCRIPTION_ID to your subscription ID."
+					+ "Run 'az login' and set AZURE_SUBSCRIPTION_ID to your subscription ID."
 			);
 
 		TokenCredential credential = new DefaultAzureCredential();
@@ -40,24 +40,24 @@ internal static class CloudUsageService
 			+ $"/providers/Microsoft.CostManagement/query?api-version={ApiVersion}";
 
 		const string requestBody = """
-		                           {
-		                             "type": "ActualCost",
-		                             "timeframe": "BillingMonthToDate",
-		                             "dataset": {
-		                               "granularity": "None",
-		                               "grouping": [
-		                                 { "type": "Dimension", "name": "ServiceName" },
-		                                 { "type": "Dimension", "name": "MeterName" }
-		                               ],
-		                               "aggregation": {
-		                                 "totalCost": {
-		                                   "name": "PreTaxCost",
-		                                   "function": "Sum"
-		                                 }
-		                               }
-		                             }
-		                           }
-		                           """;
+			{
+			  "type": "ActualCost",
+			  "timeframe": "BillingMonthToDate",
+			  "dataset": {
+			    "granularity": "None",
+			    "grouping": [
+			      { "type": "Dimension", "name": "ServiceName" },
+			      { "type": "Dimension", "name": "MeterName" }
+			    ],
+			    "aggregation": {
+			      "totalCost": {
+			        "name": "PreTaxCost",
+			        "function": "Sum"
+			      }
+			    }
+			  }
+			}
+			""";
 
 		using HttpRequestMessage request = new(method: HttpMethod.Post, requestUri: url);
 		request.Headers.Authorization = new AuthenticationHeaderValue(
@@ -70,7 +70,10 @@ internal static class CloudUsageService
 			mediaType: "application/json"
 		);
 
-		using HttpResponseMessage response = await Http.SendAsync(request: request, cancellationToken: ct);
+		using HttpResponseMessage response = await Http.SendAsync(
+			request: request,
+			cancellationToken: ct
+		);
 		var json = await response.Content.ReadAsStringAsync(cancellationToken: ct);
 
 		if (!response.IsSuccessStatusCode)
@@ -135,7 +138,8 @@ internal static class CloudUsageService
 			);
 		}
 
-		services.Sort((a, b) =>
+		services.Sort(
+			(a, b) =>
 			{
 				var costCompare = b.Cost.CompareTo(value: a.Cost);
 				return costCompare != 0
@@ -165,7 +169,10 @@ internal static class CloudUsageService
 		var index = 0;
 		foreach (JsonElement col in columns.EnumerateArray())
 		{
-			if (col.GetProperty(propertyName: "name").GetString()?.EqualsIgnoreCase(other: name) ?? false)
+			if (
+				col.GetProperty(propertyName: "name").GetString()?.EqualsIgnoreCase(other: name)
+				?? false
+			)
 				return index;
 
 			index++;

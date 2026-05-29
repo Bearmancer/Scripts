@@ -1,11 +1,11 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using CSharpScripts.Services.Music;
 
 namespace CSharpScripts.CLI.Music;
 
 internal sealed class MusicNotesCommand : BaseAsyncCommand<MusicNotesCommand.Settings>
 {
-	protected async override Task<int> ExecuteAsync(
+	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
 		Settings settings,
 		CancellationToken cancellationToken
@@ -83,7 +83,8 @@ internal sealed class MusicNotesCommand : BaseAsyncCommand<MusicNotesCommand.Set
 			table.AddColumn(column: "Annotation");
 			foreach (TrackAnnotation ta in parsed.TrackAnnotations)
 			{
-				table.AddRow(Markup.Escape(text: ta.TrackReference),
+				table.AddRow(
+					Markup.Escape(text: ta.TrackReference),
 					Markup.Escape(text: ta.Annotation)
 				);
 			}

@@ -1,10 +1,11 @@
-﻿namespace CSharpScripts.CLI;
+namespace CSharpScripts.CLI;
 
 [AttributeUsage(validOn: AttributeTargets.Property)]
 internal sealed class AllowedValuesAttribute(params string[] values)
 	: ParameterValidationAttribute($"Must be one of: {Join(separator: ", ", value: values)}")
 {
-	private readonly FrozenSet<string> AllowedValues = values.ToFrozenSet(comparer: StringComparer.OrdinalIgnoreCase
+	private readonly FrozenSet<string> AllowedValues = values.ToFrozenSet(
+		comparer: StringComparer.OrdinalIgnoreCase
 	);
 
 	public IReadOnlyList<string> Values => [.. AllowedValues];

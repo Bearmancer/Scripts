@@ -19,6 +19,23 @@ internal static class Program
 
 		try
 		{
+			Directory.CreateDirectory(Paths.LogDirectory);
+			var testFile = Path.Combine(Paths.LogDirectory, ".write-test");
+			File.WriteAllText(testFile, "");
+			File.Delete(testFile);
+		}
+		catch (Exception ex)
+		{
+			Console.Error.WriteLine(
+				$"Fatal: Cannot write to log directory {Paths.LogDirectory}: {ex.Message}"
+			);
+			return 1;
+		}
+
+		AzureCredentialManager.EnsureCredentials();
+
+		try
+		{
 			Console.CancelKeyPress += (_, e) =>
 			{
 				e.Cancel = true;
@@ -85,7 +102,9 @@ internal static class Program
 							);
 						music
 							.AddCommand<MusicNotesCommand>(name: "notes")
-							.WithDescription(description: "Parse and display Discogs release notes by ID");
+							.WithDescription(
+								description: "Parse and display Discogs release notes by ID"
+							);
 						music
 							.AddCommand<MusicTranslateCommand>(name: "translate")
 							.WithDescription(
@@ -101,12 +120,13 @@ internal static class Program
 									.WithDescription(description: "Lookup a Discogs release by ID");
 								lookup
 									.AddCommand<MusicBrainzLookupCommand>(name: "mb")
-									.WithDescription(description: "Lookup a MusicBrainz release by GUID");
+									.WithDescription(
+										description: "Lookup a MusicBrainz release by GUID"
+									);
 							}
 						);
 					}
 				);
-
 
 				config
 					.AddCommand<ReadCommand>(name: "read")
