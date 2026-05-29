@@ -1,13 +1,35 @@
+<<<<<<< HEAD
 using Lingua;
 
+=======
+>>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 namespace CSharpScripts.Services.Language;
 
 internal static class LanguageIdentifier
 {
+<<<<<<< HEAD
 	private static readonly LanguageDetector Detector = LanguageDetectorBuilder
 		.FromAllLanguages()
 		.WithPreloadedLanguageModels()
 		.Build();
+=======
+	private static Lazy<Lingua.LanguageDetector?> Detector { get; } =
+		new(() =>
+		{
+			try
+			{
+				return Lingua.LanguageDetectorBuilder.FromAllLanguages().Build();
+			}
+			catch (Exception ex)
+			{
+				Log.Warning(
+					messageTemplate: "Failed to initialize Lingua language detector: {Error}",
+					ex.Message
+				);
+				return null;
+			}
+		});
+>>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 
 	public static string? Detect(string text)
 	{
@@ -16,8 +38,17 @@ internal static class LanguageIdentifier
 
 		try
 		{
+<<<<<<< HEAD
 			var language = Detector.DetectLanguageOf(text);
 			return GetLanguageCode(language);
+=======
+			var detector = Detector.Value;
+			if (detector is null)
+				return null;
+
+			var language = detector.DetectLanguageOf(text: text);
+			return language?.IsoCode639_1;
+>>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 		}
 		catch (Exception ex)
 		{
@@ -27,12 +58,12 @@ internal static class LanguageIdentifier
 	}
 
 	public static bool IsEnglish(string text) =>
-		Detect(text: text)?.EqualsIgnoreCase(other: "eng") == true;
+		Detect(text: text)?.EqualsIgnoreCase(other: "en") == true;
 
 	public static bool RequiresTranslation(string text)
 	{
 		var lang = Detect(text: text);
-		return lang is { } && !lang.EqualsIgnoreCase(other: "eng");
+		return lang is { } && !lang.EqualsIgnoreCase(other: "en");
 	}
 
 	private static string GetLanguageCode(Lingua.Language language) =>

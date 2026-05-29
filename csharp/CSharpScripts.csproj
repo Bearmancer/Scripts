@@ -6,6 +6,10 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+<<<<<<< HEAD
+=======
+		<EFCompiledModelPath>src/Data/CompiledModels</EFCompiledModelPath>
+>>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Remove="tests\**" />
@@ -16,6 +20,10 @@
 		<Compile Remove="src\Orchestrators\**" />
 		<Compile Remove="src\CLI\**" />
 		<Compile Remove="src\Program.cs" />
+<<<<<<< HEAD
+=======
+		<Compile Remove="src\Services\Language\LanguageIdentifier.cs" />
+>>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 
 		<PackageReference Include="AngleSharp" Version="*" />
 		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="*" />
