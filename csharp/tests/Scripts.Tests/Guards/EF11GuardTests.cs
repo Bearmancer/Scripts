@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
 
-namespace CSharpScripts.Tests.Guards;
+namespace Scripts.Tests.Guards;
 
 internal class EF11GuardTests
 {
