@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal static partial class ArticleStructureDetector
 {

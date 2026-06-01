@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Language;
+namespace Scripts.Services.Language;
 
 internal static partial class TranslationNormalizer
 {

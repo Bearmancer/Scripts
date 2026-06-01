@@ -1,4 +1,4 @@
-namespace CSharpScripts.Models;
+namespace Scripts.Models;
 
 internal sealed record WorkDetails(string? Composer, string? ParentWorkName);
 

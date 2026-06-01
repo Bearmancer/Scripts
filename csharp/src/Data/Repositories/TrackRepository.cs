@@ -1,9 +1,9 @@
-using CSharpScripts.Data.Entities;
-using CSharpScripts.Data.Repositories.Interfaces;
+using Scripts.Data.Entities;
+using Scripts.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 
-namespace CSharpScripts.Data.Repositories;
+namespace Scripts.Data.Repositories;
 
 internal sealed class TrackRepository : ITrackRepository
 {

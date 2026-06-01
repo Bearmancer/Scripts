@@ -1,4 +1,4 @@
-namespace CSharpScripts.Models;
+namespace Scripts.Models;
 
 internal sealed record YouTubeVideo(
 	string Title,

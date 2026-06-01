@@ -1,7 +1,7 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
+using Scripts.Data;
 
 namespace Scripts.Tests.DbContext;
 
@@ -26,7 +26,7 @@ internal sealed class DbContextNoTrackingTests
 			.Options;
 
 		using var context = new ScriptsDbContext(options);
-		var entry = context.Attach(new CSharpScripts.Data.Entities.ExecutionLog
+		var entry = context.Attach(new Scripts.Data.Entities.ExecutionLog
 		{
 			Id = 1,
 			SessionId = "test-session",

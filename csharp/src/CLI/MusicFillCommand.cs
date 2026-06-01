@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+namespace Scripts.CLI;
 
 public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 {

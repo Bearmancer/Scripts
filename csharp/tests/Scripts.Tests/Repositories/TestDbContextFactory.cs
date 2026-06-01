@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
+using Scripts.Data;
 
 namespace Scripts.Tests.Repositories;
 

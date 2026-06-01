@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace CSharpScripts.CLI.Clean;
+namespace Scripts.CLI.Clean;
 
 internal sealed class CleanCacheCommand : Command<CleanCacheCommand.Settings>
 {

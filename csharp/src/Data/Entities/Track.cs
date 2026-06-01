@@ -1,4 +1,4 @@
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Represents a music track belonging to an album and artist.

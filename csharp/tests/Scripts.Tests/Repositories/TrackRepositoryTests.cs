@@ -1,10 +1,10 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
-using CSharpScripts.Data.Repositories;
-using CSharpScripts.Data.Repositories.Interfaces;
+using Scripts.Data;
+using Scripts.Data.Entities;
+using Scripts.Data.Repositories;
+using Scripts.Data.Repositories.Interfaces;
 
 namespace Scripts.Tests.Repositories;
 

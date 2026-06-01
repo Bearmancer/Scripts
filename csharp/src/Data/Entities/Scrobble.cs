@@ -1,4 +1,4 @@
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Records a single music play event (scrobble) from a streaming platform.

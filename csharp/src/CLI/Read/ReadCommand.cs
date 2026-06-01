@@ -1,9 +1,9 @@
 using System.ComponentModel;
-using CSharpScripts.Services.Read;
-using CSharpScripts.Services.Read.Ocr;
-using CSharpScripts.Services.Read.Validation;
+using Scripts.Services.Read;
+using Scripts.Services.Read.Ocr;
+using Scripts.Services.Read.Validation;
 
-namespace CSharpScripts.CLI.Read;
+namespace Scripts.CLI.Read;
 
 internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 {

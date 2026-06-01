@@ -1,6 +1,6 @@
 using TUnit;
 using FluentAssertions;
-using CSharpScripts.Data.Entities;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
 

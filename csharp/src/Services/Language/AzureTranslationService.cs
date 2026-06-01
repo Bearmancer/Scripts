@@ -2,7 +2,7 @@ using Azure;
 using Azure.AI.Translation.Text;
 using Azure.Identity;
 
-namespace CSharpScripts.Services.Language;
+namespace Scripts.Services.Language;
 
 internal static class AzureTranslationService
 {

@@ -2,7 +2,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal static partial class HtmlCleanupHelper
 {

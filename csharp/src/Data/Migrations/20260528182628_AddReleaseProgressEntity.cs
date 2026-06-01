@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace CSharpScripts.src.Data.Migrations
+namespace Scripts.src.Data.Migrations
 {
     /// <inheritdoc />
     public partial class AddReleaseProgressEntity : Migration

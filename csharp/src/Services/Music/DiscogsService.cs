@@ -1,7 +1,7 @@
 using ParkSquare.Discogs;
 using ParkSquare.Discogs.Dto;
 
-namespace CSharpScripts.Services.Music;
+namespace Scripts.Services.Music;
 
 internal sealed class DiscogsClientConfig(string token) : IClientConfig
 {

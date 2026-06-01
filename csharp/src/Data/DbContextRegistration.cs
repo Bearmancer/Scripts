@@ -1,7 +1,7 @@
-using CSharpScripts.Data.Repositories;
+using Scripts.Data.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CSharpScripts.Data;
+namespace Scripts.Data;
 
 internal static class DbContextRegistration
 {

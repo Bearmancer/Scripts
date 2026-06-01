@@ -5,7 +5,7 @@ using AngleSharp.Html.Parser;
 using Microsoft.Playwright;
 using SmartReader;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 using static String;
 

@@ -3,7 +3,7 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 
-namespace CSharpScripts.Services.Cloud;
+namespace Scripts.Services.Cloud;
 
 internal static class CloudUsageService
 {

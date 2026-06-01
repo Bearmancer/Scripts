@@ -1,6 +1,6 @@
 using Scripts.Tests;
 
-namespace CSharpScripts.Tests;
+namespace Scripts.Tests;
 
 internal sealed class GlobalSetup
 {

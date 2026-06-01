@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Sync.YouTube;
+namespace Scripts.Services.Sync.YouTube;
 
 internal record VideoChanges(
 	List<string> AddedVideoIds,

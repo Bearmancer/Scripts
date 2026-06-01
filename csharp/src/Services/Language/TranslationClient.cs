@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace CSharpScripts.Services.Language;
+namespace Scripts.Services.Language;
 
 internal sealed class TranslationClient(string libreTranslateUrl)
 {

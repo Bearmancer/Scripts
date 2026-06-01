@@ -1,8 +1,8 @@
 using FluentAssertions;
 using TUnit;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
-using CSharpScripts.Tests.DbContext;
+using Scripts.Data;
+using Scripts.Data.Entities;
+using Scripts.Tests.DbContext;
 using Microsoft.EntityFrameworkCore;
 
 namespace Scripts.Tests.Guards;

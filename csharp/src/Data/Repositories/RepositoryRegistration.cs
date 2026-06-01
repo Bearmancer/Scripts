@@ -1,8 +1,8 @@
-using CSharpScripts.Data.Repositories.Interfaces;
+using Scripts.Data.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 
-namespace CSharpScripts.Data.Repositories;
+namespace Scripts.Data.Repositories;
 
 internal static class RepositoryRegistration
 {

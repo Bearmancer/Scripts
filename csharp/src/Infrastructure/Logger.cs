@@ -1,4 +1,4 @@
-namespace CSharpScripts.Infrastructure;
+namespace Scripts.Infrastructure;
 
 public static class Logger
 {

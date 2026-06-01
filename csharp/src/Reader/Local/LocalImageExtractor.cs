@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text;
-using CSharpScripts.Services.Read.Ocr;
+using Scripts.Services.Read.Ocr;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal sealed class LocalImageExtractor(
 	string filePath,

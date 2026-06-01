@@ -1,6 +1,6 @@
-using CSharpScripts.Tests.DbContext;
+using Scripts.Tests.DbContext;
 
-namespace CSharpScripts.Tests;
+namespace Scripts.Tests;
 
 /// <summary>
 /// Base class for integration tests that need a real PostgreSQL database.

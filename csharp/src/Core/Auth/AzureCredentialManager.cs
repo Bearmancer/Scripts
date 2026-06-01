@@ -2,7 +2,7 @@ using Azure.Core;
 using Azure.Identity;
 using Spectre.Console;
 
-namespace CSharpScripts.Core.Auth;
+namespace Scripts.Core.Auth;
 
 internal static class AzureCredentialManager
 {

@@ -1,8 +1,8 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
+using Scripts.Data;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.EntityConfigs;
 

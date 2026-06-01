@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+namespace Scripts.CLI;
 
 internal static class DateFormatter
 {

@@ -1,6 +1,6 @@
 using TUnit;
 using FluentAssertions;
-using CSharpScripts.Data.Entities;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.ReleaseProgressTests;
 
@@ -9,7 +9,7 @@ internal sealed class ReleaseProgressEntityTests
     [Test]
     public void ReleaseProgress_HasRequired_Properties()
     {
-        var props = typeof(CSharpScripts.Data.Entities.ReleaseProgress).GetProperties().Select(p => p.Name).ToList();
+        var props = typeof(Scripts.Data.Entities.ReleaseProgress).GetProperties().Select(p => p.Name).ToList();
 
         props.Should().Contain("Id");
         props.Should().Contain("ReleaseId");
@@ -32,14 +32,14 @@ internal sealed class ReleaseProgressEntityTests
     [Test]
     public void ReleaseProgress_Id_IsLong()
     {
-        typeof(CSharpScripts.Data.Entities.ReleaseProgress)
+        typeof(Scripts.Data.Entities.ReleaseProgress)
             .GetProperty("Id")!.PropertyType.Should().Be<long>();
     }
 
     [Test]
     public void ReleaseProgress_CanBeInstantiated_WithDefaults()
     {
-        var rp = new CSharpScripts.Data.Entities.ReleaseProgress
+        var rp = new Scripts.Data.Entities.ReleaseProgress
         {
             ReleaseId = "abc123",
             DiscNumber = 1,

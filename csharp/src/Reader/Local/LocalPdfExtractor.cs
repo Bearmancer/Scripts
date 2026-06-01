@@ -1,10 +1,10 @@
 using System.Net;
 using System.Text;
-using CSharpScripts.Services.Read.Ocr;
+using Scripts.Services.Read.Ocr;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal sealed class LocalPdfExtractor(
 	string filePath,

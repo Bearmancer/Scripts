@@ -1,8 +1,8 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
+using Scripts.Data;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.ReleaseProgressTests;
 
@@ -15,7 +15,7 @@ internal sealed class ReleaseProgressConfigurationTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         await using var context = new ScriptsDbContext(options);
-        var entityType = context.Model.FindEntityType(typeof(CSharpScripts.Data.Entities.ReleaseProgress));
+        var entityType = context.Model.FindEntityType(typeof(Scripts.Data.Entities.ReleaseProgress));
 
         entityType.Should().NotBeNull();
         entityType!.GetTableName().Should().Be("release_progress");
@@ -28,7 +28,7 @@ internal sealed class ReleaseProgressConfigurationTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         await using var context = new ScriptsDbContext(options);
-        var entityType = context.Model.FindEntityType(typeof(CSharpScripts.Data.Entities.ReleaseProgress));
+        var entityType = context.Model.FindEntityType(typeof(Scripts.Data.Entities.ReleaseProgress));
 
         var indexes = entityType!.GetIndexes().ToList();
         indexes.Should().Contain(i =>
@@ -45,7 +45,7 @@ internal sealed class ReleaseProgressConfigurationTests
             .UseNpgsql("Host=localhost;Database=dummy;Username=dummy;Password=dummy")
             .Options;
         await using var context = new ScriptsDbContext(options);
-        var entityType = context.Model.FindEntityType(typeof(CSharpScripts.Data.Entities.ReleaseProgress));
+        var entityType = context.Model.FindEntityType(typeof(Scripts.Data.Entities.ReleaseProgress));
         var prop = entityType!.FindProperty("Soloists");
 
         prop.Should().NotBeNull();

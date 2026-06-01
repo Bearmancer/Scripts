@@ -2,7 +2,7 @@ using ParkSquare.Discogs.Dto;
 using Riok.Mapperly.Abstractions;
 using Version = ParkSquare.Discogs.Dto.Version;
 
-namespace CSharpScripts.Services.Music;
+namespace Scripts.Services.Music;
 
 [Mapper]
 internal static partial class DiscogsMapper

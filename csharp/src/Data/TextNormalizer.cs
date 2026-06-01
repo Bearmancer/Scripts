@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CSharpScripts.Data;
+namespace Scripts.Data;
 
 internal static class TextNormalizer
 {

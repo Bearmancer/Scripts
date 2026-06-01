@@ -1,9 +1,9 @@
-using CSharpScripts.Infrastructure;
+using Scripts.Infrastructure;
 using Google.Apis.Drive.v3.Data;
-using Console = CSharpScripts.Infrastructure.Console;
-using Resilience = CSharpScripts.Infrastructure.Resilience;
+using Console = Scripts.Infrastructure.Console;
+using Resilience = Scripts.Infrastructure.Resilience;
 
-namespace CSharpScripts.Services.Sync.Google;
+namespace Scripts.Services.Sync.Google;
 
 public class GoogleSheetsService : IDisposable
 {

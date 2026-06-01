@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Music;
+namespace Scripts.Services.Music;
 
 public static class LanguageDetector
 {

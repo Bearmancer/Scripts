@@ -1,4 +1,4 @@
-namespace CSharpScripts.Infrastructure;
+namespace Scripts.Infrastructure;
 
 [AttributeUsage(validOn: AttributeTargets.Property)]
 public sealed class AllowedValuesAttribute(params string[] values)

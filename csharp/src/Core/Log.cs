@@ -4,7 +4,7 @@ using Serilog.Core;
 using Serilog.Core.Enrichers;
 using Serilog.Formatting.Compact;
 
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 internal enum ServiceType
 {
@@ -51,7 +51,7 @@ internal static class Log
 			.Enrich.FromLogContext()
 			.Enrich.WithProcessId()
 			.Enrich.WithThreadId()
-			.Enrich.WithProperty(name: "Application", value: "CSharpScripts")
+			.Enrich.WithProperty(name: "Application", value: "Scripts")
 			.WriteTo.File(
 				new CompactJsonFormatter(),
 				Path.Combine(path1: Paths.LogDirectory, path2: filename),
@@ -69,7 +69,7 @@ internal static class Log
 			.Enrich.FromLogContext()
 			.Enrich.WithProcessId()
 			.Enrich.WithThreadId()
-			.Enrich.WithProperty(name: "Application", value: "CSharpScripts")
+			.Enrich.WithProperty(name: "Application", value: "Scripts")
 			.WriteTo.File(
 				new CompactJsonFormatter(),
 				Path.Combine(path1: Paths.LogDirectory, path2: filename),

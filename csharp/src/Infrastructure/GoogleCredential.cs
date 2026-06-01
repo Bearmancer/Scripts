@@ -1,4 +1,4 @@
-namespace CSharpScripts.Infrastructure;
+namespace Scripts.Infrastructure;
 
 using Google.Apis.YouTube.v3;
 
@@ -18,7 +18,7 @@ public static class GoogleCredentials
 		CachedInitializer ??= new BaseClientService.Initializer
 		{
 			HttpClientInitializer = GetCredential(),
-			ApplicationName = "CSharpScripts",
+			ApplicationName = "Scripts",
 		};
 
 	public static UserCredential GetCredential()

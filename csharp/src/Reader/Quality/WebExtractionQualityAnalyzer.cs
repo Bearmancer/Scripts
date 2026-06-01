@@ -1,7 +1,7 @@
 using AngleSharp.Html.Dom;
 using SmartReader;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal static partial class WebExtractionQualityAnalyzer
 {

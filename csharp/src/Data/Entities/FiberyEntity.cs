@@ -1,4 +1,4 @@
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Represents a Fibery entity record for integration tracking.

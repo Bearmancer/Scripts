@@ -1,8 +1,8 @@
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
-using Scrobble = CSharpScripts.Models.Scrobble;
+using Scrobble = Scripts.Models.Scrobble;
 
-namespace CSharpScripts.Services.Sync.LastFm;
+namespace Scripts.Services.Sync.LastFm;
 
 internal sealed class LastFmService(string apiKey, string username, IDbContextFactory<ScriptsDbContext> contextFactory)
 {
@@ -178,7 +178,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
 
-	internal async Task<CSharpScripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
+	internal async Task<Scripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
 	{
 		await using var context = await contextFactory.CreateDbContextAsync(ct);
 		return await context.Artists

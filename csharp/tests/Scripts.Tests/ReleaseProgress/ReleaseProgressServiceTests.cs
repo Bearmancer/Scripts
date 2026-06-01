@@ -1,9 +1,9 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Persistence;
-using CSharpScripts.Models;
+using Scripts.Data;
+using Scripts.Data.Persistence;
+using Scripts.Models;
 using System.Text.Json;
 
 namespace Scripts.Tests.ReleaseProgressTests;

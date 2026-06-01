@@ -8,16 +8,16 @@ internal sealed class StateManagerGlobalUsingTests
     [Test]
     public void StateManager_IsAccessible_WithoutNamespaceQualification()
     {
-        var indented = CSharpScripts.Data.State.StateManager.JsonIndented;
+        var indented = Scripts.Data.State.StateManager.JsonIndented;
         indented.Should().NotBeNull();
-        var compact = CSharpScripts.Data.State.StateManager.JsonCompact;
+        var compact = Scripts.Data.State.StateManager.JsonCompact;
         compact.Should().NotBeNull();
     }
 
     [Test]
     public void Log_IsAccessible_ViaGlobalUsing()
     {
-        var logType = typeof(CSharpScripts.Core.Log);
+        var logType = typeof(Scripts.Core.Log);
         logType.Should().NotBeNull();
     }
 }

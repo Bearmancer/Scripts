@@ -1,11 +1,11 @@
-using CSharpScripts.CLI.Clean;
-using CSharpScripts.CLI.Cloud;
-using CSharpScripts.CLI.Music;
-using CSharpScripts.CLI.Read;
-using CSharpScripts.CLI.Sync;
+using Scripts.CLI.Clean;
+using Scripts.CLI.Cloud;
+using Scripts.CLI.Music;
+using Scripts.CLI.Read;
+using Scripts.CLI.Sync;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CSharpScripts;
+namespace Scripts;
 
 internal static class Program
 {

@@ -1,7 +1,7 @@
-using CSharpScripts.Data.Entities;
+using Scripts.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharpScripts.Data;
+namespace Scripts.Data;
 
 internal sealed class ScriptsDbContext : DbContext
 {

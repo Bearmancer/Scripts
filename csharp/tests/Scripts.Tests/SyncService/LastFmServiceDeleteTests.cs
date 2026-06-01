@@ -25,7 +25,7 @@ internal sealed class LastFmServiceDeleteTests
     public void LegacyNamespace_DoesNotContainInlineScrobbleDefinition()
     {
         // The legacy file defined its own Scrobble record — verify it can't be found
-        var inlineType = Type.GetType("CSharpScripts.Services.Sync.LastFm.Scrobble, CSharpScripts");
+        var inlineType = Type.GetType("Scripts.Services.Sync.LastFm.Scrobble, Scripts");
         inlineType.Should().BeNull(because: "Inline Scrobble from legacy file must not exist");
     }
 }

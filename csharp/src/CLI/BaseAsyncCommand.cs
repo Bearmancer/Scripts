@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+namespace Scripts.CLI;
 
 internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 	where TSettings : CommandSettings

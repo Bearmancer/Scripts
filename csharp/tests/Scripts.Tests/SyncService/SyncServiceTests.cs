@@ -1,8 +1,8 @@
 using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Services.Sync.LastFm;
+using Scripts.Data;
+using Scripts.Services.Sync.LastFm;
 
 namespace Scripts.Tests.SyncService;
 
@@ -26,13 +26,13 @@ internal sealed class SyncServiceTests
     [Test]
     public async Task ILike_Lookup_FindsArtist_CaseInsensitive()
     {
-        await using var fixture = new CSharpScripts.Tests.DbContext.DatabaseTestFixture();
+        await using var fixture = new Scripts.Tests.DbContext.DatabaseTestFixture();
         await fixture.InitializeAsync();
         await using var context = fixture.GetContext();
 
         // Insert a test artist
         var artistName = "ILikeTest_" + Guid.NewGuid().ToString("N")[..8];
-        context.Artists.Add(new CSharpScripts.Data.Entities.Artist { Name = artistName });
+        context.Artists.Add(new Scripts.Data.Entities.Artist { Name = artistName });
         await context.SaveChangesAsync();
 
         // Case-insensitive lookup via EF.Functions.ILike
@@ -47,24 +47,24 @@ internal sealed class SyncServiceTests
     [Test]
     public async Task ExecuteDeleteAsync_DeletesScrobbles_ByPlatform()
     {
-        await using var fixture = new CSharpScripts.Tests.DbContext.DatabaseTestFixture();
+        await using var fixture = new Scripts.Tests.DbContext.DatabaseTestFixture();
         await fixture.InitializeAsync();
         await using var context = fixture.GetContext();
 
-        var artist = new CSharpScripts.Data.Entities.Artist { Name = "SyncArtist" };
+        var artist = new Scripts.Data.Entities.Artist { Name = "SyncArtist" };
         context.Artists.Add(artist);
         await context.SaveChangesAsync();
         
-        var album = new CSharpScripts.Data.Entities.Album { ArtistId = artist.Id, Title = "SyncAlbum", ReleaseDate = new DateOnly(2024, 1, 1) };
+        var album = new Scripts.Data.Entities.Album { ArtistId = artist.Id, Title = "SyncAlbum", ReleaseDate = new DateOnly(2024, 1, 1) };
         context.Albums.Add(album);
         await context.SaveChangesAsync();
         
-        var track = new CSharpScripts.Data.Entities.Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "SyncTrack", DurationSeconds = 120 };
+        var track = new Scripts.Data.Entities.Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "SyncTrack", DurationSeconds = 120 };
         context.Tracks.Add(track);
         await context.SaveChangesAsync();
 
         var testPlatform = "del_test_" + Guid.NewGuid().ToString("N")[..6];
-        var scrobble = new CSharpScripts.Data.Entities.Scrobble
+        var scrobble = new Scripts.Data.Entities.Scrobble
         {
             TrackId = track.Id,
             ScrobbledAt = DateTimeOffset.UtcNow,

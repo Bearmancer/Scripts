@@ -1,6 +1,6 @@
-namespace CSharpScripts.CLI;
+namespace Scripts.CLI;
 
-using CSharpScripts.Data.Persistence;
+using Scripts.Data.Persistence;
 
 #region JSON Configuration
 

@@ -7,7 +7,7 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 internal static class Resilience
 {

@@ -1,4 +1,4 @@
-using CSharpScripts.Services.Read.Ocr;
+using Scripts.Services.Read.Ocr;
 using FluentAssertions;
 
 namespace Scripts.Tests;

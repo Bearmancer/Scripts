@@ -21,7 +21,7 @@ internal sealed class BenDemystifierTests
 	public async Task Log_Exception_Overloads_Demystify_Exceptions()
 	{
 		var logPath = Path.Combine(
-			CSharpScripts.Core.Paths.ProjectRoot,
+			Scripts.Core.Paths.ProjectRoot,
 			"csharp",
 			"src",
 			"Core",

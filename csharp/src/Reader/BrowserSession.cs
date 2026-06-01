@@ -1,6 +1,6 @@
 using Microsoft.Playwright;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal sealed class BrowserSession : IAsyncDisposable
 {

@@ -1,9 +1,9 @@
 using System.IO.Compression;
 using System.Net;
 using System.Text;
-using CSharpScripts.Services.Read.Ocr;
+using Scripts.Services.Read.Ocr;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal sealed partial class LocalEpubExtractor(
 	string filePath,

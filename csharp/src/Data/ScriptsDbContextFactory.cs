@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace CSharpScripts.Data;
+namespace Scripts.Data;
 
 internal sealed class ScriptsDbContextFactory : IDesignTimeDbContextFactory<ScriptsDbContext>
 {

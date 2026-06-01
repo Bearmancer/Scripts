@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 internal static class SheetNameHelper
 {

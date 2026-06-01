@@ -1,4 +1,4 @@
-namespace CSharpScripts.CLI;
+namespace Scripts.CLI;
 
 #region Sync All Command
 

@@ -1,6 +1,6 @@
 using System.Text.Encodings.Web;
 
-namespace CSharpScripts.Data.State;
+namespace Scripts.Data.State;
 
 internal static class StateManager
 {

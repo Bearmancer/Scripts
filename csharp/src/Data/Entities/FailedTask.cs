@@ -1,4 +1,4 @@
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Records a failed background operation for retry or alerting.

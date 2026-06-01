@@ -1,7 +1,7 @@
-using CSharpScripts.Services.Sync.YouTube;
+using Scripts.Services.Sync.YouTube;
 using CollectionExtensions = AngleSharp.Dom.CollectionExtensions;
 
-namespace CSharpScripts.Orchestrators;
+namespace Scripts.Orchestrators;
 
 internal sealed class YouTubePlaylistOrchestrator : IDisposable
 {

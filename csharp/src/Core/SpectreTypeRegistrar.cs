@@ -1,5 +1,5 @@
 #pragma warning disable CS8604
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 internal sealed class SpectreTypeRegistrar(IServiceProvider serviceProvider) : ITypeRegistrar
 {

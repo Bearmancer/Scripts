@@ -1,7 +1,7 @@
-using CSharpScripts.Data.Entities;
+using Scripts.Data.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CSharpScripts.Data.Configuration;
+namespace Scripts.Data.Configuration;
 
 internal sealed class ReleaseProgressConfiguration : IEntityTypeConfiguration<ReleaseProgress>
 {

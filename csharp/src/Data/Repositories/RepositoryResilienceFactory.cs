@@ -3,7 +3,7 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 
-namespace CSharpScripts.Data.Repositories;
+namespace Scripts.Data.Repositories;
 
 /// <summary>
 /// Factory for creating Polly resilience pipelines configured for database operations.

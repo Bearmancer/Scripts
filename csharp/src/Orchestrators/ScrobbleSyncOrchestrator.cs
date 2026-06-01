@@ -1,6 +1,6 @@
-using CSharpScripts.Services.Sync.LastFm;
+using Scripts.Services.Sync.LastFm;
 
-namespace CSharpScripts.Orchestrators;
+namespace Scripts.Orchestrators;
 
 internal sealed class ScrobbleSyncOrchestrator : IDisposable
 {

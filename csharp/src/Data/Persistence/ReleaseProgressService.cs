@@ -1,9 +1,9 @@
 using System.Text.Json;
-using CSharpScripts.Data.Entities;
-using CSharpScripts.Models;
+using Scripts.Data.Entities;
+using Scripts.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharpScripts.Data.Persistence;
+namespace Scripts.Data.Persistence;
 
 internal sealed class ReleaseProgressService(IDbContextFactory<ScriptsDbContext> contextFactory)
 {

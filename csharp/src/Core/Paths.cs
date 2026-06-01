@@ -1,4 +1,4 @@
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 internal static class Paths
 {

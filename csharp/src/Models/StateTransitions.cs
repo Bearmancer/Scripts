@@ -1,4 +1,4 @@
-namespace CSharpScripts.Models;
+namespace Scripts.Models;
 
 internal static class StateTransitions
 {

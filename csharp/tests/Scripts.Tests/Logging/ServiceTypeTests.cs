@@ -8,7 +8,7 @@ internal sealed class ServiceTypeTests
 	[Test]
 	public void ServiceType_Does_Not_Contain_Sheets()
 	{
-		var enumValues = System.Enum.GetNames<CSharpScripts.Core.ServiceType>();
+		var enumValues = System.Enum.GetNames<Scripts.Core.ServiceType>();
 
 		enumValues.Should().NotContain("Sheets");
 	}
@@ -16,7 +16,7 @@ internal sealed class ServiceTypeTests
 	[Test]
 	public void ServiceType_Has_Exactly_Five_Values()
 	{
-		var enumValues = System.Enum.GetNames<CSharpScripts.Core.ServiceType>();
+		var enumValues = System.Enum.GetNames<Scripts.Core.ServiceType>();
 
 		enumValues.Should().HaveCount(5);
 	}
@@ -24,7 +24,7 @@ internal sealed class ServiceTypeTests
 	[Test]
 	public void ServiceType_Contains_Expected_Values()
 	{
-		var enumValues = System.Enum.GetNames<CSharpScripts.Core.ServiceType>();
+		var enumValues = System.Enum.GetNames<Scripts.Core.ServiceType>();
 
 		enumValues.Should().Contain(["LastFm", "YouTube", "Music", "Read", "Cloud"]);
 	}
@@ -33,7 +33,7 @@ internal sealed class ServiceTypeTests
 	public async Task ServiceType_Sheets_Removed_From_Log_Enum()
 	{
 		var logPath = Path.Combine(
-			CSharpScripts.Core.Paths.ProjectRoot,
+			Scripts.Core.Paths.ProjectRoot,
 			"csharp",
 			"src",
 			"Core",
@@ -49,7 +49,7 @@ internal sealed class ServiceTypeTests
 	public async Task ServiceType_Sheets_Removed_From_Resilience_Timeout()
 	{
 		var resiliencePath = Path.Combine(
-			CSharpScripts.Core.Paths.ProjectRoot,
+			Scripts.Core.Paths.ProjectRoot,
 			"csharp",
 			"src",
 			"Core",

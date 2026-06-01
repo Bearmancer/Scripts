@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Represents a music artist. Metadata is stored as JSONB (configured in ArtistConfiguration).

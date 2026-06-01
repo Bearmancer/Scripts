@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 /// <summary>
 /// Records a CLI execution session. Payload is JSONB for flexible structured metadata.

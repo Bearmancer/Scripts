@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
+using Scripts.Data;
 using Npgsql;
 
-namespace CSharpScripts.Tests.DbContext;
+namespace Scripts.Tests.DbContext;
 
 /// <summary>
 /// Shared integration-test fixture backed by the local PostgreSQL instance ($PGCONNSTR).

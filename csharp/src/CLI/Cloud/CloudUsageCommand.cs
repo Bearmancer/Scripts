@@ -1,7 +1,7 @@
 using Azure.Identity;
-using CSharpScripts.Services.Cloud;
+using Scripts.Services.Cloud;
 
-namespace CSharpScripts.CLI.Cloud;
+namespace Scripts.CLI.Cloud;
 
 internal sealed class CloudUsageCommand : BaseAsyncCommand<CloudUsageCommand.Settings>
 {

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CSharpScripts.Services.Read.Validation;
+namespace Scripts.Services.Read.Validation;
 
 internal static class EpubValidator
 {

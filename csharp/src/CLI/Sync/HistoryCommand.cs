@@ -1,3 +1,3 @@
-namespace CSharpScripts.CLI.Sync;
+namespace Scripts.CLI.Sync;
 
 internal sealed class HistoryCommand { }

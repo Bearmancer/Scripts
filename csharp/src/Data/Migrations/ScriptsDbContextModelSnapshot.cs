@@ -1,6 +1,6 @@
 using System;
 using System.Text.Json;
-using CSharpScripts.Data;
+using Scripts.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace CSharpScripts.src.Data.Migrations
+namespace Scripts.src.Data.Migrations
 {
 	[DbContext(typeof(ScriptsDbContext))]
 	partial class ScriptsDbContextModelSnapshot : ModelSnapshot
@@ -23,7 +23,7 @@ namespace CSharpScripts.src.Data.Migrations
 			NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Album",
+				"Scripts.Data.Entities.Album",
 				b =>
 				{
 					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
@@ -51,7 +51,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Artist",
+				"Scripts.Data.Entities.Artist",
 				b =>
 				{
 					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
@@ -74,7 +74,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.ExecutionLog",
+				"Scripts.Data.Entities.ExecutionLog",
 				b =>
 				{
 					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
@@ -105,7 +105,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.FailedTask",
+				"Scripts.Data.Entities.FailedTask",
 				b =>
 				{
 					b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
@@ -130,7 +130,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.FiberyEntity",
+				"Scripts.Data.Entities.FiberyEntity",
 				b =>
 				{
 					b.Property<Guid>("Id")
@@ -157,7 +157,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.ReleaseProgress",
+				"Scripts.Data.Entities.ReleaseProgress",
 				b =>
 				{
 					b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
@@ -210,7 +210,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Scrobble",
+				"Scripts.Data.Entities.Scrobble",
 				b =>
 				{
 					b.Property<long>("Id").ValueGeneratedOnAdd().HasColumnType("bigint");
@@ -240,7 +240,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.SourceRecord",
+				"Scripts.Data.Entities.SourceRecord",
 				b =>
 				{
 					b.Property<Guid>("Id")
@@ -269,7 +269,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Track",
+				"Scripts.Data.Entities.Track",
 				b =>
 				{
 					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
@@ -301,7 +301,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Video",
+				"Scripts.Data.Entities.Video",
 				b =>
 				{
 					b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
@@ -337,10 +337,10 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Album",
+				"Scripts.Data.Entities.Album",
 				b =>
 				{
-					b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
+					b.HasOne("Scripts.Data.Entities.Artist", "Artist")
 						.WithMany("Albums")
 						.HasForeignKey("ArtistId")
 						.OnDelete(DeleteBehavior.Cascade)
@@ -351,10 +351,10 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Scrobble",
+				"Scripts.Data.Entities.Scrobble",
 				b =>
 				{
-					b.HasOne("CSharpScripts.Data.Entities.Track", "Track")
+					b.HasOne("Scripts.Data.Entities.Track", "Track")
 						.WithMany("Scrobbles")
 						.HasForeignKey("TrackId")
 						.OnDelete(DeleteBehavior.Cascade)
@@ -365,16 +365,16 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Track",
+				"Scripts.Data.Entities.Track",
 				b =>
 				{
-					b.HasOne("CSharpScripts.Data.Entities.Album", "Album")
+					b.HasOne("Scripts.Data.Entities.Album", "Album")
 						.WithMany("Tracks")
 						.HasForeignKey("AlbumId")
 						.OnDelete(DeleteBehavior.Cascade)
 						.IsRequired();
 
-					b.HasOne("CSharpScripts.Data.Entities.Artist", "Artist")
+					b.HasOne("Scripts.Data.Entities.Artist", "Artist")
 						.WithMany("Tracks")
 						.HasForeignKey("ArtistId")
 						.OnDelete(DeleteBehavior.Cascade)
@@ -387,7 +387,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Album",
+				"Scripts.Data.Entities.Album",
 				b =>
 				{
 					b.Navigation("Tracks");
@@ -395,7 +395,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Artist",
+				"Scripts.Data.Entities.Artist",
 				b =>
 				{
 					b.Navigation("Albums");
@@ -405,7 +405,7 @@ namespace CSharpScripts.src.Data.Migrations
 			);
 
 			modelBuilder.Entity(
-				"CSharpScripts.Data.Entities.Track",
+				"Scripts.Data.Entities.Track",
 				b =>
 				{
 					b.Navigation("Scrobbles");

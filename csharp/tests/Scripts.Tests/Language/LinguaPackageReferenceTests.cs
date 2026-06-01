@@ -6,7 +6,7 @@ namespace Scripts.Tests.Language;
 
 internal sealed class LinguaPackageReferenceTests
 {
-	private static readonly string CsprojPath = TestPaths.Combine("csharp", "CSharpScripts.csproj");
+	private static readonly string CsprojPath = TestPaths.Combine("csharp", "Scripts.csproj");
 
 	[Test]
 	public async Task Csproj_References_SearchPioneer_Lingua()

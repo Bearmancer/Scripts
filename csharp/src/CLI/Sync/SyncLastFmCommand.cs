@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using CSharpScripts.Orchestrators;
+using Scripts.Orchestrators;
 
-namespace CSharpScripts.CLI.Sync;
+namespace Scripts.CLI.Sync;
 
 internal sealed class SyncLastFmCommand : BaseAsyncCommand<SyncLastFmCommand.Settings>
 {

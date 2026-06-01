@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using CSharpScripts.Services.Music;
+using Scripts.Services.Music;
 
-namespace CSharpScripts.CLI.Music;
+namespace Scripts.CLI.Music;
 
 internal sealed class DiscogsLookupCommand : BaseAsyncCommand<DiscogsLookupCommand.Settings>
 {

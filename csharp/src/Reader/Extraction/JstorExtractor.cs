@@ -7,7 +7,7 @@ using Microsoft.Playwright;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 using NetCookie = System.Net.Cookie;
 

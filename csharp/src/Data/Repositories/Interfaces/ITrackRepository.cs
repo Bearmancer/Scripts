@@ -1,6 +1,6 @@
-using CSharpScripts.Data.Entities;
+using Scripts.Data.Entities;
 
-namespace CSharpScripts.Data.Repositories.Interfaces;
+namespace Scripts.Data.Repositories.Interfaces;
 
 public interface ITrackRepository
 {

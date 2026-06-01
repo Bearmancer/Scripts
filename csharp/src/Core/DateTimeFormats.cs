@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace CSharpScripts.Core;
+namespace Scripts.Core;
 
 public static class DateTimeFormats
 {

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Language;
+namespace Scripts.Services.Language;
 
 internal static class TranslationService
 {

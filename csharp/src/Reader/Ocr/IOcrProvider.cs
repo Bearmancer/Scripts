@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read.Ocr;
+namespace Scripts.Services.Read.Ocr;
 
 internal interface IOcrProvider
 {

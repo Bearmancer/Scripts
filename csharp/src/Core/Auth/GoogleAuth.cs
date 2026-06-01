@@ -1,3 +1,3 @@
-namespace CSharpScripts.Core.Auth;
+namespace Scripts.Core.Auth;
 
 internal static class GoogleAuth { }

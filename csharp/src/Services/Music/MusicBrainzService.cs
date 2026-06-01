@@ -4,7 +4,7 @@ using MetaBrainz.MusicBrainz;
 using MetaBrainz.MusicBrainz.Interfaces.Browses;
 using MetaBrainz.MusicBrainz.Interfaces.Searches;
 
-namespace CSharpScripts.Services.Music;
+namespace Scripts.Services.Music;
 
 internal sealed class MusicBrainzService(
 	string appName = "LancesUtilities",

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Dynamic;
 
-namespace CSharpScripts.CLI.Music;
+namespace Scripts.CLI.Music;
 
 internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCommand.Settings>
 {

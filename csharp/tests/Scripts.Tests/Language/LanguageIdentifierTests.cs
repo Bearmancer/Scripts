@@ -1,4 +1,4 @@
-using CSharpScripts.Services.Language;
+using Scripts.Services.Language;
 using FluentAssertions;
 using TUnit;
 

@@ -1,4 +1,4 @@
-namespace CSharpScripts.Data;
+namespace Scripts.Data;
 
 internal static class Variables
 {

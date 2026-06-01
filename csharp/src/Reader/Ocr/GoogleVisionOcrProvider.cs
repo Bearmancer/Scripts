@@ -4,7 +4,7 @@ using Google.Protobuf;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Writer;
 
-namespace CSharpScripts.Services.Read.Ocr;
+namespace Scripts.Services.Read.Ocr;
 
 internal sealed class GoogleVisionOcrProvider : IOcrProvider
 {

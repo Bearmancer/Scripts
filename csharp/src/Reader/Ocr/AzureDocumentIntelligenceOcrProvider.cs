@@ -2,7 +2,7 @@ using Azure;
 using Azure.AI.DocumentIntelligence;
 using Azure.Identity;
 
-namespace CSharpScripts.Services.Read.Ocr;
+namespace Scripts.Services.Read.Ocr;
 
 internal sealed class AzureDocumentIntelligenceOcrProvider
 	: IOcrProvider,

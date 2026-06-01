@@ -3,7 +3,7 @@ using Google.Cloud.DocumentAI.V1;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 
-namespace CSharpScripts.Services.Read.Ocr;
+namespace Scripts.Services.Read.Ocr;
 
 internal sealed class DocumentAiOcrProvider : IStructuredImageOcrProvider
 {

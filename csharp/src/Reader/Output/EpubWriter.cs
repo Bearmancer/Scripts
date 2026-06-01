@@ -2,7 +2,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 
-namespace CSharpScripts.Services.Read;
+namespace Scripts.Services.Read;
 
 internal static partial class EpubWriter
 {

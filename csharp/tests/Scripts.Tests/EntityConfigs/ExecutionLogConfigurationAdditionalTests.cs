@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
-using CSharpScripts.Tests.DbContext;
+using Scripts.Data;
+using Scripts.Data.Entities;
+using Scripts.Tests.DbContext;
 
-namespace CSharpScripts.Tests.EntityConfigs;
+namespace Scripts.Tests.EntityConfigs;
 
 internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 {

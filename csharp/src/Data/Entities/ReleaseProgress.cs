@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace CSharpScripts.Data.Entities;
+namespace Scripts.Data.Entities;
 
 internal sealed record ReleaseProgress
 {

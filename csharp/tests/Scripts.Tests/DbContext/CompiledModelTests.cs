@@ -1,8 +1,8 @@
-using CSharpScripts.Data;
+using Scripts.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharpScripts.Tests.DbContext;
+namespace Scripts.Tests.DbContext;
 
 internal sealed class CompiledModelTests : DatabaseTestBase
 {

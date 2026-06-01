@@ -65,7 +65,7 @@ internal sealed class TestSuiteHealthTests
             ".cache", "logs", "scripts"
         );
 
-        var logDir = CSharpScripts.Core.Paths.LogDirectory;
+        var logDir = Scripts.Core.Paths.LogDirectory;
 
         logDir.Should().Be(expectedBase,
             $"LogDirectory must point to %USERPROFILE%\\.cache\\logs\\scripts. Actual: {logDir}"

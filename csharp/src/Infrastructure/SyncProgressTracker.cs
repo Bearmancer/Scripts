@@ -1,4 +1,4 @@
-namespace CSharpScripts.Infrastructure;
+namespace Scripts.Infrastructure;
 
 public record PlaylistProgressItem(string Title, int VideoCount);
 

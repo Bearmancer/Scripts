@@ -1,6 +1,6 @@
 using System.Reflection;
-using CSharpScripts.Data;
-using CSharpScripts.Data.Entities;
+using Scripts.Data;
+using Scripts.Data.Entities;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using TUnit;

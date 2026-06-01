@@ -1,4 +1,4 @@
-namespace CSharpScripts.Services.Read.Ocr;
+namespace Scripts.Services.Read.Ocr;
 
 internal sealed class TesseractOcrProvider(string tessdataPath = "./tessdata") : IOcrProvider
 {

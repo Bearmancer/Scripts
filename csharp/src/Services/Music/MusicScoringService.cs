@@ -1,3 +1,3 @@
-namespace CSharpScripts.Services.Music;
+namespace Scripts.Services.Music;
 
 internal sealed class MusicScoringService { }
