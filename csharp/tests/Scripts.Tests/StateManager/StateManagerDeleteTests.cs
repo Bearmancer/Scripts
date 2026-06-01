@@ -8,7 +8,7 @@ internal sealed class StateManagerDeleteTests
     [Test]
     public void Infrastructure_StateManager_DoesNotExist()
     {
-        var type = Type.GetType("Scripts.Infrastructure.StateManager, tools");
+        var type = Type.GetType("Scripts.Infrastructure.StateManager, Scripts");
         type.Should().BeNull(because: "Infrastructure StateManager must be deleted");
     }
 
@@ -22,7 +22,7 @@ internal sealed class StateManagerDeleteTests
     [Test]
     public void DataState_StateManager_IsSoleVersion()
     {
-        var type = Type.GetType("Scripts.Data.State.StateManager, tools");
+        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
         type.Should().NotBeNull(because: "Only Data.State version should remain");
     }
 }
