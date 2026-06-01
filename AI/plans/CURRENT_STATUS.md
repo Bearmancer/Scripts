@@ -49,18 +49,6 @@ during T1 because the split hasn't happened yet.
 | ----- | --------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | T1-00 | Environment preflight | ✅ Done        | Docker, PGCONNSTR, CanConnectAsync                                                                                         |
 | T1-01 | Entity extraction     | ✅ Done        | 8 entities in Data/Entities/                                                                                               |
-| T2   | 00–10  | 🔒 Blocked     | 0%       | Waiting for T1 sign-off                        |
-| T3   | 00–07  | 🔒 Blocked     | 0%       | Waiting for T2 sign-off                        |
-| T4   | 00–08  | 🔒 Blocked     | 0%       | Waiting for T3 sign-off                        |
-
----
-
-## T1 Phase Status (EF Core only)
-
-| Phase | Task                  | Status        | Notes                                                                                                                      |
-| ----- | --------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| T1-00 | Environment preflight | ✅ Done        | Docker, PGCONNSTR, CanConnectAsync                                                                                         |
-| T1-01 | Entity extraction     | ✅ Done        | 8 entities in Data/Entities/                                                                                               |
 | T1-02 | Entity refactoring    | ✅ Done        | MBID removal tests pass                                                                                                    |
 | T1-03 | DbContext config      | ✅ Done        | NoTracking, ApplyConfigurationsFromAssembly                                                                                |
 | T1-04 | Entity configurations | ✅ Done        | 10 configs in Data/Configuration/                                                                                          |
