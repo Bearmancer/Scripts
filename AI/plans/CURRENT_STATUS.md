@@ -8,12 +8,12 @@
 
 ## Test Summary
 
-| Metric      | Value      | Target |
-| ----------- | ---------- | ------ |
-| Total Tests | 170        | 250+   |
-| Passing     | 170 (100%) | 100%   |
-| Failing     | 0          | 0      |
-| Pass Rate   | 100%       | 100%   |
+| Metric      | Value                                              | Target |
+| ----------- | -------------------------------------------------- | ------ |
+| Total Tests | 215                                                | 250+   |
+| Passing     | 199 (92.6%)                                        | 100%   |
+| Failing     | 16 (T1-13 Lingua, not started)                     | 0      |
+| Pass Rate   | 92.6% (target 100% — T1-13 Lingua pending)         | 100%   |
 
 ---
 
