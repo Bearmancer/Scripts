@@ -54,7 +54,7 @@ during T1 because the split hasn't happened yet.
 | T1-04 | Entity configurations | ✅ Done        | 10 configs in Data/Configuration/                                                                                          |
 | T1-05 | Migrations            | ✅ Done        | 6 migrations, snapshot current                                                                                             |
 | T1-06 | Repositories          | ✅ Done        | 5 repos + interfaces + ResilienceFactory                                                                                   |
-| T1-07 | StateManager → EF     | ✅ Done        | Single StateManager remains in Data/State; full suite verified 155 passing                                                |
+| T1-07 | StateManager → EF     | ✅ Done        | Single StateManager remains in Data/State; full suite verified 199 passing                                                |
 | T1-08 | Release cache → EF    | ✅ Done        | ReleaseProgressService wired in MusicSearchCommand, CSV cache deleted                                                      |
 | T1-09 | Sync service EF10     | ✅ Done        | LastFmService has IDbContextFactory, PostgresService deleted                                                               |
 | T1-10 | EF10 query guards     | ✅ Done        | Guard tests written and passing                                                                                            |
