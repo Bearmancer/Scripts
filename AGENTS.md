@@ -313,7 +313,7 @@ Each tier must reach **sign-off** (all tests green, `dotnet build` clean) before
 ## 11. Current Status
 
 **Last Updated:** 2026-05-27  
-**Test Status:** 155 passing, 0 failing (100% pass rate)  
+**Test Status:** 199 passing, 16 failing (92.6% pass rate) — 16 failures are in LanguageIdentifierTests (T1-13 Lingua, not started)  
 **Tier 1 Progress:** 70% complete  
 **Blocker:** None. Next step: T1-08 (Release cache EF wiring). Tier 2 modularization remains blocked until T1 sign-off.
 
