@@ -17,6 +17,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\CSharpScripts.csproj" />
+		<ProjectReference Include="..\..\Scripts.csproj" />
 	</ItemGroup>
 </Project>
