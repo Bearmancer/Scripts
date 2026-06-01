@@ -1,3 +1,5 @@
+using Scripts.Tests;
+
 namespace CSharpScripts.Tests;
 
 internal sealed class GlobalSetup
@@ -5,10 +7,9 @@ internal sealed class GlobalSetup
     [Before(Assembly)]
     public static async Task LoadDotEnvAsync()
     {
-        var envFile = Path.Combine(
-            FindRepoRoot(),
-            ".env"
-        );
+        // TestPaths.RepoRoot is compiler-anchored via [CallerFilePath] and validated
+        // against AGENTS.md — reliable regardless of output directory layout.
+        var envFile = Path.Combine(TestPaths.RepoRoot, ".env");
 
         if (!File.Exists(envFile))
             return;
@@ -28,19 +29,6 @@ internal sealed class GlobalSetup
             if (System.Environment.GetEnvironmentVariable(key) is null)
                 System.Environment.SetEnvironmentVariable(key, value);
         }
-
-
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is { })
-        {
-            if (File.Exists(Path.Combine(dir, ".env")))
-                return dir;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return AppContext.BaseDirectory;
     }
 }
+

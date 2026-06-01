@@ -5,10 +5,9 @@ namespace CSharpScripts.Tests.Guards;
 
 internal class EF11GuardTests
 {
-	private static string GetSourceRoot([System.Runtime.CompilerServices.CallerFilePath] string path = "") =>
-		Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path)!, "..", "..", "..", "src"));
-
-	private static readonly string[] SourceDirectories = [ GetSourceRoot() ];
+	// Use TestPaths (CallerFilePath on TestPaths.cs, 3 levels up to repo root) rather than
+	// an ad-hoc CallerFilePath here — which was also using the wrong relative depth.
+	private static readonly string[] SourceDirectories = [ TestPaths.SrcRoot ];
 
 	[Test]
 	public void ShouldNotUseMaxByAsync()
@@ -93,7 +92,7 @@ internal class EF11GuardTests
 
 				if (matches.Count > 0)
 				{
-					var relativePath = Path.GetRelativePath(AppContext.BaseDirectory, file);
+					var relativePath = Path.GetRelativePath(TestPaths.RepoRoot, file);
 					violations.Add($"{relativePath}: {matches.Count} occurrence(s) of {patternName}");
 				}
 			}
@@ -122,7 +121,7 @@ internal class EF11GuardTests
 
 				if (regexMatches.Count > 0)
 				{
-					var relativePath = Path.GetRelativePath(AppContext.BaseDirectory, file);
+					var relativePath = Path.GetRelativePath(TestPaths.RepoRoot, file);
 					matches.Add(relativePath);
 				}
 			}

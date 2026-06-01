@@ -5,19 +5,21 @@ namespace Scripts.Tests.SignOff;
 
 internal sealed class TestSuiteHealthTests
 {
+    private static string TestsRoot => TestPaths.Combine("csharp", "tests", "Scripts.Tests");
+
     [Test]
     public void Test_Directories_Exist_And_Contain_Tests()
     {
         var testDirs = new[]
         {
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff",
+            Path.Combine(TestsRoot, "Environment"),
+            Path.Combine(TestsRoot, "Guards"),
+            Path.Combine(TestsRoot, "Logging"),
+            Path.Combine(TestsRoot, "Language"),
+            Path.Combine(TestsRoot, "Repositories"),
+            Path.Combine(TestsRoot, "StateManager"),
+            Path.Combine(TestsRoot, "DbContext"),
+            Path.Combine(TestsRoot, "SignOff"),
         };
 
         var missing = new List<string>();
@@ -37,10 +39,10 @@ internal sealed class TestSuiteHealthTests
     {
         var testDirs = new[]
         {
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language",
+            Path.Combine(TestsRoot, "Environment"),
+            Path.Combine(TestsRoot, "Guards"),
+            Path.Combine(TestsRoot, "Logging"),
+            Path.Combine(TestsRoot, "Language"),
         };
 
         var empty = new List<string>();

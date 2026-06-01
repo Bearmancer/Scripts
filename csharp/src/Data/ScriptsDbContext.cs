@@ -6,12 +6,8 @@ namespace CSharpScripts.Data;
 internal sealed class ScriptsDbContext : DbContext
 {
 	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
-<<<<<<< HEAD
-		: base(options: options) { }
-=======
 		: base(options: options) =>
 		ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
->>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
@@ -25,14 +21,6 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
 	public DbSet<ReleaseProgress> ReleaseProgress => Set<ReleaseProgress>();
 
-<<<<<<< HEAD
-	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-	{
-		optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-	}
-
-=======
->>>>>>> d057b9bb8ac223cfc175063f75aa77cad063fcb1
 	protected override void OnModelCreating(ModelBuilder mb)
 	{
 		mb.ApplyConfiguration(new Configuration.ArtistConfiguration());

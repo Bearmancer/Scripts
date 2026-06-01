@@ -8,7 +8,7 @@ internal sealed class EditorConfigEf10RulesTests
     [Test]
     public async Task EditorConfig_Contains_Ef10EnforcementSection()
     {
-        var editorConfigPath = @"C:\Users\Lance\Dev\Scripts\.editorconfig";
+        var editorConfigPath = TestPaths.Combine(".editorconfig");
         var content = await File.ReadAllTextAsync(editorConfigPath);
 
         content.Should().Contain(

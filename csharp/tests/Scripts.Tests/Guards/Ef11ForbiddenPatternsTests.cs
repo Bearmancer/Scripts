@@ -6,8 +6,9 @@ namespace Scripts.Tests.Guards;
 
 internal sealed class Ef11ForbiddenPatternsTests
 {
-    private const string SourceRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src";
+    // Anchored via TestPaths (CallerFilePath-based), not AppContext.BaseDirectory which
+    // changes with TFM, output path, or custom build layouts.
+    private static readonly string SourceRoot = TestPaths.SrcRoot;
 
     private static IEnumerable<string> EnumerateSourceFiles()
     {

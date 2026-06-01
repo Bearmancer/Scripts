@@ -8,7 +8,7 @@ internal sealed class LanguageIdentifierCompilationTests
     [Test]
     public void LanguageIdentifier_HasNoScreamingSnakeCaseReferences()
     {
-        var path = @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs";
+        var path = TestPaths.Combine("csharp", "src", "Services", "Language", "LanguageIdentifier.cs");
         var source = File.ReadAllText(path, Encoding.UTF8);
         var forbidden = new[]
         {

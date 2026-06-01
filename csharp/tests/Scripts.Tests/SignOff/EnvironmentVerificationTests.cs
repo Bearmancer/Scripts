@@ -57,7 +57,7 @@ internal sealed class EnvironmentVerificationTests
     [Test]
     public void Dot_Env_File_Exists()
     {
-        var envPath = @"C:\Users\Lance\Dev\Scripts\.env";
+        var envPath = TestPaths.Combine(".env");
         File.Exists(envPath).Should().BeTrue(
             ".env file must exist with PGCONNSTR"
         );
@@ -66,7 +66,7 @@ internal sealed class EnvironmentVerificationTests
     [Test]
     public void Dot_Env_Contains_PGCONNSTR()
     {
-        var envPath = @"C:\Users\Lance\Dev\Scripts\.env";
+        var envPath = TestPaths.Combine(".env");
         var content = File.ReadAllText(envPath);
         content.Should().Contain("PGCONNSTR",
             ".env must define PGCONNSTR"

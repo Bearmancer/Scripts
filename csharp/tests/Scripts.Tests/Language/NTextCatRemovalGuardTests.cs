@@ -6,7 +6,7 @@ namespace Scripts.Tests.Language;
 
 internal sealed class NTextCatRemovalGuardTests
 {
-	private const string SourceRoot = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+	private static readonly string SourceRoot = TestPaths.Combine("csharp", "src");
 
 	private static readonly string[] NTextCatTypes =
 	{
