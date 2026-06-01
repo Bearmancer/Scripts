@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Npgsql;
@@ -16,7 +15,7 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 
 	public async Task InitializeAsync()
 	{
-		var baseConnStr = Environment.GetEnvironmentVariable("PGCONNSTR")
+		var baseConnStr = System.Environment.GetEnvironmentVariable("PGCONNSTR")
 			?? throw new InvalidOperationException(
 				"PGCONNSTR environment variable is not set. " +
 				"Load .env before running integration tests.");
