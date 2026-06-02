@@ -17,9 +17,19 @@ internal sealed class ScriptsDbContext : DbContext
 		// Compiled model breaks InMemory provider (missing key comparers); use OnModelCreating instead.
 		var inMemory = optionsBuilder.Options.Extensions
 			.Any(e => e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true);
-		if (inMemory)
+		var noCompiledModel = System.Environment.GetEnvironmentVariable("SCRIPTS_NO_COMPILED_MODEL") is not null;
+		Console.WriteLine($"[SCRIPTS_CTX] OnConfiguring: inMemory={inMemory} noCompiledModel={noCompiledModel}");
+		if (inMemory || noCompiledModel)
 			return;
-		optionsBuilder.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance);
+		try
+		{
+			optionsBuilder.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"[SCRIPTS] UseModel FAILED: {ex.GetType().Name}: {ex.Message}");
+			throw;
+		}
 	}
 
 	public DbSet<Artist> Artists => Set<Artist>();
