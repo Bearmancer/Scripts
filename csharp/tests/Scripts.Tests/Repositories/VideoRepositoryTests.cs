@@ -4,23 +4,18 @@ using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
-using Scripts.Data.Repositories.Interfaces;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.Repositories;
 
-internal sealed class VideoRepositoryTests
+internal sealed class VideoRepositoryTests : DatabaseTestBase
 {
-	private static DbContextOptions<ScriptsDbContext> CreateInMemoryOptions() =>
-		new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseInMemoryDatabase("VideoTest_" + Guid.NewGuid())
-			.Options;
-
+	[RequiresPgConnStr]
 	[Test]
 	public async Task AddAsync_InsertsNewVideo()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new VideoRepository(factory, pipeline);
 
 		var video = new Video
@@ -37,16 +32,16 @@ internal sealed class VideoRepositoryTests
 		result.Should().NotBeNull();
 		result.Url.Should().Be(video.Url);
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Videos.CountAsync();
 		count.Should().Be(1);
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByUrlAsync_ReturnsVideoByUrl()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 
 		var video = new Video
 		{
@@ -58,7 +53,7 @@ internal sealed class VideoRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new VideoRepository(factory, pipeline);
 
 		var result = await repository.GetByUrlAsync("https://youtube.com/watch?v=test123");
@@ -67,12 +62,12 @@ internal sealed class VideoRepositoryTests
 		result!.Title.Should().Be("Test Video");
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByUrlAsync_ReturnsNullWhenNotFound()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new VideoRepository(factory, pipeline);
 
 		var result = await repository.GetByUrlAsync("https://youtube.com/watch?v=nonexistent");
@@ -80,11 +75,11 @@ internal sealed class VideoRepositoryTests
 		result.Should().BeNull();
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByChannelAsync_ReturnsVideosByChannel()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 
 		var now = DateOnly.FromDateTime(DateTime.UtcNow);
 		context.Videos.AddRange(
@@ -95,7 +90,7 @@ internal sealed class VideoRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new VideoRepository(factory, pipeline);
 
 		var result = await repository.GetByChannelAsync("Channel A");
@@ -106,12 +101,12 @@ internal sealed class VideoRepositoryTests
 		result[1].UploadDate.Should().Be(now.AddDays(-2));
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByChannelAsync_ReturnsEmptyWhenChannelNotFound()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new VideoRepository(factory, pipeline);
 
 		var result = await repository.GetByChannelAsync("Nonexistent Channel");

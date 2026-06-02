@@ -4,23 +4,18 @@ using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
-using Scripts.Data.Repositories.Interfaces;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.Repositories;
 
-internal sealed class ArtistRepositoryTests
+internal sealed class ArtistRepositoryTests : DatabaseTestBase
 {
-	private static DbContextOptions<ScriptsDbContext> CreateInMemoryOptions() =>
-		new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseInMemoryDatabase("ArtistTest_" + Guid.NewGuid())
-			.Options;
-
+	[RequiresPgConnStr]
 	[Test]
 	public async Task AddAsync_InsertsNewArtist()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ArtistRepository(factory, pipeline);
 
 		var artist = new Artist { Name = "Test Artist" };
@@ -30,23 +25,23 @@ internal sealed class ArtistRepositoryTests
 		result.Should().NotBeNull();
 		result.Name.Should().Be("Test Artist");
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Artists.CountAsync();
 		count.Should().Be(1);
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByNameAsync_ReturnsArtistByName()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ArtistRepository(factory, pipeline);
 
 		var result = await repository.GetByNameAsync("Test Artist");
@@ -55,12 +50,12 @@ internal sealed class ArtistRepositoryTests
 		result!.Name.Should().Be("Test Artist");
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByNameAsync_ReturnsNullWhenNotFound()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ArtistRepository(factory, pipeline);
 
 		var result = await repository.GetByNameAsync("Nonexistent Artist");
@@ -68,18 +63,18 @@ internal sealed class ArtistRepositoryTests
 		result.Should().BeNull();
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByNameAsync_IsCaseSensitive()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ArtistRepository(factory, pipeline);
 
 		var result = await repository.GetByNameAsync("test artist");
@@ -87,12 +82,12 @@ internal sealed class ArtistRepositoryTests
 		result.Should().BeNull();
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task AddAsync_PreservesMetadata()
 	{
-		var options = CreateInMemoryOptions();
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new ArtistRepository(factory, pipeline);
 
 		var artist = new Artist { Name = "Test Artist" };
@@ -101,7 +96,7 @@ internal sealed class ArtistRepositoryTests
 
 		result.Metadata.Should().BeNull();
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var retrieved = await verifyContext.Artists.FirstAsync();
 		retrieved.Metadata.Should().BeNull();
 	}

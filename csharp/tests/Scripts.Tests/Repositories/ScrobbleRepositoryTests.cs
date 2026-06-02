@@ -4,12 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
-using Scripts.Data.Repositories.Interfaces;
-using Polly;
-using Scripts.Tests;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.Repositories;
 
+[RequiresPgConnStr]
 internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 {
 

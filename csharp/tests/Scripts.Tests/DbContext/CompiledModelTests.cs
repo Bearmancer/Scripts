@@ -1,9 +1,11 @@
 using Scripts.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.DbContext;
 
+[RequiresPgConnStr]
 internal sealed class CompiledModelTests : DatabaseTestBase
 {
 	[Test]

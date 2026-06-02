@@ -4,34 +4,21 @@ using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
-using Scripts.Data.Repositories.Interfaces;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.Repositories;
 
-internal sealed class AlbumRepositoryTests
+internal sealed class AlbumRepositoryTests : DatabaseTestBase
 {
-	private static DbContextOptions<ScriptsDbContext> CreateInMemoryOptions() =>
-		new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseInMemoryDatabase("AlbumTest_" + Guid.NewGuid())
-			.Options;
-
-	private static async Task<Artist> SetupArtist(ScriptsDbContext context)
-	{
-		var artist = new Artist { Name = "Test Artist" };
-		context.Artists.Add(artist);
-		await context.SaveChangesAsync();
-		return artist;
-	}
-
+	[RequiresPgConnStr]
 	[Test]
 	public async Task AddAsync_InsertsNewAlbum()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var artist = await SetupArtist(context);
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var album = new Album
@@ -46,16 +33,16 @@ internal sealed class AlbumRepositoryTests
 		result.Should().NotBeNull();
 		result.Title.Should().Be("Test Album");
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Albums.CountAsync();
 		count.Should().Be(1);
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByArtistAndTitleAsync_ReturnsAlbumByArtistAndTitle()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var artist = await SetupArtist(context);
 
 		var album = new Album { ArtistId = artist.Id, Title = "Test Album" };
@@ -63,7 +50,7 @@ internal sealed class AlbumRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Test Album");
@@ -73,15 +60,15 @@ internal sealed class AlbumRepositoryTests
 		result.ArtistId.Should().Be(artist.Id);
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByArtistAndTitleAsync_ReturnsNullWhenNotFound()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var artist = await SetupArtist(context);
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Nonexistent Album");
@@ -89,11 +76,11 @@ internal sealed class AlbumRepositoryTests
 		result.Should().BeNull();
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task GetByArtistAndTitleAsync_DistinguishesBetweenArtists()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 
 		var artist1 = new Artist { Name = "Artist 1" };
 		var artist2 = new Artist { Name = "Artist 2" };
@@ -106,7 +93,7 @@ internal sealed class AlbumRepositoryTests
 		await context.SaveChangesAsync();
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var result = await repository.GetByArtistAndTitleAsync(artist1.Id, "Same Title");
@@ -115,15 +102,15 @@ internal sealed class AlbumRepositoryTests
 		result!.ArtistId.Should().Be(artist1.Id);
 	}
 
+	[RequiresPgConnStr]
 	[Test]
 	public async Task AddAsync_PreservesReleaseDate()
 	{
-		var options = CreateInMemoryOptions();
-		await using var context = new ScriptsDbContext(options);
+		await using var context = Fixture.GetContext();
 		var artist = await SetupArtist(context);
 
 		var pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
-		var factory = new TestDbContextFactory(options);
+		var factory = Fixture.GetContextFactory();
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var releaseDate = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -133,8 +120,16 @@ internal sealed class AlbumRepositoryTests
 
 		result.ReleaseDate.Should().Be(releaseDate);
 
-		await using var verifyContext = new ScriptsDbContext(options);
+		await using var verifyContext = Fixture.GetContext();
 		var retrieved = await verifyContext.Albums.FirstAsync();
 		retrieved.ReleaseDate.Should().Be(releaseDate);
+	}
+
+	private static async Task<Artist> SetupArtist(ScriptsDbContext context)
+	{
+		var artist = new Artist { Name = "Test Artist" };
+		context.Artists.Add(artist);
+		await context.SaveChangesAsync();
+		return artist;
 	}
 }

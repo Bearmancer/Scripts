@@ -2,10 +2,12 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
+using Scripts.Tests.Attributes;
 using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.EntityConfigs;
 
+[RequiresPgConnStr]
 internal class ExecutionLogConfigurationAdditionalTests : DatabaseTestBase
 {
 	[Test]

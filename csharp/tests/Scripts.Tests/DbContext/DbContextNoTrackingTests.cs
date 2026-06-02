@@ -2,6 +2,8 @@ using TUnit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
+using Scripts.Data.Entities;
+using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.DbContext;
 
@@ -17,16 +19,16 @@ internal sealed class DbContextNoTrackingTests
 		using var context = new ScriptsDbContext(options);
 		context.ChangeTracker.QueryTrackingBehavior.Should().Be(QueryTrackingBehavior.NoTracking);
 	}
+}
 
+[RequiresPgConnStr]
+internal sealed class DbContextNoTrackingAttachTests : DatabaseTestBase
+{
 	[Test]
 	public void DbContext_CanExplicitly_TrackEntity()
 	{
-		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseInMemoryDatabase("TrackExplicitlyTest_" + Guid.NewGuid())
-			.Options;
-
-		using var context = new ScriptsDbContext(options);
-		var entry = context.Attach(new Scripts.Data.Entities.ExecutionLog
+		using var context = Fixture.GetContext();
+		var entry = context.Attach(new ExecutionLog
 		{
 			Id = 1,
 			SessionId = "test-session",
