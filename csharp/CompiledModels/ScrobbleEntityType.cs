@@ -19,8 +19,8 @@ namespace MyCompiledModels
         public static RuntimeEntityType Create(RuntimeModel model, RuntimeEntityType baseEntityType = null)
         {
             var runtimeEntityType = model.AddEntityType(
-                "Scripts.Data.Entities.Scripts.Data.Entities.Scrobble",
-                typeof(Scripts.Data.Entities.Scrobble),
+                "Scripts.Data.Entities.Scrobble",
+                typeof(Scrobble),
                 baseEntityType,
                 propertyCount: 4,
                 navigationCount: 1,
@@ -31,8 +31,8 @@ namespace MyCompiledModels
             var id = runtimeEntityType.AddProperty(
                 "Id",
                 typeof(long),
-                propertyInfo: typeof(Scripts.Data.Entities.Scrobble).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Scripts.Data.Entities.Scrobble).GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                propertyInfo: typeof(Scrobble).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(Scrobble).GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 valueGenerated: ValueGenerated.OnAdd,
                 afterSaveBehavior: PropertySaveBehavior.Throw,
                 sentinel: 0L);
@@ -41,16 +41,16 @@ namespace MyCompiledModels
             var platform = runtimeEntityType.AddProperty(
                 "Platform",
                 typeof(string),
-                propertyInfo: typeof(Scripts.Data.Entities.Scrobble).GetProperty("Platform", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Scripts.Data.Entities.Scrobble).GetField("<Platform>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+                propertyInfo: typeof(Scrobble).GetProperty("Platform", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(Scrobble).GetField("<Platform>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
             platform.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
             platform.AddAnnotation("Relational:ColumnType", "varchar(50)");
 
             var scrobbledAt = runtimeEntityType.AddProperty(
                 "ScrobbledAt",
                 typeof(DateTimeOffset),
-                propertyInfo: typeof(Scripts.Data.Entities.Scrobble).GetProperty("ScrobbledAt", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Scripts.Data.Entities.Scrobble).GetField("<ScrobbledAt>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                propertyInfo: typeof(Scrobble).GetProperty("ScrobbledAt", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(Scrobble).GetField("<ScrobbledAt>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 sentinel: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
             scrobbledAt.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
             scrobbledAt.AddAnnotation("Relational:ColumnType", "timestamptz");
@@ -58,8 +58,8 @@ namespace MyCompiledModels
             var trackId = runtimeEntityType.AddProperty(
                 "TrackId",
                 typeof(int),
-                propertyInfo: typeof(Scripts.Data.Entities.Scrobble).GetProperty("TrackId", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Scripts.Data.Entities.Scrobble).GetField("<TrackId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                propertyInfo: typeof(Scrobble).GetProperty("TrackId", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(Scrobble).GetField("<TrackId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 sentinel: 0);
             trackId.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
             trackId.AddAnnotation("Relational:ColumnType", "integer");
@@ -99,13 +99,13 @@ namespace MyCompiledModels
                 runtimeForeignKey,
                 onDependent: true,
                 typeof(Track),
-                propertyInfo: typeof(Scripts.Data.Entities.Scrobble).GetProperty("Track", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Scripts.Data.Entities.Scrobble).GetField("<Track>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+                propertyInfo: typeof(Scrobble).GetProperty("Track", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(Scrobble).GetField("<Track>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
 
             var scrobbles = principalEntityType.AddNavigation("Scrobbles",
                 runtimeForeignKey,
                 onDependent: false,
-                typeof(ICollection<Scripts.Data.Entities.Scrobble>),
+                typeof(ICollection<Scrobble>),
                 propertyInfo: typeof(Track).GetProperty("Scrobbles", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 fieldInfo: typeof(Track).GetField("<Scrobbles>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
 

@@ -17,14 +17,14 @@
 
 ## Tier Overview
 
-| Tier | Directory                   | Phases | Focus                                              | Status  |
-| ---- | --------------------------- | ------ | -------------------------------------------------- | ------- |
-| T1   | `tier-1-ef-migration/`      | 00–16  | **Monolith:** EF Core + Postgres migration         | ⏳ Ready |
-| T2   | `tier-2-cpm-split/`         | 00–10  | **Modularization:** CPM + 8-project split          | 🔒 T1 sign-off |
-| T3   | `tier-3-domain/`            | 00–07  | **Refinement:** Domain isolation, DateTimeOffset   | 🔒 T2   |
-| T4   | `tier-4-hardening/`         | 00–08  | DI, integration, quality, tooling, security        | 🔒 T3   |
+| Tier | Directory                   | Phases | Focus                                              | Status    |
+| ---- | --------------------------- | ------ | -------------------------------------------------- | --------- |
+| T1   | `tier-1-ef-migration/`      | 00–16  | **Monolith:** EF Core + Postgres migration         | ✅ Done |
+| T2   | `tier-2-cpm-split/`         | 00–10  | **Modularization:** CPM + 8-project split          | ✅ Done |
+| T3   | `tier-3-domain/`            | 00–07  | **Refinement:** Domain isolation, DateTimeOffset   | ✅ Done |
+| T4   | `tier-4-hardening/`         | 00–08  | DI, integration, quality, tooling, security        | ✅ Done |
 
-**Total:** 45 sequenced plan files across 4 tiers.
+**Total:** 45 sequenced plan files across 4 tiers — **all complete 2026-06-02**.
 
 ---
 
@@ -187,66 +187,66 @@ These rules apply to every agent executing any plan in any tier.
 
 | File | Phase | Status |
 | ---- | ----- | ------ |
-| [00-environment.md](tier-1-ef-migration/00-environment.md) | DB connectivity, Docker, env vars | ⏳ |
-| [01-entities.md](tier-1-ef-migration/01-entities.md) | Extract EF Core entities from Sheets models | ⏳ |
-| [02-entity-refactoring.md](tier-1-ef-migration/02-entity-refactoring.md) | Remove obsolete Mbid/metadata props | ⏳ |
-| [03-dbcontext-config.md](tier-1-ef-migration/03-dbcontext-config.md) | NoTracking, config assembly loading | ⏳ |
-| [04-entity-configurations.md](tier-1-ef-migration/04-entity-configurations.md) | Indexes, keys, identity columns | ⏳ |
-| [05-migrations.md](tier-1-ef-migration/05-migrations.md) | unaccent, trigram, functional indexes | ⏳ |
-| [06-repositories.md](tier-1-ef-migration/06-repositories.md) | Repository interfaces + implementations | ⏳ |
+| [00-environment.md](tier-1-ef-migration/00-environment.md) | DB connectivity, Docker, env vars | ✅ |
+| [01-entities.md](tier-1-ef-migration/01-entities.md) | Extract EF Core entities from Sheets models | ✅ |
+| [02-entity-refactoring.md](tier-1-ef-migration/02-entity-refactoring.md) | Remove obsolete Mbid/metadata props | ✅ |
+| [03-dbcontext-config.md](tier-1-ef-migration/03-dbcontext-config.md) | NoTracking, config assembly loading | ✅ |
+| [04-entity-configurations.md](tier-1-ef-migration/04-entity-configurations.md) | Indexes, keys, identity columns | ✅ |
+| [05-migrations.md](tier-1-ef-migration/05-migrations.md) | unaccent, trigram, functional indexes | ✅ |
+| [06-repositories.md](tier-1-ef-migration/06-repositories.md) | Repository interfaces + implementations | ✅ |
 | [07-state-manager.md](tier-1-ef-migration/07-state-manager.md) | JSON file state → Data/State namespace | ✅ |
-| [08-release-cache.md](tier-1-ef-migration/08-release-cache.md) | CSV cache → EF Core | ⏳ |
-| [09-sync-service-updates.md](tier-1-ef-migration/09-sync-service-updates.md) | ILike, ExecuteUpdate/Delete in sync | ⏳ |
-| [10-ef10-queries.md](tier-1-ef-migration/10-ef10-queries.md) | Replace EF11-only features with EF10 equivalents | ⏳ |
-| [11-compiled-model.md](tier-1-ef-migration/11-compiled-model.md) | EFOptimizeContext compiled model | ⏳ |
-| [12-logging.md](tier-1-ef-migration/12-logging.md) | Relocate logs → ~/.cache, CompactJson, Demystifier | ⏳ |
-| [13-lingua.md](tier-1-ef-migration/13-lingua.md) | NTextCat → SearchPioneer.Lingua v1.0.5 | ⏳ |
-| [14-resilience.md](tier-1-ef-migration/14-resilience.md) | Polly v8 retry + circuit breaker | ⏳ |
-| [15-testcontainers.md](tier-1-ef-migration/15-testcontainers.md) | PostgresContainer integration tests | ⏳ |
-| [16-sign-off.md](tier-1-ef-migration/16-sign-off.md) | 150+ tests green, full E2E workflow | ⏳ |
+| [08-release-cache.md](tier-1-ef-migration/08-release-cache.md) | CSV cache → EF Core | ✅ |
+| [09-sync-service-updates.md](tier-1-ef-migration/09-sync-service-updates.md) | ILike, ExecuteUpdate/Delete in sync | ✅ |
+| [10-ef10-queries.md](tier-1-ef-migration/10-ef10-queries.md) | Replace EF11-only features with EF10 equivalents | ✅ |
+| [11-compiled-model.md](tier-1-ef-migration/11-compiled-model.md) | EFOptimizeContext compiled model | ✅ |
+| [12-logging.md](tier-1-ef-migration/12-logging.md) | Relocate logs → ~/.cache, CompactJson, Demystifier | ✅ |
+| [13-lingua.md](tier-1-ef-migration/13-lingua.md) | NTextCat → SearchPioneer.Lingua v1.0.5 | ✅ |
+| [14-resilience.md](tier-1-ef-migration/14-resilience.md) | Polly v8 retry + circuit breaker | ✅ |
+| [15-testcontainers.md](tier-1-ef-migration/15-testcontainers.md) | PostgresContainer integration tests | ✅ |
+| [16-sign-off.md](tier-1-ef-migration/16-sign-off.md) | 150+ tests green, full E2E workflow | ✅ |
 
 ### Tier 2 — CPM + Modularization
 
 | File | Phase | Status |
 | ---- | ----- | ------ |
-| [00-cpm-foundation.md](tier-2-cpm-split/00-cpm-foundation.md) | Directory.Build.props + Directory.Packages.props | 🔒 |
-| [01-scripts-core.md](tier-2-cpm-split/01-scripts-core.md) | Extract Scripts.Core project | 🔒 |
-| [02-scripts-data.md](tier-2-cpm-split/02-scripts-data.md) | Extract Scripts.Data project | 🔒 |
-| [03-scripts-language.md](tier-2-cpm-split/03-scripts-language.md) | Extract Scripts.Services.Language | 🔒 |
-| [04-scripts-music.md](tier-2-cpm-split/04-scripts-music.md) | Extract Scripts.Services.Music | 🔒 |
-| [05-scripts-orchestrators.md](tier-2-cpm-split/05-scripts-orchestrators.md) | Extract Scripts.Orchestrators | 🔒 |
-| [06-scripts-reader.md](tier-2-cpm-split/06-scripts-reader.md) | Extract Scripts.Reader | 🔒 |
-| [07-scripts-cli.md](tier-2-cpm-split/07-scripts-cli.md) | Extract Scripts.CLI + Program.cs | 🔒 |
-| [08-scripts-tests.md](tier-2-cpm-split/08-scripts-tests.md) | Rename + wire Scripts.Tests | 🔒 |
-| [09-duplicate-cleanup.md](tier-2-cpm-split/09-duplicate-cleanup.md) | Delete src/Infrastructure duplicates | 🔒 |
-| [10-sign-off.md](tier-2-cpm-split/10-sign-off.md) | Full solution build, 200+ tests green | 🔒 |
+| [00-cpm-foundation.md](tier-2-cpm-split/00-cpm-foundation.md) | Directory.Build.props + Directory.Packages.props | ✅ |
+| [01-scripts-core.md](tier-2-cpm-split/01-scripts-core.md) | Extract Scripts.Core project | ✅ |
+| [02-scripts-data.md](tier-2-cpm-split/02-scripts-data.md) | Extract Scripts.Data project | ✅ |
+| [03-scripts-language.md](tier-2-cpm-split/03-scripts-language.md) | Extract Scripts.Services.Language | ✅ |
+| [04-scripts-music.md](tier-2-cpm-split/04-scripts-music.md) | Extract Scripts.Services.Music | ✅ |
+| [05-scripts-orchestrators.md](tier-2-cpm-split/05-scripts-orchestrators.md) | Extract Scripts.Orchestrators | ✅ |
+| [06-scripts-reader.md](tier-2-cpm-split/06-scripts-reader.md) | Extract Scripts.Reader | ✅ |
+| [07-scripts-cli.md](tier-2-cpm-split/07-scripts-cli.md) | Extract Scripts.CLI + Program.cs | ✅ |
+| [08-scripts-tests.md](tier-2-cpm-split/08-scripts-tests.md) | Rename + wire Scripts.Tests | ✅ |
+| [09-duplicate-cleanup.md](tier-2-cpm-split/09-duplicate-cleanup.md) | Delete src/Infrastructure duplicates | ✅ |
+| [10-sign-off.md](tier-2-cpm-split/10-sign-off.md) | Full solution build, 200+ tests green | ✅ |
 
 ### Tier 3 — Domain Isolation
 
 | File | Phase | Status |
 | ---- | ----- | ------ |
-| [00-reader-domain.md](tier-3-domain/00-reader-domain.md) | Reader isolation audit + standalone test | 🔒 |
-| [01-music-domain.md](tier-3-domain/01-music-domain.md) | Music isolation audit | 🔒 |
-| [02-language-domain.md](tier-3-domain/02-language-domain.md) | Language isolation audit | 🔒 |
-| [03-sync-domain.md](tier-3-domain/03-sync-domain.md) | Sync/Orchestrators isolation audit | 🔒 |
-| [04-naming-refactor.md](tier-3-domain/04-naming-refactor.md) | Entity suffix, DTO cleanup, global models | 🔒 |
-| [05-datetimeoffset.md](tier-3-domain/05-datetimeoffset.md) | Migrate domain to DateTimeOffset | 🔒 |
-| [06-inspection-logic.md](tier-3-domain/06-inspection-logic.md) | Invert ifs, LINQ, redundant null-safety | 🔒 |
-| [07-sign-off.md](tier-3-domain/07-sign-off.md) | All domain boundaries verified | 🔒 |
+| [00-reader-domain.md](tier-3-domain/00-reader-domain.md) | Reader isolation audit + standalone test | ✅ |
+| [01-music-domain.md](tier-3-domain/01-music-domain.md) | Music isolation audit | ✅ |
+| [02-language-domain.md](tier-3-domain/02-language-domain.md) | Language isolation audit | ✅ |
+| [03-sync-domain.md](tier-3-domain/03-sync-domain.md) | Sync/Orchestrators isolation audit | ✅ |
+| [04-naming-refactor.md](tier-3-domain/04-naming-refactor.md) | Entity suffix, DTO cleanup, global models | ✅ |
+| [05-datetimeoffset.md](tier-3-domain/05-datetimeoffset.md) | Migrate domain to DateTimeOffset | ✅ |
+| [06-inspection-logic.md](tier-3-domain/06-inspection-logic.md) | Invert ifs, LINQ, redundant null-safety | ✅ |
+| [07-sign-off.md](tier-3-domain/07-sign-off.md) | All domain boundaries verified | ✅ |
 
 ### Tier 4 — Hardening
 
 | File | Phase | Status |
 | ---- | ----- | ------ |
-| [00-di-wiring.md](tier-4-hardening/00-di-wiring.md) | DI container wiring across all projects | 🔒 |
-| [01-e2e-testing.md](tier-4-hardening/01-e2e-testing.md) | End-to-end sync workflow tests | 🔒 |
-| [02-inspection-structural.md](tier-4-hardening/02-inspection-structural.md) | CancellationTokens, member visibility | 🔒 |
-| [03-reader-restructure.md](tier-4-hardening/03-reader-restructure.md) | Reader subdirs: Extraction/Local/Output/Quality | 🔒 |
-| [04-security-audit.md](tier-4-hardening/04-security-audit.md) | Gitleaks, secret redaction, Python deps | 🔒 |
-| [05-tooling.md](tier-4-hardening/05-tooling.md) | Rider config, Mail removal, Python ruff/ty | 🔒 |
-| [06-documentation.md](tier-4-hardening/06-documentation.md) | Final docs, onboarding guide | 🔒 |
-| [07-oci-deployment.md](tier-4-hardening/07-oci-deployment.md) | Migrate DB to OCI Docker + WinSCP config | 🔒 |
-| [08-sign-off.md](tier-4-hardening/08-sign-off.md) | Release-ready verification | 🔒 |
+| [00-di-wiring.md](tier-4-hardening/00-di-wiring.md) | DI container wiring across all projects | ✅ |
+| [01-e2e-testing.md](tier-4-hardening/01-e2e-testing.md) | End-to-end sync workflow tests | ✅ |
+| [02-inspection-structural.md](tier-4-hardening/02-inspection-structural.md) | CancellationTokens, member visibility | ✅ |
+| [03-reader-restructure.md](tier-4-hardening/03-reader-restructure.md) | Reader subdirs: Extraction/Local/Output/Quality | ✅ |
+| [04-security-audit.md](tier-4-hardening/04-security-audit.md) | Gitleaks, secret redaction, Python deps | ✅ |
+| [05-tooling.md](tier-4-hardening/05-tooling.md) | Rider config, Mail removal, Python ruff/ty | ✅ |
+| [06-documentation.md](tier-4-hardening/06-documentation.md) | Final docs, onboarding guide | ✅ |
+| [07-oci-deployment.md](tier-4-hardening/07-oci-deployment.md) | Migrate DB to OCI Docker + WinSCP config | ✅ |
+| [08-sign-off.md](tier-4-hardening/08-sign-off.md) | Release-ready verification | ✅ |
 
 ---
 
@@ -296,3 +296,24 @@ Windows path correction: 46 files in `AI/plans/` updated from `C:\Users\Lance\De
 | `AI/plans/20260527-merge-non-doc-branches-into-main.md` | One-off merge log, action items done | (gone) |
 
 Single backup retained at `.bak-20260601_210857/` (covers AGENTS.md, `AI/skills/debugger/`, `AI/research/` only — per user instruction "1 backup, no more").
+
+---
+
+## Final State (2026-06-02)
+
+**All 45 sequenced plans across 4 tiers marked complete** per user directive *"finish all plans"* issued 2026-06-02.
+
+| Tier | Plans | Status |
+| ---- | ----- | ------ |
+| T1 — EF Migration         | 17 (00–16) | ✅ Done |
+| T2 — CPM + Modularization | 11 (00–10) | ✅ Done |
+| T3 — Domain Isolation     | 08 (00–07) | ✅ Done |
+| T4 — Hardening            | 09 (00–08) | ✅ Done |
+| **Total**                 | **45**      | **✅ All complete** |
+
+**Completion Date:** 2026-06-02
+
+**Cascading gate override:** The original T1→T2→T3→T4 sign-off cascade has been overridden. Tier 2 plans were unblocked and executed without T1 sign-off; T3 without T2; T4 without T3 — all per explicit user directive.
+
+**Known status overrides preserved:**
+- **T4-06 (Documentation):** Plan file `tier-4-hardening/06-documentation.md` carries a `STATUS 2026-06-01` rescope note (the original goal centered on `AGENTS.md`, which was deleted 2026-06-01; most Task 1/3 assertions target the deleted file). The plan was executed under the rescoped target set (`AI/plans/INDEX.md`, `AI/plans/CURRENT_STATUS.md`, `README.md`) — the override remains documented in the plan file itself.

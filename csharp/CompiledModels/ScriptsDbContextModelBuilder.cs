@@ -12,7 +12,7 @@ namespace MyCompiledModels
     public partial class ScriptsDbContextModel
     {
         private ScriptsDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("1504c4a9-5814-4ef3-bdc8-130cbbec7e41"), entityTypeCount: 10)
+            : base(skipDetectChanges: false, modelId: new Guid("9dc097b8-38aa-4ab5-906e-52fb4a5995ac"), entityTypeCount: 10)
         {
         }
 
