@@ -27,7 +27,7 @@ Write-Host "gitleaks: $(gitleaks version)"
 Get-Command uv -ErrorAction Stop
 Write-Host "uv: $(uv --version)"
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 ```
 
 ---
@@ -50,7 +50,7 @@ namespace Scripts.Tests.SecurityTests;
 public class SecretScanTests
 {
     private static readonly string CsharpSrcRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        @"/home/lance/Scripts/csharp/src";
 
     private static IEnumerable<string> GetSourceFiles() =>
         Directory.GetFiles(CsharpSrcRoot, "*.cs", SearchOption.AllDirectories)
@@ -85,7 +85,7 @@ public class SecretScanTests
     [Test]
     public void EnvFile_IsInGitignore()
     {
-        var gitignorePath = @"C:\Users\Lance\Dev\Scripts\.gitignore";
+        var gitignorePath = @"/home/lance/Scripts/.gitignore";
         File.Exists(gitignorePath).Should().BeTrue(".gitignore must exist at repo root");
 
         var gitignore = File.ReadAllText(gitignorePath);
@@ -122,7 +122,7 @@ public class SecretScanTests
     {
         var psi = new System.Diagnostics.ProcessStartInfo("git", arguments)
         {
-            WorkingDirectory = @"C:\Users\Lance\Dev\Scripts",
+            WorkingDirectory = @"/home/lance/Scripts",
             RedirectStandardOutput = true,
             UseShellExecute = false
         };
@@ -137,7 +137,7 @@ public class SecretScanTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SecurityTests\SecretScanTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SecurityTests\SecretScanTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -145,7 +145,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm all PASS (or identify violations)**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SecretScanTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -168,8 +168,8 @@ If violations found:
 ```powershell
 $result = gitleaks detect `
     --no-git `
-    --source 'C:\Users\Lance\Dev\Scripts' `
-    --config 'C:\Users\Lance\Dev\Scripts\.gitleaks.toml' `
+    --source '/home/lance/Scripts' `
+    --config '/home/lance/Scripts/.gitleaks.toml' `
     2>&1
 
 Write-Host $result
@@ -182,7 +182,7 @@ Write-Host "Gitleaks: CLEAN"
 
 > **Note:** If `.gitleaks.toml` does not exist, run without `--config`:
 > ```powershell
-> gitleaks detect --no-git --source 'C:\Users\Lance\Dev\Scripts' 2>&1
+> gitleaks detect --no-git --source '/home/lance/Scripts' 2>&1
 > ```
 
 - [ ] **Step 2: If Gitleaks reports findings — redact them**
@@ -196,7 +196,7 @@ For each finding:
 - [ ] **Step 3: Re-run TUnit security tests**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SecretScanTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -210,7 +210,7 @@ Expected: all 5 tests PASS.
 - [ ] **Step 1: Sync Python dependencies**
 
 ```powershell
-$pythonDir = 'C:\Users\Lance\Dev\Scripts\python'
+$pythonDir = '/home/lance/Scripts/python'
 Test-Path $pythonDir | Should -Be $true
 
 uv sync --project $pythonDir 2>&1 | Tee-Object -Variable syncOut
@@ -222,7 +222,7 @@ Write-Host "uv sync: OK"
 - [ ] **Step 2: Run safety check for CVEs**
 
 ```powershell
-uv run --project 'C:\Users\Lance\Dev\Scripts\python' safety check 2>&1 | Tee-Object -Variable safetyOut
+uv run --project '/home/lance/Scripts/python' safety check 2>&1 | Tee-Object -Variable safetyOut
 $safetyOut | Write-Host
 # safety exits 0 if no CVEs, non-zero if vulnerabilities found
 if ($LASTEXITCODE -ne 0) {
@@ -236,7 +236,7 @@ if ($LASTEXITCODE -ne 0) {
 For each CVE found:
 ```powershell
 # Example — update a specific package
-uv add --project 'C:\Users\Lance\Dev\Scripts\python' requests --upgrade
+uv add --project '/home/lance/Scripts/python' requests --upgrade
 ```
 
 Re-run `uv run safety check` after each update until exit code is `0`.
@@ -248,7 +248,7 @@ Re-run `uv run safety check` after each update until exit code is `0`.
 [Test]
 public void PythonFiles_ContainNoHardcodedApiKeys()
 {
-    var pythonRoot = @"C:\Users\Lance\Dev\Scripts\python";
+    var pythonRoot = @"/home/lance/Scripts/python";
     var apiKeyPattern = new Regex(@"[A-Za-z0-9_-]{32,}", RegexOptions.Compiled);
     var knownSafePatterns = new[] { "hash", "digest", "checksum", "uuid", "placeholder" };
 
@@ -272,7 +272,7 @@ public void PythonFiles_ContainNoHardcodedApiKeys()
 - [ ] **Step 5: Run the updated security tests**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SecretScanTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -286,7 +286,7 @@ Expected: all tests PASS.
 - [ ] **Step 1: Final Gitleaks scan**
 
 ```powershell
-gitleaks detect --no-git --source 'C:\Users\Lance\Dev\Scripts' 2>&1
+gitleaks detect --no-git --source '/home/lance/Scripts' 2>&1
 if ($LASTEXITCODE -ne 0) { throw "Gitleaks: secrets still present" }
 Write-Host "Gitleaks final scan: CLEAN"
 ```
@@ -294,27 +294,27 @@ Write-Host "Gitleaks final scan: CLEAN"
 - [ ] **Step 2: Full build + test run**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
 - [ ] **Step 3: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     csharp/tests/Scripts.Tests/SecurityTests/ `
     python/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-04): security audit — gitleaks clean, no hardcoded secrets, Python deps updated"
+git -C /home/lance/Scripts commit -m "feat(t4-04): security audit — gitleaks clean, no hardcoded secrets, Python deps updated"
 ```
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `gitleaks detect --no-git --source C:\Users\Lance\Dev\Scripts` exits with code `0`
+- [ ] `gitleaks detect --no-git --source /home/lance/Scripts` exits with code `0`
 - [ ] All 6 `SecretScanTests` pass
 - [ ] `.env` is listed in `.gitignore` and not tracked by git
 - [ ] No `Host=localhost;Database=` or `Password=` appears in any `.cs` file

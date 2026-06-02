@@ -5,8 +5,8 @@ namespace Scripts.Tests.SignOff;
 
 internal sealed class PlanInventoryTests
 {
-    private const string PlanDir =
-        @"C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration";
+    private static readonly string PlanDir =
+        TestPaths.Combine("AI", "plans", "tier-1-ef-migration");
 
     private static readonly string[] RequiredPlans =
     {

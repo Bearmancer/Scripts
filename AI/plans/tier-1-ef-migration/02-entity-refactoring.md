@@ -43,8 +43,8 @@
 ## Task 1: Remove `Artist.Mbid`
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs:8`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Entities\Artist.cs:8`
 
 ### Step 0: Preflight
 
@@ -54,16 +54,16 @@
 # What: Remove the property from Artist.cs
 # Expected: Property gone, tests green, build clean
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Artist.cs
 # Expected: True
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Artist.cs -Pattern 'Mbid'
 # Expected: 1 match (line with `public string? Mbid { get; init; }`)
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs`
 
 ```csharp
 using TUnit;
@@ -86,16 +86,16 @@ public sealed class ArtistMbidRemovalTests
 ### Step 2: Read-back — verify file written
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\ArtistMbidRemovalTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run test — confirm RED
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ArtistMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ArtistMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with
@@ -109,7 +109,7 @@ Property exists. Test correctly detects it. Proceed to remove.
 
 ### Step 4: Write minimal implementation
 
-Remove line 8 from `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs`:
+Remove line 8 from `/home/lance/Scripts/csharp/src\Data\Entities\Artist.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -129,15 +129,15 @@ internal sealed record Artist
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Artist.cs -Pattern 'Mbid'
 # Expected: 0 matches
 ```
 
 ### Step 5: Run test — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ArtistMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ArtistMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `1 passed, 0 failed`
@@ -145,9 +145,9 @@ Expected: `1 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Artist.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/ArtistMbidRemovalTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Artist.Mbid dead property"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Artist.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/ArtistMbidRemovalTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-02): remove Artist.Mbid dead property"
 ```
 
 ---
@@ -155,8 +155,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Artist.Mbid dea
 ## Task 2: Remove `Album.Mbid`
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs:10`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Entities\Album.cs:10`
 
 ### Step 0: Preflight
 
@@ -166,16 +166,16 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Artist.Mbid dea
 # What: Remove the property
 # Expected: Property gone, tests green
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Album.cs
 # Expected: True
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Album.cs -Pattern 'Mbid'
 # Expected: 1 match
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs`
 
 ```csharp
 using TUnit;
@@ -198,15 +198,15 @@ public sealed class AlbumMbidRemovalTests
 ### Step 2: Read-back — verify file written
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\AlbumMbidRemovalTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run test — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "AlbumMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "AlbumMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with
@@ -220,7 +220,7 @@ Property exists. Test correctly detects it. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Remove line 10 from `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs`:
+Remove line 10 from `/home/lance/Scripts/csharp/src\Data\Entities\Album.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -241,15 +241,15 @@ internal sealed record Album
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Album.cs -Pattern 'Mbid'
 # Expected: 0 matches
 ```
 
 ### Step 5: Run test — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "AlbumMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "AlbumMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `1 passed, 0 failed`
@@ -257,9 +257,9 @@ Expected: `1 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Album.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/AlbumMbidRemovalTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Album.Mbid dead property"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Album.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/AlbumMbidRemovalTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-02): remove Album.Mbid dead property"
 ```
 
 ---
@@ -267,8 +267,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Album.Mbid dead
 ## Task 3: Remove `Track.Mbid`
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs:11`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Entities\Track.cs:11`
 
 ### Step 0: Preflight
 
@@ -278,16 +278,16 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Album.Mbid dead
 # What: Remove the property
 # Expected: Property gone, tests green
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Track.cs
 # Expected: True
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Track.cs -Pattern 'Mbid'
 # Expected: 1 match
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs`
 
 ```csharp
 using TUnit;
@@ -310,15 +310,15 @@ public sealed class TrackMbidRemovalTests
 ### Step 2: Read-back — verify file written
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityRefactoring\TrackMbidRemovalTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run test — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "TrackMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "TrackMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with
@@ -332,7 +332,7 @@ Property exists. Test correctly detects it. Proceed — final removal.
 
 ### Step 4: Write minimal implementation
 
-Remove line 11 from `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs`:
+Remove line 11 from `/home/lance/Scripts/csharp/src\Data\Entities\Track.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -355,15 +355,15 @@ internal sealed record Track
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\Track.cs -Pattern 'Mbid'
 # Expected: 0 matches
 ```
 
 ### Step 5: Run test — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "TrackMbidRemovalTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "TrackMbidRemovalTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `1 passed, 0 failed`
@@ -371,9 +371,9 @@ Expected: `1 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Track.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/TrackMbidRemovalTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Track.Mbid dead property"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Track.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityRefactoring/TrackMbidRemovalTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-02): remove Track.Mbid dead property"
 ```
 
 ---
@@ -382,11 +382,11 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-02): remove Track.Mbid dead
 
 ```powershell
 # Confirm no Mbid remains anywhere in entity files
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\*.cs -Pattern 'Mbid'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Entities\*.cs -Pattern 'Mbid'
 # Expected: 0 matches across all entity files
 
 # Run all refactoring tests
-dotnet test --filter "Scripts.Tests.EntityRefactoring" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.EntityRefactoring" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -398,3 +398,13 @@ Passed TrackMbidRemovalTests (1 test)
 ```
 
 **→ Proceed to `03-dbcontext-config.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/ENTITY-DESIGN-consolidated.md -->
+
+Source: `AI/plans/research/ENTITY-DESIGN-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+Content already covered by this plan: Mbid removal (Tasks 1-3), Track metadata audit (already clean), Video/FailedTask "flag for clarification" (Tasks 1-3 do not touch them). See `01-entities.md` Research Provenance for the full Video/FailedTask divergence tables and the int→UUID migration audit deferred to a later phase.

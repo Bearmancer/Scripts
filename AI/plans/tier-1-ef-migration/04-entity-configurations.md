@@ -39,8 +39,8 @@
 ## Task 1: Create SourceRecordConfiguration
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\SourceRecordConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Configuration\SourceRecordConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -50,13 +50,13 @@
 # What: Create SourceRecordConfiguration with table name, PK, indexes, column types
 # Expected: Configuration loaded, entity discoverable with correct table name "source_records"
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\SourceRecordConfiguration.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Configuration\SourceRecordConfiguration.cs
 # Expected: False
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -116,15 +116,15 @@ public sealed class SourceRecordConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\SourceRecordConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "SourceRecordConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "SourceRecordConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with `Expected entityType not to be <null>` or `Expected entityType!.GetTableName() to be "source_records", but found null.`
@@ -135,7 +135,7 @@ No configuration exists for SourceRecord. The model cannot map it. Proceed to cr
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\SourceRecordConfiguration.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Configuration\SourceRecordConfiguration.cs`
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -164,15 +164,15 @@ internal sealed class SourceRecordConfiguration : IEntityTypeConfiguration<Sourc
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\SourceRecordConfiguration.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Configuration\SourceRecordConfiguration.cs
 # Expected: True
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "SourceRecordConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "SourceRecordConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -180,9 +180,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/SourceRecordConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/SourceRecordConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): create SourceRecordConfiguration"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/SourceRecordConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/SourceRecordConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): create SourceRecordConfiguration"
 ```
 
 ---
@@ -190,8 +190,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): create SourceRecordCon
 ## Task 2: Add FiberyEntity Composite Unique Index + Column Types
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FiberyEntityConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\FiberyEntityConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -201,13 +201,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): create SourceRecordCon
 # What: Add default UUID generation, column types, composite unique index, EntityType index
 # Expected: Configuration includes all indexes
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FiberyEntityConfiguration.cs -Pattern 'FiberyId'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\FiberyEntityConfiguration.cs -Pattern 'FiberyId'
 # Expected: 0 matches (no FiberyId property reference in config)
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -269,15 +269,15 @@ public sealed class FiberyEntityConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FiberyEntityConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "FiberyEntityConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "FiberyEntityConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — indexes not found.
@@ -288,7 +288,7 @@ FiberyEntityConfiguration only has PK and jsonb. Missing all indexes and column 
 
 ### Step 4: Write minimal implementation
 
-Replace contents of `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FiberyEntityConfiguration.cs`:
+Replace contents of `/home/lance/Scripts/csharp/src\Data\Configuration\FiberyEntityConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -318,8 +318,8 @@ internal sealed class FiberyEntityConfiguration : IEntityTypeConfiguration<Fiber
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "FiberyEntityConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "FiberyEntityConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -327,9 +327,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/FiberyEntityConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/FiberyEntityConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add FiberyEntity composite unique index and column types"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/FiberyEntityConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/FiberyEntityConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add FiberyEntity composite unique index and column types"
 ```
 
 ---
@@ -337,8 +337,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add FiberyEntity compo
 ## Task 3: Fix AlbumConfiguration — ReleaseDate Column Type
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\AlbumConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\AlbumConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -348,13 +348,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add FiberyEntity compo
 # What: Add .HasColumnType("date") on ReleaseDate, add ReleaseDate index
 # Expected: ReleaseDate column type is "date"
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\AlbumConfiguration.cs -Pattern 'ReleaseDate'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\AlbumConfiguration.cs -Pattern 'ReleaseDate'
 # Expected: 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -399,14 +399,14 @@ public sealed class AlbumConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\AlbumConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "AlbumConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "AlbumConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — ReleaseDate column type is not "date" (defaults to timestamp), no ReleaseDate index.
@@ -417,7 +417,7 @@ Confirmed missing. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\AlbumConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\AlbumConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -448,8 +448,8 @@ internal sealed class AlbumConfiguration : IEntityTypeConfiguration<Album>
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "AlbumConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "AlbumConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -457,9 +457,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/AlbumConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/AlbumConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Album.ReleaseDate column type and index"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/AlbumConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/AlbumConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add Album.ReleaseDate column type and index"
 ```
 
 ---
@@ -467,8 +467,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Album.ReleaseDate 
 ## Task 4: Fix TrackConfiguration — Duration Column Type + Composite Unique
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\TrackConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\TrackConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -478,13 +478,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Album.ReleaseDate 
 # What: Add column type + composite unique index
 # Expected: Duration is "integer", composite unique exists
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\TrackConfiguration.cs -Pattern 'Duration'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\TrackConfiguration.cs -Pattern 'Duration'
 # Expected: 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -532,14 +532,14 @@ public sealed class TrackConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\TrackConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "TrackConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "TrackConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — no Duration column type, no composite unique (ArtistId, Title).
@@ -550,7 +550,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\TrackConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\TrackConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -589,8 +589,8 @@ internal sealed class TrackConfiguration : IEntityTypeConfiguration<Track>
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "TrackConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "TrackConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -598,9 +598,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/TrackConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/TrackConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Track.Duration column type and composite unique index"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/TrackConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/TrackConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add Track.Duration column type and composite unique index"
 ```
 
 ---
@@ -608,8 +608,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Track.Duration col
 ## Task 5: Fix ScrobbleConfiguration — Platform Column Type + Indexes
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ScrobbleConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\ScrobbleConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -619,13 +619,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Track.Duration col
 # What: Add Platform column type "varchar(50)", Platform index, standalone ScrobbledAt index
 # Expected: Configuration includes all three
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ScrobbleConfiguration.cs -Pattern 'Platform'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\ScrobbleConfiguration.cs -Pattern 'Platform'
 # Expected: 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -686,14 +686,14 @@ public sealed class ScrobbleConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ScrobbleConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "ScrobbleConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ScrobbleConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — Platform column type and indexes not found.
@@ -704,7 +704,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ScrobbleConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\ScrobbleConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -739,8 +739,8 @@ internal sealed class ScrobbleConfiguration : IEntityTypeConfiguration<Scrobble>
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ScrobbleConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ScrobbleConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -748,9 +748,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/ScrobbleConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/ScrobbleConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Scrobble.Platform column type, Platform and ScrobbledAt indexes"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/ScrobbleConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/ScrobbleConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add Scrobble.Platform column type, Platform and ScrobbledAt indexes"
 ```
 
 ---
@@ -758,8 +758,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Scrobble.Platform 
 ## Task 6: Fix VideoConfiguration — Column Types + Named Indexes
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -769,13 +769,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Scrobble.Platform 
 # What: Add column types + Title index + name all indexes
 # Expected: All properties have correct types, all indexes have names
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs -Pattern 'SyncedAt|UploadDate.*date|Title'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs -Pattern 'SyncedAt|UploadDate.*date|Title'
 # Expected: UploadDate matched (index only, no column type), SyncedAt 0 matches, Title 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -834,14 +834,14 @@ public sealed class VideoConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\VideoConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "VideoConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "VideoConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — column types and Title index not found.
@@ -852,7 +852,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -881,8 +881,8 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "VideoConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "VideoConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -890,9 +890,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/VideoConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/VideoConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Video column types, Title index, named indexes"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/VideoConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/VideoConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add Video column types, Title index, named indexes"
 ```
 
 ---
@@ -900,8 +900,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Video column types
 ## Task 7: Fix ExecutionLogConfiguration — SessionId + Timestamp Indexes
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ExecutionLogConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\ExecutionLogConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -911,13 +911,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add Video column types
 # What: Add SessionId and Timestamp indexes
 # Expected: Two new indexes in configuration
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ExecutionLogConfiguration.cs -Pattern 'SessionId|Timestamp.*index'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\ExecutionLogConfiguration.cs -Pattern 'SessionId|Timestamp.*index'
 # Expected: 0 matches for index lines (Property lines exist)
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -961,14 +961,14 @@ public sealed class ExecutionLogConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\ExecutionLogConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "ExecutionLogConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ExecutionLogConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — SessionId and Timestamp indexes not found.
@@ -979,7 +979,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ExecutionLogConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\ExecutionLogConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -1008,8 +1008,8 @@ internal sealed class ExecutionLogConfiguration : IEntityTypeConfiguration<Execu
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ExecutionLogConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ExecutionLogConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -1017,9 +1017,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/ExecutionLogConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/ExecutionLogConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add ExecutionLog SessionId and Timestamp indexes"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/ExecutionLogConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/ExecutionLogConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add ExecutionLog SessionId and Timestamp indexes"
 ```
 
 ---
@@ -1027,8 +1027,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add ExecutionLog Sessi
 ## Task 8: Fix FailedTaskConfiguration — TaskName + Timestamp Indexes
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FailedTaskConfiguration.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\FailedTaskConfiguration.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs`
 
 ### Step 0: Preflight
 
@@ -1038,13 +1038,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add ExecutionLog Sessi
 # What: Add TaskName and Timestamp indexes
 # Expected: Two new indexes
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FailedTaskConfiguration.cs -Pattern 'TaskName|Timestamp.*index'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\FailedTaskConfiguration.cs -Pattern 'TaskName|Timestamp.*index'
 # Expected: 0 matches for index lines
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -1088,14 +1088,14 @@ public sealed class FailedTaskConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\EntityConfigs\FailedTaskConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "FailedTaskConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "FailedTaskConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — TaskName and Timestamp indexes not found.
@@ -1106,7 +1106,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-Replace `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FailedTaskConfiguration.cs`:
+Replace `/home/lance/Scripts/csharp/src\Data\Configuration\FailedTaskConfiguration.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -1134,8 +1134,8 @@ internal sealed class FailedTaskConfiguration : IEntityTypeConfiguration<FailedT
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "FailedTaskConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "FailedTaskConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -1143,9 +1143,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/FailedTaskConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/EntityConfigs/FailedTaskConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add FailedTask TaskName and Timestamp indexes"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/FailedTaskConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/EntityConfigs/FailedTaskConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-04): add FailedTask TaskName and Timestamp indexes"
 ```
 
 ---
@@ -1154,7 +1154,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-04): add FailedTask TaskNam
 
 ```powershell
 # Run all entity configuration tests
-dotnet test --filter "Scripts.Tests.EntityConfigs" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.EntityConfigs" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -1171,3 +1171,15 @@ Passed FailedTaskConfigurationTests (2 tests)
 ```
 
 **→ Proceed to `05-migrations.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/ENTITY-DESIGN-consolidated.md (configuration gaps) and research/DBCONTEXT-CONFIGURATION-consolidated.md (entity config inventory) -->
+
+Sources:
+- `AI/plans/research/ENTITY-DESIGN-consolidated.md` (Section 8: Configuration Gaps) — consolidated 2026-06-01; dir deleted
+- `AI/plans/research/DBCONTEXT-CONFIGURATION-consolidated.md` (Section 2: Entity Configuration Files, Section 3: Configuration Gaps) — consolidated 2026-06-01; dir deleted
+
+Content already covered by this plan's tasks: SourceRecord configuration (Task 1), FiberyEntity composite unique + column types (Task 2), Album ReleaseDate (Task 3), Track composite unique (Task 4), Scrobble Platform + indexes (Task 5), Video column types + named indexes (Task 6), ExecutionLog SessionId + Timestamp (Task 7), FailedTask TaskName + Timestamp (Task 8). The low-priority items (named indexes on FK/management entities, PK strategy standardization) are deferred — not blocking.

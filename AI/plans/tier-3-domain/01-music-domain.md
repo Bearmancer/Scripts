@@ -44,12 +44,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -65,12 +65,12 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T301_MusicDomainTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T301_MusicDomainTests.cs`:
 
 ```csharp
 using System.IO;
@@ -83,10 +83,10 @@ namespace CSharpScripts.Tests.T3;
 public class T301_MusicDomainTests
 {
     private const string MusicCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj";
+        @"/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj";
 
     private const string MusicSrcDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music";
+        @"/home/lance/Scripts/csharp/src\Services\Music";
 
     [Test]
     public void MusicDomain_HasNoDependencies_OnDataOrOrchestrators()
@@ -154,7 +154,7 @@ public class T301_MusicDomainTests
 ### Step 1.2 — Run to confirm RED
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T301_MusicDomainTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -173,10 +173,10 @@ Write-Host ($testOutput -join "`n")
 **Expected Outcome:** Explicit list of violating files and lines.
 
 ```powershell
-$musicDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music"
+$musicDir = "/home/lance/Scripts/csharp/src\Services\Music"
 
 Write-Host "=== .csproj references ==="
-Get-Content "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj" |
+Get-Content "/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj" |
     Select-String "ProjectReference"
 
 Write-Host "=== Source files importing CSharpScripts.Data ==="
@@ -213,7 +213,7 @@ Get-ChildItem $musicDir -Recurse -Filter "*.cs" |
 
 ```powershell
 # For each affected source file (replace <FileName> with actual name):
-$src = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\<FileName>.cs"
+$src = "/home/lance/Scripts/csharp/src\Services\Music\<FileName>.cs"
 $bak = "$src.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $src -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -224,7 +224,7 @@ Write-Host "Backed up: $bak"
 
 If Music calls a language detection method from `Scripts.Services.Language`, extract an interface:
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\ILanguageDetector.cs`:
+Create file `/home/lance/Scripts/csharp/src\Core\Abstractions\ILanguageDetector.cs`:
 
 ```csharp
 namespace CSharpScripts.Core.Abstractions;
@@ -241,14 +241,14 @@ public interface ILanguageDetector
 ```
 
 ```powershell
-Test-Path "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\ILanguageDetector.cs" | Should -Be $true
+Test-Path "/home/lance/Scripts/csharp/src\Core\Abstractions\ILanguageDetector.cs" | Should -Be $true
 Write-Host "ILanguageDetector created in Core"
 ```
 
 ### Step 3.3 — Replace illegal using in Music source file
 
 ```powershell
-$file    = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\<FileName>.cs"
+$file    = "/home/lance/Scripts/csharp/src\Services\Music\<FileName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 
 # Remove illegal using directives
@@ -273,7 +273,7 @@ Write-Host "Cleaned: $file"
 ### Step 3.4 — Remove illegal .csproj references
 
 ```powershell
-$csproj = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj"
+$csproj = "/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj"
 $bak    = "$csproj.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $csproj -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -307,7 +307,7 @@ Write-Host "Updated: $csproj"
 **Expected Outcome:** All Music files declare `namespace CSharpScripts.Services.Music.*`.
 
 ```powershell
-$musicDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music"
+$musicDir = "/home/lance/Scripts/csharp/src\Services\Music"
 
 Get-ChildItem $musicDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -344,13 +344,13 @@ Get-ChildItem $musicDir -Recurse -Filter "*.cs" |
 **Expected Outcome:** 0 build errors, all T301 tests pass.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T301_MusicDomainTests" 2>&1
 $testOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "T301 tests: GREEN"
@@ -372,7 +372,7 @@ Tests: 3 (3 passed)
 **Expected Outcome:** Commit `feat(t3-01)` visible in log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"
@@ -382,7 +382,7 @@ git add csharp/src/Services/Music/ `
         csharp/tests/Scripts.Tests/T3/T301_MusicDomainTests.cs 2>&1
 
 # Only add Core changes if new abstractions were created
-if (Test-Path "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\ILanguageDetector.cs") {
+if (Test-Path "/home/lance/Scripts/csharp/src\Core\Abstractions\ILanguageDetector.cs") {
     git add csharp/src/Core/Abstractions/ILanguageDetector.cs 2>&1
 }
 

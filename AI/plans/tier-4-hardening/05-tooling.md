@@ -20,10 +20,10 @@ Get-Command dotnet -ErrorAction Stop
 Get-Command git    -ErrorAction Stop
 Get-Command uv     -ErrorAction Stop
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
 # Inventory all Mail-related files
-Get-ChildItem 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI' -Recurse -Filter '*Mail*' |
+Get-ChildItem '/home/lance/Scripts/csharp/src\CLI' -Recurse -Filter '*Mail*' |
     Select-Object FullName
 ```
 
@@ -45,7 +45,7 @@ namespace Scripts.Tests.ToolingTests;
 
 public class MailRemovalTests
 {
-    private const string CliRoot = @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI";
+    private const string CliRoot = @"/home/lance/Scripts/csharp/src\CLI";
 
     [Test]
     public void MailCommand_DoesNotExist_InCliDirectory()
@@ -76,7 +76,7 @@ public class MailRemovalTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ToolingTests\MailRemovalTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\ToolingTests\MailRemovalTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -84,7 +84,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "MailRemovalTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -95,7 +95,7 @@ Expected: tests fail — Mail files still exist in CLI.
 
 Run this to confirm exactly which files need deletion:
 ```powershell
-Get-ChildItem 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI' -Recurse -Filter '*Mail*' |
+Get-ChildItem '/home/lance/Scripts/csharp/src\CLI' -Recurse -Filter '*Mail*' |
     Select-Object FullName, Length
 ```
 
@@ -106,7 +106,7 @@ Get-ChildItem 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI' -Recurse -Filter '*Mai
 - [ ] **Step 1: Backup and delete each Mail file**
 
 ```powershell
-$mailFiles = Get-ChildItem 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI' `
+$mailFiles = Get-ChildItem '/home/lance/Scripts/csharp/src\CLI' `
     -Recurse -Filter '*Mail*' |
     Where-Object { $_.Name -notlike '*.bak.*' }
 
@@ -142,7 +142,7 @@ Do not remove any other command registrations.
 - [ ] **Step 3: Build — confirm no compile errors**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 Write-Host "Build clean after Mail removal"
 ```
@@ -150,7 +150,7 @@ Write-Host "Build clean after Mail removal"
 - [ ] **Step 4: Run MailRemovalTests — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "MailRemovalTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -160,10 +160,10 @@ Expected: both tests PASS.
 - [ ] **Step 5: Commit Mail removal**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     csharp/src/CLI/ `
     csharp/tests/Scripts.Tests/ToolingTests/MailRemovalTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-05a): remove Mail command stubs from CLI"
+git -C /home/lance/Scripts commit -m "feat(t4-05a): remove Mail command stubs from CLI"
 ```
 
 ---
@@ -184,7 +184,7 @@ namespace Scripts.Tests.ToolingTests;
 
 public class PythonToolingTests
 {
-    private const string PyprojectPath = @"C:\Users\Lance\Dev\Scripts\python\pyproject.toml";
+    private const string PyprojectPath = @"/home/lance/Scripts/python\pyproject.toml";
 
     [Test]
     public void PyprojectToml_Exists()
@@ -244,7 +244,7 @@ public class PythonToolingTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ToolingTests\PythonToolingTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\ToolingTests\PythonToolingTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -252,7 +252,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "PythonToolingTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -269,7 +269,7 @@ Expected: fail — `pyproject.toml` has Black or lacks Ruff config.
 - [ ] **Step 1: Backup pyproject.toml**
 
 ```powershell
-$pyproject = 'C:\Users\Lance\Dev\Scripts\python\pyproject.toml'
+$pyproject = '/home/lance/Scripts/python\pyproject.toml'
 $bak = $pyproject + '.bak.' + (Get-Date -Format 'yyyyMMdd_HHmmss')
 Copy-Item $pyproject $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -298,14 +298,14 @@ ignore = []
 - [ ] **Step 4: Add ruff as a dev dependency (if not already present)**
 
 ```powershell
-uv add --project 'C:\Users\Lance\Dev\Scripts\python' ruff --dev 2>&1
+uv add --project '/home/lance/Scripts/python' ruff --dev 2>&1
 if ($LASTEXITCODE -ne 0) { throw "uv add ruff failed" }
 ```
 
 - [ ] **Step 5: Run PythonToolingTests — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "PythonToolingTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -319,22 +319,22 @@ Expected: all 6 tests PASS.
 - [ ] **Step 1: Run ruff check on Python source**
 
 ```powershell
-$ruffOut = uv run --project 'C:\Users\Lance\Dev\Scripts\python' `
-    ruff check 'C:\Users\Lance\Dev\Scripts\python' 2>&1
+$ruffOut = uv run --project '/home/lance/Scripts/python' `
+    ruff check '/home/lance/Scripts/python' 2>&1
 $ruffOut | Write-Host
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "Ruff found issues — fix them before committing"
     # Fix auto-fixable issues:
-    uv run --project 'C:\Users\Lance\Dev\Scripts\python' `
-        ruff check --fix 'C:\Users\Lance\Dev\Scripts\python' 2>&1
+    uv run --project '/home/lance/Scripts/python' `
+        ruff check --fix '/home/lance/Scripts/python' 2>&1
 }
 ```
 
 - [ ] **Step 2: Re-run ruff check — confirm zero errors**
 
 ```powershell
-uv run --project 'C:\Users\Lance\Dev\Scripts\python' `
-    ruff check 'C:\Users\Lance\Dev\Scripts\python' 2>&1
+uv run --project '/home/lance/Scripts/python' `
+    ruff check '/home/lance/Scripts/python' 2>&1
 if ($LASTEXITCODE -ne 0) { throw "ruff still reports errors — fix manually" }
 Write-Host "ruff: 0 errors"
 ```
@@ -342,21 +342,21 @@ Write-Host "ruff: 0 errors"
 - [ ] **Step 3: Final build + tests — no regressions**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
 - [ ] **Step 4: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     python/pyproject.toml `
     python/uv.lock `
     csharp/tests/Scripts.Tests/ToolingTests/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-05b): replace Black with Ruff in python/pyproject.toml; ruff check passes 0 errors"
+git -C /home/lance/Scripts commit -m "feat(t4-05b): replace Black with Ruff in python/pyproject.toml; ruff check passes 0 errors"
 ```
 
 ---

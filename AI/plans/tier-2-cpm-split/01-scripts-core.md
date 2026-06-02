@@ -14,7 +14,7 @@
 
 - [ ] T2-00 (CPM Foundation) is signed off — `Directory.Build.props` and `Directory.Packages.props` exist
 - [ ] `dotnet build csharp/Scripts.slnx` exits 0 before this task begins
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\src\Core\` directory exists (create if absent)
+- [ ] `/home/lance/Scripts/csharp/src\Core\` directory exists (create if absent)
 
 ---
 
@@ -26,7 +26,7 @@
 Write-Host "STATE: Verifying src/Core directory and any existing Scripts.Core.csproj"
 Write-Host "REASON: Must not overwrite without backup (Zero-Presumption Rule 9)"
 
-$coreDir  = 'C:\Users\Lance\Dev\Scripts\csharp\src\Core'
+$coreDir  = '/home/lance/Scripts/csharp/src\Core'
 $coreProj = Join-Path $coreDir 'Scripts.Core.csproj'
 $ts       = Get-Date -Format 'yyyyMMdd_HHmmss'
 
@@ -52,7 +52,7 @@ if (Test-Path $coreProj) {
 
 ### Step 2 — Write tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ScriptsCoreProjectTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ScriptsCoreProjectTests.cs`
 
 ```csharp
 using System.IO;
@@ -64,13 +64,13 @@ namespace Scripts.Tests;
 public class ScriptsCoreProjectTests
 {
     private const string CoreCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj";
+        @"/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj";
 
     private const string SlnxPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx";
+        @"/home/lance/Scripts/csharp/Scripts.slnx";
 
     private const string AssemblyInfoPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Core\Properties\AssemblyInfo.cs";
 
     [Test]
     public void ScriptsCore_CsprojFile_Exists()
@@ -115,7 +115,7 @@ public class ScriptsCoreProjectTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj",
+            Arguments              = @"build /home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -131,7 +131,7 @@ public class ScriptsCoreProjectTests
 ### Step 3 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsCoreProjectTests" `
     --no-build 2>&1
 Write-Host $result
@@ -144,7 +144,7 @@ Write-Host $result
 
 ### Step 4 — Write the project file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj`
+File: `/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -167,7 +167,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj`
 ### Step 5 — Verify the file was written
 
 ```powershell
-$coreProj = 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj'
+$coreProj = '/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj'
 if (-not (Test-Path $coreProj)) { throw "Scripts.Core.csproj was not created" }
 
 $content = Get-Content $coreProj -Raw -Encoding UTF8
@@ -187,7 +187,7 @@ Write-Host "OUTCOME: Scripts.Core.csproj verified — no ProjectReferences, no i
 ### Step 6 — Create AssemblyInfo.cs
 
 ```powershell
-$propsDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties'
+$propsDir = '/home/lance/Scripts/csharp/src\Core\Properties'
 if (-not (Test-Path $propsDir)) {
     New-Item -ItemType Directory -Path $propsDir -ErrorAction Stop | Out-Null
     if (-not (Test-Path $propsDir)) { throw "Failed to create $propsDir" }
@@ -195,7 +195,7 @@ if (-not (Test-Path $propsDir)) {
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties\AssemblyInfo.cs`
+File: `/home/lance/Scripts/csharp/src\Core\Properties\AssemblyInfo.cs`
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -204,7 +204,7 @@ using System.Runtime.CompilerServices;
 ```
 
 ```powershell
-$infoPath = 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties\AssemblyInfo.cs'
+$infoPath = '/home/lance/Scripts/csharp/src\Core\Properties\AssemblyInfo.cs'
 if (-not (Test-Path $infoPath)) { throw "AssemblyInfo.cs was not created in Scripts.Core" }
 
 $content = Get-Content $infoPath -Raw -Encoding UTF8
@@ -223,7 +223,7 @@ Write-Host "OUTCOME: AssemblyInfo.cs verified OK"
 Write-Host "STATE: Adding Scripts.Core.csproj to Scripts.slnx"
 Write-Host "REASON: Solution file must reference every project for dotnet build/test to discover it"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 
 # Backup solution file
@@ -231,8 +231,8 @@ $bak = "$slnx.bak.$ts"
 Copy-Item $slnx $bak -ErrorAction Stop
 if (-not (Test-Path $bak)) { throw "Backup of Scripts.slnx failed" }
 
-dotnet sln 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
-    add 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj' `
+dotnet sln '/home/lance/Scripts/csharp/Scripts.slnx' `
+    add '/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj' `
     2>&1 | Tee-Object -Variable slnOutput
 Write-Host $slnOutput
 
@@ -256,11 +256,11 @@ Write-Host "OUTCOME: Scripts.Core.csproj registered in solution"
 Write-Host "STATE: Running dotnet restore and dotnet build for Scripts.Core"
 Write-Host "REASON: Confirm the project compiles in isolation"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed for Scripts.Core" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Scripts.Core.csproj' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/src\Core\Scripts.Core.csproj' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Core — stderr above" }
 
@@ -276,7 +276,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Core — stder
 ### Step 9 — Run project tests
 
 ```powershell
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsCoreProjectTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "ScriptsCoreProjectTests failed" }
@@ -288,13 +288,13 @@ if ($LASTEXITCODE -ne 0) { throw "ScriptsCoreProjectTests failed" }
 ## Task 8 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/src/Core/Scripts.Core.csproj' `
     'csharp/src/Core/Properties/AssemblyInfo.cs' `
     'csharp/tests/Scripts.Tests/ScriptsCoreProjectTests.cs' `
     'csharp/Scripts.slnx'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-01): add Scripts.Core.csproj with CPM, no project references, InternalsVisibleTo"
 ```
 

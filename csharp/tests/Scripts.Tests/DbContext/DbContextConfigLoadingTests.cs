@@ -52,8 +52,9 @@ internal sealed class DbContextConfigLoadingTests
 			.Options;
 
 		await using var context = new ScriptsDbContext(options);
-		var entityType = context.Model.FindEntityType(typeof(Scrobble));
-		var scrobbledAt = entityType!.FindProperty("ScrobbledAt");
+		// FindEntityType returns null for Scrobble in this InMemory setup; use GetEntityTypes() lookup instead.
+		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
+		var scrobbledAt = entityType?.FindProperty("ScrobbledAt");
 
 		scrobbledAt.Should().NotBeNull();
 		scrobbledAt!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("timestamptz");

@@ -6,7 +6,7 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-		<EFCompiledModelPath>src/Data/CompiledModels</EFCompiledModelPath>
+		<EFCompiledModelPath>CompiledModels</EFCompiledModelPath>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Remove="tests\**" />
@@ -56,7 +56,7 @@
 		<PackageReference Include="Polly.RateLimiting" Version="*" />
 		<PackageReference Include="RestSharp" Version="*" />
 		<PackageReference Include="Riok.Mapperly" Version="*" />
-		<PackageReference Include="SearchPioneer.Lingua" Version="1.0.5" />
+		<PackageReference Include="SearchPioneer.Lingua" Version="*" />
 		<PackageReference Include="Serilog" Version="*" />
 		<PackageReference Include="Serilog.Enrichers.Process" Version="*" />
 		<PackageReference Include="Serilog.Enrichers.Thread" Version="*" />

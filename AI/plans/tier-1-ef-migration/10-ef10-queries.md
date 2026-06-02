@@ -23,11 +23,11 @@
 - T1-09 completed (Sync Service Updates green)
 - `Scripts.Tests` project exists and referenced in `Scripts.slnx`
 - Docker running, `$env:PGCONNSTR` loaded
-- `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\` directory exists
+- `/home/lance/Scripts/csharp/tests\Scripts.Tests\` directory exists
 
 ```powershell
 # Verify prerequisites
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj
+Test-Path /home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj
 # Expected: True
 
 docker ps 2>&1 | Select-String "healthy"
@@ -39,7 +39,7 @@ docker ps 2>&1 | Select-String "healthy"
 ## Task 1 — EF11 Forbidden Pattern Guard Tests
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs`
 
 ### Step 0: Preflight
 
@@ -49,17 +49,17 @@ docker ps 2>&1 | Select-String "healthy"
 # What: Create guard tests that regex-scan all .cs files for forbidden patterns.
 # Expected: Tests created, pass immediately (no EF11 patterns present).
 
-$testFile = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs'
+$testFile = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs'
 Test-Path $testFile
 # Expected: False
 
-New-Item -ItemType Directory -Force -Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards'
+New-Item -ItemType Directory -Force -Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards'
 ```
 
 ### Step 1: Write tests
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using TUnit;
@@ -69,7 +69,7 @@ namespace Scripts.Tests.Guards;
 public sealed class Ef11ForbiddenPatternsTests
 {
     private static readonly string SourceRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        @"/home/lance/Scripts/csharp/src";
 
     private static readonly string[] ForbiddenPatterns =
     {
@@ -137,7 +137,7 @@ public sealed class Ef11ForbiddenPatternsTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs'
 Test-Path $file
 # Expected: True
 Get-Content $file | Select-Object -First 5
@@ -147,7 +147,7 @@ Get-Content $file | Select-Object -First 5
 ### Step 3: Run test (expect GREEN — no EF11 patterns exist)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "Ef11ForbiddenPatternsTests" `
     --no-build 2>&1
 ```
@@ -161,7 +161,7 @@ All tests pass immediately because the research audit confirmed zero `MaxByAsync
 ### Step 5: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef11ForbiddenPatternsTests.cs
 git commit -m "feat(t1-10): add ef11 forbidden pattern guard tests"
 ```
 
@@ -170,7 +170,7 @@ git commit -m "feat(t1-10): add ef11 forbidden pattern guard tests"
 ## Task 2 — EF10 Replacement Compilation Tests
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs`
 
 ### Step 0: Preflight
 
@@ -180,7 +180,7 @@ git commit -m "feat(t1-10): add ef11 forbidden pattern guard tests"
 # What: Create tests that exercise the EF10 patterns against a real DbContext.
 # Expected: Tests written, pass on actual PostgreSQL container.
 
-$testFile = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs'
+$testFile = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs'
 Test-Path $testFile
 # Expected: False
 ```
@@ -188,7 +188,7 @@ Test-Path $testFile
 ### Step 1: Write tests
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs
 using FluentAssertions;
 using TUnit;
 using CSharpScripts.Data;
@@ -328,7 +328,7 @@ public sealed class Ef10ReplacementPatternTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs'
 Test-Path $file
 # Expected: True
 
@@ -340,7 +340,7 @@ Get-Content $file | Select-String "using CSharpScripts.Data"
 ### Step 3: Run test (expect RED — DatabaseFixture may not exist yet)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "Ef10ReplacementPatternTests" 2>&1
 ```
 
@@ -353,16 +353,18 @@ Tests will go green once T1-15 `DatabaseFixture` exists. These are forward-compa
 ### Step 5: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\Ef10ReplacementPatternTests.cs
 git commit -m "feat(t1-10): add ef10 replacement pattern compilation tests"
 ```
 
 ---
 
-## Task 3 — EF10 Replacement Documentation in AGENTS.md
+## Task 3 — ⚠️ OBSOLETE 2026-06-01 (AGENTS.md deleted)
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\AGENTS.md`
+- ~~Modify: `/home/lance/Scripts/AGENTS.md`~~ — file deleted 2026-06-01 (see `INDEX.md` → "Recently Removed")
+
+The EF10 Query Pattern Code Examples content in the Step 2 block below is preserved for reference but has no home now. Recommend: when Tier 4 / 06 (Documentation) is rescoped, this content moves to a developer-guide section in `README.md` or a top-level `docs/ef10-patterns.md`.
 
 ### Step 0: Preflight
 
@@ -372,11 +374,11 @@ git commit -m "feat(t1-10): add ef10 replacement pattern compilation tests"
 # What: Append EF10 Query Patterns section with runnable code snippets.
 # Expected: AGENTS.md updated with concrete code examples.
 
-Test-Path C:\Users\Lance\Dev\Scripts\AGENTS.md
+Test-Path /home/lance/Scripts/AGENTS.md
 # Expected: True
 
 # Read current line count
-(Get-Content C:\Users\Lance\Dev\Scripts\AGENTS.md).Count
+(Get-Content /home/lance/Scripts/AGENTS.md).Count
 # Expected: ~227 lines
 ```
 
@@ -434,14 +436,14 @@ These regression tests fail the build if any EF11-only API is introduced.
 ### Step 3: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\AGENTS.md | Select-String "EF10 Query Pattern Code Examples"
+Get-Content /home/lance/Scripts/AGENTS.md | Select-String "EF10 Query Pattern Code Examples"
 # Expected: match found
 ```
 
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\AGENTS.md
+git add /home/lance/Scripts/AGENTS.md
 git commit -m "docs(t1-10): add ef10 query pattern code examples to agents.md"
 ```
 
@@ -450,7 +452,7 @@ git commit -m "docs(t1-10): add ef10 query pattern code examples to agents.md"
 ## Task 4 — .editorconfig Analyzer Rule for EF11 Patterns
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\.editorconfig`
+- Modify: `/home/lance/Scripts/.editorconfig`
 
 ### Step 0: Preflight
 
@@ -460,7 +462,7 @@ git commit -m "docs(t1-10): add ef10 query pattern code examples to agents.md"
 # What: Add naming/type-forbidden rules that encode the EF10-only constraint.
 # Expected: .editorconfig updated; build remains clean.
 
-Test-Path C:\Users\Lance\Dev\Scripts\.editorconfig
+Test-Path /home/lance/Scripts/.editorconfig
 # Expected: True
 ```
 
@@ -469,7 +471,7 @@ Test-Path C:\Users\Lance\Dev\Scripts\.editorconfig
 Write a test file that verifies the .editorconfig rule section exists:
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs
 using FluentAssertions;
 using TUnit;
 
@@ -480,7 +482,7 @@ public sealed class EditorConfigEf10RulesTests
     [Test]
     public async Task EditorConfig_Contains_Ef10EnforcementSection()
     {
-        var editorConfigPath = @"C:\Users\Lance\Dev\Scripts\.editorconfig";
+        var editorConfigPath = @"/home/lance/Scripts/.editorconfig";
         var content = await File.ReadAllTextAsync(editorConfigPath);
 
         content.Should().Contain(
@@ -499,7 +501,7 @@ public sealed class EditorConfigEf10RulesTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -507,7 +509,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — editorconfig enforcement section doesn't yet exist)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "EditorConfigEf10RulesTests" `
     --no-build 2>&1
 ```
@@ -520,7 +522,7 @@ The .editorconfig needs C#-specific sections with diagnostic severity rules. Sin
 
 ### Step 5: Implement
 
-Add to `C:\Users\Lance\Dev\Scripts\.editorconfig` at end of file:
+Add to `/home/lance/Scripts/.editorconfig` at end of file:
 
 ```
 # ──────────────────────────────────────────────────────────
@@ -548,7 +550,7 @@ dotnet_style_prefer_collection_expression = true:suggestion
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "EditorConfigEf10RulesTests" 2>&1
 ```
 
@@ -557,7 +559,7 @@ Expected: GREEN — `.editorconfig` now contains `dotnet_diagnostic` entries.
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\.editorconfig C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs
+git add /home/lance/Scripts/.editorconfig /home/lance/Scripts/csharp/tests\Scripts.Tests\Guards\EditorConfigEf10RulesTests.cs
 git commit -m "feat(t1-10): add ef10 editorconfig analyzer rules and test"
 ```
 
@@ -569,6 +571,29 @@ git commit -m "feat(t1-10): add ef10 editorconfig analyzer rules and test"
 - [ ] `dotnet test` — Ef11ForbiddenPatternsTests: 4/4 PASS (no EF11 patterns)
 - [ ] `dotnet test` — Ef10ReplacementPatternTests: 4/4 PASS (EF10 patterns compile)
 - [ ] `dotnet test` — EditorConfigEf10RulesTests: PASS (editorconfig enforced)
-- [ ] `dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx` — 0 errors
+- [ ] `dotnet build /home/lance/Scripts/csharp/Scripts.slnx` — 0 errors
 - [ ] AGENTS.md contains EF10 code examples
 - [ ] `.editorconfig` contains EF10 enforcement section
+
+---
+
+## Research Provenance
+
+<!-- from research/ADVANCED-FEATURES-consolidated.md (Section 1: EF10 Query Patterns) -->
+
+Source: `AI/plans/research/ADVANCED-FEATURES-consolidated.md` (Section 1) — consolidated 2026-06-01; dir deleted
+
+Content already covered: zero EF11 patterns found (research §1.1, verified by full grep), EF10 replacement table (research §1.2), guard tests (Tasks 1-3), editorconfig enforcement (Task 3). See `01-entities.md` Research Provenance for the JsonDocument NRE root cause that motivated the `mb.Ignore<JsonDocument>()` guard.
+
+### JSONB Column Inventory (research §1.3)
+
+Four entities use JSONB columns — all use `JsonDocument?` natively mapped by Npgsql 10, no special configuration required:
+
+| Entity         | Property   | Type                         | Config File                       |
+| -------------- | ---------- | ---------------------------- | --------------------------------- |
+| `Artist`       | `Metadata` | `JsonDocument?`              | `ArtistConfiguration.cs:14`       |
+| `Video`        | `Metadata` | `Dictionary<string, string>` | `VideoConfiguration.cs:16`        |
+| `ExecutionLog` | `Payload`  | `JsonDocument?`              | `ExecutionLogConfiguration.cs:17` |
+| `FiberyEntity` | `RawData`  | `JsonDocument?`              | `FiberyEntityConfiguration.cs:13` |
+
+Note: `Video.Metadata` uses `Dictionary<string,string>` (not `JsonDocument?`) — see `01-entities.md` Research Provenance for the Video entity divergence context.

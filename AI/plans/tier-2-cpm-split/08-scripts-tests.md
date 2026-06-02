@@ -14,7 +14,7 @@
 
 - [ ] T2-00 through T2-07 are signed off — all 7 projects exist and compile
 - [ ] CPM is active — `Directory.Packages.props` lists `TUnit`, `FluentAssertions`, `Testcontainers.PostgreSql`
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\` directory must be created
+- [ ] `/home/lance/Scripts/csharp/tests\Scripts.Tests\` directory must be created
 - [ ] Existing test files from prior phases exist at `csharp/tests/Scripts.Tests/` (if different location, migration is handled here)
 
 ---
@@ -27,8 +27,8 @@
 Write-Host "STATE: Verifying tests directory and checking for existing test projects"
 Write-Host "REASON: Must not overwrite without backup (Zero-Presumption Rule 9)"
 
-$testsDir  = 'C:\Users\Lance\Dev\Scripts\csharp\tests'
-$testsProjDir = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests'
+$testsDir  = '/home/lance/Scripts/csharp/tests'
+$testsProjDir = '/home/lance/Scripts/csharp/tests\Scripts.Tests'
 $testsProj = Join-Path $testsProjDir 'Scripts.Tests.csproj'
 $ts        = Get-Date -Format 'yyyyMMdd_HHmmss'
 
@@ -60,7 +60,7 @@ if (Test-Path $testsProj) {
 
 ### Step 2 — Write tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ScriptsTestsProjectTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ScriptsTestsProjectTests.cs`
 
 ```csharp
 using System.IO;
@@ -73,31 +73,31 @@ namespace Scripts.Tests;
 public class ScriptsTestsProjectTests
 {
     private const string TestsCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj";
+        @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj";
 
     private const string CoreAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Core\Properties\AssemblyInfo.cs";
 
     private const string DataAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Data\Properties\AssemblyInfo.cs";
 
     private const string LanguageAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Services\Language\Properties\AssemblyInfo.cs";
 
     private const string MusicAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Services\Music\Properties\AssemblyInfo.cs";
 
     private const string OrchestratorsAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Orchestrators\Properties\AssemblyInfo.cs";
 
     private const string ReaderAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Reader\Properties\AssemblyInfo.cs";
 
     private const string ClicAssemblyInfo =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\CLI\Properties\AssemblyInfo.cs";
 
     private const string SlnxPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx";
+        @"/home/lance/Scripts/csharp/Scripts.slnx";
 
     [Test]
     public void ScriptsTests_CsprojFile_Exists()
@@ -205,7 +205,7 @@ public class ScriptsTestsProjectTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"test C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj",
+            Arguments              = @"test /home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -221,7 +221,7 @@ public class ScriptsTestsProjectTests
 ### Step 3 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsTestsProjectTests" `
     --no-build 2>&1
 Write-Host $result
@@ -234,7 +234,7 @@ Write-Host $result
 
 ### Step 4 — Write the project file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -261,7 +261,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.cspro
 ### Step 5 — Verify the project file
 
 ```powershell
-$testsProj = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj'
+$testsProj = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj'
 if (-not (Test-Path $testsProj)) { throw "Scripts.Tests.csproj was not created" }
 
 $content = Get-Content $testsProj -Raw -Encoding UTF8
@@ -310,13 +310,13 @@ Write-Host "STATE: Verifying InternalsVisibleTo in all 7 library projects"
 Write-Host "REASON: Tests project must be able to access internal types for testing"
 
 $assemblyInfoPaths = @(
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Core\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Data\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties\AssemblyInfo.cs',
-    'C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Properties\AssemblyInfo.cs'
+    '/home/lance/Scripts/csharp/src\Core\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\Data\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\Services\Language\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\Services\Music\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\Orchestrators\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\Reader\Properties\AssemblyInfo.cs',
+    '/home/lance/Scripts/csharp/src\CLI\Properties\AssemblyInfo.cs'
 )
 
 foreach ($infoPath in $assemblyInfoPaths) {
@@ -347,7 +347,7 @@ Write-Host "OUTCOME: All 7 projects have correct InternalsVisibleTo"
 Write-Host "STATE: Removing old CSharpScripts.Tests project from Scripts.slnx if present"
 Write-Host "REASON: Old project reference must be removed to prevent duplicate references during dotnet build"
 
-$slnx       = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx       = '/home/lance/Scripts/csharp/Scripts.slnx'
 $oldProject = 'tests\CSharpScripts.Tests\CSharpScripts.Tests.csproj'
 
 if ((Get-Content $slnx -Raw) -match [regex]::Escape($oldProject)) {
@@ -375,14 +375,14 @@ if ((Get-Content $slnx -Raw) -match [regex]::Escape($oldProject)) {
 ```powershell
 Write-Host "STATE: Adding Scripts.Tests.csproj to Scripts.slnx"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$slnx.bak.$ts"
 Copy-Item $slnx $bak -ErrorAction Stop
 if (-not (Test-Path $bak)) { throw "Backup of Scripts.slnx failed" }
 
-dotnet sln 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
-    add 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj' `
+dotnet sln '/home/lance/Scripts/csharp/Scripts.slnx' `
+    add '/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj' `
     2>&1 | Tee-Object -Variable slnOutput
 Write-Host $slnOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet sln add failed for Scripts.Tests.csproj" }
@@ -404,15 +404,15 @@ Write-Host "OUTCOME: Scripts.Tests.csproj registered in solution"
 Write-Host "STATE: Running dotnet restore, build, and test for full solution"
 Write-Host "REASON: Verify entire dependency graph compiles and all tests pass"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed for full solution" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for full solution" }
 
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet test failed for full solution" }
 
@@ -427,12 +427,12 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet test failed for full solution" }
 ## Task 7 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/tests/Scripts.Tests/Scripts.Tests.csproj' `
     'csharp/tests/Scripts.Tests/ScriptsTestsProjectTests.cs' `
     'csharp/Scripts.slnx'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-08): add Scripts.Tests.csproj with TUnit, InternalsVisibleTo in all 7 library projects, OutputType=Exe"
 ```
 

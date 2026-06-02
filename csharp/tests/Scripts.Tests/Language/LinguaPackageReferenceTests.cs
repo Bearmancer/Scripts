@@ -25,8 +25,10 @@ internal sealed class LinguaPackageReferenceTests
 	}
 
 	[Test]
-	public async Task Csproj_Lingua_Version_Is_One_Dot_Zero_Dot_Five()
+	public async Task Csproj_Lingua_Version_Is_Floating()
 	{
+		// Repo policy: always use latest NuGet (per "use * not hardcoded versions" rule).
+		// Version="*" means NuGet picks the latest stable on every restore.
 		var xml = await File.ReadAllTextAsync(CsprojPath);
 		var doc = XDocument.Parse(xml);
 		var ns = doc.Root!.GetDefaultNamespace();
@@ -38,6 +40,23 @@ internal sealed class LinguaPackageReferenceTests
 		linguaRef.Should().NotBeNull();
 
 		var version = linguaRef!.Attribute("Version")?.Value;
-		version.Should().Be("1.0.5", $"because the target version is 1.0.5. Actual: {version}");
+		version.Should().Be("*",
+			$"because the repo always uses latest NuGet packages. Actual: {version}");
+	}
+
+	[Test]
+	public async Task Resolved_Lingua_NuGet_Version_Is_Latest_Stable()
+	{
+		// Validates that floating `*` resolves to a real semver (not "*-*" prerelease
+		// nor a missing package) at restore time.
+		var packageId = "SearchPioneer.Lingua";
+		var lockFile = TestPaths.Combine("csharp", "obj", "project.assets.json");
+		File.Exists(lockFile).Should().BeTrue(
+			"dotnet restore must have produced project.assets.json"
+		);
+
+		var assets = await File.ReadAllTextAsync(lockFile);
+		assets.Should().Contain($"\"{packageId.ToLowerInvariant()}\"",
+			$"because {packageId} must be in the resolved package graph");
 	}
 }

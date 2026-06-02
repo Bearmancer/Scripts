@@ -67,7 +67,7 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		State = State.MarkFetchComplete();
 		await SaveStateAsync();
 
-		List<Scrobble> scrobbles = await this.LastFmService.LoadScrobblesAsync();
+		List<LastFmScrobble> scrobbles = await this.LastFmService.LoadScrobblesAsync();
 
 		if (scrobbles.Count == 0)
 		{
@@ -102,7 +102,7 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 
 	private async Task ExecuteIncrementalSyncAsync()
 	{
-		List<Scrobble> cachedScrobbles = await this.LastFmService.LoadScrobblesAsync();
+		List<LastFmScrobble> cachedScrobbles = await this.LastFmService.LoadScrobblesAsync();
 
 		if (cachedScrobbles.Count > 0)
 		{

@@ -1,7 +1,6 @@
-#pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Scrobble = Scripts.Data.Entities.Scrobble;
+using Scripts.Data.Entities;
 
 namespace Scripts.Data.Configuration;
 

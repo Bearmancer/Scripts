@@ -21,13 +21,13 @@
 ## Prerequisites
 
 - Docker Desktop running
-- `.env` loaded into the current shell (see repo `AGENTS.md` §3)
+- `.env` loaded into the current shell
 - `$env:PGCONNSTR` must be set before running any step
 
 ```powershell
 # Verify env is loaded
 if (-not $env:PGCONNSTR) {
-    Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+    Get-Content /home/lance/Scripts/.env | ForEach-Object {
         if ($_ -match '^([^#][^=]+)=(.+)$') {
             [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
         }
@@ -56,7 +56,7 @@ Write-Host "Docker is running. Output: $result"
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\DockerEnvironmentTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\DockerEnvironmentTests.cs`
 
 ```csharp
 using TUnit;
@@ -93,7 +93,7 @@ public sealed class DockerEnvironmentTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\DockerEnvironmentTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\DockerEnvironmentTests.cs
 ```
 
 Expected: File exists, contains `process.ExitCode.Should().Be(0)`.
@@ -101,7 +101,7 @@ Expected: File exists, contains `process.ExitCode.Should().Be(0)`.
 ### Step 3: Run — expect FAIL (if Docker stopped) or PASS (if running)
 
 ```powershell
-dotnet test --filter "Docker_IsRunning_WhenDockerPsSucceeds" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Docker_IsRunning_WhenDockerPsSucceeds" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected output if Docker is not running:
@@ -126,7 +126,7 @@ if ($LASTEXITCODE -ne 0) { throw "Docker still not running after 30 seconds" }
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet test --filter "Docker_IsRunning_WhenDockerPsSucceeds" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Docker_IsRunning_WhenDockerPsSucceeds" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -138,8 +138,8 @@ Passed Docker_IsRunning_WhenDockerPsSucceeds [...]
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Environment/DockerEnvironmentTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-00): add Docker environment preflight test"
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Environment/DockerEnvironmentTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-00): add Docker environment preflight test"
 ```
 
 ---
@@ -163,7 +163,7 @@ Write-Host "PGCONNSTR is set (redacted length: $($connStr.Length))"
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\ConnectionStringTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\ConnectionStringTests.cs`
 
 ```csharp
 using TUnit;
@@ -209,7 +209,7 @@ public sealed class ConnectionStringTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\ConnectionStringTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\ConnectionStringTests.cs
 ```
 
 Expected: File exists, contains three `[Test]` methods.
@@ -217,7 +217,7 @@ Expected: File exists, contains three `[Test]` methods.
 ### Step 3: Run — expect FAIL if env not loaded
 
 ```powershell
-dotnet test --filter "ConnectionString_IsSet_InEnvironment" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ConnectionString_IsSet_InEnvironment" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected failure:
@@ -233,7 +233,7 @@ Load `.env` and re-run. The test exercises runtime environment, not compilation.
 ### Step 4: Load env and re-run
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+Get-Content /home/lance/Scripts/.env | ForEach-Object {
     if ($_ -match '^([^#][^=]+)=(.+)$') {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
     }
@@ -243,7 +243,7 @@ Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet test --filter "ConnectionString" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ConnectionString" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -257,8 +257,8 @@ Passed ConnectionString_DoesNotContain_Password_InPlainText_InLogs
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Environment/ConnectionStringTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-00): add connection string format validation tests"
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Environment/ConnectionStringTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-00): add connection string format validation tests"
 ```
 
 ---
@@ -273,13 +273,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-00): add connection string 
 # What: Create minimal DbContext with empty OnModelCreating
 # Expected: File created, compiles, CanConnectAsync returns true
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\DbContextConnectionTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\DbContextConnectionTests.cs`
 
 ```csharp
 using TUnit;
@@ -317,7 +317,7 @@ public sealed class DbContextConnectionTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\DbContextConnectionTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\DbContextConnectionTests.cs
 ```
 
 Expected: File exists, contains `CanConnectAsync`.
@@ -325,7 +325,7 @@ Expected: File exists, contains `CanConnectAsync`.
 ### Step 3: Run — expect FAIL (ScriptsDbContext does not exist)
 
 ```powershell
-dotnet test --filter "DatabaseConnection_Succeeds_WithValidConnectionString" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "DatabaseConnection_Succeeds_WithValidConnectionString" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -339,7 +339,7 @@ Compilation failure confirms the class is missing. Proceed to create it.
 
 ### Step 4: Create `ScriptsDbContext.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`
+File: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -364,16 +364,16 @@ public sealed class ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
 Verify file was created:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "DatabaseConnection_Succeeds_WithValidConnectionString" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "DatabaseConnection_Succeeds_WithValidConnectionString" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -386,9 +386,9 @@ Passed DatabaseConnection_Succeeds_WithValidConnectionString
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/ScriptsDbContext.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Environment/DbContextConnectionTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-00): add ScriptsDbContext stub and connection test"
+git -C /home/lance/Scripts add csharp/src/Data/ScriptsDbContext.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Environment/DbContextConnectionTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-00): add ScriptsDbContext stub and connection test"
 ```
 
 ---
@@ -396,7 +396,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-00): add ScriptsDbContext s
 ## Final Verification
 
 ```powershell
-dotnet test --filter "Scripts.Tests.Environment" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.Environment" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:

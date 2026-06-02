@@ -76,12 +76,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -97,12 +97,12 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T302_LanguageDomainTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T302_LanguageDomainTests.cs`:
 
 ```csharp
 using System;
@@ -116,10 +116,10 @@ namespace CSharpScripts.Tests.T3;
 public class T302_LanguageDomainTests
 {
     private const string LanguageCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Scripts.Services.Language.csproj";
+        @"/home/lance/Scripts/csharp/src\Services\Language\Scripts.Services.Language.csproj";
 
     private const string LanguageSrcDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language";
+        @"/home/lance/Scripts/csharp/src\Services\Language";
 
     [Test]
     public void LanguageDomain_HasNoDependencies_OnDataOrMusic()
@@ -223,7 +223,7 @@ public class T302_LanguageDomainTests
 ### Step 1.2 — Run to confirm RED
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T302_LanguageDomainTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -242,10 +242,10 @@ Write-Host ($testOutput -join "`n")
 **Expected Outcome:** Explicit list with file paths and line numbers.
 
 ```powershell
-$langDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language"
+$langDir = "/home/lance/Scripts/csharp/src\Services\Language"
 
 Write-Host "=== .csproj ProjectReferences ==="
-Get-Content "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Scripts.Services.Language.csproj" |
+Get-Content "/home/lance/Scripts/csharp/src\Services\Language\Scripts.Services.Language.csproj" |
     Select-String "ProjectReference"
 
 Write-Host "=== Source files importing CSharpScripts.Data ==="
@@ -280,7 +280,7 @@ Get-ChildItem $langDir -Recurse -Filter "LanguageIdentifier.cs" |
 ### Step 3.1 — Back up affected files
 
 ```powershell
-$src = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\<FileName>.cs"
+$src = "/home/lance/Scripts/csharp/src\Services\Language\<FileName>.cs"
 $bak = "$src.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $src -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -290,7 +290,7 @@ Write-Host "Backed up: $bak"
 ### Step 3.2 — Remove illegal using directives from source files
 
 ```powershell
-$file    = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\<FileName>.cs"
+$file    = "/home/lance/Scripts/csharp/src\Services\Language\<FileName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 
 $updated = $content `
@@ -308,7 +308,7 @@ Write-Host "Cleaned: $file"
 ### Step 3.3 — Remove illegal project references from .csproj
 
 ```powershell
-$csproj = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Scripts.Services.Language.csproj"
+$csproj = "/home/lance/Scripts/csharp/src\Services\Language\Scripts.Services.Language.csproj"
 $bak    = "$csproj.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $csproj -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -344,7 +344,7 @@ Write-Host "Updated: $csproj"
 ### Step 4.1 — Locate LanguageIdentifier.cs
 
 ```powershell
-$langDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language"
+$langDir = "/home/lance/Scripts/csharp/src\Services\Language"
 $file = Get-ChildItem $langDir -Recurse -Filter "LanguageIdentifier.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
     Select-Object -ExpandProperty FullName -First 1
@@ -382,7 +382,7 @@ Write-Host "LanguageIdentifier is now internal sealed"
 If `Scripts.Tests` directly instantiates `LanguageIdentifier` (it shouldn't — but check):
 
 ```powershell
-$langCsproj = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\Scripts.Services.Language.csproj"
+$langCsproj = "/home/lance/Scripts/csharp/src\Services\Language\Scripts.Services.Language.csproj"
 $content    = Get-Content $langCsproj -Raw -Encoding UTF8
 
 if ($content -notmatch "InternalsVisibleTo") {
@@ -401,13 +401,13 @@ if ($content -notmatch "InternalsVisibleTo") {
 **Expected Outcome:** 0 errors, all T302 tests pass.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T302_LanguageDomainTests" 2>&1
 $testOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "T302 tests: GREEN"
@@ -429,7 +429,7 @@ Tests: 4 (4 passed)
 **Expected Outcome:** Commit `feat(t3-02)` in git log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"

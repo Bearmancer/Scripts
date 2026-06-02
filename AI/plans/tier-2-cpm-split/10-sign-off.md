@@ -15,7 +15,7 @@
 - [ ] T2-00 through T2-09 are signed off — all phases complete, no known issues
 - [ ] Docker Desktop is running (for integration tests)
 - [ ] `$env:PGCONNSTR` is set (for EF Core / integration tests)
-- [ ] Working directory: `C:\Users\Lance\Dev\Scripts`
+- [ ] Working directory: `/home/lance/Scripts`
 
 ---
 
@@ -23,7 +23,7 @@
 
 ### Step 1 — Write the test file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Tier2SignOffTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Tier2SignOffTests.cs`
 
 ```csharp
 using System.IO;
@@ -38,10 +38,10 @@ namespace Scripts.Tests;
 public class Tier2SignOffTests
 {
     private const string CsharpRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp";
+        @"/home/lance/Scripts/csharp";
 
     private const string SlnxPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx";
+        @"/home/lance/Scripts/csharp/Scripts.slnx";
 
     /// <summary>
     /// Every .csproj in the solution must have zero inline Version= attributes.
@@ -176,7 +176,7 @@ public class Tier2SignOffTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx",
+            Arguments              = @"build /home/lance/Scripts/csharp/Scripts.slnx",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -214,7 +214,7 @@ public class Tier2SignOffTests
 ### Step 2 — Run tests RED (they may pass if already clean, but verify)
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~Tier2SignOffTests" `
     --no-build 2>&1
 Write-Host $result
@@ -231,7 +231,7 @@ Write-Host $result
 Write-Host "STATE: Running full solution dotnet restore"
 Write-Host "REASON: Tier 2 sign-off requires clean restore and build"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLOCKER: dotnet restore failed — Tier 2 cannot be signed off"
@@ -240,7 +240,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "OUTCOME: dotnet restore OK"
 
 Write-Host "STATE: Running full solution dotnet build"
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLOCKER: dotnet build failed — Tier 2 cannot be signed off"
@@ -264,7 +264,7 @@ Write-Host "OUTCOME: dotnet build OK — 0 errors"
 Write-Host "STATE: Running full solution test suite"
 Write-Host "REASON: All tests must pass for Tier 2 sign-off"
 
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLOCKER: dotnet test failed — Tier 2 cannot be signed off"
@@ -288,7 +288,7 @@ Write-Host "OUTCOME: All tests passed"
 Write-Host "STATE: Running CLI smoke test (dotnet run -- --help)"
 Write-Host "REASON: Verify the compiled CLI executable is functional"
 
-$helpOutput = dotnet run --project 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Scripts.CLI.csproj' -- --help 2>&1
+$helpOutput = dotnet run --project '/home/lance/Scripts/csharp/src\CLI\Scripts.CLI.csproj' -- --help 2>&1
 Write-Host $helpOutput
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLOCKER: dotnet run -- --help failed — Tier 2 cannot be signed off"
@@ -316,7 +316,7 @@ Write-Host "OUTCOME: CLI --help smoke test OK"
 ```powershell
 Write-Host "STATE: Running Tier2SignOffTests to confirm all gates pass"
 
-$signOffOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$signOffOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~Tier2SignOffTests" 2>&1
 Write-Host $signOffOutput
 if ($LASTEXITCODE -ne 0) {
@@ -340,7 +340,7 @@ Write-Host "OUTCOME: All 5 Tier2SignOffTests PASSED"
 Write-Host "STATE: Running final CPM compliance scan"
 Write-Host "REASON: Zero-tolerance for inline Version= in any .csproj"
 
-$csprojFiles = Get-ChildItem -Path 'C:\Users\Lance\Dev\Scripts\csharp' -Filter '*.csproj' -Recurse |
+$csprojFiles = Get-ChildItem -Path '/home/lance/Scripts/csharp' -Filter '*.csproj' -Recurse |
     Where-Object { $_.FullName -notmatch '\\obj\\' -and $_.FullName -notmatch '\\bin\\' }
 
 $violations = @()
@@ -369,7 +369,7 @@ Write-Host "OUTCOME: CPM compliance verified — zero inline Version= attributes
 Write-Host "STATE: Scanning for duplicate .cs filenames across src/ projects"
 Write-Host "REASON: Each type must have exactly one authoritative location"
 
-$srcRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src'
+$srcRoot = '/home/lance/Scripts/csharp/src'
 $allCsFiles = Get-ChildItem -Path $srcRoot -Filter '*.cs' -Recurse |
     Where-Object { $_.FullName -notmatch '\\obj\\' -and $_.FullName -notmatch '\\bin\\' }
 
@@ -412,7 +412,7 @@ $projects = @{
                                      'Scripts.Orchestrators', 'Scripts.Reader', 'Scripts.CLI')
 }
 
-$srcDir = 'C:\Users\Lance\Dev\Scripts\csharp\src'
+$srcDir = '/home/lance/Scripts/csharp/src'
 $projMap = @{
     'Scripts.Core'                = Join-Path $srcDir 'Core\Scripts.Core.csproj'
     'Scripts.Data'                = Join-Path $srcDir 'Data\Scripts.Data.csproj'
@@ -421,7 +421,7 @@ $projMap = @{
     'Scripts.Orchestrators'       = Join-Path $srcDir 'Orchestrators\Scripts.Orchestrators.csproj'
     'Scripts.Reader'              = Join-Path $srcDir 'Reader\Scripts.Reader.csproj'
     'Scripts.CLI'                 = Join-Path $srcDir 'CLI\Scripts.CLI.csproj'
-    'Scripts.Tests'               = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj'
+    'Scripts.Tests'               = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj'
 }
 
 $errors = @()
@@ -476,19 +476,19 @@ Write-Host "OUTCOME: Dependency graph audit passed"
 Write-Host "STATE: All sign-off checks passed. Applying git tag t2-sign-off."
 Write-Host "REASON: Marks the exact commit where Tier 2 was signed off"
 
-$existingTag = git -C 'C:\Users\Lance\Dev\Scripts' tag -l 't2-sign-off' 2>&1
+$existingTag = git -C '/home/lance/Scripts' tag -l 't2-sign-off' 2>&1
 if ($existingTag) {
     Write-Host "OUTCOME: Tag t2-sign-off already exists at:"
-    git -C 'C:\Users\Lance\Dev\Scripts' log -1 --oneline 't2-sign-off'
+    git -C '/home/lance/Scripts' log -1 --oneline 't2-sign-off'
     Write-Host "WHAT: Deleting old tag and re-applying at current HEAD"
-    git -C 'C:\Users\Lance\Dev\Scripts' tag -d 't2-sign-off'
+    git -C '/home/lance/Scripts' tag -d 't2-sign-off'
 }
 
-git -C 'C:\Users\Lance\Dev\Scripts' tag -a 't2-sign-off' -m "Tier 2 sign-off: CPM + 8-project modularization complete"
+git -C '/home/lance/Scripts' tag -a 't2-sign-off' -m "Tier 2 sign-off: CPM + 8-project modularization complete"
 if ($LASTEXITCODE -ne 0) { throw "git tag creation failed" }
 
 # Verify tag exists
-$tagVerify = git -C 'C:\Users\Lance\Dev\Scripts' tag -l 't2-sign-off'
+$tagVerify = git -C '/home/lance/Scripts' tag -l 't2-sign-off'
 if ($tagVerify -ne 't2-sign-off') { throw "Tag t2-sign-off not found after creation" }
 Write-Host "OUTCOME: Git tag t2-sign-off applied at HEAD"
 ```
@@ -498,10 +498,10 @@ Write-Host "OUTCOME: Git tag t2-sign-off applied at HEAD"
 ## Task 10 — Commit sign-off tests
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/tests/Scripts.Tests/Tier2SignOffTests.cs'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-10): Tier 2 sign-off — full build, all tests green, CPM compliance, dependency audit, no duplicates"
 ```
 

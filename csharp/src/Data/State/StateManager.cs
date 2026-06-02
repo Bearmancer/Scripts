@@ -140,10 +140,8 @@ internal static class StateManager
 			var tempPath = path + $".{Guid.NewGuid()}.tmp";
 
 			var json = JsonSerializer.Serialize(value: state, options: JsonIndented);
-#pragma warning disable CA1849
 			File.WriteAllText(path: tempPath, contents: json);
 			File.Move(sourceFileName: tempPath, destFileName: path, overwrite: true);
-#pragma warning restore CA1849
 		}
 
 		await Task.CompletedTask;

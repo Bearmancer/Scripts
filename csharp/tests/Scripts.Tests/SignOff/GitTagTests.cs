@@ -14,7 +14,7 @@ internal sealed class GitTagTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "git",
-                Arguments = "-C C:\\Users\\Lance\\Dev\\Scripts tag -l t1-sign-off",
+                Arguments = $"-C {TestPaths.RepoRoot} tag -l t1-sign-off",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -48,7 +48,7 @@ internal sealed class GitTagTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "git",
-                Arguments = "-C C:\\Users\\Lance\\Dev\\Scripts log --oneline",
+                Arguments = $"-C {TestPaths.RepoRoot} log --oneline",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

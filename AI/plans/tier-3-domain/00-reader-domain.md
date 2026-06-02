@@ -44,13 +44,13 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
 # Verify solution builds before starting
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -66,17 +66,17 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore
 ### Step 1.1 — Create test file
 
 ```powershell
-$testFile = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T300_ReaderDomainTests.cs"
+$testFile = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T300_ReaderDomainTests.cs"
 
 # Verify tests project exists
-Test-Path "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj" -ErrorAction Stop | Should -Be $true
+Test-Path "/home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj" -ErrorAction Stop | Should -Be $true
 
 # Create T3 directory
-New-Item -ItemType Directory -Path "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3" -Force -ErrorAction Stop
-Test-Path "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3" -ErrorAction Stop | Should -Be $true
+New-Item -ItemType Directory -Path "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3" -Force -ErrorAction Stop
+Test-Path "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3" -ErrorAction Stop | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T300_ReaderDomainTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T300_ReaderDomainTests.cs`:
 
 ```csharp
 using System.IO;
@@ -89,10 +89,10 @@ namespace CSharpScripts.Tests.T3;
 public class T300_ReaderDomainTests
 {
     private const string ReaderCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj";
+        @"/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj";
 
     private const string ReaderSrcDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader";
+        @"/home/lance/Scripts/csharp/src\Reader";
 
     [Test]
     public void ReaderDomain_HasNoDependencies_OnDataOrOrchestrators()
@@ -140,7 +140,7 @@ public class T300_ReaderDomainTests
 ### Step 1.2 — Run tests to confirm RED
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T300_ReaderDomainTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -163,7 +163,7 @@ Failed! - Failed: 1, Passed: 0, Skipped: 0
 **Expected Outcome:** A list of files that import from `CSharpScripts.Data` or `CSharpScripts.Orchestrators`.
 
 ```powershell
-$readerDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Reader"
+$readerDir = "/home/lance/Scripts/csharp/src\Reader"
 
 Write-Host "=== Files importing CSharpScripts.Data ==="
 Get-ChildItem $readerDir -Recurse -Filter "*.cs" |
@@ -200,7 +200,7 @@ Get-ChildItem $readerDir -Recurse -Filter "*.cs" |
 For each affected file (replace `<FileName>` with the actual filename):
 
 ```powershell
-$src = "C:\Users\Lance\Dev\Scripts\csharp\src\Reader\<FileName>.cs"
+$src = "/home/lance/Scripts/csharp/src\Reader\<FileName>.cs"
 $bak = "$src.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $src -Destination $bak -ErrorAction Stop
 Test-Path $bak -ErrorAction Stop | Should -Be $true
@@ -211,7 +211,7 @@ Write-Host "Backed up: $bak"
 
 If a Reader file calls a method from `CSharpScripts.Data` (e.g., a repository), create an interface in Core:
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\IDocumentStore.cs`:
+Create file `/home/lance/Scripts/csharp/src\Core\Abstractions\IDocumentStore.cs`:
 
 ```csharp
 namespace CSharpScripts.Core.Abstractions;
@@ -228,7 +228,7 @@ public interface IDocumentStore
 
 Verify file created:
 ```powershell
-Test-Path "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\IDocumentStore.cs" -ErrorAction Stop
+Test-Path "/home/lance/Scripts/csharp/src\Core\Abstractions\IDocumentStore.cs" -ErrorAction Stop
 # Expected: True
 ```
 
@@ -238,7 +238,7 @@ Replace the direct `CSharpScripts.Data` import with `CSharpScripts.Core.Abstract
 
 ```powershell
 # In each violating Reader .cs file, replace the illegal using directive
-$file = "C:\Users\Lance\Dev\Scripts\csharp\src\Reader\<FileName>.cs"
+$file = "/home/lance/Scripts/csharp/src\Reader\<FileName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 $updated = $content -replace "using CSharpScripts\.Data[^;]*;", "using CSharpScripts.Core.Abstractions;"
 Set-Content -Path $file -Value $updated -Encoding UTF8 -ErrorAction Stop
@@ -252,7 +252,7 @@ Write-Host "Cleaned: $file"
 ### Step 3.4 — Remove project reference from .csproj
 
 ```powershell
-$csproj = "C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj"
+$csproj = "/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj"
 $bak    = "$csproj.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $csproj -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -282,7 +282,7 @@ Write-Host "Updated .csproj: $csproj"
 **Expected Outcome:** All Reader files use `CSharpScripts.Reader.*`.
 
 ```powershell
-$readerDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Reader"
+$readerDir = "/home/lance/Scripts/csharp/src\Reader"
 
 Get-ChildItem $readerDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -319,17 +319,17 @@ Get-ChildItem $readerDir -Recurse -Filter "*.cs" |
 **Expected Outcome:** 0 errors, all tests pass.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 
-$buildOutput = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOutput = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOutput | Select-String "Error\(s\)" | ForEach-Object {
     $_ | Should -Match "0 Error\(s\)"
 }
 ```
 
 ```powershell
-$testOutput = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOutput = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T300_ReaderDomainTests" 2>&1
 $testOutput | Select-String "Failed:" | ForEach-Object {
     $_ | Should -Match "Failed: 0"
@@ -353,7 +353,7 @@ Tests: 2 (2 passed)
 **Expected Outcome:** One commit with message `feat(t3-00): isolate Reader domain`.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 # Security check — never commit secrets
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {

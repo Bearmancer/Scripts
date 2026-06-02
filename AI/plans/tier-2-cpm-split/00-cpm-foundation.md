@@ -15,8 +15,8 @@
 - [ ] Docker Desktop running (`docker ps` succeeds)
 - [ ] .NET 10 SDK installed (`dotnet --version` → `10.0.x`)
 - [ ] PowerShell 7+ (`pwsh --version`)
-- [ ] Repo root: `C:\Users\Lance\Dev\Scripts`
-- [ ] C# root: `C:\Users\Lance\Dev\Scripts\csharp`
+- [ ] Repo root: `/home/lance/Scripts`
+- [ ] C# root: `/home/lance/Scripts/csharp`
 
 ---
 
@@ -32,7 +32,7 @@
 Write-Host "STATE: Checking for Scripts.slnx"
 Write-Host "REASON: Solution file required by all T2 tasks"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 
 if (Test-Path $slnx) {
@@ -43,7 +43,7 @@ if (Test-Path $slnx) {
     Write-Host "OUTCOME: Backed up → $bak"
 } else {
     Write-Host "OUTCOME: Scripts.slnx absent — creating"
-    dotnet new slnx --name Scripts --output 'C:\Users\Lance\Dev\Scripts\csharp' --force 2>&1 | Tee-Object -Variable slnOutput
+    dotnet new slnx --name Scripts --output '/home/lance/Scripts/csharp' --force 2>&1 | Tee-Object -Variable slnOutput
     Write-Host $slnOutput
     if ($LASTEXITCODE -ne 0) { throw "dotnet new slnx failed" }
     
@@ -63,8 +63,8 @@ if (Test-Path $slnx) {
 Write-Host "STATE: Checking for existing Directory.Build.props and Directory.Packages.props"
 Write-Host "REASON: Must backup before overwriting (Zero-Presumption Rule 9)"
 
-$buildProps  = 'C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props'
-$pkgProps    = 'C:\Users\Lance\Dev\Scripts\csharp\Directory.Packages.props'
+$buildProps  = '/home/lance/Scripts/csharp/Directory.Build.props'
+$pkgProps    = '/home/lance/Scripts/csharp/Directory.Packages.props'
 $ts          = Get-Date -Format 'yyyyMMdd_HHmmss'
 
 if (Test-Path $buildProps) {
@@ -92,7 +92,7 @@ if (Test-Path $pkgProps) {
 
 ### Step 2 — Write tests (they will fail because the files don't exist yet)
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CpmFoundationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\CpmFoundationTests.cs`
 
 ```csharp
 using System.IO;
@@ -103,7 +103,7 @@ namespace Scripts.Tests;
 
 public class CpmFoundationTests
 {
-    private const string CsharpRoot = @"C:\Users\Lance\Dev\Scripts\csharp";
+    private const string CsharpRoot = @"/home/lance/Scripts/csharp";
 
     [Test]
     public void DirectoryPackagesProps_Exists()
@@ -153,7 +153,7 @@ public class CpmFoundationTests
 ### Step 3 — Run tests and confirm RED
 
 ```powershell
-$result = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$result = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~CpmFoundationTests" `
     --no-build 2>&1
 
@@ -167,7 +167,7 @@ Write-Host $result
 
 ### Step 4 — Write Directory.Build.props
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props`
+File: `/home/lance/Scripts/csharp/Directory.Build.props`
 
 ```xml
 <Project>
@@ -211,7 +211,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props`
 ### Step 5 — Verify file was written
 
 ```powershell
-$buildProps = 'C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props'
+$buildProps = '/home/lance/Scripts/csharp/Directory.Build.props'
 if (-not (Test-Path $buildProps)) { throw "Directory.Build.props was not created" }
 
 $content = Get-Content $buildProps -Raw -Encoding UTF8
@@ -227,7 +227,7 @@ Write-Host "OUTCOME: Directory.Build.props verified OK"
 
 ### Step 6 — Write Directory.Packages.props
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\Directory.Packages.props`
+File: `/home/lance/Scripts/csharp/Directory.Packages.props`
 
 ```xml
 <Project>
@@ -293,7 +293,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\Directory.Packages.props`
 ### Step 7 — Verify file was written
 
 ```powershell
-$pkgProps = 'C:\Users\Lance\Dev\Scripts\csharp\Directory.Packages.props'
+$pkgProps = '/home/lance/Scripts/csharp/Directory.Packages.props'
 if (-not (Test-Path $pkgProps)) { throw "Directory.Packages.props was not created" }
 Write-Host "OUTCOME: Directory.Packages.props verified OK"
 ```
@@ -308,7 +308,7 @@ Write-Host "OUTCOME: Directory.Packages.props verified OK"
 Write-Host "STATE: Scanning all .csproj files for inline Version= attributes"
 Write-Host "REASON: CPM requires version-free PackageReference elements"
 
-$csprojFiles = Get-ChildItem -Path 'C:\Users\Lance\Dev\Scripts\csharp' -Filter '*.csproj' -Recurse |
+$csprojFiles = Get-ChildItem -Path '/home/lance/Scripts/csharp' -Filter '*.csproj' -Recurse |
     Where-Object { $_.FullName -notmatch '\\obj\\' -and $_.FullName -notmatch '\\bin\\' }
 
 $ts = Get-Date -Format 'yyyyMMdd_HHmmss'
@@ -357,11 +357,11 @@ foreach ($file in $csprojFiles) {
 Write-Host "STATE: Running dotnet restore then dotnet build to verify CPM is functional"
 Write-Host "REASON: CPM will fail loudly if any package is referenced without a PackageVersion entry"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed with exit code $LASTEXITCODE" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed with exit code $LASTEXITCODE" }
 
@@ -373,7 +373,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build failed with exit code $LASTEXITCO
 ### Step 10 — Run tests GREEN
 
 ```powershell
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~CpmFoundationTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "CpmFoundationTests failed" }
@@ -385,24 +385,24 @@ if ($LASTEXITCODE -ne 0) { throw "CpmFoundationTests failed" }
 ## Task 7 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/Directory.Build.props' `
     'csharp/Directory.Packages.props' `
     'csharp/tests/Scripts.Tests/CpmFoundationTests.cs'
 
 # Stage any .csproj files that were stripped of inline versions
-git -C 'C:\Users\Lance\Dev\Scripts' add 'csharp/src/*.csproj'
-git -C 'C:\Users\Lance\Dev\Scripts' add 'csharp/**/*.csproj'
+git -C '/home/lance/Scripts' add 'csharp/src/*.csproj'
+git -C '/home/lance/Scripts' add 'csharp/**/*.csproj'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t2-00): enable CPM, create Directory.Build.props and Directory.Packages.props, strip inline versions"
+git -C '/home/lance/Scripts' commit -m "feat(t2-00): enable CPM, create Directory.Build.props and Directory.Packages.props, strip inline versions"
 ```
 
 ---
 
 ## Sign-off Criteria
 
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props` exists and contains `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>`
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\Directory.Packages.props` exists and lists all packages with `<PackageVersion>` elements
+- [ ] `/home/lance/Scripts/csharp/Directory.Build.props` exists and contains `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>`
+- [ ] `/home/lance/Scripts/csharp/Directory.Packages.props` exists and lists all packages with `<PackageVersion>` elements
 - [ ] Zero `.csproj` files contain `PackageReference ... Version="` (inline versions)
 - [ ] `dotnet restore csharp/Scripts.slnx` exits 0
 - [ ] `dotnet build csharp/Scripts.slnx` exits 0 with 0 errors

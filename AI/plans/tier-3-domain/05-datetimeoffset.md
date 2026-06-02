@@ -20,7 +20,7 @@ PostgreSQL `timestamptz` (timestamp with time zone) maps to .NET `DateTimeOffset
 
 ### Logging Path Migration
 
-**Current**: `<project_root>/logs/` (e.g., `C:\Users\Lance\Dev\Scripts\logs\`)
+**Current**: `<project_root>/logs/` (e.g., `/home/lance/Scripts/logs\`)
 **Target**: `%USERPROFILE%\.cache\logs\scripts\`
 
 Update `Paths.cs`:
@@ -96,12 +96,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -117,12 +117,12 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T305_DateTimeOffsetTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T305_DateTimeOffsetTests.cs`:
 
 ```csharp
 using System;
@@ -138,13 +138,13 @@ namespace Scripts.Tests.T3;
 public class T305_DateTimeOffsetTests
 {
     private const string DataEntitiesDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities";
+        @"/home/lance/Scripts/csharp/src\Data\Entities";
 
     private const string DateTimeFormatsFile =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\DateTimeFormats.cs";
+        @"/home/lance/Scripts/csharp/src\Core\DateTimeFormats.cs";
 
     private const string OrchestratorsDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators";
+        @"/home/lance/Scripts/csharp/src\Orchestrators";
 
     [Test]
     public void NoEntityProperties_UseDateTime_InsteadOfDateTimeOffset()
@@ -208,7 +208,7 @@ public class T305_DateTimeOffsetTests
     [Test]
     public void DateTimeExtensions_AcceptsDateTimeOffset_NotDateTime()
     {
-        var extensionsFile = @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\DateTimeExtensions.cs";
+        var extensionsFile = @"/home/lance/Scripts/csharp/src\Core\DateTimeExtensions.cs";
 
         if (!File.Exists(extensionsFile))
         {
@@ -261,9 +261,9 @@ public class T305_DateTimeOffsetTests
 ### Step 1.2 — Run to confirm RED
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T305_DateTimeOffsetTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -282,8 +282,8 @@ Write-Host ($testOutput -join "`n")
 **Expected Outcome:** Complete list of all violations.
 
 ```powershell
-$entitiesDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities"
-$orchDir     = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators"
+$entitiesDir = "/home/lance/Scripts/csharp/src\Data\Entities"
+$orchDir     = "/home/lance/Scripts/csharp/src\Orchestrators"
 
 Write-Host "=== Entity files: DateTime property declarations ==="
 Get-ChildItem $entitiesDir -Filter "*.cs" |
@@ -307,7 +307,7 @@ Get-ChildItem $orchDir -Recurse -Filter "*.cs" |
     ForEach-Object { "  $($_.Path):$($_.LineNumber): $($_.Line.Trim())" }
 
 Write-Host "=== DateTimeExtensions.cs — check extension parameter type ==="
-$extFile = "C:\Users\Lance\Dev\Scripts\csharp\src\Core\DateTimeExtensions.cs"
+$extFile = "/home/lance/Scripts/csharp/src\Core\DateTimeExtensions.cs"
 if (Test-Path $extFile) {
     Get-Content $extFile |
         Select-String "extension" |
@@ -331,7 +331,7 @@ if (Test-Path $extFile) {
 For each entity file with a violation (replace `<EntityName>` with actual name):
 
 ```powershell
-$file = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\<EntityName>.cs"
+$file = "/home/lance/Scripts/csharp/src\Data\Entities\<EntityName>.cs"
 $bak  = "$file.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $file -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -341,7 +341,7 @@ Write-Host "Backed up: $bak"
 ### Step 3.2 — Replace DateTime with DateTimeOffset in entity file
 
 ```powershell
-$file    = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\<EntityName>.cs"
+$file    = "/home/lance/Scripts/csharp/src\Data\Entities\<EntityName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 
 # Replace DateTime? → DateTimeOffset? (must do before plain DateTime to avoid double-matching)
@@ -363,7 +363,7 @@ Write-Host "Fixed: $file"
 If the entity has a corresponding configuration file in `csharp/src/Data/Configuration/`:
 
 ```powershell
-$configDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration"
+$configDir = "/home/lance/Scripts/csharp/src\Data\Configuration"
 $configFile = "$configDir\<EntityName>Configuration.cs"
 
 if (Test-Path $configFile) {
@@ -396,7 +396,7 @@ if (Test-Path $configFile) {
 ### Step 4.1 — Back up each orchestrator file with violations
 
 ```powershell
-$orchDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators"
+$orchDir = "/home/lance/Scripts/csharp/src\Orchestrators"
 
 Get-ChildItem $orchDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -444,7 +444,7 @@ Get-ChildItem $orchDir -Recurse -Filter "*.cs" |
 ### Step 5.1 — Update DateTimeExtensions.cs
 
 ```powershell
-$extFile = "C:\Users\Lance\Dev\Scripts\csharp\src\Core\DateTimeExtensions.cs"
+$extFile = "/home/lance/Scripts/csharp/src\Core\DateTimeExtensions.cs"
 
 if (-not (Test-Path $extFile)) {
     Write-Host "DateTimeExtensions.cs does not exist — skipping"
@@ -515,7 +515,7 @@ Write-Host "DateTimeExtensions now extends DateTimeOffset"
 
 ```powershell
 # Load .env variables for connection string
-Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+Get-Content /home/lance/Scripts/.env | ForEach-Object {
     if ($_ -match '^([^#][^=]+)=(.+)$') {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
     }
@@ -526,8 +526,8 @@ if (-not $env:PGCONNSTR) { throw "PGCONNSTR environment variable is not set" }
 
 # Generate migration
 dotnet ef migrations add MigrateToDateTimeOffset `
-    --project C:\Users\Lance\Dev\Scripts\csharp\src\Data\Scripts.Data.csproj `
-    --startup-project C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Scripts.CLI.csproj `
+    --project /home/lance/Scripts/csharp/src\Data\Scripts.Data.csproj `
+    --startup-project /home/lance/Scripts/csharp/src\CLI\Scripts.CLI.csproj `
     -ErrorAction Stop 2>&1 | Tee-Object -Variable migOut
 
 $migOut | Select-String "Done" | Should -Not -BeNullOrEmpty
@@ -535,8 +535,8 @@ Write-Host "Migration generated: MigrateToDateTimeOffset"
 
 # Apply to local database
 dotnet ef database update `
-    --project C:\Users\Lance\Dev\Scripts\csharp\src\Data\Scripts.Data.csproj `
-    --startup-project C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Scripts.CLI.csproj `
+    --project /home/lance/Scripts/csharp/src\Data\Scripts.Data.csproj `
+    --startup-project /home/lance/Scripts/csharp/src\CLI\Scripts.CLI.csproj `
     -ErrorAction Stop 2>&1 | Tee-Object -Variable updateOut
 
 $updateOut | Select-String "Done" | Should -Not -BeNullOrEmpty
@@ -553,20 +553,20 @@ Write-Host "Database updated with DateTimeOffset migration"
 **Expected Outcome:** 0 build errors, all T305 tests pass, full suite green.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
 # Run DateTimeOffset tests
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T305_DateTimeOffsetTests" 2>&1
 $testOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "T305 tests: GREEN"
 
 # Full suite — DateTimeOffset change affects many callers
-$fullTestOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$fullTestOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $fullTestOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "Full test suite: GREEN"
 ```
@@ -587,7 +587,7 @@ Tests: 4 (4 passed)
 **Expected Outcome:** Commit `feat(t3-05)` in git log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"

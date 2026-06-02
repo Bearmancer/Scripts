@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Persistence;
 using Scripts.Models;
+using Scripts.Tests.Attributes;
 using System.Text.Json;
 
 namespace Scripts.Tests.ReleaseProgressTests;
 
+[RequiresPgConnStr]
 internal sealed class ReleaseProgressServiceTests : IDisposable
 {
     private readonly DbContextOptions<ScriptsDbContext> _options;

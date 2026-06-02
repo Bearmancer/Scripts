@@ -14,7 +14,7 @@ internal sealed class BuildVerificationTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = "build C:\\Users\\Lance\\Dev\\Scripts\\csharp\\Scripts.slnx",
+                Arguments = $"build {Path.Combine(TestPaths.CSharpRoot, "Scripts.slnx")}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -40,7 +40,7 @@ internal sealed class BuildVerificationTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = "restore C:\\Users\\Lance\\Dev\\Scripts\\csharp\\Scripts.slnx",
+                Arguments = $"restore {Path.Combine(TestPaths.CSharpRoot, "Scripts.slnx")}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

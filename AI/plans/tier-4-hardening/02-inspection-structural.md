@@ -19,8 +19,8 @@ Get-Command pwsh   -ErrorAction Stop
 Get-Command dotnet -ErrorAction Stop
 Get-Command git    -ErrorAction Stop
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable buildOutput
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable buildOutput
 # Capture current warning count for baseline
 $warnings = ($buildOutput | Select-String ' warning ').Count
 Write-Host "Baseline warning count: $warnings"
@@ -102,7 +102,7 @@ public class CancellationTokenTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StructuralTests\CancellationTokenTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\StructuralTests\CancellationTokenTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -110,7 +110,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CancellationTokenTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -156,7 +156,7 @@ Apply this pattern to ALL async methods in ALL repository classes.
 - [ ] **Step 5: Run — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CancellationTokenTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -166,9 +166,9 @@ Expected: all CancellationToken tests PASS.
 - [ ] **Step 6: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/ `
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/ `
     csharp/tests/Scripts.Tests/StructuralTests/CancellationTokenTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-02a): add CancellationToken to all async repository methods"
+git -C /home/lance/Scripts commit -m "feat(t4-02a): add CancellationToken to all async repository methods"
 ```
 
 ---
@@ -215,7 +215,7 @@ public class VisibilityTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StructuralTests\VisibilityTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\StructuralTests\VisibilityTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -223,7 +223,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "VisibilityTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -249,7 +249,7 @@ internal static class TextNormalizer { ... }
 - [ ] **Step 5: Run — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "VisibilityTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -259,9 +259,9 @@ Expected: all visibility tests PASS.
 - [ ] **Step 6: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/ `
+git -C /home/lance/Scripts add csharp/src/ `
     csharp/tests/Scripts.Tests/StructuralTests/VisibilityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-02b): reduce public visibility to internal for non-public types"
+git -C /home/lance/Scripts commit -m "feat(t4-02b): reduce public visibility to internal for non-public types"
 ```
 
 ---
@@ -287,7 +287,7 @@ public class SpectreRegistrarTests
     public void SpectreTypeRegistrar_IsUsed_InProgramCs()
     {
         var programContent = File.ReadAllText(
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Program.cs");
+            @"/home/lance/Scripts/csharp/src\CLI\Program.cs");
 
         programContent.Should().Contain("SpectreTypeRegistrar",
             "Program.cs must instantiate SpectreTypeRegistrar, not suppress it");
@@ -296,7 +296,7 @@ public class SpectreRegistrarTests
     [Test]
     public void SpectreTypeRegistrar_HasNoSuppressMessage_Attributes()
     {
-        var registrarFile = @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI\SpectreTypeRegistrar.cs";
+        var registrarFile = @"/home/lance/Scripts/csharp/src\CLI\SpectreTypeRegistrar.cs";
         if (!File.Exists(registrarFile)) return; // class may be inlined
 
         var content = File.ReadAllText(registrarFile);
@@ -309,7 +309,7 @@ public class SpectreRegistrarTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StructuralTests\SpectreRegistrarTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\StructuralTests\SpectreRegistrarTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -317,7 +317,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED or GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SpectreRegistrarTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -345,7 +345,7 @@ Remove any `[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]` or 
 - [ ] **Step 5: Run — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SpectreRegistrarTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -359,7 +359,7 @@ Expected: both tests PASS.
 - [ ] **Step 1: Full build — confirm zero warnings**
 
 ```powershell
-$build = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$build = dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $build | Write-Host
 $errorLines = $build | Where-Object { $_ -match ' error ' }
 $warnLines  = $build | Where-Object { $_ -match ' warning ' }
@@ -371,7 +371,7 @@ Write-Host "Build clean: 0 errors, 0 warnings"
 - [ ] **Step 2: Full test suite — no regressions**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
@@ -380,10 +380,10 @@ Expected: all tests PASS.
 - [ ] **Step 3: Commit all structural fixes**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     csharp/src/ `
     csharp/tests/Scripts.Tests/StructuralTests/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-02c): zero-warning build — all structural inspections resolved"
+git -C /home/lance/Scripts commit -m "feat(t4-02c): zero-warning build — all structural inspections resolved"
 ```
 
 ---

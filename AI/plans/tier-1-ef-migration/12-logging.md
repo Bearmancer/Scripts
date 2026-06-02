@@ -14,17 +14,17 @@
 
 - T1-11 completed (CompiledModel generated and green)
 - `Scripts.Tests` project exists and is referenced in `Scripts.slnx`
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs` exists
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs` exists
+- `/home/lance/Scripts/csharp/src\Core\Paths.cs` exists
+- `/home/lance/Scripts/csharp/src\Core\Log.cs` exists
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Paths.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Log.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj
+Test-Path /home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj
 # Expected: True
 ```
 
@@ -33,31 +33,31 @@ Test-Path C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.cs
 ## Task 1 — Relocate LogDirectory to `%USERPROFILE%\.cache\logs\scripts`
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\LogDirectoryTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Core\Paths.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\LogDirectoryTests.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-# Current state: LogDirectory = Path.Combine(ProjectRoot, "logs") → C:\Users\Lance\Dev\Scripts\logs
+# Current state: LogDirectory = Path.Combine(ProjectRoot, "logs") → /home/lance/Scripts/logs
 # Reason: AGENTS.md §9 mandates %USERPROFILE%\.cache\logs\scripts\
 # What: Change LogDirectory to use Environment.GetFolderPath(UserProfile) + .cache\logs\scripts
 # Expected: LogDirectory resolves to C:\Users\Lance\.cache\logs\scripts
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs | Select-String "LogDirectory"
+Get-Content /home/lance/Scripts/csharp/src\Core\Paths.cs | Select-String "LogDirectory"
 # Expected: public static readonly string LogDirectory = Path.Combine(path1: ProjectRoot, path2: "logs");
 
-$testFile = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\LogDirectoryTests.cs'
+$testFile = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\LogDirectoryTests.cs'
 Test-Path $testFile
 # Expected: False
 
-New-Item -ItemType Directory -Force -Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging'
+New-Item -ItemType Directory -Force -Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging'
 ```
 
 ### Step 1: Write tests
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\LogDirectoryTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\LogDirectoryTests.cs
 using FluentAssertions;
 using TUnit;
 
@@ -121,7 +121,7 @@ public sealed class LogDirectoryTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\LogDirectoryTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\LogDirectoryTests.cs'
 Test-Path $file
 # Expected: True
 
@@ -131,11 +131,11 @@ Get-Content $file | Select-String "LogDirectory_Points_To" | Select-Object -Firs
 ### Step 3: Run test (expect RED — LogDirectory still points to ProjectRoot/logs)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LogDirectoryTests" 2>&1
 ```
 
-Expected: RED. `LogDirectory_Points_To_UserProfile_Cache_Logs_Scripts` fails — actual value is `C:\Users\Lance\Dev\Scripts\logs`, expected `C:\Users\Lance\.cache\logs\scripts`. `LogDirectory_Does_Not_Point_To_ProjectRoot` and `LogDirectory_Is_Created_Automatically` also fail.
+Expected: RED. `LogDirectory_Points_To_UserProfile_Cache_Logs_Scripts` fails — actual value is `/home/lance/Scripts/logs`, expected `C:\Users\Lance\.cache\logs\scripts`. `LogDirectory_Does_Not_Point_To_ProjectRoot` and `LogDirectory_Is_Created_Automatically` also fail.
 
 ### Step 4: Assess
 
@@ -143,7 +143,7 @@ Need to change one line in `Paths.cs` and add `Directory.CreateDirectory` in `Lo
 
 ### Step 5: Implement
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs` line 9:**
+**Edit `/home/lance/Scripts/csharp/src\Core\Paths.cs` line 9:**
 
 OLD:
 ```csharp
@@ -160,7 +160,7 @@ NEW:
 	);
 ```
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs` static constructor (after line 22 `private static readonly AsyncLocal<ServiceType?> ActiveServiceLocal = new();`):**
+**Edit `/home/lance/Scripts/csharp/src\Core\Log.cs` static constructor (after line 22 `private static readonly AsyncLocal<ServiceType?> ActiveServiceLocal = new();`):**
 
 Add `Directory.CreateDirectory` before the logger initialization:
 
@@ -187,7 +187,7 @@ NEW:
 **Verify build:**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -195,7 +195,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LogDirectoryTests" 2>&1
 ```
 
@@ -208,9 +208,9 @@ Expected: GREEN — all 4 tests pass:
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Paths.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\LogDirectoryTests.cs
+git add /home/lance/Scripts/csharp/src\Core\Paths.cs
+git add /home/lance/Scripts/csharp/src\Core\Log.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\LogDirectoryTests.cs
 git commit -m "feat(t1-12): relocate log directory to userprofile .cache logs scripts"
 ```
 
@@ -219,9 +219,9 @@ git commit -m "feat(t1-12): relocate log directory to userprofile .cache logs sc
 ## Task 2 — Add Ben.Demystifier for Stack Trace Cleaning
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\BenDemystifierTests.cs`
+- Modify: `/home/lance/Scripts/csharp/CSharpScripts.csproj`
+- Modify: `/home/lance/Scripts/csharp/src\Core\Log.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\BenDemystifierTests.cs`
 
 ### Step 0: Preflight
 
@@ -232,17 +232,17 @@ git commit -m "feat(t1-12): relocate log directory to userprofile .cache logs sc
 # What: Add Ben.Demystifier NuGet, call .Demystify() in Error/Fatal exception overloads.
 # Expected: NuGet added, Log methods call .Demystify(), build succeeds.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj | Select-String "Ben.Demystifier"
+Get-Content /home/lance/Scripts/csharp/CSharpScripts.csproj | Select-String "Ben.Demystifier"
 # Expected: (no output — package not referenced)
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs | Select-String "Demystify"
+Get-Content /home/lance/Scripts/csharp/src\Core\Log.cs | Select-String "Demystify"
 # Expected: (no output — .Demystify() not called)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\BenDemystifierTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\BenDemystifierTests.cs
 using FluentAssertions;
 using TUnit;
 
@@ -303,7 +303,7 @@ public sealed class BenDemystifierTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\BenDemystifierTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\BenDemystifierTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -311,7 +311,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — Ben.Demystifier not referenced, .Demystify() won't compile)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "BenDemystifierTests" 2>&1
 ```
 
@@ -325,7 +325,7 @@ Two changes needed:
 
 ### Step 5: Implement
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`:**
+**Edit `/home/lance/Scripts/csharp/CSharpScripts.csproj`:**
 
 Add after line 26 (after `Azure.Identity`):
 
@@ -333,7 +333,7 @@ Add after line 26 (after `Azure.Identity`):
 		<PackageReference Include="Ben.Demystifier" Version="*" />
 ```
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs`:**
+**Edit `/home/lance/Scripts/csharp/src\Core\Log.cs`:**
 
 Change `Error(Exception ex, ...)` at line 108:
 
@@ -366,8 +366,8 @@ NEW:
 **Run restore and build:**
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet restore /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Restore succeeded, Build succeeded with 0 errors.
@@ -375,7 +375,7 @@ Expected: Restore succeeded, Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "BenDemystifierTests" 2>&1
 ```
 
@@ -386,9 +386,9 @@ Expected: GREEN — both tests pass:
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\BenDemystifierTests.cs
+git add /home/lance/Scripts/csharp/CSharpScripts.csproj
+git add /home/lance/Scripts/csharp/src\Core\Log.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\BenDemystifierTests.cs
 git commit -m "feat(t1-12): add ben demystifier for cleaned stack traces in log error fatal"
 ```
 
@@ -397,8 +397,8 @@ git commit -m "feat(t1-12): add ben demystifier for cleaned stack traces in log 
 ## Task 3 — Remove `ServiceType.Sheets` from Enum
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\ServiceTypeTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Core\Log.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\ServiceTypeTests.cs`
 
 ### Step 0: Preflight
 
@@ -410,18 +410,18 @@ git commit -m "feat(t1-12): add ben demystifier for cleaned stack traces in log 
 # What: Remove Sheets = 2 from enum, remove its logger initialization, remove from BuildTimeout switch.
 # Expected: Enum has 5 values, build compiles, no Sheets references remain.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs | Select-String "Sheets"
+Get-Content /home/lance/Scripts/csharp/src\Core\Log.cs | Select-String "Sheets"
 # Expected: lines 12 (enum), 31 (logger init), 148 (BuildTimeout)
 
 # Check for other Sheets references in Resilience.cs
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs | Select-String "Sheets"
+Get-Content /home/lance/Scripts/csharp/src\Core\Resilience.cs | Select-String "Sheets"
 # Expected: line 147 (BuildTimeout)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\ServiceTypeTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\ServiceTypeTests.cs
 using FluentAssertions;
 using TUnit;
 
@@ -464,7 +464,7 @@ public sealed class ServiceTypeTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\ServiceTypeTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\ServiceTypeTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -472,7 +472,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — Sheets still present in enum)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ServiceTypeTests" 2>&1
 ```
 
@@ -491,11 +491,11 @@ Need to:
 **Check for other Sheets references before deleting:**
 
 ```powershell
-$result = Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\*.cs -Recurse | Select-String "ServiceType\.Sheets" -SimpleMatch
+$result = Get-ChildItem /home/lance/Scripts/csharp/src\*.cs -Recurse | Select-String "ServiceType\.Sheets" -SimpleMatch
 if ($result) { Write-Host "WARNING: Additional Sheets references found:"; $result }
 ```
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs` — Remove `Sheets` from enum (lines 8-16):**
+**Edit `/home/lance/Scripts/csharp/src\Core\Log.cs` — Remove `Sheets` from enum (lines 8-16):**
 
 OLD:
 ```csharp
@@ -522,7 +522,7 @@ internal enum ServiceType
 }
 ```
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs` — Remove Sheets logger init (line 31):**
+**Edit `/home/lance/Scripts/csharp/src\Core\Log.cs` — Remove Sheets logger init (line 31):**
 
 OLD:
 ```csharp
@@ -531,7 +531,7 @@ OLD:
 
 REMOVE this line.
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs` — Remove Sheets timeout switch case (line 147):**
+**Edit `/home/lance/Scripts/csharp/src\Core\Resilience.cs` — Remove Sheets timeout switch case (line 147):**
 
 OLD:
 ```csharp
@@ -563,7 +563,7 @@ NEW:
 **Verify build:**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -571,7 +571,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ServiceTypeTests" 2>&1
 ```
 
@@ -583,9 +583,9 @@ Expected: GREEN — all 3 tests pass:
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Log.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging\ServiceTypeTests.cs
+git add /home/lance/Scripts/csharp/src\Core\Log.cs
+git add /home/lance/Scripts/csharp/src\Core\Resilience.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Logging\ServiceTypeTests.cs
 git commit -m "feat(t1-12): remove servicetype sheets from enum and related code"
 ```
 
@@ -604,3 +604,13 @@ git commit -m "feat(t1-12): remove servicetype sheets from enum and related code
 - [ ] `dotnet test` — LogDirectoryTests: 4/4 PASS
 - [ ] `dotnet test` — BenDemystifierTests: 2/2 PASS
 - [ ] `dotnet test` — ServiceTypeTests: 3/3 PASS
+
+---
+
+## Research Provenance
+
+<!-- from research/ADVANCED-FEATURES-consolidated.md (Section 3: Logging) -->
+
+Source: `AI/plans/research/ADVANCED-FEATURES-consolidated.md` (Section 3) — consolidated 2026-06-01; dir deleted
+
+Content already covered: `Paths.LogDirectory` change to `%USERPROFILE%\.cache\logs\scripts` (Task 1), `Ben.Demystifier` package + `.Demystify()` in `Log.Error/Fatal` (Task 2), `ServiceType.Sheets` removal (Task 3), `Directory.CreateDirectory` ensure (Task 1 Step 4).

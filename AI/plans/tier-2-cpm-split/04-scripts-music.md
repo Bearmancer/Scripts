@@ -94,7 +94,7 @@ Music service does NOT directly access the database. It returns enriched DTOs to
 
 - [ ] T2-01 (Scripts.Core) is signed off — `Scripts.Core.csproj` exists and compiles
 - [ ] CPM is active — `Directory.Packages.props` lists `MetaBrainz.MusicBrainz`, `ParkSquare.Discogs`, `Riok.Mapperly`
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\` directory exists (create if absent)
+- [ ] `/home/lance/Scripts/csharp/src\Services\Music\` directory exists (create if absent)
 
 ---
 
@@ -106,7 +106,7 @@ Music service does NOT directly access the database. It returns enriched DTOs to
 Write-Host "STATE: Verifying src/Services/Music directory and any existing Scripts.Services.Music.csproj"
 Write-Host "REASON: Must not overwrite without backup (Zero-Presumption Rule 9)"
 
-$musicDir  = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music'
+$musicDir  = '/home/lance/Scripts/csharp/src\Services\Music'
 $musicProj = Join-Path $musicDir 'Scripts.Services.Music.csproj'
 $ts        = Get-Date -Format 'yyyyMMdd_HHmmss'
 
@@ -132,7 +132,7 @@ if (Test-Path $musicProj) {
 
 ### Step 2 — Write tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ScriptsMusicProjectTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ScriptsMusicProjectTests.cs`
 
 ```csharp
 using System.IO;
@@ -144,10 +144,10 @@ namespace Scripts.Tests;
 public class ScriptsMusicProjectTests
 {
     private const string MusicCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj";
+        @"/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj";
 
     private const string AssemblyInfoPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Services\Music\Properties\AssemblyInfo.cs";
 
     [Test]
     public void ScriptsMusic_CsprojFile_Exists()
@@ -210,7 +210,7 @@ public class ScriptsMusicProjectTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj",
+            Arguments              = @"build /home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -226,7 +226,7 @@ public class ScriptsMusicProjectTests
 ### Step 3 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsMusicProjectTests" `
     --no-build 2>&1
 Write-Host $result
@@ -239,7 +239,7 @@ Write-Host $result
 
 ### Step 4 — Write the project file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj`
+File: `/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -257,7 +257,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Mus
 ### Step 5 — Verify the project file
 
 ```powershell
-$musicProj = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj'
+$musicProj = '/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj'
 if (-not (Test-Path $musicProj)) { throw "Scripts.Services.Music.csproj was not created" }
 
 $content = Get-Content $musicProj -Raw -Encoding UTF8
@@ -284,7 +284,7 @@ Write-Host "OUTCOME: Scripts.Services.Music.csproj verified OK"
 ### Step 6 — Create AssemblyInfo.cs
 
 ```powershell
-$propsDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties'
+$propsDir = '/home/lance/Scripts/csharp/src\Services\Music\Properties'
 if (-not (Test-Path $propsDir)) {
     New-Item -ItemType Directory -Path $propsDir -ErrorAction Stop | Out-Null
     if (-not (Test-Path $propsDir)) { throw "Failed to create $propsDir" }
@@ -292,7 +292,7 @@ if (-not (Test-Path $propsDir)) {
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties\AssemblyInfo.cs`
+File: `/home/lance/Scripts/csharp/src\Services\Music\Properties\AssemblyInfo.cs`
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -301,7 +301,7 @@ using System.Runtime.CompilerServices;
 ```
 
 ```powershell
-$infoPath = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Properties\AssemblyInfo.cs'
+$infoPath = '/home/lance/Scripts/csharp/src\Services\Music\Properties\AssemblyInfo.cs'
 if (-not (Test-Path $infoPath)) { throw "AssemblyInfo.cs was not created in Scripts.Services.Music" }
 
 $content = Get-Content $infoPath -Raw -Encoding UTF8
@@ -319,14 +319,14 @@ Write-Host "OUTCOME: AssemblyInfo.cs verified OK"
 ```powershell
 Write-Host "STATE: Adding Scripts.Services.Music.csproj to Scripts.slnx"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$slnx.bak.$ts"
 Copy-Item $slnx $bak -ErrorAction Stop
 if (-not (Test-Path $bak)) { throw "Backup of Scripts.slnx failed" }
 
-dotnet sln 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
-    add 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj' `
+dotnet sln '/home/lance/Scripts/csharp/Scripts.slnx' `
+    add '/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj' `
     2>&1 | Tee-Object -Variable slnOutput
 Write-Host $slnOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet sln add failed for Scripts.Services.Music.csproj" }
@@ -347,11 +347,11 @@ Write-Host "OUTCOME: Scripts.Services.Music.csproj registered in solution"
 ```powershell
 Write-Host "STATE: Running dotnet restore and dotnet build for Scripts.Services.Music"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed for Scripts.Services.Music" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Music\Scripts.Services.Music.csproj' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/src\Services\Music\Scripts.Services.Music.csproj' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Services.Music" }
 
@@ -367,7 +367,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Services.Music
 ### Step 9 — Run project tests
 
 ```powershell
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsMusicProjectTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "ScriptsMusicProjectTests failed" }
@@ -379,13 +379,13 @@ if ($LASTEXITCODE -ne 0) { throw "ScriptsMusicProjectTests failed" }
 ## Task 8 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/src/Services/Music/Scripts.Services.Music.csproj' `
     'csharp/src/Services/Music/Properties/AssemblyInfo.cs' `
     'csharp/tests/Scripts.Tests/ScriptsMusicProjectTests.cs' `
     'csharp/Scripts.slnx'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-04): add Scripts.Services.Music.csproj referencing Core only, MusicBrainz + Discogs + Mapperly via CPM"
 ```
 

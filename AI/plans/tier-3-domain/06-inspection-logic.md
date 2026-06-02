@@ -70,12 +70,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -91,12 +91,12 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T306_InspectionLogicTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T306_InspectionLogicTests.cs`:
 
 ```csharp
 using System;
@@ -116,7 +116,7 @@ public class T306_InspectionLogicTests
     [Test]
     public void NoFiles_UseNegatedNullCheck_WithIsPattern()
     {
-        var srcDir = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        var srcDir = @"/home/lance/Scripts/csharp/src";
 
         var violations = new List<string>();
 
@@ -142,7 +142,7 @@ public class T306_InspectionLogicTests
     [Test]
     public void NoFiles_Use_ToListDotCountZero_InsteadOfAny()
     {
-        var srcDir = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        var srcDir = @"/home/lance/Scripts/csharp/src";
 
         var violations = new List<string>();
 
@@ -169,7 +169,7 @@ public class T306_InspectionLogicTests
     [Test]
     public void NoFiles_Use_StringEqualsNull_InsteadOfIsNull()
     {
-        var srcDir = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        var srcDir = @"/home/lance/Scripts/csharp/src";
 
         var violations = new List<string>();
 
@@ -213,7 +213,7 @@ public class T306_InspectionLogicTests
     [Test]
     public void NoFiles_Use_RedundantNullConditional_OnNonNullablePaths()
     {
-        var srcDir = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        var srcDir = @"/home/lance/Scripts/csharp/src";
 
         var violations = new List<string>();
 
@@ -271,9 +271,9 @@ public class T306_InspectionLogicTests
 ### Step 1.2 — Run to confirm baseline
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T306_InspectionLogicTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -283,7 +283,7 @@ Write-Host ($testOutput -join "`n")
 
 ### Step 1.3 — Create behavior test file
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T306_InspectionBehaviorTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T306_InspectionBehaviorTests.cs`:
 
 ```csharp
 using System;
@@ -465,7 +465,7 @@ public class T306_InspectionBehaviorTests
 ### Step 2.0 — Find all occurrences
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== Files with !(... is null) ==="
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
@@ -479,7 +479,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 For each file found, back up and replace:
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -521,7 +521,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 ### Step 3.0 — Find all occurrences
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== .ToList().Count == 0 patterns ==="
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
@@ -539,7 +539,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 ### Step 3.1 — Apply replacements
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -597,7 +597,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 ### Step 4.0 — Audit scope
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== == null patterns (informational) ==="
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
@@ -617,7 +617,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 For files within `src/Data/entities/` and files where the variable is clearly a string (heuristically detectable):
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -653,7 +653,7 @@ Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
 ### Step 5.0 — Audit scope
 
 ```powershell
-$srcDir = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$srcDir = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== Potential redundant ?. patterns (informational) ==="
 Get-ChildItem $srcDir -Recurse -Filter "*.cs" |
@@ -686,14 +686,14 @@ Write-Host "Review each occurrence and remove the ?. where the receiver is guara
 **Expected Outcome:** 0 build errors, all tests pass.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
 # Run inspection logic tests
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T306_InspectionLogicTests" 2>&1
 $testOut | Select-String "Failed:" | ForEach-Object {
     # Informational: some tests may show violations; that's the expected semi-diagnostic behavior
@@ -702,7 +702,7 @@ $testOut | Select-String "Failed:" | ForEach-Object {
 Write-Host "T306 tests: RUN"
 
 # Full suite — refactoring must not break anything
-$fullTestOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$fullTestOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $fullTestOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "Full test suite: GREEN"
 ```
@@ -724,7 +724,7 @@ Failed: 0
 **Expected Outcome:** Commit `feat(t3-06)` in git log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"

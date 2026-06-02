@@ -44,8 +44,8 @@
 ## Task 1: Delete Legacy LastFm/LastFmService.cs (if not already done)
 
 **Files:**
-- Delete: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs`
+- Delete: `/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs`
 
 ### Step 0: Preflight
 
@@ -54,17 +54,17 @@
 # Reason: Legacy file redefines models inline, uses sync StateManager, different Scrobble type
 # What: Verify file status; if still exists, delete it; if already gone, write test confirming it
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs
+Test-Path /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs
 # If True: proceed with deletion
 # If False: skip this task — already deleted in T1-07
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs
+Test-Path /home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs
 # Expected: True (canonical version must exist)
 ```
 
 ### Step 1: Write the test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs`
 
 ```csharp
 using TUnit;
@@ -77,7 +77,7 @@ public sealed class LastFmServiceDeleteTests
     [Test]
     public void LegacyLastFmService_FileDoesNotExist()
     {
-        var path = @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs";
+        var path = @"/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs";
         System.IO.File.Exists(path).Should().BeFalse(
             because: "Legacy duplicate LastFmService must be deleted — canonical version is at Services/Sync/LastFmService.cs");
     }
@@ -85,7 +85,7 @@ public sealed class LastFmServiceDeleteTests
     [Test]
     public void CanonicalLastFmService_FileExists()
     {
-        var path = @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs";
+        var path = @"/home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs";
         System.IO.File.Exists(path).Should().BeTrue(
             because: "Canonical LastFmService at Services/Sync/LastFmService.cs must be preserved");
     }
@@ -103,15 +103,15 @@ public sealed class LastFmServiceDeleteTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\LastFmServiceDeleteTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — verify current state
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "LastFmServiceDeleteTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "LastFmServiceDeleteTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 If legacy file was already deleted in T1-07: `3 passed, 0 failed` — skip to Task 2.
@@ -121,14 +121,14 @@ If legacy file still exists: Test 1 FAILS — proceed to Step 4.
 
 ```powershell
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$backupPath = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs.bak.$timestamp"
+$backupPath = "/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs.bak.$timestamp"
 
-if (Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs) {
-    Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs $backupPath -Force
-    Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs -Force
+if (Test-Path /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs) {
+    Copy-Item /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs $backupPath -Force
+    Remove-Item /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs -Force
 
     # Remove empty LastFm/ directory
-    $lastFmDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm'
+    $lastFmDir = '/home/lance/Scripts/csharp/src\Services\Sync\LastFm'
     if ((Get-ChildItem $lastFmDir -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0) {
         Remove-Item $lastFmDir -Force -Recurse
     }
@@ -138,8 +138,8 @@ if (Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmS
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "LastFmServiceDeleteTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "LastFmServiceDeleteTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -147,11 +147,11 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/SyncService/LastFmServiceDeleteTests.cs
-if (Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm) {
-    git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Services/Sync/LastFm/LastFmService.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/SyncService/LastFmServiceDeleteTests.cs
+if (Test-Path /home/lance/Scripts/csharp/src\Services\Sync\LastFm) {
+    git -C /home/lance/Scripts rm csharp/src/Services/Sync/LastFm/LastFmService.cs
 }
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-09): delete legacy LastFmService duplicate"
+git -C /home/lance/Scripts commit -m "feat(t1-09): delete legacy LastFmService duplicate"
 ```
 
 ---
@@ -159,8 +159,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-09): delete legacy LastFmSe
 ## Task 2: Inject IDbContextFactory into Canonical LastFmService
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\SyncServiceTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\SyncServiceTests.cs`
 
 ### Step 0: Preflight
 
@@ -170,16 +170,16 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-09): delete legacy LastFmSe
 # What: Add IDbContextFactory<ScriptsDbContext> as additional constructor parameter
 # Expected: Constructor accepts contextFactory, build passes
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs -Pattern 'IDbContextFactory'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs -Pattern 'IDbContextFactory'
 # Expected: 0 matches
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs -Pattern 'class LastFmService'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs -Pattern 'class LastFmService'
 # Expected: 1 match — shows current constructor signature
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\SyncServiceTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\SyncServiceTests.cs`
 
 ```csharp
 using TUnit;
@@ -275,15 +275,15 @@ internal sealed class TestDbContextFactory(ScriptsDbContext context) : IDbContex
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SyncService\SyncServiceTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\SyncService\SyncServiceTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "SyncServiceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "SyncServiceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `LastFmService` constructor does not accept `IDbContextFactory<ScriptsDbContext>`.
@@ -294,7 +294,7 @@ Current constructor: `LastFmService(string apiKey, string username)`. Needs addi
 
 ### Step 4: Write minimal implementation
 
-Update `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs` — change the constructor:
+Update `/home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs` — change the constructor:
 
 ```csharp
 using Hqub.Lastfm;
@@ -331,15 +331,15 @@ The full file keeps all existing lines (1-175) and adds:
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs -Pattern 'IDbContextFactory\|ILike\|FindArtistByNameAsync'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs -Pattern 'IDbContextFactory\|ILike\|FindArtistByNameAsync'
 # Expected: 3 matches
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "SyncServiceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "SyncServiceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -347,9 +347,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Services/Sync/LastFmService.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/SyncService/SyncServiceTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-09): inject IDbContextFactory into LastFmService, add ILike lookup"
+git -C /home/lance/Scripts add csharp/src/Services/Sync/LastFmService.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/SyncService/SyncServiceTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-09): inject IDbContextFactory into LastFmService, add ILike lookup"
 ```
 
 ---
@@ -367,10 +367,10 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-09): inject IDbContextFacto
 # What: Run verification that ExecuteUpdateAsync is the mutation strategy
 # Expected: No changes, just confirmation
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\PostgresService.cs -Pattern 'ExecuteUpdateAsync'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\PostgresService.cs -Pattern 'ExecuteUpdateAsync'
 # Expected: 1 match (line 21)
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\PostgresService.cs -Pattern 'SaveChangesAsync'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\PostgresService.cs -Pattern 'SaveChangesAsync'
 # Expected: 1 match (line 39 — BulkInsertTracksAsync, acceptable for AddRange)
 ```
 
@@ -385,7 +385,7 @@ No changes are needed. The postgres service already complies with the "prefer Ex
 ### Step 5: Confirm existing tests
 
 ```powershell
-dotnet test --filter "Scripts.Tests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 All pre-existing tests must still pass.
@@ -398,7 +398,7 @@ All pre-existing tests must still pass.
 
 ```powershell
 # Run all sync service tests
-dotnet test --filter "Scripts.Tests.SyncService" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.SyncService" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -409,3 +409,26 @@ Passed SyncServiceTests (3 tests)
 ```
 
 **→ Proceed to `10-ef10-queries.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/DATA-ACCESS-REPOSITORIES-consolidated.md (LastFmService duplicate + ILike + ExecuteDelete) -->
+
+Source: `AI/plans/research/DATA-ACCESS-REPOSITORIES-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+Content already covered: LastFmService duplicate delete (Task 1), `IDbContextFactory<ScriptsDbContext>` injection (Task 2), `ILike` for artist lookups (Task 3), `ExecuteDeleteAsync` for YouTube cleanup (Task 4).
+
+### LastFmService Duplicate Comparison (research §2.1)
+
+| Aspect              | `Sync/LastFmService.cs` (175 lines, canonical)     | `Sync/LastFm/LastFmService.cs` (165 lines, legacy)  |
+| ------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| Namespace           | `CSharpScripts.Services.Sync.LastFm`               | `CSharpScripts.Services.Sync.LastFm`               |
+| Class               | `internal sealed class LastFmService`              | `public class LastFmService`                       |
+| Models              | Uses `using Scrobble = ...Models.Scrobble;`        | **Defines inline** `Scrobble`, `FetchState` records|
+| StateManager        | Async (`SaveStateAsync`, `LoadStateAsync`)         | Sync (`Save`, `Load`)                              |
+| Logging             | `Log.Debug/Information/Warning`                    | `Console.Info`                                     |
+| `Scrobble.PlayedAt` | `DateTimeOffset?` (matches `Models/LastFm.cs`)     | `DateTime?` (mismatch)                             |
+
+**Verdict:** legacy redefines models that already exist in `Models/LastFm.cs`, uses sync StateManager, lower visibility. Delete `Sync/LastFm/LastFmService.cs` and the `Sync/LastFm/` subdirectory.

@@ -61,12 +61,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -89,7 +89,7 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ```powershell
 Write-Host "STATE: Auditing current CSharpScripts namespace usage"
 
-$srcRoot = 'C:\Users\Lance\Dev\Scripts\csharp'
+$srcRoot = '/home/lance/Scripts/csharp'
 
 Write-Host "=== All unique CSharpScripts.* namespaces ==="
 Get-ChildItem $srcRoot -Filter '*.cs' -Recurse |
@@ -110,9 +110,9 @@ Write-Host "Total CSharpScripts references in .cs files: $count"
 ```powershell
 Write-Host "REASON: Global rename — backup entire src/ tree"
 $ts = Get-Date -Format 'yyyyMMdd_HHmmss'
-$bakDir = "C:\Users\Lance\Dev\Scripts\csharp\src-backup-$ts"
+$bakDir = "/home/lance/Scripts/csharp/src-backup-$ts"
 
-Copy-Item 'C:\Users\Lance\Dev\Scripts\csharp\src' $bakDir -Recurse -ErrorAction Stop
+Copy-Item '/home/lance/Scripts/csharp/src' $bakDir -Recurse -ErrorAction Stop
 if (-not (Test-Path $bakDir)) { throw "Full src/ backup failed" }
 Write-Host "OUTCOME: Full src/ backed up to $bakDir"
 ```
@@ -125,7 +125,7 @@ Write-Host "REASON: Align namespaces with project naming convention"
 Write-Host "WHAT: Replace 'CSharpScripts.' with 'Scripts.' in all .cs files"
 Write-Host "EXPECTED OUTCOME: Zero CSharpScripts references remaining"
 
-$srcRoot = 'C:\Users\Lance\Dev\Scripts\csharp'
+$srcRoot = '/home/lance/Scripts/csharp'
 $csFiles = Get-ChildItem $srcRoot -Filter '*.cs' -Recurse |
     Where-Object { $_.FullName -notmatch '\\obj\\' -and $_.FullName -notmatch '\\bin\\' } |
     Where-Object { $_.FullName -notmatch '\\src-backup-' }
@@ -151,7 +151,7 @@ Write-Host "OUTCOME: Renamed CSharpScripts → Scripts in $renamed file(s)"
 ```powershell
 Write-Host "STATE: Verifying zero CSharpScripts references remain"
 
-$srcRoot = 'C:\Users\Lance\Dev\Scripts\csharp'
+$srcRoot = '/home/lance/Scripts/csharp'
 $remaining = Get-ChildItem $srcRoot -Filter '*.cs' -Recurse |
     Where-Object { $_.FullName -notmatch '\\obj\\' -and $_.FullName -notmatch '\\bin\\' } |
     Where-Object { $_.FullName -notmatch '\\src-backup-' } |
@@ -170,7 +170,7 @@ Write-Host "OUTCOME: Zero CSharpScripts references — rename complete"
 ```powershell
 Write-Host "STATE: Updating GlobalUsings.cs namespace references"
 
-$globalUsings = 'C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs'
+$globalUsings = '/home/lance/Scripts/csharp/src\GlobalUsings.cs'
 $bak = "$globalUsings.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item $globalUsings $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -191,7 +191,7 @@ Write-Host "OUTCOME: GlobalUsings.cs updated — all references changed to Scrip
 ```powershell
 Write-Host "STATE: Updating Directory.Build.props global usings"
 
-$buildProps = 'C:\Users\Lance\Dev\Scripts\csharp\Directory.Build.props'
+$buildProps = '/home/lance/Scripts/csharp/Directory.Build.props'
 $bak = "$buildProps.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item $buildProps $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -215,9 +215,9 @@ Write-Host "OUTCOME: Directory.Build.props updated — Scripts.Core global using
 Write-Host "STATE: Building solution after namespace rename"
 Write-Host "REASON: Verify all references resolve with new Scripts.* namespaces"
 
-dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' -ErrorAction Stop
+dotnet restore '/home/lance/Scripts/csharp/Scripts.slnx' -ErrorAction Stop
 
-$buildOut = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --no-restore 2>&1
+$buildOut = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' --no-restore 2>&1
 Write-Host ($buildOut -join "`n")
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLOCKER: Build failed after namespace rename — check for missed references"
@@ -236,12 +236,12 @@ Write-Host "OUTCOME: Build succeeded with Scripts.* namespaces"
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T304_NamingRefactorTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T304_NamingRefactorTests.cs`:
 
 ```csharp
 using System;
@@ -256,16 +256,16 @@ namespace Scripts.Tests.T3;
 public class T304_NamingRefactorTests
 {
     private const string DataEntitiesDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities";
+        @"/home/lance/Scripts/csharp/src\Data\Entities";
 
     private const string GlobalUsingsFile =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs";
+        @"/home/lance/Scripts/csharp/src\GlobalUsings.cs";
 
     private const string CoreDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Core";
+        @"/home/lance/Scripts/csharp/src\Core";
 
     private const string CLIDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI";
+        @"/home/lance/Scripts/csharp/src\CLI";
 
     [Test]
     public void FiberyEntity_DoesNotExist()
@@ -346,9 +346,9 @@ public class T304_NamingRefactorTests
 ### Step 1.2 — Run to confirm RED
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T304_NamingRefactorTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -369,7 +369,7 @@ Write-Host ($testOutput -join "`n")
 ### Step 2.0 — Pre-flight: Find all FiberyEntity references
 
 ```powershell
-$repoRoot = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$repoRoot = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== Files referencing FiberyEntity ==="
 Get-ChildItem $repoRoot -Recurse -Filter "*.cs" |
@@ -384,7 +384,7 @@ For each file that references `FiberyEntity` (beyond the entity file itself), re
 
 ```powershell
 # Remove DbSet<FiberyEntity> FiberyEntities from ScriptsDbContext.cs
-$file = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs"
+$file = "/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs"
 $bak  = "$file.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $file -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -402,7 +402,7 @@ Write-Host "Removed FiberyEntity reference from: $file"
 ### Step 2.2 — Back up and delete FiberyEntity.cs
 
 ```powershell
-$fiberyFile = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\FiberyEntity.cs"
+$fiberyFile = "/home/lance/Scripts/csharp/src\Data\Entities\FiberyEntity.cs"
 $bak = "$fiberyFile.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 
 Copy-Item -Path $fiberyFile -Destination $bak -ErrorAction Stop
@@ -417,7 +417,7 @@ Write-Host "Deleted: $fiberyFile"
 ### Step 2.3 — Back up and delete FiberyEntityConfiguration.cs
 
 ```powershell
-$configFile = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\FiberyEntityConfiguration.cs"
+$configFile = "/home/lance/Scripts/csharp/src\Data\Configuration\FiberyEntityConfiguration.cs"
 
 if (Test-Path $configFile) {
     $bak = "$configFile.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
@@ -445,7 +445,7 @@ if (Test-Path $configFile) {
 ### Step 3.1 — Audit current entity access modifiers
 
 ```powershell
-$entitiesDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities"
+$entitiesDir = "/home/lance/Scripts/csharp/src\Data\Entities"
 
 Get-ChildItem $entitiesDir -Filter "*.cs" |
     Where-Object { $_.FullName -notlike "*\obj\*" } |
@@ -468,7 +468,7 @@ Get-ChildItem $entitiesDir -Filter "*.cs" |
 For each entity that is `public`, back it up and change the access modifier:
 
 ```powershell
-$file = "C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\<EntityName>.cs"
+$file = "/home/lance/Scripts/csharp/src\Data\Entities\<EntityName>.cs"
 $bak  = "$file.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $file -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -503,7 +503,7 @@ Write-Host "Fixed: $file"
 ### Step 4.1 — Back up GlobalUsings.cs
 
 ```powershell
-$globalUsings = "C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs"
+$globalUsings = "/home/lance/Scripts/csharp/src\GlobalUsings.cs"
 $bak = "$globalUsings.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $globalUsings -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -577,7 +577,7 @@ Write-Host "GlobalUsings.cs stripped of package-level duplicates"
 
 ## Task 5 — GREEN: Move SpectreTypeRegistrar from Core to CLI
 
-**Current State:** `SpectreTypeRegistrar.cs` lives in `C:\Users\Lance\Dev\Scripts\csharp\src\Core\`.
+**Current State:** `SpectreTypeRegistrar.cs` lives in `/home/lance/Scripts/csharp/src\Core\`.
 **Reason:** Spectre.Console.Cli is a CLI-only concern. Core should not reference Spectre.Console.Cli types.
 **What:** Move the file to the CLI project directory and update its namespace.
 **Expected Outcome:** `SpectreTypeRegistrar.cs` exists in CLI, not in Core.
@@ -585,9 +585,9 @@ Write-Host "GlobalUsings.cs stripped of package-level duplicates"
 ### Step 5.1 — Move the file
 
 ```powershell
-$srcFile = "C:\Users\Lance\Dev\Scripts\csharp\src\Core\SpectreTypeRegistrar.cs"
-$dstDir  = "C:\Users\Lance\Dev\Scripts\csharp\src\CLI"
-$dstFile = "C:\Users\Lance\Dev\Scripts\csharp\src\CLI\SpectreTypeRegistrar.cs"
+$srcFile = "/home/lance/Scripts/csharp/src\Core\SpectreTypeRegistrar.cs"
+$dstDir  = "/home/lance/Scripts/csharp/src\CLI"
+$dstFile = "/home/lance/Scripts/csharp/src\CLI\SpectreTypeRegistrar.cs"
 
 # Backup original
 $bak = "$srcFile.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
@@ -619,7 +619,7 @@ Write-Host "Removed from Core: $srcFile"
 ### Step 5.2 — Update all references to SpectreTypeRegistrar
 
 ```powershell
-$repoRoot = "C:\Users\Lance\Dev\Scripts\csharp\src"
+$repoRoot = "/home/lance/Scripts/csharp/src"
 
 Write-Host "=== Files referencing SpectreTypeRegistrar ==="
 Get-ChildItem $repoRoot -Recurse -Filter "*.cs" |
@@ -631,7 +631,7 @@ Get-ChildItem $repoRoot -Recurse -Filter "*.cs" |
 For any file outside CLI that references `SpectreTypeRegistrar`:
 
 ```powershell
-$file = "C:\Users\Lance\Dev\Scripts\csharp\src\<Dir>\<FileName>.cs"
+$file = "/home/lance/Scripts/csharp/src\<Dir>\<FileName>.cs"
 $bak  = "$file.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $file -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -656,20 +656,20 @@ if ($content -match "SpectreTypeRegistrar" -and $content -notmatch "using Script
 **Expected Outcome:** 0 build errors, all T304 tests pass, full suite green.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
 # Run naming refactor tests
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T304_NamingRefactorTests" 2>&1
 $testOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "T304 tests: GREEN"
 
 # Full suite to catch regressions from FiberyEntity deletion and SpectreTypeRegistrar move
-$fullTestOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$fullTestOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $fullTestOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "Full test suite: GREEN"
 ```
@@ -690,7 +690,7 @@ Tests: 4 (4 passed)
 **Expected Outcome:** Commit `feat(t3-04)` in git log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"

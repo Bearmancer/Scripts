@@ -22,7 +22,7 @@
 
 ### Step 1 — Write the test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DuplicateCleanupTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DuplicateCleanupTests.cs`
 
 ```csharp
 using System.IO;
@@ -36,7 +36,7 @@ namespace Scripts.Tests;
 public class DuplicateCleanupTests
 {
     private const string SrcRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        @"/home/lance/Scripts/csharp/src";
 
     /// <summary>
     /// After deletion of duplicates, no .cs filename should appear in more than one
@@ -83,12 +83,12 @@ public class DuplicateCleanupTests
     {
         var staleFiles = new[]
         {
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs",
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs",
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Paths.cs",
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs",
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StringExtensions.cs",
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ValidationAttributes.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\Paths.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\StringExtensions.cs",
+            @"/home/lance/Scripts/csharp/src\Infrastructure\ValidationAttributes.cs",
         };
 
         foreach (var file in staleFiles)
@@ -105,8 +105,8 @@ public class DuplicateCleanupTests
     [Test]
     public void DuplicateLastFmService_InSyncRoot_DoesNotExist()
     {
-        var staleLastFm = @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs";
-        var authoritativeLastFm = @"C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs";
+        var staleLastFm = @"/home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs";
+        var authoritativeLastFm = @"/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs";
 
         File.Exists(staleLastFm).Should().BeFalse(
             $"Stale LastFmService.cs at Services/Sync/ root must be deleted. " +
@@ -125,7 +125,7 @@ public class DuplicateCleanupTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx",
+            Arguments              = @"build /home/lance/Scripts/csharp/Scripts.slnx",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -142,7 +142,7 @@ public class DuplicateCleanupTests
 ### Step 2 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~DuplicateCleanupTests" `
     --no-build 2>&1
 Write-Host $result
@@ -160,7 +160,7 @@ Write-Host "STATE: Deleting stale src/Infrastructure/StateManager.cs"
 Write-Host "REASON: Authoritative version is at src/Core/Persistence/StateManager.cs"
 Write-Host "WHAT: Backup with .bak.YYYYMMDD_HHmmss, delete, assert gone"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -178,7 +178,7 @@ if (Test-Path $file) { throw "Delete failed — $file still exists" }
 Write-Host "OUTCOME: Deleted $file"
 
 # Verify build still succeeds
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting StateManager.cs" }
 Write-Host "OUTCOME: Build verified OK after StateManager.cs deletion"
@@ -194,7 +194,7 @@ Write-Host "OUTCOME: Build verified OK after StateManager.cs deletion"
 Write-Host "STATE: Deleting stale src/Infrastructure/ReleaseProgressCache.cs"
 Write-Host "REASON: Authoritative version is at src/Core/Persistence/ReleaseProgressCache.cs"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -211,7 +211,7 @@ Remove-Item $file -ErrorAction Stop
 if (Test-Path $file) { throw "Delete failed — $file still exists" }
 Write-Host "OUTCOME: Deleted $file"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting ReleaseProgressCache.cs" }
 Write-Host "OUTCOME: Build verified OK after ReleaseProgressCache.cs deletion"
@@ -227,7 +227,7 @@ Write-Host "OUTCOME: Build verified OK after ReleaseProgressCache.cs deletion"
 Write-Host "STATE: Deleting stale src/Infrastructure/Paths.cs"
 Write-Host "REASON: Authoritative version is at src/Core/Paths.cs"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Paths.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\Paths.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -244,7 +244,7 @@ Remove-Item $file -ErrorAction Stop
 if (Test-Path $file) { throw "Delete failed — $file still exists" }
 Write-Host "OUTCOME: Deleted $file"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting Paths.cs" }
 Write-Host "OUTCOME: Build verified OK after Paths.cs deletion"
@@ -260,7 +260,7 @@ Write-Host "OUTCOME: Build verified OK after Paths.cs deletion"
 Write-Host "STATE: Deleting stale src/Infrastructure/Resilience.cs"
 Write-Host "REASON: Authoritative version is at src/Core/Resilience.cs"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -277,7 +277,7 @@ Remove-Item $file -ErrorAction Stop
 if (Test-Path $file) { throw "Delete failed — $file still exists" }
 Write-Host "OUTCOME: Deleted $file"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting Resilience.cs" }
 Write-Host "OUTCOME: Build verified OK after Resilience.cs deletion"
@@ -293,7 +293,7 @@ Write-Host "OUTCOME: Build verified OK after Resilience.cs deletion"
 Write-Host "STATE: Deleting stale src/Infrastructure/StringExtensions.cs"
 Write-Host "REASON: Authoritative version is at src/Core/StringExtensions.cs"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StringExtensions.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\StringExtensions.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -310,7 +310,7 @@ Remove-Item $file -ErrorAction Stop
 if (Test-Path $file) { throw "Delete failed — $file still exists" }
 Write-Host "OUTCOME: Deleted $file"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting StringExtensions.cs" }
 Write-Host "OUTCOME: Build verified OK after StringExtensions.cs deletion"
@@ -327,8 +327,8 @@ Write-Host "STATE: Deleting stale src/Services/Sync/LastFmService.cs (root-level
 Write-Host "REASON: Authoritative version is at src/Services/Sync/LastFm/LastFmService.cs"
 Write-Host "WHAT: Backup with .bak.YYYYMMDD_HHmmss, delete, assert gone"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFmService.cs'
-$authFile = 'C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs'
+$file = '/home/lance/Scripts/csharp/src\Services\Sync\LastFmService.cs'
+$authFile = '/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -356,7 +356,7 @@ if (-not (Test-Path $authFile)) {
 }
 Write-Host "OUTCOME: Authoritative LastFmService.cs at $authFile still present"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting stale LastFmService.cs" }
 Write-Host "OUTCOME: Build verified OK after LastFmService.cs deletion"
@@ -372,8 +372,8 @@ Write-Host "OUTCOME: Build verified OK after LastFmService.cs deletion"
 Write-Host "STATE: Deleting stale src/Infrastructure/ValidationAttributes.cs"
 Write-Host "REASON: Authoritative version is at src/CLI/ValidationAttributes.cs"
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ValidationAttributes.cs'
-$authFile = 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI\ValidationAttributes.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\ValidationAttributes.cs'
+$authFile = '/home/lance/Scripts/csharp/src\CLI\ValidationAttributes.cs'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$file.bak.$ts"
 
@@ -400,7 +400,7 @@ if (-not (Test-Path $authFile)) {
 }
 Write-Host "OUTCOME: Authoritative ValidationAttributes.cs at $authFile still present"
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed after deleting stale ValidationAttributes.cs" }
 Write-Host "OUTCOME: Build verified OK after ValidationAttributes.cs deletion"
@@ -416,13 +416,13 @@ Write-Host "OUTCOME: Build verified OK after ValidationAttributes.cs deletion"
 Write-Host "STATE: Running DuplicateCleanupTests after all deletions"
 Write-Host "REASON: Confirm no duplicates remain and full solution builds"
 
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~DuplicateCleanupTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "DuplicateCleanupTests failed" }
 
 # Also run the full test suite to confirm no regressions
-$fullTestOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' 2>&1
+$fullTestOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' 2>&1
 Write-Host $fullTestOutput
 if ($LASTEXITCODE -ne 0) { throw "Full test suite failed after duplicate cleanup" }
 
@@ -439,10 +439,10 @@ if ($LASTEXITCODE -ne 0) { throw "Full test suite failed after duplicate cleanup
 ## Task 10 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/tests/Scripts.Tests/DuplicateCleanupTests.cs'
 
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/src/Infrastructure/StateManager.cs' `
     'csharp/src/Infrastructure/ReleaseProgressCache.cs' `
     'csharp/src/Infrastructure/Paths.cs' `
@@ -450,7 +450,7 @@ git -C 'C:\Users\Lance\Dev\Scripts' add `
     'csharp/src/Infrastructure/StringExtensions.cs' `
     'csharp/src/Services/Sync/LastFmService.cs' 2>$null
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-09): delete 7 stale duplicate .cs files from Infrastructure/ and Services/Sync/ root"
 ```
 

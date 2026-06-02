@@ -729,7 +729,7 @@ public class GoogleSheetsService : IDisposable
 		return rowsToDelete;
 	}
 
-	internal List<Scrobble> GetNewScrobbles(string spreadsheetId, List<Scrobble> allScrobbles)
+	internal List<LastFmScrobble> GetNewScrobbles(string spreadsheetId, List<LastFmScrobble> allScrobbles)
 	{
 		if (!SheetExists(spreadsheetId))
 		{
@@ -745,7 +745,7 @@ public class GoogleSheetsService : IDisposable
 		return [.. allScrobbles.Where(s => s.PlayedAt > latestInSheet)];
 	}
 
-	internal void WriteScrobbles(string spreadsheetId, List<Scrobble> scrobbles)
+	internal void WriteScrobbles(string spreadsheetId, List<LastFmScrobble> scrobbles)
 	{
 		var records = scrobbles
 			.Select(s => (IList<object>)[s.FormattedDate, s.TrackName, s.ArtistName, s.AlbumName])

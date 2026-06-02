@@ -24,7 +24,7 @@ Get-Command git    -ErrorAction Stop
 if (-not $env:PGCONNSTR) { throw 'PGCONNSTR not set — load .env first' }
 
 # Restore solution
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 ```
 
 Expected: restore succeeds with 0 errors.
@@ -124,7 +124,7 @@ public class DiWiringTests
 - [ ] **Step 2: Read-back — verify test file was written**
 
 ```powershell
-$testFile = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DiWiringTests.cs'
+$testFile = '/home/lance/Scripts/csharp/tests\Scripts.Tests\DiWiringTests.cs'
 Test-Path $testFile | Should -Be $true
 (Get-Content $testFile -Raw) | Should -Match 'AddScriptsServices'
 Write-Host "Read-back OK"
@@ -133,7 +133,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run tests — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DiWiringTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -182,7 +182,7 @@ internal static class ServiceRegistration
 - [ ] **Step 5: Read-back — verify `ServiceRegistration.cs` written**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\CLI\ServiceRegistration.cs'
+$file = '/home/lance/Scripts/csharp/src\CLI\ServiceRegistration.cs'
 Test-Path $file | Should -Be $true
 (Get-Content $file -Raw) | Should -Match 'AddScriptsServices'
 Write-Host "Read-back OK"
@@ -191,7 +191,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 6: Run tests — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DiWiringTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -213,7 +213,7 @@ Expected: all 5 `DiWiringTests` pass.
 public void ProgramCs_CallsAddScriptsServices()
 {
     var programContent = File.ReadAllText(
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Program.cs");
+        @"/home/lance/Scripts/csharp/src\CLI\Program.cs");
     programContent.Should().Contain("AddScriptsServices",
         "Program.cs must delegate registration to ServiceRegistration.AddScriptsServices");
 }
@@ -222,7 +222,7 @@ public void ProgramCs_CallsAddScriptsServices()
 - [ ] **Step 2: Run test — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ProgramCs_CallsAddScriptsServices" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -243,7 +243,7 @@ Remove any pre-existing inline `AddDbContext`, `AddScoped<IScrobbleRepository>`,
 - [ ] **Step 4: Run test — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ProgramCs_CallsAddScriptsServices" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -253,7 +253,7 @@ Expected: PASS.
 - [ ] **Step 5: Full build check**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Build succeeded. 0 Error(s). 0 Warning(s).`
@@ -261,11 +261,11 @@ Expected: `Build succeeded. 0 Error(s). 0 Warning(s).`
 - [ ] **Step 6: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     csharp/src/CLI/ServiceRegistration.cs `
     csharp/src/CLI/Program.cs `
     csharp/tests/Scripts.Tests/DiWiringTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-00): wire all services into Microsoft DI container"
+git -C /home/lance/Scripts commit -m "feat(t4-00): wire all services into Microsoft DI container"
 ```
 
 ---

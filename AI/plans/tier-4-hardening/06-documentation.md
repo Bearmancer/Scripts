@@ -1,5 +1,10 @@
 # Documentation Final Pass Implementation Plan
 
+> ⚠️ **STATUS 2026-06-01:** The original goal centered on `AGENTS.md` (root), which was deleted 2026-06-01. Most Task 1 tests and Task 3 will fail because they assert against the deleted file. **Rescope needed before execution:**
+> 1. Replace AGENTS.md assertions with assertions against `AI/plans/INDEX.md` (canonical index), `AI/plans/CURRENT_STATUS.md`, and `README.md`.
+> 2. Task 3 (verify/update AGENTS.md) → rewrite as "verify `AI/plans/INDEX.md` Plan Navigation block references all 4 tiers; mark completed phases `✅`; verify `README.md` quick-start covers Docker, env vars, build, test."
+> 3. The "structural tests" pattern (TUnit + FluentAssertions on file content) is sound and reusable after the rescope.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Verify `AGENTS.md` is accurate and complete, mark all completed plan phases `✅` in `INDEX.md`, and ensure `README.md` has a working quick-start section covering Docker, env vars, build, and test.
@@ -19,12 +24,12 @@ Get-Command pwsh   -ErrorAction Stop
 Get-Command dotnet -ErrorAction Stop
 Get-Command git    -ErrorAction Stop
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
 # Confirm key docs exist
 $docs = @(
-    'C:\Users\Lance\Dev\Scripts\AGENTS.md',
-    'C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md'
+    '/home/lance/Scripts/AGENTS.md',
+    '/home/lance/Scripts/AI\plans\INDEX.md'
 )
 foreach ($doc in $docs) {
     Test-Path $doc | Should -Be $true
@@ -55,42 +60,42 @@ public class DocStructureTests
     [Test]
     public void AgentsMd_Exists_AtRepoRoot()
     {
-        File.Exists(@"C:\Users\Lance\Dev\Scripts\AGENTS.md")
+        File.Exists(@"/home/lance/Scripts/AGENTS.md")
             .Should().BeTrue("AGENTS.md must exist at repo root");
     }
 
     [Test]
     public void AgentsMd_Contains_ProjectOverviewSection()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AGENTS.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AGENTS.md");
         content.Should().Contain("## 1. Project Overview");
     }
 
     [Test]
     public void AgentsMd_Contains_EnvironmentSetupSection()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AGENTS.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AGENTS.md");
         content.Should().Contain("## 3. Environment Setup");
     }
 
     [Test]
     public void AgentsMd_Contains_AbsoluteZeroRulesetSection()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AGENTS.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AGENTS.md");
         content.Should().Contain("## 9. Absolute Zero Presumption Ruleset");
     }
 
     [Test]
     public void AgentsMd_Contains_PlanNavigationSection()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AGENTS.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AGENTS.md");
         content.Should().Contain("## 10. Plan Navigation");
     }
 
     [Test]
     public void AgentsMd_Mentions_Tier4Hardening()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AGENTS.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AGENTS.md");
         content.Should().Contain("tier-4-hardening",
             "AGENTS.md plan navigation must reference tier-4-hardening");
     }
@@ -100,14 +105,14 @@ public class DocStructureTests
     [Test]
     public void IndexMd_Exists_InAiPlans()
     {
-        File.Exists(@"C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md")
+        File.Exists(@"/home/lance/Scripts/AI\plans\INDEX.md")
             .Should().BeTrue("INDEX.md must exist in AI/plans/");
     }
 
     [Test]
     public void IndexMd_HasAllFourTiers()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AI\plans\INDEX.md");
         content.Should().Contain("tier-1-ef-migration");
         content.Should().Contain("tier-2-cpm-split");
         content.Should().Contain("tier-3-domain");
@@ -117,7 +122,7 @@ public class DocStructureTests
     [Test]
     public void IndexMd_Tier4_HasAllEightPhases()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AI\plans\INDEX.md");
         content.Should().Contain("00-di-wiring.md");
         content.Should().Contain("01-e2e-testing.md");
         content.Should().Contain("02-inspection-structural.md");
@@ -132,7 +137,7 @@ public class DocStructureTests
     [Test]
     public void IndexMd_Tier4_AllPhasesMarkedComplete()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/AI\plans\INDEX.md");
         // After this tier completes, every T4 phase row must contain ✅
         // We check that the section has at least 8 ✅ occurrences after the "Tier 4" heading
         var tier4Section = content.Substring(content.IndexOf("### Tier 4", StringComparison.Ordinal));
@@ -148,14 +153,14 @@ public class DocStructureTests
     [Test]
     public void ReadmeMd_Exists_AtRepoRoot()
     {
-        File.Exists(@"C:\Users\Lance\Dev\Scripts\README.md")
+        File.Exists(@"/home/lance/Scripts/README.md")
             .Should().BeTrue("README.md must exist at repo root");
     }
 
     [Test]
     public void ReadmeMd_HasQuickStart_Section()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\README.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/README.md");
         content.Should().Contain("Quick Start",
             "README.md must have a Quick Start section");
     }
@@ -163,7 +168,7 @@ public class DocStructureTests
     [Test]
     public void ReadmeMd_QuickStart_CoversDockerAndDotnet()
     {
-        var content = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\README.md");
+        var content = File.ReadAllText(@"/home/lance/Scripts/README.md");
         content.Should().Contain("docker compose",
             "Quick Start must cover Docker Compose startup");
         content.Should().Contain("dotnet build",
@@ -179,7 +184,7 @@ public class DocStructureTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DocumentationTests\DocStructureTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\DocumentationTests\DocStructureTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -187,7 +192,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm which tests pass and which fail**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DocStructureTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -201,7 +206,7 @@ Note every failing test. Proceed to fix each one.
 - [ ] **Step 1: Backup INDEX.md**
 
 ```powershell
-$indexPath = 'C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md'
+$indexPath = '/home/lance/Scripts/AI\plans\INDEX.md'
 $bak = $indexPath + '.bak.' + (Get-Date -Format 'yyyyMMdd_HHmmss')
 Copy-Item $indexPath $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -233,7 +238,7 @@ Also update the Tier Overview table row for T4 from `🔒 T3` to `✅ Done`:
 - [ ] **Step 3: Read-back — verify changes**
 
 ```powershell
-$content = Get-Content 'C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md' -Raw -Encoding UTF8
+$content = Get-Content '/home/lance/Scripts/AI\plans\INDEX.md' -Raw -Encoding UTF8
 $checkmarks = ([regex]::Matches($content, '✅')).Count
 Write-Host "✅ count: $checkmarks (expect ≥ 8 in T4 section)"
 ```
@@ -245,7 +250,7 @@ Write-Host "✅ count: $checkmarks (expect ≥ 8 in T4 section)"
 - [ ] **Step 1: Check AGENTS.md plan navigation references Tier 4**
 
 ```powershell
-$gemini = Get-Content 'C:\Users\Lance\Dev\Scripts\AGENTS.md' -Raw -Encoding UTF8
+$gemini = Get-Content '/home/lance/Scripts/AGENTS.md' -Raw -Encoding UTF8
 if ($gemini -notmatch 'tier-4-hardening') {
     Write-Warning "AGENTS.md plan navigation missing tier-4-hardening reference"
 }
@@ -271,7 +276,7 @@ If absent or stale, update it with the correct tier directory names.
 - [ ] **Step 1: Check if Quick Start already exists**
 
 ```powershell
-$readme = 'C:\Users\Lance\Dev\Scripts\README.md'
+$readme = '/home/lance/Scripts/README.md'
 if (-not (Test-Path $readme)) {
     New-Item -ItemType File -Path $readme -Force -ErrorAction Stop
 }
@@ -286,7 +291,7 @@ if ($content -notmatch 'Quick Start') {
 - [ ] **Step 2: Backup README.md**
 
 ```powershell
-$readme = 'C:\Users\Lance\Dev\Scripts\README.md'
+$readme = '/home/lance/Scripts/README.md'
 $bak = $readme + '.bak.' + (Get-Date -Format 'yyyyMMdd_HHmmss')
 if (Test-Path $readme) {
     Copy-Item $readme $bak -ErrorAction Stop
@@ -347,7 +352,7 @@ dotnet run --project csharp/src/CLI/Scripts.CLI.csproj -- --help
 - [ ] **Step 4: Run documentation tests — confirm all GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DocStructureTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -357,19 +362,19 @@ Expected: all 14 tests PASS.
 - [ ] **Step 5: Full test suite — no regressions**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     AGENTS.md `
     README.md `
     AI/plans/INDEX.md `
     csharp/tests/Scripts.Tests/DocumentationTests/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-06): final docs pass — INDEX.md T4 complete, README quick-start, AGENTS.md verified"
+git -C /home/lance/Scripts commit -m "feat(t4-06): final docs pass — INDEX.md T4 complete, README quick-start, AGENTS.md verified"
 ```
 
 ---

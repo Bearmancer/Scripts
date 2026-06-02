@@ -25,7 +25,7 @@ Write-Host "git:  $(git --version)"
 Write-Host "ssh:  $(ssh -V 2>&1)"
 
 # Verify local build works
-dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' -ErrorAction Stop
+dotnet build '/home/lance/Scripts/csharp/Scripts.slnx' -ErrorAction Stop
 ```
 
 ---
@@ -33,7 +33,7 @@ dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' -ErrorAction Stop
 ## Task 1: OCI SSH Connection Gate
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\OciDeploymentTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\OciDeploymentTests.cs`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -53,7 +53,7 @@ internal sealed class OciDeploymentTests
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
-            WorkingDirectory = @"C:\Users\Lance\Dev\Scripts",
+            WorkingDirectory = @"/home/lance/Scripts",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -79,7 +79,7 @@ internal sealed class OciDeploymentTests
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciSshConnection_Succeeds_WithVerifiedFile" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciSshConnection_Succeeds_WithVerifiedFile" 2>&1
 ```
 Expected: FAIL with exit code `1` (file `/home/ubuntu/.oci_verified` does not exist).
 
@@ -94,15 +94,15 @@ ssh oci "touch /home/ubuntu/.oci_verified"
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciSshConnection_Succeeds_WithVerifiedFile" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciSshConnection_Succeeds_WithVerifiedFile" 2>&1
 ```
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
-git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): add OCI SSH gate test and verified marker"
+git -C '/home/lance/Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
+git -C '/home/lance/Scripts' commit -m "feat(t4-07): add OCI SSH gate test and verified marker"
 ```
 
 ---
@@ -110,8 +110,8 @@ git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): add OCI SSH gate tes
 ## Task 2: Deploy PostgreSQL container on OCI VM
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add container test)
-- Create: `C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\deploy_oci_postgres.ps1`
+- Modify: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add container test)
+- Create: `/home/lance/Scripts/powershell\ScriptsToolkit\deploy_oci_postgres.ps1`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -130,7 +130,7 @@ Add to `OciDeploymentTests.cs`:
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciPostgresContainer_IsRunning" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciPostgresContainer_IsRunning" 2>&1
 ```
 Expected: FAIL (exit code `0` but stdout is empty).
 
@@ -138,7 +138,7 @@ Expected: FAIL (exit code `0` but stdout is empty).
 
 Create the deployment script `deploy_oci_postgres.ps1`:
 ```powershell
-# C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\deploy_oci_postgres.ps1
+# /home/lance/Scripts/powershell\ScriptsToolkit\deploy_oci_postgres.ps1
 $ErrorActionPreference = 'Stop'
 
 # Create remote directory
@@ -176,23 +176,23 @@ Write-Host "OCI PostgreSQL stack deployed successfully."
 
 Execute the script:
 ```powershell
-& 'C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\deploy_oci_postgres.ps1'
+& '/home/lance/Scripts/powershell\ScriptsToolkit\deploy_oci_postgres.ps1'
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciPostgresContainer_IsRunning" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciPostgresContainer_IsRunning" 2>&1
 ```
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
-git -C 'C:\Users\Lance\Dev\Scripts' add powershell/ScriptsToolkit/deploy_oci_postgres.ps1
-git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): add OCI postgres deployment script and test"
+git -C '/home/lance/Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
+git -C '/home/lance/Scripts' add powershell/ScriptsToolkit/deploy_oci_postgres.ps1
+git -C '/home/lance/Scripts' commit -m "feat(t4-07): add OCI postgres deployment script and test"
 ```
 
 ---
@@ -200,8 +200,8 @@ git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): add OCI postgres dep
 ## Task 3: Local Environment Connection to OCI Database
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add connection test)
-- Modify: `C:\Users\Lance\Dev\Scripts\.env`
+- Modify: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add connection test)
+- Modify: `/home/lance/Scripts/.env`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -228,13 +228,13 @@ Add to `OciDeploymentTests.cs`:
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciDatabase_CanConnect_ViaConnectionString" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciDatabase_CanConnect_ViaConnectionString" 2>&1
 ```
 Expected: FAIL (host is `localhost` and doesn't match `Host=oci`).
 
 - [ ] **Step 3: Write minimal implementation**
 
-Modify `C:\Users\Lance\Dev\Scripts\.env`:
+Modify `/home/lance/Scripts/.env`:
 ```env
 # Docker Compose - PostgreSQL 18
 POSTGRES_DB=pg_db
@@ -254,16 +254,16 @@ Reload environment variables in terminal or run profile load script.
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.OciDatabase_CanConnect_ViaConnectionString" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.OciDatabase_CanConnect_ViaConnectionString" 2>&1
 ```
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
-git -C 'C:\Users\Lance\Dev\Scripts' add .env
-git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): redirect PGCONNSTR to OCI and verify connection"
+git -C '/home/lance/Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
+git -C '/home/lance/Scripts' add .env
+git -C '/home/lance/Scripts' commit -m "feat(t4-07): redirect PGCONNSTR to OCI and verify connection"
 ```
 
 ---
@@ -271,8 +271,8 @@ git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): redirect PGCONNSTR t
 ## Task 4: Configure Permanent WinSCP Profile
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add WinSCP registry test)
-- Create: `C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\configure_winscp.ps1`
+- Modify: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment\OciDeploymentTests.cs` (add WinSCP registry test)
+- Create: `/home/lance/Scripts/powershell\ScriptsToolkit\configure_winscp.ps1`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -299,15 +299,15 @@ Add to `OciDeploymentTests.cs`:
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.WinScpSession_OciProfile_Exists" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.WinScpSession_OciProfile_Exists" 2>&1
 ```
 Expected: FAIL (registry path/properties not found).
 
 - [ ] **Step 3: Write minimal implementation**
 
-Create configuration script `C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\configure_winscp.ps1`:
+Create configuration script `/home/lance/Scripts/powershell\ScriptsToolkit\configure_winscp.ps1`:
 ```powershell
-# C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\configure_winscp.ps1
+# /home/lance/Scripts/powershell\ScriptsToolkit\configure_winscp.ps1
 $ErrorActionPreference = 'Stop'
 
 $regPath = "HKCU:\Software\Martin Prikryl\WinSCP 2\Sessions\oci"
@@ -325,21 +325,21 @@ Write-Host "WinSCP permanent profile 'oci' configured successfully."
 
 Execute the configuration script:
 ```powershell
-& 'C:\Users\Lance\Dev\Scripts\powershell\ScriptsToolkit\configure_winscp.ps1'
+& '/home/lance/Scripts/powershell\ScriptsToolkit\configure_winscp.ps1'
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
 ```powershell
-dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' --filter "OciDeploymentTests.WinScpSession_OciProfile_Exists" 2>&1
+dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' --filter "OciDeploymentTests.WinScpSession_OciProfile_Exists" 2>&1
 ```
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
-git -C 'C:\Users\Lance\Dev\Scripts' add powershell/ScriptsToolkit/configure_winscp.ps1
-git -C 'C:\Users\Lance\Dev\Scripts' commit -m "feat(t4-07): configure WinSCP session profile for OCI"
+git -C '/home/lance/Scripts' add csharp/tests/Scripts.Tests/Environment/OciDeploymentTests.cs
+git -C '/home/lance/Scripts' add powershell/ScriptsToolkit/configure_winscp.ps1
+git -C '/home/lance/Scripts' commit -m "feat(t4-07): configure WinSCP session profile for OCI"
 ```

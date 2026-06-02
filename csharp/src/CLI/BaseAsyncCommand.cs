@@ -56,14 +56,12 @@ internal abstract class BaseAsyncCommand<TSettings> : AsyncCommand<TSettings>
 			Ui.Exception(ex: ex);
 			return 1;
 		}
-#pragma warning disable CA1031
 		catch (Exception ex)
 		{
 			Log.Fatal(ex: ex, messageTemplate: "Command failed with unhandled exception");
 			Ui.Exception(ex: ex);
 			return 1;
 		}
-#pragma warning restore CA1031
 	}
 
 	private static string FormatException(Exception ex) =>

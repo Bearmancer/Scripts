@@ -64,12 +64,12 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw "dotnet SDK
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx --no-restore -ErrorAction Stop
 # Expected: Build succeeded. 0 Error(s).
 ```
 
@@ -85,12 +85,12 @@ dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore -Erro
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T303_SyncDomainTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T303_SyncDomainTests.cs`:
 
 ```csharp
 using System.IO;
@@ -103,10 +103,10 @@ namespace CSharpScripts.Tests.T3;
 public class T303_SyncDomainTests
 {
     private const string OrchestratorsCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj";
+        @"/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj";
 
     private const string OrchestratorsSrcDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators";
+        @"/home/lance/Scripts/csharp/src\Orchestrators";
 
     [Test]
     public void OrchestratorsDomain_DoesNotReferenceCLIOrReader()
@@ -192,7 +192,7 @@ public class T303_SyncDomainTests
 ### Step 1.2 — Run to confirm RED
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T303_SyncDomainTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -211,10 +211,10 @@ Write-Host ($testOutput -join "`n")
 **Expected Outcome:** Explicit list of violating files and lines.
 
 ```powershell
-$syncDir = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators"
+$syncDir = "/home/lance/Scripts/csharp/src\Orchestrators"
 
 Write-Host "=== .csproj ProjectReferences ==="
-Get-Content "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj" `
+Get-Content "/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj" `
     -ErrorAction SilentlyContinue |
     Select-String "ProjectReference"
 
@@ -259,7 +259,7 @@ Get-ChildItem $syncDir -Recurse -Filter "*.cs" |
 For each affected source file (replace `<FileName>` with the actual filename):
 
 ```powershell
-$src = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\<FileName>.cs"
+$src = "/home/lance/Scripts/csharp/src\Orchestrators\<FileName>.cs"
 $bak = "$src.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $src -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -269,7 +269,7 @@ Write-Host "Backed up: $bak"
 ### Step 3.2 — Remove illegal using directives from source files
 
 ```powershell
-$file    = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\<FileName>.cs"
+$file    = "/home/lance/Scripts/csharp/src\Orchestrators\<FileName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 
 $updated = $content `
@@ -287,7 +287,7 @@ Write-Host "Cleaned: $file"
 ### Step 3.3 — Remove illegal project references from .csproj
 
 ```powershell
-$csproj = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj"
+$csproj = "/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj"
 $bak    = "$csproj.bak.$(Get-Date -Format 'yyyyMMdd_HHmmss')"
 Copy-Item -Path $csproj -Destination $bak -ErrorAction Stop
 Test-Path $bak | Should -Be $true
@@ -326,7 +326,7 @@ Examine each violating file to determine what the DbContext is used for (e.g., q
 
 For ScrobbleSyncOrchestrator, the likely interface is:
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\IScrobbleRepository.cs`:
+Create file `/home/lance/Scripts/csharp/src\Core\Abstractions\IScrobbleRepository.cs`:
 
 ```csharp
 namespace CSharpScripts.Core.Abstractions;
@@ -339,14 +339,14 @@ public interface IScrobbleRepository
 ```
 
 ```powershell
-Test-Path "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\IScrobbleRepository.cs" | Should -Be $true
+Test-Path "/home/lance/Scripts/csharp/src\Core\Abstractions\IScrobbleRepository.cs" | Should -Be $true
 Write-Host "IScrobbleRepository created in Core"
 ```
 
 ### Step 4.2 — Update orchestrator to use interface via DI
 
 ```powershell
-$file    = "C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\<FileName>.cs"
+$file    = "/home/lance/Scripts/csharp/src\Orchestrators\<FileName>.cs"
 $content = Get-Content $file -Raw -Encoding UTF8
 
 # Add using for Core.Abstractions if not present
@@ -376,20 +376,20 @@ Write-Host "Updated to use repository interface: $file"
 **Expected Outcome:** 0 build errors, all T303 tests pass.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOut = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOut = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 $buildOut | Select-String "0 Error" | Should -Not -BeNullOrEmpty
 Write-Host "Build: GREEN"
 
 # Run the domain isolation tests
-$testOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+$testOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T303_SyncDomainTests" 2>&1
 $testOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "T303 tests: GREEN"
 
 # Also run ALL tests to catch regressions from interface extraction
-$fullTestOut = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$fullTestOut = dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $fullTestOut | Select-String "Failed: 0" | Should -Not -BeNullOrEmpty
 Write-Host "Full test suite: GREEN"
 ```
@@ -410,7 +410,7 @@ Tests: 4 (4 passed)
 **Expected Outcome:** Commit `feat(t3-03)` visible in log.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
     throw "Gitleaks found secrets — abort commit"
@@ -419,7 +419,7 @@ gitleaks detect --no-git 2>&1 | Select-String "leaks found" | ForEach-Object {
 git add csharp/src/Orchestrators/ `
         csharp/tests/Scripts.Tests/T3/T303_SyncDomainTests.cs 2>&1
 
-if (Test-Path "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Abstractions\IScrobbleRepository.cs") {
+if (Test-Path "/home/lance/Scripts/csharp/src\Core\Abstractions\IScrobbleRepository.cs") {
     git add csharp/src/Core/Abstractions/IScrobbleRepository.cs 2>&1
 }
 

@@ -44,7 +44,7 @@
 ## Task 1: Verify NoTracking Is Default
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs`
 
 ### Step 0: Preflight
 
@@ -54,13 +54,13 @@
 # What: Test that context defaults to NoTracking
 # Expected: QueryTrackingBehavior is NoTracking
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'NoTracking'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'NoTracking'
 # Expected: 1 match (line 10)
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs`
 
 ```csharp
 using TUnit;
@@ -106,14 +106,14 @@ public sealed class DbContextNoTrackingTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextNoTrackingTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "DbContextNoTrackingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "DbContextNoTrackingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: PASS (NoTracking is already set). If the test project cannot reference InMemory, the test will fail with a DI/Microsoft.EntityFrameworkCore.InMemory dependency error — that's the RED signal. If InMemory is already a dependency, this should pass immediately; skip to Step 6 commit.
@@ -123,7 +123,7 @@ Expected: PASS (NoTracking is already set). If the test project cannot reference
 If test cannot build because `UseInMemoryDatabase` is not available, add `Microsoft.EntityFrameworkCore.InMemory` to the test project:
 
 ```powershell
-dotnet add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Scripts.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory
+dotnet add /home/lance/Scripts/csharp/tests\Scripts.Tests\Scripts.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory
 ```
 
 Then retry Step 3. Otherwise, tests already GREEN (functionality pre-exists).
@@ -138,8 +138,8 @@ NoTracking is already set in `ScriptsDbContext.cs:10`:
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "DbContextNoTrackingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "DbContextNoTrackingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -147,8 +147,8 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextNoTrackingTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add NoTracking behavior tests"
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextNoTrackingTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-03): add NoTracking behavior tests"
 ```
 
 ---
@@ -156,7 +156,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add NoTracking behavio
 ## Task 2: Verify ApplyConfigurationsFromAssembly Loads All Configs
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs`
 
 ### Step 0: Preflight
 
@@ -166,13 +166,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add NoTracking behavio
 # What: Test that the model has configurations for each known entity
 # Expected: Model finds entity types for Artist, Album, Track, Scrobble, Video, ExecutionLog, FailedTask, FiberyEntity
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'ApplyConfigurationsFromAssembly'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'ApplyConfigurationsFromAssembly'
 # Expected: 1 match
 ```
 
 ### Step 1: Write the test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs`
 
 ```csharp
 using TUnit;
@@ -241,15 +241,15 @@ public sealed class DbContextConfigLoadingTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextConfigLoadingTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED or GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "DbContextConfigLoadingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "DbContextConfigLoadingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: All 3 tests PASS (configurations already exist and are loaded by `ApplyConfigurationsFromAssembly`). If SourceRecord is not yet in the model, test 1 will FAIL with "Expected entityTypes to contain SourceRecord" — this is expected until SourceRecord DbSet is added in Task 3.
@@ -265,7 +265,7 @@ The `ApplyConfigurationsFromAssembly` call on `ScriptsDbContext.cs:23` already l
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet test --filter "DbContextConfigLoadingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "DbContextConfigLoadingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -273,8 +273,8 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextConfigLoadingTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add config loading verification tests"
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextConfigLoadingTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-03): add config loading verification tests"
 ```
 
 ---
@@ -282,8 +282,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add config loading ver
 ## Task 3: Add DbSet\<SourceRecord\> to ScriptsDbContext
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`
 
 ### Step 0: Preflight
 
@@ -294,16 +294,16 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add config loading ver
 # What: Add DbSet<SourceRecord> to ScriptsDbContext
 # Expected: DbSet property exists and entity is discoverable by model
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'SourceRecord'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'SourceRecord'
 # Expected: 0 matches (no DbSet exists)
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\SourceRecord.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\SourceRecord.cs
 # Expected: True
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs`
 
 ```csharp
 using TUnit;
@@ -346,15 +346,15 @@ public sealed class DbContextSourceRecordDbSetTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\DbContextSourceRecordDbSetTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "DbContextSourceRecordDbSetTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "DbContextSourceRecordDbSetTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with
@@ -372,7 +372,7 @@ SourceRecord entity exists but is not registered in DbContext. Confirmed gap. Pr
 
 ### Step 4: Write minimal implementation
 
-Add `DbSet<SourceRecord>` to `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs` after the `FailedTasks` line (line 20):
+Add `DbSet<SourceRecord>` to `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs` after the `FailedTasks` line (line 20):
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -405,15 +405,15 @@ internal sealed class ScriptsDbContext : DbContext
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'SourceRecord'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'SourceRecord'
 # Expected: 1 match (the new DbSet line)
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "DbContextSourceRecordDbSetTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "DbContextSourceRecordDbSetTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -421,9 +421,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/ScriptsDbContext.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextSourceRecordDbSetTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add SourceRecord DbSet to ScriptsDbContext"
+git -C /home/lance/Scripts add csharp/src/Data/ScriptsDbContext.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/DbContext/DbContextSourceRecordDbSetTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-03): add SourceRecord DbSet to ScriptsDbContext"
 ```
 
 ---
@@ -431,7 +431,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add SourceRecord DbSet
 ## Task 4: Fix Non-Static Lambdas in VideoConfiguration
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs`
 
 ### Step 0: Preflight
 
@@ -441,7 +441,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): add SourceRecord DbSet
 # What: Change 5 lambdas from v => to static v =>
 # Expected: Build clean, no behavioral change
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs -Pattern '=>'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs -Pattern '=>'
 # Expected: 5 matches (Id, Url, ChannelName, UploadDate, Metadata) — none prefixed with static
 ```
 
@@ -449,7 +449,7 @@ Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\Vid
 
 A style validation cannot be directly tested via unit tests (both static and non-static compile identically). Instead, we verify the configuration still works after applying the `static` fix.
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\VideoConfigurationStyleTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\VideoConfigurationStyleTests.cs`
 
 ```csharp
 using TUnit;
@@ -498,15 +498,15 @@ public sealed class VideoConfigurationStyleTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\DbContext\VideoConfigurationStyleTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\DbContext\VideoConfigurationStyleTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm tests pass (pre-fix baseline)
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "VideoConfigurationStyleTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "VideoConfigurationStyleTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed` (tests pass before fix; they validate behavior, not style)
@@ -517,7 +517,7 @@ Behavioral tests pass. Proceed with style fix — the tests serve as regression 
 
 ### Step 4: Write minimal implementation
 
-Change all 5 lambdas in `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs` from instance to static:
+Change all 5 lambdas in `/home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs` from instance to static:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -543,15 +543,15 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\VideoConfiguration.cs -Pattern 'static'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\Configuration\VideoConfiguration.cs -Pattern 'static'
 # Expected: 5 matches (all lambdas now use static keyword)
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "VideoConfigurationStyleTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "VideoConfigurationStyleTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -559,9 +559,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/VideoConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/DbContext/VideoConfigurationStyleTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): normalize VideoConfiguration to static lambdas"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/VideoConfiguration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/DbContext/VideoConfigurationStyleTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-03): normalize VideoConfiguration to static lambdas"
 ```
 
 ---
@@ -570,7 +570,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-03): normalize VideoConfigu
 
 ```powershell
 # Run all DbContext tests
-dotnet test --filter "Scripts.Tests.DbContext" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.DbContext" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -583,3 +583,32 @@ Passed VideoConfigurationStyleTests (2 tests)
 ```
 
 **→ Proceed to `04-entity-configurations.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/DBCONTEXT-CONFIGURATION-consolidated.md -->
+
+Source: `AI/plans/research/DBCONTEXT-CONFIGURATION-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+Content already covered: DbSet/SourceRecord (Task 3), NoTracking (Task 1), VideoConfiguration static lambdas (Task 4), `EnableRetryOnFailure` (deferred to T1-14 per plan note). See `14-resilience.md` for the `EnableRetryOnFailure` code.
+
+### Compiled Model Lock (research §4.1)
+
+Compiled models bypass `OnModelCreating` reflection. **By-design limitation:** when `UseModel(MyDbContextModel.Instance)` is called, EF Core completely ignores `OnModelCreating`. Any runtime model modifications are not evaluated. Implication: any `OnModelCreating` change requires regenerating both the migration snapshot (`dotnet ef migrations add <Name>`) AND the compiled model (`dotnet ef dbcontext optimize`).
+
+EF9+ auto-detects the compiled model when `DbContext` and compiled model types are in the same assembly — no `.UseModel()` call needed. See `11-compiled-model.md` for the build-time generation setup.
+
+### PendingModelChangesWarning Workflow (research §4.2, §4.3)
+
+**EF Core 9+ behavior change:** if the runtime model (output of `OnModelCreating`) has pending changes compared to the last migration snapshot, EF Core throws an exception by default when `MigrateAsync` is called. Rationale: "forgetting to add a new migration after making model changes is a common mistake."
+
+**Workflow for any `OnModelCreating` change** (e.g., removing `mb.Ignore<JsonDocument>()`, adding `HasPostgresExtension(...)`, fixing a configuration):
+
+1. Modify `OnModelCreating`
+2. `dotnet ef migrations add <DescriptiveName>`
+3. `dotnet ef dbcontext optimize --project src/Data/Scripts.Data.csproj --output-dir CompiledModels`
+4. `dotnet build` + `dotnet test`
+
+This is also covered in `05-migrations.md` (Key Findings line 18).

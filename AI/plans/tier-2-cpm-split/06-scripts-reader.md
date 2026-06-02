@@ -96,7 +96,7 @@ foreach (var page in document.GetPages())
 
 - [ ] T2-01 (Scripts.Core) is signed off — `Scripts.Core.csproj` exists and compiles
 - [ ] CPM is active — `Directory.Packages.props` lists `Microsoft.Playwright`, `AngleSharp`, `SmartReader`, `PdfPig`, `Azure.AI.DocumentIntelligence`, `Google.Cloud.Vision.V1`, `Google.Cloud.DocumentAI.V1`
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\src\Reader\` directory exists (create if absent)
+- [ ] `/home/lance/Scripts/csharp/src\Reader\` directory exists (create if absent)
 
 ---
 
@@ -108,7 +108,7 @@ foreach (var page in document.GetPages())
 Write-Host "STATE: Verifying src/Reader directory and any existing Scripts.Reader.csproj"
 Write-Host "REASON: Must not overwrite without backup (Zero-Presumption Rule 9)"
 
-$readerDir  = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerDir  = '/home/lance/Scripts/csharp/src\Reader'
 $readerProj = Join-Path $readerDir 'Scripts.Reader.csproj'
 $ts         = Get-Date -Format 'yyyyMMdd_HHmmss'
 
@@ -134,7 +134,7 @@ if (Test-Path $readerProj) {
 
 ### Step 2 — Write tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ScriptsReaderProjectTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ScriptsReaderProjectTests.cs`
 
 ```csharp
 using System.IO;
@@ -147,13 +147,13 @@ namespace Scripts.Tests;
 public class ScriptsReaderProjectTests
 {
     private const string ReaderCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj";
+        @"/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj";
 
     private const string OrchCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj";
+        @"/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj";
 
     private const string AssemblyInfoPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Reader\Properties\AssemblyInfo.cs";
 
     [Test]
     public void ScriptsReader_CsprojFile_Exists()
@@ -242,7 +242,7 @@ public class ScriptsReaderProjectTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj",
+            Arguments              = @"build /home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -258,7 +258,7 @@ public class ScriptsReaderProjectTests
 ### Step 3 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsReaderProjectTests" `
     --no-build 2>&1
 Write-Host $result
@@ -271,7 +271,7 @@ Write-Host $result
 
 ### Step 4 — Write the project file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj`
+File: `/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -293,7 +293,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj`
 ### Step 5 — Verify the project file
 
 ```powershell
-$readerProj = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj'
+$readerProj = '/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj'
 if (-not (Test-Path $readerProj)) { throw "Scripts.Reader.csproj was not created" }
 
 $content = Get-Content $readerProj -Raw -Encoding UTF8
@@ -329,7 +329,7 @@ Write-Host "OUTCOME: Scripts.Reader.csproj verified OK"
 ### Step 6 — Create AssemblyInfo.cs
 
 ```powershell
-$propsDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties'
+$propsDir = '/home/lance/Scripts/csharp/src\Reader\Properties'
 if (-not (Test-Path $propsDir)) {
     New-Item -ItemType Directory -Path $propsDir -ErrorAction Stop | Out-Null
     if (-not (Test-Path $propsDir)) { throw "Failed to create $propsDir" }
@@ -337,7 +337,7 @@ if (-not (Test-Path $propsDir)) {
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties\AssemblyInfo.cs`
+File: `/home/lance/Scripts/csharp/src\Reader\Properties\AssemblyInfo.cs`
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -346,7 +346,7 @@ using System.Runtime.CompilerServices;
 ```
 
 ```powershell
-$infoPath = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Properties\AssemblyInfo.cs'
+$infoPath = '/home/lance/Scripts/csharp/src\Reader\Properties\AssemblyInfo.cs'
 if (-not (Test-Path $infoPath)) { throw "AssemblyInfo.cs was not created in Scripts.Reader" }
 
 $content = Get-Content $infoPath -Raw -Encoding UTF8
@@ -364,14 +364,14 @@ Write-Host "OUTCOME: AssemblyInfo.cs verified OK"
 ```powershell
 Write-Host "STATE: Adding Scripts.Reader.csproj to Scripts.slnx"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$slnx.bak.$ts"
 Copy-Item $slnx $bak -ErrorAction Stop
 if (-not (Test-Path $bak)) { throw "Backup of Scripts.slnx failed" }
 
-dotnet sln 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
-    add 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj' `
+dotnet sln '/home/lance/Scripts/csharp/Scripts.slnx' `
+    add '/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj' `
     2>&1 | Tee-Object -Variable slnOutput
 Write-Host $slnOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet sln add failed for Scripts.Reader.csproj" }
@@ -392,11 +392,11 @@ Write-Host "OUTCOME: Scripts.Reader.csproj registered in solution"
 ```powershell
 Write-Host "STATE: Running dotnet restore and dotnet build for Scripts.Reader"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed for Scripts.Reader" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Reader" }
 
@@ -412,7 +412,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Reader" }
 ### Step 9 — Run project tests
 
 ```powershell
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsReaderProjectTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "ScriptsReaderProjectTests failed" }
@@ -424,13 +424,13 @@ if ($LASTEXITCODE -ne 0) { throw "ScriptsReaderProjectTests failed" }
 ## Task 8 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/src/Reader/Scripts.Reader.csproj' `
     'csharp/src/Reader/Properties/AssemblyInfo.cs' `
     'csharp/tests/Scripts.Tests/ScriptsReaderProjectTests.cs' `
     'csharp/Scripts.slnx'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-06): add Scripts.Reader.csproj referencing Core only, Playwright + AngleSharp + PdfPig + OCR via CPM"
 ```
 

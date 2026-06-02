@@ -5,7 +5,7 @@ namespace Scripts.Tests;
 internal sealed class GlobalSetup
 {
     [Before(Assembly)]
-    public static async Task LoadDotEnvAsync()
+    public static async Task LoadDotEnvAsync(AssemblyHookContext context)
     {
         // TestPaths.RepoRoot is compiler-anchored via [CallerFilePath] and validated
         // against AGENTS.md — reliable regardless of output directory layout.

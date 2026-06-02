@@ -7,7 +7,7 @@ namespace Scripts.Tests.Language;
 internal sealed class LanguageIdentifierTests
 {
 	[Test]
-	public void Detect_English_Returns_eng()
+	public void Detect_English_Returns_en()
 	{
 		var result = LanguageIdentifier.Detect(
 			"This is a test sentence in English language with enough characters"
@@ -15,17 +15,17 @@ internal sealed class LanguageIdentifierTests
 
 		result
 			.Should()
-			.Be("eng", $"because Lingua must detect English text correctly. Actual: {result}");
+			.Be("en", $"because Lingua must detect English text correctly. Actual: {result}");
 	}
 
 	[Test]
-	public void Detect_Japanese_Returns_jpn()
+	public void Detect_Japanese_Returns_ja()
 	{
 		var result = LanguageIdentifier.Detect(
 			"これは日本語のテスト文章です十分な文字数があります"
 		);
 
-		result.Should().Be("jpn", $"because Lingua must detect Japanese text. Actual: {result}");
+		result.Should().Be("ja", $"because Lingua must detect Japanese text. Actual: {result}");
 	}
 
 	[Test]

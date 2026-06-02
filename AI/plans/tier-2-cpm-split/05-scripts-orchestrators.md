@@ -91,7 +91,7 @@ npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
 - [ ] T2-03 (Scripts.Services.Language) is signed off — `Scripts.Services.Language.csproj` exists and compiles
 - [ ] T2-04 (Scripts.Services.Music) is signed off — `Scripts.Services.Music.csproj` exists and compiles
 - [ ] CPM is active — `Directory.Packages.props` lists `Hqub.Last.fm`, `Google.Apis.*`, `Google.Apis.Sheets.v4`
-- [ ] `C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\` directory exists (create if absent)
+- [ ] `/home/lance/Scripts/csharp/src\Orchestrators\` directory exists (create if absent)
 
 ---
 
@@ -103,7 +103,7 @@ npgsqlOptions => npgsqlOptions.EnableRetryOnFailure(
 Write-Host "STATE: Verifying src/Orchestrators directory and any existing Scripts.Orchestrators.csproj"
 Write-Host "REASON: Must not overwrite without backup (Zero-Presumption Rule 9)"
 
-$orchDir  = 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators'
+$orchDir  = '/home/lance/Scripts/csharp/src\Orchestrators'
 $orchProj = Join-Path $orchDir 'Scripts.Orchestrators.csproj'
 $ts       = Get-Date -Format 'yyyyMMdd_HHmmss'
 
@@ -129,7 +129,7 @@ if (Test-Path $orchProj) {
 
 ### Step 2 — Write tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ScriptsOrchestratorsProjectTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ScriptsOrchestratorsProjectTests.cs`
 
 ```csharp
 using System.IO;
@@ -141,10 +141,10 @@ namespace Scripts.Tests;
 public class ScriptsOrchestratorsProjectTests
 {
     private const string OrchCsproj =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj";
+        @"/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj";
 
     private const string AssemblyInfoPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties\AssemblyInfo.cs";
+        @"/home/lance/Scripts/csharp/src\Orchestrators\Properties\AssemblyInfo.cs";
 
     [Test]
     public void ScriptsOrchestrators_CsprojFile_Exists()
@@ -219,7 +219,7 @@ public class ScriptsOrchestratorsProjectTests
         var psi = new System.Diagnostics.ProcessStartInfo
         {
             FileName               = "dotnet",
-            Arguments              = @"build C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj",
+            Arguments              = @"build /home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj",
             RedirectStandardOutput = true,
             RedirectStandardError  = true,
             UseShellExecute        = false,
@@ -235,7 +235,7 @@ public class ScriptsOrchestratorsProjectTests
 ### Step 3 — Run tests RED
 
 ```powershell
-$result = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$result = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsOrchestratorsProjectTests" `
     --no-build 2>&1
 Write-Host $result
@@ -248,7 +248,7 @@ Write-Host $result
 
 ### Step 4 — Write the project file
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj`
+File: `/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj`
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -270,7 +270,7 @@ File: `C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators
 ### Step 5 — Verify the project file
 
 ```powershell
-$orchProj = 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj'
+$orchProj = '/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj'
 if (-not (Test-Path $orchProj)) { throw "Scripts.Orchestrators.csproj was not created" }
 
 $content = Get-Content $orchProj -Raw -Encoding UTF8
@@ -303,7 +303,7 @@ Write-Host "OUTCOME: Scripts.Orchestrators.csproj verified OK"
 ### Step 6 — Create AssemblyInfo.cs
 
 ```powershell
-$propsDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties'
+$propsDir = '/home/lance/Scripts/csharp/src\Orchestrators\Properties'
 if (-not (Test-Path $propsDir)) {
     New-Item -ItemType Directory -Path $propsDir -ErrorAction Stop | Out-Null
     if (-not (Test-Path $propsDir)) { throw "Failed to create $propsDir" }
@@ -311,7 +311,7 @@ if (-not (Test-Path $propsDir)) {
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties\AssemblyInfo.cs`
+File: `/home/lance/Scripts/csharp/src\Orchestrators\Properties\AssemblyInfo.cs`
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -320,7 +320,7 @@ using System.Runtime.CompilerServices;
 ```
 
 ```powershell
-$infoPath = 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Properties\AssemblyInfo.cs'
+$infoPath = '/home/lance/Scripts/csharp/src\Orchestrators\Properties\AssemblyInfo.cs'
 if (-not (Test-Path $infoPath)) { throw "AssemblyInfo.cs was not created in Scripts.Orchestrators" }
 
 $content = Get-Content $infoPath -Raw -Encoding UTF8
@@ -338,14 +338,14 @@ Write-Host "OUTCOME: AssemblyInfo.cs verified OK"
 ```powershell
 Write-Host "STATE: Adding Scripts.Orchestrators.csproj to Scripts.slnx"
 
-$slnx = 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx'
+$slnx = '/home/lance/Scripts/csharp/Scripts.slnx'
 $ts   = Get-Date -Format 'yyyyMMdd_HHmmss'
 $bak  = "$slnx.bak.$ts"
 Copy-Item $slnx $bak -ErrorAction Stop
 if (-not (Test-Path $bak)) { throw "Backup of Scripts.slnx failed" }
 
-dotnet sln 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
-    add 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj' `
+dotnet sln '/home/lance/Scripts/csharp/Scripts.slnx' `
+    add '/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj' `
     2>&1 | Tee-Object -Variable slnOutput
 Write-Host $slnOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet sln add failed for Scripts.Orchestrators.csproj" }
@@ -366,11 +366,11 @@ Write-Host "OUTCOME: Scripts.Orchestrators.csproj registered in solution"
 ```powershell
 Write-Host "STATE: Running dotnet restore and dotnet build for Scripts.Orchestrators"
 
-$restoreOutput = dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj' 2>&1
+$restoreOutput = dotnet restore '/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj' 2>&1
 Write-Host $restoreOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed for Scripts.Orchestrators" }
 
-$buildOutput = dotnet build 'C:\Users\Lance\Dev\Scripts\csharp\src\Orchestrators\Scripts.Orchestrators.csproj' 2>&1
+$buildOutput = dotnet build '/home/lance/Scripts/csharp/src\Orchestrators\Scripts.Orchestrators.csproj' 2>&1
 Write-Host $buildOutput
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Orchestrators" }
 
@@ -386,7 +386,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet build failed for Scripts.Orchestrators"
 ### Step 9 — Run project tests
 
 ```powershell
-$testOutput = dotnet test 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' `
+$testOutput = dotnet test '/home/lance/Scripts/csharp/Scripts.slnx' `
     --filter "FullyQualifiedName~ScriptsOrchestratorsProjectTests" 2>&1
 Write-Host $testOutput
 if ($LASTEXITCODE -ne 0) { throw "ScriptsOrchestratorsProjectTests failed" }
@@ -398,13 +398,13 @@ if ($LASTEXITCODE -ne 0) { throw "ScriptsOrchestratorsProjectTests failed" }
 ## Task 8 — Commit
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     'csharp/src/Orchestrators/Scripts.Orchestrators.csproj' `
     'csharp/src/Orchestrators/Properties/AssemblyInfo.cs' `
     'csharp/tests/Scripts.Tests/ScriptsOrchestratorsProjectTests.cs' `
     'csharp/Scripts.slnx'
 
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t2-05): add Scripts.Orchestrators.csproj referencing Data + Language + Music, retain Google Sheets via CPM"
 ```
 

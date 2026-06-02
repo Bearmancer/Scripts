@@ -39,15 +39,15 @@
 # What: Create Artist.cs with Id, Name, Metadata, Albums nav
 # Expected: File created, properties accessible via reflection
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Artist.cs
 # Expected: False
 
-New-Item -ItemType Directory -Force -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities
+New-Item -ItemType Directory -Force -Path /home/lance/Scripts/csharp/src\Data\Entities
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ArtistEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ArtistEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -117,7 +117,7 @@ public sealed class ArtistEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ArtistEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ArtistEntityTests.cs
 ```
 
 Expected: File exists, contains 6 `[Test]` methods.
@@ -125,7 +125,7 @@ Expected: File exists, contains 6 `[Test]` methods.
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "ArtistEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ArtistEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -139,7 +139,7 @@ Compilation error confirms `Artist` class is missing. Proceed to create it.
 
 ### Step 4: Create `Artist.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\Artist.cs`
 
 ```csharp
 using System.Text.Json;
@@ -161,16 +161,16 @@ public sealed class Artist
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Artist.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Artist.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "ArtistEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "ArtistEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -182,9 +182,9 @@ Build succeeded.
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Artist.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/ArtistEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Artist entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Artist.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/ArtistEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add Artist entity and reflection tests"
 ```
 
 ---
@@ -199,13 +199,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Artist entity and 
 # What: Create Album.cs with ArtistId FK, DateOnly? ReleaseDate
 # Expected: File created, compiles
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Album.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\AlbumEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\AlbumEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -266,13 +266,13 @@ public sealed class AlbumEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\AlbumEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\AlbumEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "AlbumEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "AlbumEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'Album' not found`
@@ -283,7 +283,7 @@ Compilation error confirms missing entity. Proceed.
 
 ### Step 4: Create `Album.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\Album.cs`
 
 ```csharp
 namespace CSharpScripts.Data.Entities;
@@ -308,15 +308,15 @@ public sealed class Album
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Album.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Album.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "AlbumEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "AlbumEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `5 passed, 0 failed`
@@ -324,9 +324,9 @@ Expected: `5 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Album.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/AlbumEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Album entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Album.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/AlbumEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add Album entity and reflection tests"
 ```
 
 ---
@@ -336,13 +336,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Album entity and r
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Track.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\TrackEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\TrackEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -397,13 +397,13 @@ public sealed class TrackEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\TrackEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\TrackEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "TrackEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "TrackEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'Track' not found`
@@ -414,7 +414,7 @@ Compilation error confirmed. Proceed.
 
 ### Step 4: Create `Track.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\Track.cs`
 
 ```csharp
 namespace CSharpScripts.Data.Entities;
@@ -441,15 +441,15 @@ public sealed class Track
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Track.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Track.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "TrackEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "TrackEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `4 passed, 0 failed`
@@ -457,9 +457,9 @@ Expected: `4 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Track.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/TrackEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Track entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Track.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/TrackEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add Track entity and reflection tests"
 ```
 
 ---
@@ -469,13 +469,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Track entity and r
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Scrobble.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Scrobble.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ScrobbleEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ScrobbleEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -535,13 +535,13 @@ public sealed class ScrobbleEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ScrobbleEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ScrobbleEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "ScrobbleEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ScrobbleEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'Scrobble' not found`
@@ -552,7 +552,7 @@ Compilation error confirmed. Proceed.
 
 ### Step 4: Create `Scrobble.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Scrobble.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\Scrobble.cs`
 
 ```csharp
 namespace CSharpScripts.Data.Entities;
@@ -577,15 +577,15 @@ public sealed class Scrobble
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Scrobble.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Scrobble.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "ScrobbleEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "ScrobbleEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `5 passed, 0 failed`
@@ -593,9 +593,9 @@ Expected: `5 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Scrobble.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/ScrobbleEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Scrobble entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Scrobble.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/ScrobbleEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add Scrobble entity and reflection tests"
 ```
 
 ---
@@ -605,13 +605,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Scrobble entity an
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Video.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Video.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\VideoEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\VideoEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -658,13 +658,13 @@ public sealed class VideoEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\VideoEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\VideoEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "VideoEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "VideoEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'Video' not found`
@@ -675,7 +675,7 @@ Missing entity confirmed. Proceed.
 
 ### Step 4: Create `Video.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Video.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\Video.cs`
 
 ```csharp
 namespace CSharpScripts.Data.Entities;
@@ -697,15 +697,15 @@ public sealed class Video
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\Video.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\Video.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "VideoEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "VideoEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `4 passed, 0 failed`
@@ -713,9 +713,9 @@ Expected: `4 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/Video.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/VideoEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Video entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/Video.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/VideoEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add Video entity and reflection tests"
 ```
 
 ---
@@ -725,13 +725,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add Video entity and r
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ExecutionLog.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\ExecutionLog.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ExecutionLogEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ExecutionLogEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -774,13 +774,13 @@ public sealed class ExecutionLogEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\ExecutionLogEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\ExecutionLogEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "ExecutionLogEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ExecutionLogEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'ExecutionLog' not found`
@@ -791,7 +791,7 @@ Missing entity confirmed. Proceed.
 
 ### Step 4: Create `ExecutionLog.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ExecutionLog.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\ExecutionLog.cs`
 
 ```csharp
 using System.Text.Json;
@@ -815,15 +815,15 @@ public sealed class ExecutionLog
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ExecutionLog.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\ExecutionLog.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "ExecutionLogEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "ExecutionLogEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -831,9 +831,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/ExecutionLog.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/ExecutionLogEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add ExecutionLog entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/ExecutionLog.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/ExecutionLogEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add ExecutionLog entity and reflection tests"
 ```
 
 ---
@@ -843,13 +843,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add ExecutionLog entit
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\FailedTask.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\FailedTask.cs
 # Expected: False
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\FailedTaskEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\FailedTaskEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -889,13 +889,13 @@ public sealed class FailedTaskEntityTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\FailedTaskEntityTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\FailedTaskEntityTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "FailedTaskEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "FailedTaskEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `Error CS0246: 'FailedTask' not found`
@@ -906,7 +906,7 @@ Missing entity confirmed. Proceed.
 
 ### Step 4: Create `FailedTask.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\FailedTask.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\FailedTask.cs`
 
 ```csharp
 namespace CSharpScripts.Data.Entities;
@@ -927,15 +927,15 @@ public sealed class FailedTask
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\FailedTask.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\FailedTask.cs
 # Expected: True
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "FailedTaskEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "FailedTaskEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -943,9 +943,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/FailedTask.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/FailedTaskEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add FailedTask entity and reflection tests"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/FailedTask.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/FailedTaskEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): add FailedTask entity and reflection tests"
 ```
 
 ---
@@ -960,13 +960,13 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): add FailedTask entity 
 # What: Add DbSet properties for all 7 entities to ScriptsDbContext
 # Expected: Context compiles with all DbSet properties visible
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern "DbSet" | Measure-Object | Select-Object -ExpandProperty Count
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern "DbSet" | Measure-Object | Select-Object -ExpandProperty Count
 # Expected: 0 (no DbSet properties yet)
 ```
 
 ### Step 1: Write test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\DbContextDbSetTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\DbContextDbSetTests.cs`
 
 ```csharp
 using TUnit;
@@ -1043,13 +1043,13 @@ public sealed class DbContextDbSetTests
 ### Step 2: Readback
 
 ```powershell
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Entities\DbContextDbSetTests.cs
+Get-Content /home/lance/Scripts/csharp/tests\Scripts.Tests\Entities\DbContextDbSetTests.cs
 ```
 
 ### Step 3: Run — expect FAIL
 
 ```powershell
-dotnet test --filter "DbContextDbSetTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "DbContextDbSetTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -1063,7 +1063,7 @@ DbSet properties are missing. Proceed to add them.
 
 ### Step 4: Update `ScriptsDbContext.cs`
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`
+File: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -1101,16 +1101,16 @@ public sealed class ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern "DbSet" | Measure-Object | Select-Object -ExpandProperty Count
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern "DbSet" | Measure-Object | Select-Object -ExpandProperty Count
 # Expected: 7
 ```
 
 ### Step 5: Run — expect PASS
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test --filter "DbContextDbSetTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test --filter "DbContextDbSetTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `7 passed, 0 failed`
@@ -1118,9 +1118,9 @@ Expected: `7 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/ScriptsDbContext.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Entities/DbContextDbSetTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): register all entity DbSets on ScriptsDbContext"
+git -C /home/lance/Scripts add csharp/src/Data/ScriptsDbContext.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Entities/DbContextDbSetTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-01): register all entity DbSets on ScriptsDbContext"
 ```
 
 ---
@@ -1135,11 +1135,11 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): register all entity Db
 # What: Generate InitialEntities migration
 # Expected: Migrations/ directory created with snapshot and migration file
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations
+Test-Path /home/lance/Scripts/csharp/src\Data\Migrations
 # Expected: False (no migrations yet)
 
 # Load env for EF CLI
-Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+Get-Content /home/lance/Scripts/.env | ForEach-Object {
     if ($_ -match '^([^#][^=]+)=(.+)$') {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
     }
@@ -1150,8 +1150,8 @@ Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
 
 ```powershell
 dotnet ef migrations add InitialEntities `
-    --project C:\Users\Lance\Dev\Scripts\csharp\src\Data\Scripts.Data.csproj `
-    --startup-project C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Scripts.CLI.csproj `
+    --project /home/lance/Scripts/csharp/src\Data\Scripts.Data.csproj `
+    --startup-project /home/lance/Scripts/csharp/src\CLI\Scripts.CLI.csproj `
     2>&1
 ```
 
@@ -1165,18 +1165,18 @@ Done. To undo this action, use 'ef migrations remove'
 Verify migration files created:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations
+Test-Path /home/lance/Scripts/csharp/src\Data\Migrations
 # Expected: True
 
-Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations | Select-Object Name
+Get-ChildItem /home/lance/Scripts/csharp/src\Data\Migrations | Select-Object Name
 # Expected: files matching *_InitialEntities.cs, *_InitialEntities.Designer.cs, ScriptsDbContextModelSnapshot.cs
 ```
 
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Migrations/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): generate InitialEntities EF Core migration"
+git -C /home/lance/Scripts add csharp/src/Data/Migrations/
+git -C /home/lance/Scripts commit -m "feat(t1-01): generate InitialEntities EF Core migration"
 ```
 
 ---
@@ -1184,7 +1184,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-01): generate InitialEntiti
 ## Final Verification
 
 ```powershell
-dotnet test --filter "Scripts.Tests.Entities" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.Entities" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -1201,3 +1201,74 @@ Passed DbContextDbSetTests (7 tests)
 ```
 
 **→ Proceed to `02-entity-refactoring.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/ENTITY-DESIGN-consolidated.md -->
+<!-- 2026-06-01: AI/plans/research/ directory was deleted after this content was merged inline. Source path below is a historical pointer. -->
+
+Source: `AI/plans/research/ENTITY-DESIGN-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+### Entity Inventory (research §1)
+
+| Entity       | PK Type           | Config | DbSet | Status                       |
+| ------------ | ----------------- | ------ | ----- | ---------------------------- |
+| Artist       | `int` identity    | ✅      | ✅     | Has obsolete `Mbid` — DELETE |
+| Album        | `int` identity    | ✅      | ✅     | Has obsolete `Mbid` — DELETE |
+| Track        | `int` identity    | ✅      | ✅     | Has obsolete `Mbid` — DELETE |
+| Scrobble     | `long` identity   | ✅      | ✅     | Clean                        |
+| Video        | `long` identity   | ✅      | ✅     | Diverges from plan spec      |
+| ExecutionLog | `int` serial      | ✅      | ✅     | Clean                        |
+| FailedTask   | `int` serial      | ✅      | ✅     | Diverges from plan spec      |
+| FiberyEntity | `Guid` client-gen | ✅      | ✅     | Missing critical indexes     |
+| SourceRecord | `Guid` client-gen | ✅ post-T1-04 | ✅ post-T1-03 | Mapped (was UNMAPPED) |
+
+### Legacy int ID Audit (research §4)
+
+Targets below came from AGENTS.md (deleted 2026-06-01); preserved here for traceability.
+
+| Entity         | Current PK | Target        | Match?       |
+| -------------- | ---------- | ------------- | ------------ |
+| `Artist`       | `int`      | `id UUID PK`  | **MISMATCH** |
+| `Album`        | `int`      | `id UUID PK`  | **MISMATCH** |
+| `Track`        | `int`      | `id UUID PK`  | **MISMATCH** |
+| `Scrobble`     | `long`     | `id BIGINT PK`| OK           |
+| `Video`        | `long`     | `id UUID PK`  | **MISMATCH** |
+| `ExecutionLog` | `int`      | `id SERIAL`   | OK           |
+| `FailedTask`   | `int`      | `id UUID`     | **MISMATCH** |
+
+**Defer UUID migration to later phase.** DB doesn't exist yet, not blocking. T1-02 focuses on Mbid only.
+
+### Video Entity Discrepancy (research §5)
+
+| Property      | Current `Video.cs`            | Plan `01-entities.md` Task 5 |
+| ------------- | ----------------------------- | ---------------------------- |
+| `Id`          | `long`                        | `int`                        |
+| `Url`         | `string` (unique index)       | —                            |
+| `Title`       | `string`                      | `string`                     |
+| `ChannelName` | `string` (indexed)            | —                            |
+| `UploadDate`  | `DateOnly` (indexed)          | —                            |
+| `SyncedAt`    | `DateTimeOffset`              | —                            |
+| `Metadata`    | `Dict<string,string>` (jsonb) | —                            |
+| `YoutubeId`   | —                             | `string`                     |
+| `PlaylistId`  | —                             | `string`                     |
+| `IsDeleted`   | —                             | `bool`                       |
+
+Current entity is generic (Url/ChannelName); plan spec is YouTube-specific (YoutubeId/PlaylistId/IsDeleted). **Do not change in T1-01** without user direction. Current `Dictionary<string,string> Metadata` JSONB is intentional, not obsolete.
+
+### FailedTask Entity Discrepancy (research §6)
+
+| Property       | Current `FailedTask.cs` | Plan `01-entities.md`        |
+| -------------- | ----------------------- | --------------------------- |
+| `Id`           | `int`                   | `Guid`                      |
+| `TaskName`     | `string`                | `Operation` (string)        |
+| `ErrorMessage` | `string?`               | —                           |
+| `Timestamp`    | `DateTimeOffset`        | `CreatedAt` (DateTimeOffset)|
+
+Current entity has `ErrorMessage` not in plan. Flag for clarification.
+
+### JsonDocument NRE Root Cause (research §7)
+
+In EF Core 10 + Npgsql 10, `System.NullReferenceException` is thrown inside `InMemoryTable`/`NpgsqlMigrator` when `GetKeyValueComparer()` is accessed for a `JsonDocument` property. **Root cause:** if `mb.Ignore<JsonDocument>()` is declared in `OnModelCreating`, EF Core removes `JsonDocument` from model metadata, but properties explicitly typed as `JsonDocument` still demand `GetKeyValueComparer()` during context init → NRE. **Resolution:** do not add `mb.Ignore<JsonDocument>()` — Npgsql handles `JsonDocument` natively.

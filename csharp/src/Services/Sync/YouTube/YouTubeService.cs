@@ -1,4 +1,3 @@
-#pragma warning disable IDE0060
 namespace Scripts.Services.Sync.YouTube;
 
 internal class YouTubeService

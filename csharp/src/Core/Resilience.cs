@@ -1,4 +1,3 @@
-#pragma warning disable CA2000
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Sockets;

@@ -20,7 +20,6 @@ internal static class Log
 	private static readonly FrozenDictionary<ServiceType, ILogger> ServiceLoggers;
 	private static readonly AsyncLocal<ServiceType?> ActiveServiceLocal = new();
 
-#pragma warning disable CA1810
 	static Log()
 	{
 		Directory.CreateDirectory(path: Paths.LogDirectory);
@@ -34,7 +33,6 @@ internal static class Log
 			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl"),
 		}.ToFrozenDictionary();
 	}
-#pragma warning restore CA1810
 
 	private static ServiceType? ActiveService
 	{

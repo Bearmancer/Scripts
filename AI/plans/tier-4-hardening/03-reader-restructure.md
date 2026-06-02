@@ -20,15 +20,15 @@ Get-Command dotnet -ErrorAction Stop
 Get-Command git    -ErrorAction Stop
 
 # Confirm Reader project exists
-$readerProj = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader\Scripts.Reader.csproj'
+$readerProj = '/home/lance/Scripts/csharp/src\Reader\Scripts.Reader.csproj'
 Test-Path $readerProj | Should -Be $true
 
 # Baseline build — must be green before any moves
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop 2>&1 | Tee-Object -Variable buildOut
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop 2>&1 | Tee-Object -Variable buildOut
 $buildOut | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 
 # Inventory existing files
-$readerDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerDir = '/home/lance/Scripts/csharp/src\Reader'
 Get-ChildItem $readerDir -Filter '*.cs' | Select-Object Name | Sort-Object Name
 ```
 
@@ -87,7 +87,7 @@ namespace Scripts.Tests.StructuralTests;
 
 public class ReaderStructureTests
 {
-    private const string ReaderRoot = @"C:\Users\Lance\Dev\Scripts\csharp\src\Reader";
+    private const string ReaderRoot = @"/home/lance/Scripts/csharp/src\Reader";
 
     // Extraction
     [Test] public void JstorExtractor_IsIn_ExtractionDir()
@@ -152,7 +152,7 @@ public class ReaderStructureTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StructuralTests\ReaderStructureTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\StructuralTests\ReaderStructureTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -160,7 +160,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ReaderStructureTests" `
     --logger "console;verbosity=normal" 2>&1
 ```
@@ -174,7 +174,7 @@ Expected: all tests fail — files are still flat in `src/Reader/`.
 - [ ] **Step 1: Move Extraction files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $extractionDir = Join-Path $readerRoot 'Extraction'
 New-Item -ItemType Directory -Path $extractionDir -Force -ErrorAction Stop
 
@@ -198,7 +198,7 @@ foreach ($f in $extractionFiles) {
 - [ ] **Step 2: Build — confirm no errors after Extraction move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 Write-Host "Build clean after Extraction/ move"
 ```
@@ -210,7 +210,7 @@ Write-Host "Build clean after Extraction/ move"
 - [ ] **Step 1: Move Local files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $localDir = Join-Path $readerRoot 'Local'
 New-Item -ItemType Directory -Path $localDir -Force -ErrorAction Stop
 
@@ -234,7 +234,7 @@ foreach ($f in $localFiles) {
 - [ ] **Step 2: Build — confirm no errors after Local move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 Write-Host "Build clean after Local/ move"
 ```
@@ -246,7 +246,7 @@ Write-Host "Build clean after Local/ move"
 - [ ] **Step 1: Move Ocr files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $ocrDir = Join-Path $readerRoot 'Ocr'
 New-Item -ItemType Directory -Path $ocrDir -Force -ErrorAction Stop
 
@@ -277,7 +277,7 @@ foreach ($f in $ocrFiles) {
 - [ ] **Step 2: Build — confirm no errors after Ocr move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 Write-Host "Build clean after Ocr/ move"
 ```
@@ -289,7 +289,7 @@ Write-Host "Build clean after Ocr/ move"
 - [ ] **Step 1: Move Output files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $outputDir = Join-Path $readerRoot 'Output'
 New-Item -ItemType Directory -Path $outputDir -Force -ErrorAction Stop
 
@@ -313,7 +313,7 @@ foreach ($f in $outputFiles) {
 - [ ] **Step 2: Build — confirm no errors after Output move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 ```
 
@@ -324,7 +324,7 @@ $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 - [ ] **Step 1: Move Quality files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $qualityDir = Join-Path $readerRoot 'Quality'
 New-Item -ItemType Directory -Path $qualityDir -Force -ErrorAction Stop
 
@@ -353,7 +353,7 @@ foreach ($f in $qualityFiles) {
 - [ ] **Step 2: Build — confirm no errors after Quality move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 ```
 
@@ -364,7 +364,7 @@ $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 - [ ] **Step 1: Move Validation files**
 
 ```powershell
-$readerRoot = 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader'
+$readerRoot = '/home/lance/Scripts/csharp/src\Reader'
 $validationDir = Join-Path $readerRoot 'Validation'
 New-Item -ItemType Directory -Path $validationDir -Force -ErrorAction Stop
 
@@ -388,7 +388,7 @@ foreach ($f in $validationFiles) {
 - [ ] **Step 2: Build — confirm no errors after Validation move**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Tee-Object -Variable b
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Tee-Object -Variable b
 $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 ```
 
@@ -399,7 +399,7 @@ $b | Where-Object { $_ -match ' error ' } | Should -BeNullOrEmpty
 - [ ] **Step 1: Run structure tests**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ReaderStructureTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -409,14 +409,14 @@ Expected: all tests that had matching files PASS. Tests for files that were not 
 - [ ] **Step 2: Full test suite — no regressions**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
 - [ ] **Step 3: Clean up .bak files**
 
 ```powershell
-Get-ChildItem 'C:\Users\Lance\Dev\Scripts\csharp\src\Reader' -Recurse -Filter '*.bak.*' |
+Get-ChildItem '/home/lance/Scripts/csharp/src\Reader' -Recurse -Filter '*.bak.*' |
     Remove-Item -Force -ErrorAction Stop
 Write-Host "Backup files removed"
 ```
@@ -424,9 +424,9 @@ Write-Host "Backup files removed"
 - [ ] **Step 4: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Reader/ `
+git -C /home/lance/Scripts add csharp/src/Reader/ `
     csharp/tests/Scripts.Tests/StructuralTests/ReaderStructureTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-03): restructure Reader into Extraction/Local/Ocr/Output/Quality/Validation subdirs"
+git -C /home/lance/Scripts commit -m "feat(t4-03): restructure Reader into Extraction/Local/Ocr/Output/Quality/Validation subdirs"
 ```
 
 ---

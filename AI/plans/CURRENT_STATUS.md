@@ -137,4 +137,3 @@ proper projects with correct visibility modifiers. Do not fix them in T1.
 
 - [Plan Index](INDEX.md)
 - [Tier 1 Plans](tier-1-ef-migration/)
-- [AGENTS.md](../../AGENTS.md)

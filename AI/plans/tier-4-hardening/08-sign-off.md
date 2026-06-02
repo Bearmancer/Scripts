@@ -25,11 +25,11 @@ Write-Host "git:  $(git --version)"
 Write-Host "gitleaks: $(gitleaks version)"
 
 # Confirm we are on the expected branch
-$branch = git -C 'C:\Users\Lance\Dev\Scripts' branch --show-current
+$branch = git -C '/home/lance/Scripts' branch --show-current
 Write-Host "Branch: $branch"
 
 # Load .env so PGCONNSTR is available
-Get-Content 'C:\Users\Lance\Dev\Scripts\.env' | ForEach-Object {
+Get-Content '/home/lance/Scripts/.env' | ForEach-Object {
     if ($_ -match '^([^#][^=]+)=(.+)$') {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
     }
@@ -37,7 +37,7 @@ Get-Content 'C:\Users\Lance\Dev\Scripts\.env' | ForEach-Object {
 if (-not $env:PGCONNSTR) { throw 'PGCONNSTR not set after loading .env' }
 
 # Restore
-dotnet restore 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx' -ErrorAction Stop
+dotnet restore '/home/lance/Scripts/csharp/Scripts.slnx' -ErrorAction Stop
 ```
 
 ---
@@ -81,7 +81,7 @@ public class SignOffGateTests
     {
         var (exit, stdout, _) = RunCommand(
             "dotnet", "build C:\\Users\\Lance\\Dev\\Scripts\\csharp\\Scripts.slnx",
-            @"C:\Users\Lance\Dev\Scripts");
+            @"/home/lance/Scripts");
 
         exit.Should().Be(0, $"build failed:\n{stdout}");
         stdout.Should().NotContain(" error ",
@@ -96,7 +96,7 @@ public class SignOffGateTests
         var (exit, stdout, stderr) = RunCommand(
             "dotnet",
             "test C:\\Users\\Lance\\Dev\\Scripts\\csharp\\Scripts.slnx --logger console;verbosity=normal",
-            @"C:\Users\Lance\Dev\Scripts");
+            @"/home/lance/Scripts");
 
         exit.Should().Be(0, $"tests failed:\n{stderr}");
         stdout.Should().NotContain("Failed",
@@ -111,7 +111,7 @@ public class SignOffGateTests
         var (exit, stdout, _) = RunCommand(
             "gitleaks",
             "detect --no-git --source C:\\Users\\Lance\\Dev\\Scripts",
-            @"C:\Users\Lance\Dev\Scripts");
+            @"/home/lance/Scripts");
 
         exit.Should().Be(0, $"Gitleaks found secrets:\n{stdout}");
     }
@@ -119,7 +119,7 @@ public class SignOffGateTests
     [Test]
     public void AllTier4PlanFiles_Exist()
     {
-        var tier4Root = @"C:\Users\Lance\Dev\Scripts\AI\plans\tier-4-hardening";
+        var tier4Root = @"/home/lance/Scripts/AI\plans\tier-4-hardening";
         var expectedFiles = new[]
         {
             "00-di-wiring.md",
@@ -144,7 +144,7 @@ public class SignOffGateTests
     public void IndexMd_Tier4_AllPhasesComplete()
     {
         var content = File.ReadAllText(
-            @"C:\Users\Lance\Dev\Scripts\AI\plans\INDEX.md");
+            @"/home/lance/Scripts/AI\plans\INDEX.md");
         var tier4Section = content.Substring(
             content.IndexOf("### Tier 4", StringComparison.Ordinal));
         var rows = tier4Section.Split('\n')
@@ -161,7 +161,7 @@ public class SignOffGateTests
     [Test]
     public void ServiceRegistration_Exists()
     {
-        File.Exists(@"C:\Users\Lance\Dev\Scripts\csharp\src\CLI\ServiceRegistration.cs")
+        File.Exists(@"/home/lance/Scripts/csharp/src\CLI\ServiceRegistration.cs")
             .Should().BeTrue("ServiceRegistration.cs must exist (T4-00)");
     }
 
@@ -169,7 +169,7 @@ public class SignOffGateTests
     public void NoMailFiles_InCliDirectory()
     {
         var mailFiles = Directory.GetFiles(
-            @"C:\Users\Lance\Dev\Scripts\csharp\src\CLI",
+            @"/home/lance/Scripts/csharp/src\CLI",
             "*Mail*", SearchOption.AllDirectories)
             .Where(f => !f.Contains(".bak."))
             .ToList();
@@ -180,7 +180,7 @@ public class SignOffGateTests
     [Test]
     public void ReadmeMd_HasQuickStart()
     {
-        var readme = File.ReadAllText(@"C:\Users\Lance\Dev\Scripts\README.md");
+        var readme = File.ReadAllText(@"/home/lance/Scripts/README.md");
         readme.Should().Contain("Quick Start");
         readme.Should().Contain("PGCONNSTR");
         readme.Should().Contain("dotnet build");
@@ -192,7 +192,7 @@ public class SignOffGateTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOffTests\SignOffGateTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOffTests\SignOffGateTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -200,7 +200,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run gate tests — all must be GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "SignOffGateTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -214,8 +214,8 @@ dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
 - [ ] **Step 1: Run all tests**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
-    --logger "trx;LogFileName=C:\Users\Lance\Dev\Scripts\csharp\tests\t4-sign-off.trx" `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
+    --logger "trx;LogFileName=/home/lance/Scripts/csharp/tests\t4-sign-off.trx" `
     --logger "console;verbosity=normal" `
     2>&1 | Tee-Object -Variable testOut
 $testOut | Write-Host
@@ -225,14 +225,14 @@ if ($LASTEXITCODE -ne 0) { throw "Test suite failed — do not tag" }
 - [ ] **Step 2: Verify TRX file was written**
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\t4-sign-off.trx' | Should -Be $true
+Test-Path '/home/lance/Scripts/csharp/tests\t4-sign-off.trx' | Should -Be $true
 Write-Host "TRX test result file written"
 ```
 
 - [ ] **Step 3: Check for any failed tests in TRX**
 
 ```powershell
-$trx = [xml](Get-Content 'C:\Users\Lance\Dev\Scripts\csharp\tests\t4-sign-off.trx' -Encoding UTF8)
+$trx = [xml](Get-Content '/home/lance/Scripts/csharp/tests\t4-sign-off.trx' -Encoding UTF8)
 $failed = $trx.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -eq 'Failed' }
 $failed.Count | Should -Be 0 `
     "Failed tests: $($failed | ForEach-Object { $_.testName } | Out-String)"
@@ -246,9 +246,9 @@ Write-Host "All tests passed. Total: $($trx.TestRun.Results.UnitTestResult.Count
 - [ ] **Step 1: Clean build from scratch**
 
 ```powershell
-dotnet clean C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1 | Out-Null
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop 2>&1 | Out-Null
-$build = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet clean /home/lance/Scripts/csharp/Scripts.slnx 2>&1 | Out-Null
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop 2>&1 | Out-Null
+$build = dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 $build | Write-Host
 $errors   = $build | Where-Object { $_ -match ' error ' }
 $warnings = $build | Where-Object { $_ -match ' warning ' }
@@ -264,7 +264,7 @@ Write-Host "Build: 0 errors, 0 warnings ✅"
 - [ ] **Step 1: Final Gitleaks scan**
 
 ```powershell
-$glResult = gitleaks detect --no-git --source 'C:\Users\Lance\Dev\Scripts' 2>&1
+$glResult = gitleaks detect --no-git --source '/home/lance/Scripts' 2>&1
 $glResult | Write-Host
 if ($LASTEXITCODE -ne 0) { throw "Gitleaks: secrets detected — do not tag. Remediate in T4-04." }
 Write-Host "Gitleaks: CLEAN ✅"
@@ -277,13 +277,13 @@ Write-Host "Gitleaks: CLEAN ✅"
 - [ ] **Step 1: Publish release build**
 
 ```powershell
-$publishOut = 'C:\Users\Lance\Dev\Scripts\csharp\publish'
+$publishOut = '/home/lance/Scripts/csharp/publish'
 if (Test-Path $publishOut) {
     Remove-Item $publishOut -Recurse -Force -ErrorAction Stop
 }
 
 dotnet publish `
-    'C:\Users\Lance\Dev\Scripts\csharp\src\CLI\Scripts.CLI.csproj' `
+    '/home/lance/Scripts/csharp/src\CLI\Scripts.CLI.csproj' `
     -c Release `
     -o $publishOut `
     2>&1 | Tee-Object -Variable pubOut
@@ -294,7 +294,7 @@ if ($LASTEXITCODE -ne 0) { throw "Publish failed" }
 - [ ] **Step 2: Verify publish output**
 
 ```powershell
-$publishOut = 'C:\Users\Lance\Dev\Scripts\csharp\publish'
+$publishOut = '/home/lance/Scripts/csharp/publish'
 Test-Path $publishOut | Should -Be $true
 
 # Check that at least one executable was produced
@@ -310,24 +310,24 @@ $exes | ForEach-Object { Write-Host "Published: $($_.Name) ($([math]::Round($_.L
 - [ ] **Step 1: Commit sign-off test file**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' add `
+git -C '/home/lance/Scripts' add `
     csharp/tests/Scripts.Tests/SignOffTests/ `
     csharp/tests/t4-sign-off.trx
-git -C 'C:\Users\Lance\Dev\Scripts' commit `
+git -C '/home/lance/Scripts' commit `
     -m "feat(t4-07): sign-off gate — all tests green, build clean, gitleaks clean"
 ```
 
 - [ ] **Step 2: Tag release**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' tag t4-sign-off
+git -C '/home/lance/Scripts' tag t4-sign-off
 Write-Host "Tagged: t4-sign-off"
 ```
 
 - [ ] **Step 3: Push tag**
 
 ```powershell
-git -C 'C:\Users\Lance\Dev\Scripts' push origin t4-sign-off
+git -C '/home/lance/Scripts' push origin t4-sign-off
 if ($LASTEXITCODE -ne 0) { throw "Push failed" }
 Write-Host "Tag pushed: t4-sign-off ✅"
 ```

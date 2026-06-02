@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Scripts.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Scripts.Data;
 
@@ -8,6 +10,17 @@ internal sealed class ScriptsDbContext : DbContext
 	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
 		: base(options: options) =>
 		ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		base.OnConfiguring(optionsBuilder);
+		// Compiled model breaks InMemory provider (missing key comparers); use OnModelCreating instead.
+		var inMemory = optionsBuilder.Options.Extensions
+			.Any(e => e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true);
+		if (inMemory)
+			return;
+		optionsBuilder.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance);
+	}
 
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
@@ -36,23 +49,14 @@ internal sealed class ScriptsDbContext : DbContext
 
 		if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
 		{
-			var jsonConverter =
-				new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<
-					System.Text.Json.JsonDocument,
-					string
-				>(
-					v => v.RootElement.ToString(),
-					v =>
-						System.Text.Json.JsonDocument.Parse(
-							v,
-							new System.Text.Json.JsonDocumentOptions()
-						)
-				);
+			var jsonConverter = new ValueConverter<JsonDocument, string>(
+				v => v.RootElement.ToString(),
+				v => JsonDocument.Parse(v, new JsonDocumentOptions()));
 
 			foreach (var entityType in mb.Model.GetEntityTypes())
 			foreach (var property in entityType.GetProperties())
 			{
-				if (property.ClrType == typeof(System.Text.Json.JsonDocument))
+				if (property.ClrType == typeof(JsonDocument))
 					property.SetValueConverter(jsonConverter);
 			}
 		}

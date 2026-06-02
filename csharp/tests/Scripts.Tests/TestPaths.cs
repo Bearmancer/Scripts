@@ -35,6 +35,13 @@ internal static class TestPaths
     public static string Combine(params string[] parts) =>
         Path.GetFullPath(Path.Combine([RepoRoot, .. parts]));
 
+    /// <summary>Returns a repo-relative path for <paramref name="absoluteOrRelative"/>.</summary>
+    /// <remarks>Always rooted at <see cref="RepoRoot"/>. Use in test assertions and
+    /// error messages so the same test output reads consistently across local
+    /// builds, CI, and output directory layout changes.</remarks>
+    public static string Relative(string absoluteOrRelative) =>
+        Path.GetRelativePath(RepoRoot, Path.GetFullPath(absoluteOrRelative));
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
@@ -50,17 +57,26 @@ internal static class TestPaths
 
     /// <summary>
     /// Fails fast with a clear message if the resolved root does not contain
-    /// the expected repo sentinel. Catches moves of this file without a
-    /// corresponding update to the <c>..</c> count.
+    /// the expected repo sentinels. Catches moves of this file without a
+    /// corresponding update to the <c>..</c> count, or the repo being cloned
+    /// into an unexpected layout.
     /// </summary>
     private static void ThrowIfInvalid(string root)
     {
-        // AGENTS.md is the single source of truth — always present at the repo root.
-        var sentinel = Path.Combine(root, "AGENTS.md");
-        if (!File.Exists(sentinel))
+        // Multi-sentinel: requires both the .NET solution and the canonical
+        // plan index. Survives removal of historical files (AGENTS.md, .kiro/,
+        // AI/research/) and works regardless of OS (no path-separator coupling).
+        var sentinels = new[]
+        {
+            Path.Combine(root, "csharp", "Scripts.slnx"),
+            Path.Combine(root, "AI", "plans", "INDEX.md"),
+        };
+        var missing = sentinels.Where(p => !File.Exists(p)).ToArray();
+        if (missing.Length > 0)
         {
             throw new InvalidOperationException(
-                $"TestPaths resolved repo root to '{root}', but '{sentinel}' was not found. " +
+                $"TestPaths resolved repo root to '{root}', but sentinel(s) not found: " +
+                string.Join(", ", missing.Select(p => $"'{p}'")) + ". " +
                 "If TestPaths.cs was moved, update the number of '..' segments in ComputeRepoRoot().");
         }
     }

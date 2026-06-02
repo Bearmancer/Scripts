@@ -46,13 +46,11 @@ internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 			service: ServiceType.YouTube,
 			async () =>
 			{
-#pragma warning disable CA2000
 				YouTubePlaylistOrchestrator orchestrator =
 					await YouTubePlaylistOrchestrator.CreateAsync(
 						ct: Program.Cts.Token,
 						previewMode: false
 					);
-#pragma warning restore CA2000
 				await orchestrator.ExecuteAsync();
 			}
 		);
@@ -62,12 +60,10 @@ internal sealed class SyncAllCommand : BaseAsyncCommand<SyncAllCommand.Settings>
 			service: ServiceType.LastFm,
 			async () =>
 			{
-#pragma warning disable CA2000
 				ScrobbleSyncOrchestrator orchestrator = await ScrobbleSyncOrchestrator.CreateAsync(
 					forceFromDate: null,
 					ct: Program.Cts.Token
 				);
-#pragma warning restore CA2000
 				await orchestrator.ExecuteAsync();
 			}
 		);

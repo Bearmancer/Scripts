@@ -1,6 +1,6 @@
 namespace Scripts.Models;
 
-internal sealed record Scrobble(
+internal sealed record LastFmScrobble(
 	string TrackName,
 	string ArtistName,
 	string AlbumName,

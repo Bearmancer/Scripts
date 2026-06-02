@@ -50,8 +50,8 @@
 ## Task 1: Create ReleaseProgress Entity
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ReleaseProgress.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Entities\ReleaseProgress.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs`
 
 ### Step 0: Preflight
 
@@ -61,13 +61,13 @@
 # What: Create ReleaseProgress entity with all TrackInfo fields mapped as columns
 # Expected: 14-column entity with auto-increment PK, composite unique index on (ReleaseId, DiscNumber, TrackNumber)
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ReleaseProgress.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\ReleaseProgress.cs
 # Expected: False
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs`
 
 ```csharp
 using TUnit;
@@ -130,15 +130,15 @@ public sealed class ReleaseProgressEntityTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressEntityTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ReleaseProgressEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ReleaseProgressEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `Error CS0246: The type or namespace name 'ReleaseProgress' could not be found`.
@@ -149,7 +149,7 @@ Entity does not exist. Proceed.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ReleaseProgress.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Entities\ReleaseProgress.cs`
 
 ```csharp
 using System.Text.Json;
@@ -180,15 +180,15 @@ internal sealed record ReleaseProgress
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Entities\ReleaseProgress.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Entities\ReleaseProgress.cs
 # Expected: True
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ReleaseProgressEntityTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ReleaseProgressEntityTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -196,9 +196,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Entities/ReleaseProgress.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressEntityTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgress entity"
+git -C /home/lance/Scripts add csharp/src/Data/Entities/ReleaseProgress.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressEntityTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-08): add ReleaseProgress entity"
 ```
 
 ---
@@ -206,23 +206,23 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgress en
 ## Task 2: Create ReleaseProgressConfiguration and Add DbSet
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ReleaseProgressConfiguration.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Configuration\ReleaseProgressConfiguration.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ReleaseProgressConfiguration.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Configuration\ReleaseProgressConfiguration.cs
 # Expected: False
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'ReleaseProgress'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'ReleaseProgress'
 # Expected: 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs`
 
 ```csharp
 using TUnit;
@@ -284,14 +284,14 @@ public sealed class ReleaseProgressConfigurationTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressConfigurationTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "ReleaseProgressConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ReleaseProgressConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — entity type not found (no DbSet, no configuration).
@@ -302,7 +302,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ReleaseProgressConfiguration.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Configuration\ReleaseProgressConfiguration.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -373,18 +373,18 @@ internal sealed class ScriptsDbContext : DbContext
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'ReleaseProgress'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'ReleaseProgress'
 # Expected: 1 match
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Configuration\ReleaseProgressConfiguration.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Configuration\ReleaseProgressConfiguration.cs
 # Expected: True
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ReleaseProgressConfigurationTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ReleaseProgressConfigurationTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -392,10 +392,10 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Configuration/ReleaseProgressConfiguration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/ScriptsDbContext.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressConfigurationTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgressConfiguration and DbSet"
+git -C /home/lance/Scripts add csharp/src/Data/Configuration/ReleaseProgressConfiguration.cs
+git -C /home/lance/Scripts add csharp/src/Data/ScriptsDbContext.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressConfigurationTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-08): add ReleaseProgressConfiguration and DbSet"
 ```
 
 ---
@@ -413,7 +413,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgressCon
 # What: Run dotnet ef migrations add AddReleaseProgress
 # Expected: Migration file created
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations
+Test-Path /home/lance/Scripts/csharp/src\Data\Migrations
 # Expected: True (from InitialCreate)
 ```
 
@@ -421,7 +421,7 @@ Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations
 
 ```powershell
 dotnet ef migrations add AddReleaseProgress `
-    --project C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj `
+    --project /home/lance/Scripts/csharp/CSharpScripts.csproj `
     --output-dir src\Data\Migrations `
     2>&1
 ```
@@ -437,7 +437,7 @@ Apply migration:
 
 ```powershell
 dotnet ef database update `
-    --project C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj `
+    --project /home/lance/Scripts/csharp/CSharpScripts.csproj `
     2>&1
 ```
 
@@ -458,8 +458,8 @@ Expected: Table schema with columns Id, ReleaseId, DiscNumber, TrackNumber, Titl
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Migrations/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgress migration"
+git -C /home/lance/Scripts add csharp/src/Data/Migrations/
+git -C /home/lance/Scripts commit -m "feat(t1-08): add ReleaseProgress migration"
 ```
 
 ---
@@ -467,8 +467,8 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgress mi
 ## Task 4: Create ReleaseProgressService (Replace CSV Cache)
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Persistence\ReleaseProgressService.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Persistence\ReleaseProgressService.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs`
 
 ### Step 0: Preflight
 
@@ -478,15 +478,15 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): add ReleaseProgress mi
 # What: Create ReleaseProgressService using IDbContextFactory
 # Expected: AppendTrack → INSERT, Load → SELECT ORDER BY, Delete → DELETE WHERE
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Persistence
+Test-Path /home/lance/Scripts/csharp/src\Data\Persistence
 # Expected: False
 
-New-Item -ItemType Directory -Force -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Persistence
+New-Item -ItemType Directory -Force -Path /home/lance/Scripts/csharp/src\Data\Persistence
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs`
 
 ```csharp
 using TUnit;
@@ -576,14 +576,14 @@ internal sealed class TestDbContextFactory(ScriptsDbContext context) : IDbContex
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\ReleaseProgress\ReleaseProgressServiceTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "ReleaseProgressServiceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ReleaseProgressServiceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `ReleaseProgressService` not found.
@@ -594,7 +594,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Persistence\ReleaseProgressService.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Persistence\ReleaseProgressService.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -693,8 +693,8 @@ internal sealed class ReleaseProgressService(IDbContextFactory<ScriptsDbContext>
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ReleaseProgressServiceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ReleaseProgressServiceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -702,9 +702,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Persistence/ReleaseProgressService.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressServiceTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): create ReleaseProgressService with EF Core backend"
+git -C /home/lance/Scripts add csharp/src/Data/Persistence/ReleaseProgressService.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/ReleaseProgress/ReleaseProgressServiceTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-08): create ReleaseProgressService with EF Core backend"
 ```
 
 ---
@@ -712,16 +712,16 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): create ReleaseProgress
 ## Task 5: Delete Old CSV-Based ReleaseProgressCache Files
 
 **Files:**
-- Delete: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs`
-- Delete: `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs`
+- Delete: `/home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs`
+- Delete: `/home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs
+Test-Path /home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs
 # Expected: True
 ```
 
@@ -731,28 +731,28 @@ Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCa
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 
 # Backup and delete Core version
-Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs.bak.$timestamp" -Force
-Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs -Force
+Copy-Item /home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs "/home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs.bak.$timestamp" -Force
+Remove-Item /home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs -Force
 
 # Backup and delete Infrastructure version
-Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs "C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs.bak.$timestamp" -Force
-Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs -Force
+Copy-Item /home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs "/home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs.bak.$timestamp" -Force
+Remove-Item /home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs -Force
 ```
 
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\ReleaseProgressCache.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Persistence\ReleaseProgressCache.cs
 # Expected: False
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\ReleaseProgressCache.cs
+Test-Path /home/lance/Scripts/csharp/src\Infrastructure\ReleaseProgressCache.cs
 # Expected: False
 ```
 
 ### Step 5: Run — confirm build clean
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: Build succeeds (no references to deleted files from compiled path — `CLI/` and `Orchestrators/` are excluded from compilation).
@@ -764,9 +764,9 @@ If build fails because `MusicSearchCommand.cs` references `ReleaseProgressCache`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Core/Persistence/ReleaseProgressCache.cs
-git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Infrastructure/ReleaseProgressCache.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): delete CSV-based ReleaseProgressCache duplicates"
+git -C /home/lance/Scripts rm csharp/src/Core/Persistence/ReleaseProgressCache.cs
+git -C /home/lance/Scripts rm csharp/src/Infrastructure/ReleaseProgressCache.cs
+git -C /home/lance/Scripts commit -m "feat(t1-08): delete CSV-based ReleaseProgressCache duplicates"
 ```
 
 ---
@@ -775,7 +775,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-08): delete CSV-based Relea
 
 ```powershell
 # Run all ReleaseProgress tests
-dotnet test --filter "Scripts.Tests.ReleaseProgress" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.ReleaseProgress" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -787,3 +787,53 @@ Passed ReleaseProgressServiceTests (3 tests)
 ```
 
 **→ Proceed to `09-sync-service-updates.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/STATE-MANAGEMENT-consolidated.md (ReleaseProgressCache section) -->
+
+Source: `AI/plans/research/STATE-MANAGEMENT-consolidated.md` (Sections 5, 6) — consolidated 2026-06-01; dir deleted
+
+Content already covered: dual caching system (CSV per-track + JSON batch) in Architecture; ReleaseProgress entity (Task 1) with all 14 columns; ReleaseProgressConfiguration with composite unique index (Task 2); ReleaseProgressService replacing CSV cache (Task 3); DbContext DbSet (Task 4); Infrastructure duplicate deletion (Task 5); MusicSearchCommand update (Task 6).
+
+### ReleaseProgress Entity Spec (research §5.2)
+
+The recommended entity shape:
+
+```csharp
+internal sealed record ReleaseProgress
+{
+    public long Id { get; set; }
+    public string ReleaseId { get; set; } = null!;
+    public int DiscNumber { get; set; }
+    public int TrackNumber { get; set; }
+    public string Title { get; set; } = null!;
+    public string? Duration { get; set; }
+    public int? RecordingYear { get; set; }
+    public string? Composer { get; set; }
+    public string? WorkName { get; set; }
+    public string? Conductor { get; set; }
+    public string? Orchestra { get; set; }
+    public string? Soloists { get; set; }
+    public string? Artist { get; set; }
+    public string? RecordingVenue { get; set; }
+    public string? RecordingId { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+```
+
+**Trade-off noted in research:** 14 columns duplicates `TrackInfo` schema; migration complexity. Pros: incremental append, crash-resilient, queryable per-track.
+
+### Configuration (research §5.3)
+
+```csharp
+b.ToTable("release_progress");
+b.HasKey(e => e.Id);
+b.Property(e => e.Id).ValueGeneratedOnAdd();
+b.HasIndex(e => new { e.ReleaseId, e.DiscNumber, e.TrackNumber }).IsUnique();
+b.Property(e => e.ReleaseId).HasColumnType("text");
+b.Property(e => e.Soloists).HasColumnType("jsonb");
+b.Property(e => e.CreatedAt).HasColumnType("timestamptz").HasDefaultValueSql("CURRENT_TIMESTAMP");
+```

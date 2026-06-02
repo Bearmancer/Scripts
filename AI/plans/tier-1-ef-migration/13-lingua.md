@@ -14,14 +14,14 @@
 
 - T1-12 completed (logging relocated, ServiceType cleaned)
 - `Scripts.Tests` project exists
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs` exists (currently excluded from build)
+- `/home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs` exists (currently excluded from build)
 - No callers of `LanguageIdentifier` exist in the codebase (zero-risk migration)
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs
+Test-Path /home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs
 # Expected: True
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj | Select-String "LanguageIdentifier.cs"
+Get-Content /home/lance/Scripts/csharp/CSharpScripts.csproj | Select-String "LanguageIdentifier.cs"
 # Expected: <Compile Remove="src\Services\Language\LanguageIdentifier.cs" />
 ```
 
@@ -30,7 +30,7 @@ Get-Content C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj | Select-Stri
 ## Task 1 — Add SearchPioneer.Lingua 1.0.5 NuGet Package
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`
+- Modify: `/home/lance/Scripts/csharp/CSharpScripts.csproj`
 
 ### Step 0: Preflight
 
@@ -41,14 +41,14 @@ Get-Content C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj | Select-Stri
 # What: Add <PackageReference Include="SearchPioneer.Lingua" Version="1.0.5" /> to csproj.
 # Expected: NuGet referenced, dotnet restore succeeds.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj | Select-String "Lingua"
+Get-Content /home/lance/Scripts/csharp/CSharpScripts.csproj | Select-String "Lingua"
 # Expected: (no output)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs
 using System.Xml.Linq;
 using FluentAssertions;
 using TUnit;
@@ -58,7 +58,7 @@ namespace Scripts.Tests.Language;
 public sealed class LinguaPackageReferenceTests
 {
     private static readonly string CsprojPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj";
+        @"/home/lance/Scripts/csharp/CSharpScripts.csproj";
 
     [Test]
     public async Task Csproj_References_SearchPioneer_Lingua()
@@ -102,17 +102,17 @@ public sealed class LinguaPackageReferenceTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs'
 Test-Path $file
 # Expected: True
 
-New-Item -ItemType Directory -Force -Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language' -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Language' -ErrorAction SilentlyContinue
 ```
 
 ### Step 3: Run test (expect RED — Lingua not yet referenced)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LinguaPackageReferenceTests" 2>&1
 ```
 
@@ -124,7 +124,7 @@ Add one `PackageReference` line. No other csproj changes needed at this stage.
 
 ### Step 5: Implement
 
-Add after line 50 (`<PackageReference Include="Polly.RateLimiting" Version="*" />`) in `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`:
+Add after line 50 (`<PackageReference Include="Polly.RateLimiting" Version="*" />`) in `/home/lance/Scripts/csharp/CSharpScripts.csproj`:
 
 ```xml
 		<PackageReference Include="SearchPioneer.Lingua" Version="1.0.5" />
@@ -133,7 +133,7 @@ Add after line 50 (`<PackageReference Include="Polly.RateLimiting" Version="*" /
 Run restore:
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet restore /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Restore completed successfully.
@@ -141,7 +141,7 @@ Expected: Restore completed successfully.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LinguaPackageReferenceTests" 2>&1
 ```
 
@@ -150,8 +150,8 @@ Expected: GREEN — both tests pass.
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs
+git add /home/lance/Scripts/csharp/CSharpScripts.csproj
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LinguaPackageReferenceTests.cs
 git commit -m "feat(t1-13): add searchpioneer lingua 1.0.5 nuget package"
 ```
 
@@ -160,8 +160,8 @@ git commit -m "feat(t1-13): add searchpioneer lingua 1.0.5 nuget package"
 ## Task 2 — Rewrite LanguageIdentifier.cs with Lingua API
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LanguageIdentifierTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LanguageIdentifierTests.cs`
 
 ### Step 0: Preflight
 
@@ -172,17 +172,17 @@ git commit -m "feat(t1-13): add searchpioneer lingua 1.0.5 nuget package"
 # What: Rewrite using Lingua API, preserve public contract.
 # Expected: LanguageIdentifier.cs compiles with Lingua only, no NTextCat types.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs
+Get-Content /home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs
 # Expected: NTextCat types visible (RankedLanguageIdentifier, RankedLanguageIdentifierFactory, LanguageInfo)
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
+Test-Path /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
 # Expected: False
 ```
 
 ### Step 1: Write tests
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
 using FluentAssertions;
 using TUnit;
 using CSharpScripts.Services.Language;
@@ -297,7 +297,7 @@ public sealed class LanguageIdentifierTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LanguageIdentifierTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LanguageIdentifierTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -305,7 +305,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — LanguageIdentifier.cs is excluded from build, won't compile)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LanguageIdentifierTests" 2>&1
 ```
 
@@ -320,7 +320,7 @@ Three changes needed:
 
 ### Step 5: Implement
 
-**Rewrite `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs`:**
+**Rewrite `/home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs`:**
 
 OLD (full file):
 ```csharp
@@ -399,7 +399,7 @@ internal static class LanguageIdentifier
 }
 ```
 
-**Remove `<Compile Remove>` from `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`:**
+**Remove `<Compile Remove>` from `/home/lance/Scripts/csharp/CSharpScripts.csproj`:**
 
 Delete line 21:
 ```xml
@@ -411,7 +411,7 @@ Remove this line entirely.
 **Verify build:**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -419,7 +419,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "LanguageIdentifierTests" 2>&1
 ```
 
@@ -438,9 +438,9 @@ Expected: GREEN — all 10 tests pass:
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Services\Language\LanguageIdentifier.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
+git add /home/lance/Scripts/csharp/src\Services\Language\LanguageIdentifier.cs
+git add /home/lance/Scripts/csharp/CSharpScripts.csproj
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\LanguageIdentifierTests.cs
 git commit -m "feat(t1-13): rewrite languageidentifier with searchpioneer lingua api"
 ```
 
@@ -449,7 +449,7 @@ git commit -m "feat(t1-13): rewrite languageidentifier with searchpioneer lingua
 ## Task 3 — Verify No NTextCat Types Remain
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs`
 
 ### Step 0: Preflight
 
@@ -460,14 +460,14 @@ git commit -m "feat(t1-13): rewrite languageidentifier with searchpioneer lingua
 # What: Regex-scan all source files for NTextCat type names.
 # Expected: Zero matches.
 
-Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\*.cs -Recurse | Select-String "RankedLanguageIdentifier|LanguageInfo" -SimpleMatch
+Get-ChildItem /home/lance/Scripts/csharp/src\*.cs -Recurse | Select-String "RankedLanguageIdentifier|LanguageInfo" -SimpleMatch
 # Expected: (no output)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using TUnit;
@@ -477,7 +477,7 @@ namespace Scripts.Tests.Language;
 public sealed class NTextCatRemovalGuardTests
 {
     private static readonly string SourceRoot =
-        @"C:\Users\Lance\Dev\Scripts\csharp\src";
+        @"/home/lance/Scripts/csharp/src";
 
     private static readonly string[] NTextCatTypes =
     {
@@ -538,7 +538,7 @@ public sealed class NTextCatRemovalGuardTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -546,7 +546,7 @@ Test-Path $file
 ### Step 3: Run test (expect GREEN — NTextCat already removed)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "NTextCatRemovalGuardTests" 2>&1
 ```
 
@@ -555,7 +555,7 @@ Expected: GREEN — 2 tests pass. No NTextCat types or Core14.profile.xml refere
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Language\NTextCatRemovalGuardTests.cs
 git commit -m "feat(t1-13): add ntextcat removal guard tests"
 ```
 
@@ -576,3 +576,13 @@ git commit -m "feat(t1-13): add ntextcat removal guard tests"
 - [ ] `dotnet test` — LinguaPackageReferenceTests: 2/2 PASS
 - [ ] `dotnet test` — LanguageIdentifierTests: 10/10 PASS
 - [ ] `dotnet test` — NTextCatRemovalGuardTests: 2/2 PASS
+
+---
+
+## Research Provenance
+
+<!-- from research/ADVANCED-FEATURES-consolidated.md (Section 4: Lingua Language Detection) -->
+
+Source: `AI/plans/research/ADVANCED-FEATURES-consolidated.md` (Section 4) — consolidated 2026-06-01; dir deleted
+
+Content already covered: `SearchPioneer.Lingua` 1.0.5 package (Task 1), `LanguageDetectorBuilder.FromAllLanguages().WithPreloadedLanguageModels()` (Task 2), file-based profile removal (Tasks 2, 4), `<Compile Remove>` line removal (Task 3). 79 languages vs NTextCat's 15; zero external dependencies (model embedded in NuGet).

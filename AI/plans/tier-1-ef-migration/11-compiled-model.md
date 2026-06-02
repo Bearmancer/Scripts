@@ -4,18 +4,17 @@
 
 **Goal:** Generate and commit an EF Core compiled model for `ScriptsDbContext` using `dotnet ef dbcontext optimize`, reducing cold-start time by avoiding runtime model discovery.
 
-**Architecture:** Add `<EFOptimizeContext>true</EFOptimizeContext>` and `<EFScaffoldModelStage>build</EFScaffoldModelStage>` to `CSharpScripts.csproj` so the compiled model regenerates on every `dotnet build` when the EF model changes. Add `Microsoft.EntityFrameworkCore.Tasks` NuGet package. Run `dotnet ef dbcontext optimize` to generate `CompiledModels/` output. EF9+ auto-detects the compiled model — no `.UseModel()` call needed.
+**Architecture:** Add `<EFOptimizeContext>true</EFOptimizeContext>` and `<EFScaffoldModelStage>build</EFScaffoldModelStage>` to `CSharpScripts.csproj` so the compiled model regenerates on every `dotnet build` when the EF model changes. Add `Microsoft.EntityFrameworkCore.Tasks` NuGet package. Run `dotnet ef dbcontext optimize` to generate `CompiledModels/` output. OnConfiguring must call `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` to activate the compiled model.
 
 **Key Findings from Research:**
 - Compiled models bypass OnModelCreating reflection overhead — pre-generated source code loads entity metadata instantly at startup
-- EF Core 9+ auto-detects compiled model when DbContext and model types are in same assembly — no .UseModel() call needed
 - PendingModelChangesWarning (EF Core 9+): If OnModelCreating changes, migration snapshot must be updated and compiled model regenerated
 - Workflow: Modify OnModelCreating → `dotnet ef migrations add <Name>` → `dotnet ef database update` → `dotnet ef dbcontext optimize`
 - MSBuild properties: EFOptimizeContext=true enables optimization, EFScaffoldModelStage=build regenerates on every build
 - Microsoft.EntityFrameworkCore.Tasks package provides the build-time model generation task
 - Output directory: CompiledModels/ (configurable via --output-dir flag)
 - Namespace: CSharpScripts.Data.Compiled (configurable via --namespace flag)
-- No code changes needed in DbContext — EF auto-detects and uses compiled model
+- OnConfiguring must wire `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` — MSBuild generates the .cs file, the call in code activates it
 
 **Tech Stack:** C# 14 / .NET 10 / EF Core 10 / Npgsql 10 / PostgreSQL 18 / TUnit / FluentAssertions
 
@@ -34,7 +33,7 @@ docker ps 2>&1 | Select-String "healthy"
 # Expected: container listed
 
 if (-not $env:PGCONNSTR) {
-    Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+    Get-Content /home/lance/Scripts/.env | ForEach-Object {
         if ($_ -match '^([^#][^=]+)=(.+)$') {
             [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
         }
@@ -49,7 +48,7 @@ Write-Host "PGCONNSTR: $env:PGCONNSTR" -ForegroundColor Green
 ## Task 1 — Add MSBuild Properties and Tasks Package
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj`
+- Modify: `/home/lance/Scripts/csharp/CSharpScripts.csproj`
 
 ### Step 0: Preflight
 
@@ -60,7 +59,7 @@ Write-Host "PGCONNSTR: $env:PGCONNSTR" -ForegroundColor Green
 #       and <PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" Version="*" />.
 # Expected: csproj modified, dotnet restore succeeds.
 
-$csproj = 'C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj'
+$csproj = '/home/lance/Scripts/csharp/CSharpScripts.csproj'
 Test-Path $csproj
 # Expected: True
 
@@ -74,7 +73,7 @@ Get-Content $csproj | Select-String "Microsoft.EntityFrameworkCore.Tasks"
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs
 using System.Xml.Linq;
 using FluentAssertions;
 using TUnit;
@@ -84,7 +83,7 @@ namespace Scripts.Tests.CompiledModel;
 public sealed class CompiledModelGenerationTests
 {
     private static readonly string CsprojPath =
-        @"C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj";
+        @"/home/lance/Scripts/csharp/CSharpScripts.csproj";
 
     [Test]
     public async Task Csproj_Contains_EFOptimizeContext_Property()
@@ -149,7 +148,7 @@ public sealed class CompiledModelGenerationTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs'
 Test-Path $file
 # Expected: True
 
@@ -160,7 +159,7 @@ Get-Content $file | Select-String "EFOptimizeContext_Property"
 ### Step 3: Run test (expect RED — properties and package not yet added)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CompiledModelGenerationTests" 2>&1
 ```
 
@@ -175,7 +174,7 @@ Three MSBuild changes needed:
 
 ### Step 5: Implement
 
-Add to `C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj` in the `<PropertyGroup>` block (after line 8 `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`):
+Add to `/home/lance/Scripts/csharp/CSharpScripts.csproj` in the `<PropertyGroup>` block (after line 8 `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`):
 
 ```xml
 		<EFOptimizeContext>true</EFOptimizeContext>
@@ -224,7 +223,7 @@ NEW:
 **Edit 3** — Run restore:
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet restore /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Restore completed successfully.
@@ -232,7 +231,7 @@ Expected: Restore completed successfully.
 **Edit 4** — Verify build:
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj --no-restore 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj --no-restore 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -240,7 +239,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CompiledModelGenerationTests" 2>&1
 ```
 
@@ -249,8 +248,8 @@ Expected: GREEN — all 3 tests pass (EFOptimizeContext=true, EFScaffoldModelSta
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs
+git add /home/lance/Scripts/csharp/CSharpScripts.csproj
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelGenerationTests.cs
 git commit -m "feat(t1-11): add ef optimize context msbuild properties and tasks package"
 ```
 
@@ -259,8 +258,8 @@ git commit -m "feat(t1-11): add ef optimize context msbuild properties and tasks
 ## Task 2 — Run `dotnet ef dbcontext optimize` and Verify Output
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\CompiledModels\` (generated directory)
-- Verify: No `.UseModel()` call exists in codebase
+- Create: `/home/lance/Scripts/csharp/CompiledModels\` (generated directory)
+- Verify: `.UseModel()` IS called in `OnConfiguring` of ScriptsDbContext.cs
 
 ### Step 0: Preflight
 
@@ -270,7 +269,7 @@ git commit -m "feat(t1-11): add ef optimize context msbuild properties and tasks
 # What: Run dotnet ef dbcontext optimize, verify output exists.
 # Expected: CompiledModels/ directory created with ScriptsDbContextModel.cs and related files.
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\CompiledModels
+Test-Path /home/lance/Scripts/csharp/CompiledModels
 # Expected: False
 
 # Verify dotnet ef tool is available
@@ -281,7 +280,7 @@ dotnet ef --version 2>&1
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs
 using FluentAssertions;
 using TUnit;
 
@@ -290,7 +289,7 @@ namespace Scripts.Tests.CompiledModel;
 public sealed class CompiledModelFileTests
 {
     private static readonly string CompiledModelDir =
-        @"C:\Users\Lance\Dev\Scripts\csharp\CompiledModels";
+        @"/home/lance/Scripts/csharp/CompiledModels";
 
     [Test]
     public async Task CompiledModels_Directory_Exists()
@@ -329,21 +328,13 @@ public sealed class CompiledModelFileTests
     }
 
     [Test]
-    public async Task No_UseModel_Call_Exists_In_Source()
+    public async Task UseModel_Call_Exists_In_ScriptsDbContext()
     {
-        var srcRoot = @"C:\Users\Lance\Dev\Scripts\csharp\src";
-        var allFiles = Directory.GetFiles(srcRoot, "*.cs", SearchOption.AllDirectories);
+        var dbContextFile = @"/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs";
+        var content = await File.ReadAllTextAsync(dbContextFile);
 
-        var violations = new List<string>();
-        foreach (var file in allFiles)
-        {
-            var content = await File.ReadAllTextAsync(file);
-            if (content.Contains(".UseModel("))
-                violations.Add(file);
-        }
-
-        violations.Should().BeEmpty(
-            "because EF9+ auto-detects compiled model — .UseModel() is an anti-pattern"
+        content.Should().Contain(".UseModel(",
+            "because compiled model must be activated via .UseModel(MyCompiledModels.ScriptsDbContextModel.Instance) in OnConfiguring"
         );
     }
 
@@ -355,7 +346,7 @@ public sealed class CompiledModelFileTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = "build C:\\Users\\Lance\\Dev\\Scripts\\csharp\\CSharpScripts.csproj --no-restore",
+                Arguments = "build /home/lance/Scripts/csharp/CSharpScripts.csproj --no-restore",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -378,7 +369,7 @@ public sealed class CompiledModelFileTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -386,7 +377,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — no CompiledModels directory yet)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CompiledModelFileTests" 2>&1
 ```
 
@@ -409,27 +400,27 @@ if (-not $env:PGCONNSTR) {
 
 # Run the optimize command
 dotnet ef dbcontext optimize `
-    --project C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj `
+    --project /home/lance/Scripts/csharp/CSharpScripts.csproj `
     --output-dir CompiledModels `
     --namespace CSharpScripts.Data.Compiled 2>&1
 ```
 
-Expected: Command completes successfully, directory `C:\Users\Lance\Dev\Scripts\csharp\CompiledModels\` created with multiple `.cs` files.
+Expected: Command completes successfully, directory `/home/lance/Scripts/csharp/CompiledModels\` created with multiple `.cs` files.
 
 ```powershell
 # Verify generated files
-Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\CompiledModels\*.cs | Select-Object Name
+Get-ChildItem /home/lance/Scripts/csharp/CompiledModels\*.cs | Select-Object Name
 # Expected: ScriptsDbContextModel.cs, ScriptsDbContextModelBuilder.cs, plus entity type files
 
-# Verify .UseModel() is NOT called anywhere
-$result = Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\*.cs -Recurse | Select-String ".UseModel(" -SimpleMatch
-if ($result) { throw ".UseModel() found — this is an anti-pattern in EF9+" }
-Write-Host "No .UseModel() calls found — correct." -ForegroundColor Green
+# Verify .UseModel() IS called in ScriptsDbContext.cs
+$result = Select-String -Path "/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs" -Pattern ".UseModel(" -SimpleMatch
+if (-not $result) { throw ".UseModel() NOT found in ScriptsDbContext.cs OnConfiguring — compiled model is not activated" }
+Write-Host ".UseModel() call found in ScriptsDbContext.cs — correct." -ForegroundColor Green
 ```
 
 ```powershell
 # Verify build passes with compiled model
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors and 0 warnings.
@@ -437,7 +428,7 @@ Expected: Build succeeded with 0 errors and 0 warnings.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "CompiledModelFileTests" 2>&1
 ```
 
@@ -445,15 +436,158 @@ Expected: GREEN — all 5 tests pass:
 - `CompiledModels_Directory_Exists`: PASS
 - `CompiledModels_Contains_ScriptsDbContextModel`: PASS
 - `CompiledModels_Contains_ScriptsDbContextModelBuilder`: PASS
-- `No_UseModel_Call_Exists_In_Source`: PASS
+- `UseModel_Call_Exists_In_ScriptsDbContext`: PASS
 - `Build_Succeeds_After_CompiledModel_Generation`: PASS
 
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\CompiledModels\
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs
+git add /home/lance/Scripts/csharp/CompiledModels\
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel\CompiledModelFileTests.cs
 git commit -m "feat(t1-11): generate ef core compiled model for scripts dbcontext"
+```
+
+---
+
+## Task 3 — Wire `.UseModel()` in OnConfiguring
+
+**Files:**
+- Modify: `/home/lance/Scripts/csharp/src/Data/ScriptsDbContext.cs`
+
+### Step 0: Preflight
+
+```powershell
+# Current state: CompiledModels/ exists with ScriptsDbContextModel.cs, but the DbContext
+# does NOT call .UseModel() — compiled model is generated but inactive.
+# Reason: EFOptimizeContext MSBuild task only generates the .cs file; activation requires
+#         the DbContext to call .UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)
+#         in OnConfiguring.
+# What: Add the .UseModel() call alongside .UseNpgsql() in OnConfiguring.
+# Expected: ScriptsDbContext.cs contains both .UseNpgsql() and .UseModel() in OnConfiguring,
+#           build + tests pass.
+
+$dbContext = '/home/lance/Scripts/csharp/src/Data/ScriptsDbContext.cs'
+Test-Path $dbContext
+# Expected: True
+
+Get-Content $dbContext | Select-String ".UseModel("
+# Expected: (no output — .UseModel() not yet wired)
+```
+
+### Step 1: Write test
+
+```csharp
+// /home/lance/Scripts/csharp/tests/Scripts.Tests/CompiledModel/UseModelWiringTests.cs
+using FluentAssertions;
+using TUnit;
+
+namespace Scripts.Tests.CompiledModel;
+
+public sealed class UseModelWiringTests
+{
+    private static readonly string DbContextPath =
+        "/home/lance/Scripts/csharp/src/Data/ScriptsDbContext.cs";
+
+    [Test]
+    public async Task ScriptsDbContext_OnConfiguring_Calls_UseModel_With_CompiledModel_Instance()
+    {
+        var content = await File.ReadAllTextAsync(DbContextPath);
+
+        content.Should().Contain(".UseModel(",
+            "because compiled model must be activated via .UseModel(...) in OnConfiguring"
+        );
+
+        content.Should().Contain("MyCompiledModels.ScriptsDbContextModel.Instance",
+            "because the exact compiled model instance must be passed to .UseModel()"
+        );
+    }
+}
+```
+
+### Step 2: Readback
+
+```powershell
+$file = '/home/lance/Scripts/csharp/tests/Scripts.Tests/CompiledModel/UseModelWiringTests.cs'
+Test-Path $file
+# Expected: True
+
+Get-Content $file | Select-String "UseModelWiringTests"
+# Expected: UseModelWiringTests (class name match)
+```
+
+### Step 3: Run test (expect RED — .UseModel() not yet wired)
+
+```powershell
+dotnet test /home/lance/Scripts/Scripts.slnx `
+    --filter "UseModelWiringTests" 2>&1
+```
+
+Expected: RED — `ScriptsDbContext_OnConfiguring_Calls_UseModel_With_CompiledModel_Instance` fails because ScriptsDbContext.cs does not yet contain `.UseModel(`.
+
+### Step 4: Assess
+
+The `OnConfiguring` override in `ScriptsDbContext.cs` already calls `.UseNpgsql(connectionString)`. We must chain `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` on the same `DbContextOptionsBuilder` so the compiled model is loaded instead of the runtime-discovered model.
+
+### Step 5: Implement
+
+In `/home/lance/Scripts/csharp/src/Data/ScriptsDbContext.cs`, update the `OnConfiguring` override to chain `.UseModel(...)` after `.UseNpgsql(...)`:
+
+OLD (typical shape):
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{
+    optionsBuilder.UseNpgsql(connectionString);
+}
+```
+
+NEW:
+```csharp
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{
+    optionsBuilder
+        .UseNpgsql(connectionString)
+        .UseModel(MyCompiledModels.ScriptsDbContextModel.Instance);
+}
+```
+
+Add the using directive at the top of the file (if not already present):
+
+```csharp
+using MyCompiledModels;
+```
+
+Verify build:
+
+```powershell
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj --no-restore 2>&1
+```
+
+Expected: Build succeeded with 0 errors. The generated `ScriptsDbContextModel.Instance` is a public static singleton emitted by `EFOptimizeContext`, so no extra reference assembly is required.
+
+### Step 6: Run test (expect GREEN)
+
+```powershell
+dotnet test /home/lance/Scripts/Scripts.slnx `
+    --filter "UseModelWiringTests" 2>&1
+```
+
+Expected: GREEN — `ScriptsDbContext_OnConfiguring_Calls_UseModel_With_CompiledModel_Instance` PASS.
+
+Then re-run the full compiled-model suite to confirm nothing regressed:
+
+```powershell
+dotnet test /home/lance/Scripts/Scripts.slnx `
+    --filter "CompiledModelGenerationTests|CompiledModelFileTests|UseModelWiringTests" 2>&1
+```
+
+Expected: GREEN — 3 + 5 + 1 = 9 tests PASS.
+
+### Step 7: Commit
+
+```powershell
+git add /home/lance/Scripts/csharp/src/Data/ScriptsDbContext.cs
+git add /home/lance/Scripts/csharp/tests/Scripts.Tests/CompiledModel/UseModelWiringTests.cs
+git commit -m "feat(t1-11): wire .UseModel(CompiledModel.Instance) in ScriptsDbContext OnConfiguring"
 ```
 
 ---
@@ -466,7 +600,20 @@ git commit -m "feat(t1-11): generate ef core compiled model for scripts dbcontex
 - [ ] `csharp/CompiledModels/` directory exists with generated `.cs` files
 - [ ] `ScriptsDbContextModel.cs` exists in CompiledModels
 - [ ] `ScriptsDbContextModelBuilder.cs` exists in CompiledModels
-- [ ] No `.UseModel()` call exists anywhere in `csharp/src/`
+- [ ] `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` exists in `csharp/src/Data/ScriptsDbContext.cs OnConfiguring`
 - [ ] `dotnet build` passes with 0 errors and 0 warnings
 - [ ] `dotnet test` — CompiledModelGenerationTests: 3/3 PASS
 - [ ] `dotnet test` — CompiledModelFileTests: 5/5 PASS
+
+---
+
+## Research Provenance
+
+<!-- from research/ADVANCED-FEATURES-consolidated.md (Section 2: Compiled Models) and research/DBCONTEXT-CONFIGURATION-consolidated.md (§4.1 Compiled Model Lock). CORRECTION: prior research incorrectly claimed EF9+ auto-detects compiled model with no `.UseModel()` call. MS Learn 2026 confirms the `EFOptimizeContext` MSBuild task only GENERATES the compiled model `.cs` file; activation still requires `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` in the DbContext's `OnConfiguring`. -->
+
+Sources:
+- `AI/plans/research/ADVANCED-FEATURES-consolidated.md` (Section 2) — consolidated 2026-06-01; dir deleted
+- `AI/plans/research/DBCONTEXT-CONFIGURATION-consolidated.md` (Section 4.1) — consolidated 2026-06-01; dir deleted
+- https://learn.microsoft.com/en-us/ef/core/performance/advanced-performance-topics#compiled-models (MS Learn 2026 — confirms explicit `.UseModel()` wiring is required)
+
+Content already covered: MSBuild properties `EFOptimizeContext=true` + `EFScaffoldModelStage=build` (Task 1), `Microsoft.EntityFrameworkCore.Tasks` package (Task 1), `dotnet ef dbcontext optimize` command (Task 2), `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` wiring in `OnConfiguring` (Task 3 — correcting prior Key Findings claim). The Compiled Model Lock is also documented in `03-dbcontext-config.md` Research Provenance.

@@ -1,4 +1,3 @@
-#pragma warning disable CS8604
 namespace Scripts.Core;
 
 internal sealed class SpectreTypeRegistrar(IServiceProvider serviceProvider) : ITypeRegistrar

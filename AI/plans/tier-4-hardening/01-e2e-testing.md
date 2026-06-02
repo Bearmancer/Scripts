@@ -22,7 +22,7 @@ Get-Command docker -ErrorAction Stop
 # Verify Docker is running
 docker info 2>&1 | Select-String "Server Version" | Should -Not -BeNullOrEmpty
 
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 ```
 
 Expected: Docker is running; restore succeeds.
@@ -63,7 +63,7 @@ public class FixtureBootstrapTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\E2eTests\FixtureBootstrapTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\E2eTests\FixtureBootstrapTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -71,7 +71,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED or GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FixtureBootstrapTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -135,7 +135,7 @@ public sealed class DatabaseFixture : IAsyncDisposable
 - [ ] **Step 5: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Infrastructure\DatabaseFixture.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Infrastructure\DatabaseFixture.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -143,7 +143,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 6: Run fixture bootstrap test — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FixtureBootstrapTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -255,7 +255,7 @@ public class ScrobbleSyncE2eTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\E2eTests\ScrobbleSyncE2eTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\E2eTests\ScrobbleSyncE2eTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -263,7 +263,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ScrobbleSyncE2eTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -305,7 +305,7 @@ public async Task<Scrobble?> GetLatestAsync(CancellationToken ct = default)
 - [ ] **Step 5: Run — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "ScrobbleSyncE2eTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -411,7 +411,7 @@ public class YouTubePlaylistE2eTests
 - [ ] **Step 2: Read-back**
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\E2eTests\YouTubePlaylistE2eTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\E2eTests\YouTubePlaylistE2eTests.cs'
 Test-Path $file | Should -Be $true
 Write-Host "Read-back OK"
 ```
@@ -419,7 +419,7 @@ Write-Host "Read-back OK"
 - [ ] **Step 3: Run — confirm RED**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "YouTubePlaylistE2eTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -455,7 +455,7 @@ public async Task MarkDeletedAsync(string youtubeId, CancellationToken ct = defa
 - [ ] **Step 5: Run — confirm GREEN**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "YouTubePlaylistE2eTests" `
     --logger "console;verbosity=detailed" 2>&1
 ```
@@ -465,7 +465,7 @@ Expected: all 3 tests PASS.
 - [ ] **Step 6: Full test suite — no regressions**
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --logger "console;verbosity=normal" 2>&1
 ```
 
@@ -474,12 +474,12 @@ Expected: all tests PASS (no regressions).
 - [ ] **Step 7: Commit**
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add `
+git -C /home/lance/Scripts add `
     csharp/tests/Scripts.Tests/E2eTests/ `
     csharp/tests/Scripts.Tests/Infrastructure/DatabaseFixture.cs `
     csharp/src/Data/Repositories/ScrobbleRepository.cs `
     csharp/src/Data/Repositories/VideoRepository.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t4-01): add E2E Testcontainers tests for scrobble sync and YouTube playlist"
+git -C /home/lance/Scripts commit -m "feat(t4-01): add E2E Testcontainers tests for scrobble sync and YouTube playlist"
 ```
 
 ---

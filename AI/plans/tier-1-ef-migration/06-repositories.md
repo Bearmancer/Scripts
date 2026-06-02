@@ -50,9 +50,9 @@
 ## Task 1: ScrobbleRepository
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IScrobbleRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ScrobbleRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\IScrobbleRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\ScrobbleRepository.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs`
 
 ### Step 0: Preflight
 
@@ -62,15 +62,15 @@
 # What: Create IScrobbleRepository + ScrobbleRepository, test CRUD against real PostgreSQL
 # Expected: Repository compiles, tests pass with real DB
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories
 # Expected: False
 
-New-Item -ItemType Directory -Force -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories
+New-Item -ItemType Directory -Force -Path /home/lance/Scripts/csharp/src\Data\Repositories
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs`
 
 ```csharp
 using TUnit;
@@ -143,15 +143,15 @@ internal sealed class TestDbContextFactory(ScriptsDbContext context) : IDbContex
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ScrobbleRepositoryTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ScrobbleRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ScrobbleRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL with `Error CS0246: The type or namespace name 'ScrobbleRepository' could not be found` or `Error CS0246: The type or namespace name 'IScrobbleRepository' could not be found`.
@@ -162,7 +162,7 @@ Interface and implementation do not exist. Proceed to create both.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IScrobbleRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\IScrobbleRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -180,7 +180,7 @@ internal interface IScrobbleRepository
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ScrobbleRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\ScrobbleRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -267,17 +267,17 @@ internal sealed class ScrobbleRepository(IDbContextFactory<ScriptsDbContext> con
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IScrobbleRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\IScrobbleRepository.cs
 # Expected: True
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ScrobbleRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\ScrobbleRepository.cs
 # Expected: True
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ScrobbleRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ScrobbleRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -285,10 +285,10 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/IScrobbleRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/ScrobbleRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Repositories/ScrobbleRepositoryTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add IScrobbleRepository + ScrobbleRepository"
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/IScrobbleRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/ScrobbleRepository.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Repositories/ScrobbleRepositoryTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-06): add IScrobbleRepository + ScrobbleRepository"
 ```
 
 ---
@@ -296,20 +296,20 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add IScrobbleRepositor
 ## Task 2: VideoRepository
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IVideoRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\VideoRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\IVideoRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\VideoRepository.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IVideoRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\IVideoRepository.cs
 # Expected: False
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs`
 
 ```csharp
 using TUnit;
@@ -395,14 +395,14 @@ public sealed class VideoRepositoryTests : IDisposable
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\VideoRepositoryTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "VideoRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "VideoRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `VideoRepository` or `IVideoRepository` not found.
@@ -413,7 +413,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IVideoRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\IVideoRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -431,7 +431,7 @@ internal interface IVideoRepository
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\VideoRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\VideoRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -495,8 +495,8 @@ internal sealed class VideoRepository(IDbContextFactory<ScriptsDbContext> contex
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "VideoRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "VideoRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -504,10 +504,10 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/IVideoRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/VideoRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Repositories/VideoRepositoryTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add IVideoRepository + VideoRepository"
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/IVideoRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/VideoRepository.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Repositories/VideoRepositoryTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-06): add IVideoRepository + VideoRepository"
 ```
 
 ---
@@ -515,20 +515,20 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add IVideoRepository +
 ## Task 3: TrackRepository
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ITrackRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\TrackRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\ITrackRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\TrackRepository.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ITrackRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\ITrackRepository.cs
 # Expected: False
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs`
 
 ```csharp
 using TUnit;
@@ -602,14 +602,14 @@ public sealed class TrackRepositoryTests : IDisposable
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\TrackRepositoryTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "TrackRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "TrackRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `TrackRepository` or `ITrackRepository` not found.
@@ -620,7 +620,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementation
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ITrackRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\ITrackRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -636,7 +636,7 @@ internal interface ITrackRepository
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\TrackRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\TrackRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -682,8 +682,8 @@ internal sealed class TrackRepository(IDbContextFactory<ScriptsDbContext> contex
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "TrackRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "TrackRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -691,10 +691,10 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/ITrackRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/TrackRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Repositories/TrackRepositoryTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add ITrackRepository + TrackRepository"
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/ITrackRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/TrackRepository.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Repositories/TrackRepositoryTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-06): add ITrackRepository + TrackRepository"
 ```
 
 ---
@@ -702,27 +702,27 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add ITrackRepository +
 ## Task 4: ArtistRepository + AlbumRepository
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IArtistRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ArtistRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IAlbumRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\AlbumRepository.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\RepositoryRegistration.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\IArtistRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\ArtistRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\IAlbumRepository.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\AlbumRepository.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\Repositories\RepositoryRegistration.cs`
 
 ### Step 0: Preflight
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IArtistRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\IArtistRepository.cs
 # Expected: False
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IAlbumRepository.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\Repositories\IAlbumRepository.cs
 # Expected: False
 ```
 
 ### Step 1: Write both failing tests
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs`
 
 ```csharp
 using TUnit;
@@ -773,7 +773,7 @@ public sealed class ArtistRepositoryTests : IDisposable
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs`
 
 ```csharp
 using TUnit;
@@ -839,16 +839,16 @@ public sealed class AlbumRepositoryTests : IDisposable
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\ArtistRepositoryTests.cs'
 # Expected: True
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Repositories\AlbumRepositoryTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet test --filter "ArtistRepositoryTests|AlbumRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "ArtistRepositoryTests|AlbumRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — interfaces and implementations not found.
@@ -859,7 +859,7 @@ Confirmed. Proceed.
 
 ### Step 4: Write minimal implementations
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IArtistRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\IArtistRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -876,7 +876,7 @@ internal interface IArtistRepository
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\ArtistRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\ArtistRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -921,7 +921,7 @@ internal sealed class ArtistRepository(IDbContextFactory<ScriptsDbContext> conte
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\IAlbumRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\IAlbumRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -937,7 +937,7 @@ internal interface IAlbumRepository
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\AlbumRepository.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\AlbumRepository.cs`
 
 ```csharp
 using CSharpScripts.Data.Entities;
@@ -980,7 +980,7 @@ internal sealed class AlbumRepository(IDbContextFactory<ScriptsDbContext> contex
 }
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\Repositories\RepositoryRegistration.cs`
+File: `/home/lance/Scripts/csharp/src\Data\Repositories\RepositoryRegistration.cs`
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -1004,8 +1004,8 @@ internal static class RepositoryRegistration
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "ArtistRepositoryTests|AlbumRepositoryTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "ArtistRepositoryTests|AlbumRepositoryTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `4 passed, 0 failed`
@@ -1013,14 +1013,14 @@ Expected: `4 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/IArtistRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/ArtistRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/IAlbumRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/AlbumRepository.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Repositories/RepositoryRegistration.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Repositories/ArtistRepositoryTests.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Repositories/AlbumRepositoryTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add Artist/Album repositories + DI registration"
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/IArtistRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/ArtistRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/IAlbumRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/AlbumRepository.cs
+git -C /home/lance/Scripts add csharp/src/Data/Repositories/RepositoryRegistration.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Repositories/ArtistRepositoryTests.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Repositories/AlbumRepositoryTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-06): add Artist/Album repositories + DI registration"
 ```
 
 ---
@@ -1029,7 +1029,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-06): add Artist/Album repos
 
 ```powershell
 # Run all repository tests
-dotnet test --filter "Scripts.Tests.Repositories" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.Repositories" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -1043,3 +1043,33 @@ Passed AlbumRepositoryTests (2 tests)
 ```
 
 **→ Proceed to `07-state-manager.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/DATA-ACCESS-REPOSITORIES-consolidated.md -->
+
+Source: `AI/plans/research/DATA-ACCESS-REPOSITORIES-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+Content already covered: 7 repository pairs, `IDbContextFactory<ScriptsDbContext>` constructor, `ExecuteUpdateAsync`/`ExecuteDeleteAsync` preference, DI registration. LastFmService duplicate deletion is in `09-sync-service-updates.md`.
+
+### PostgresService Mutation Patterns (research §1.2)
+
+| Operation            | Pattern              | File                    | Status                                         |
+| -------------------- | -------------------- | ----------------------- | ---------------------------------------------- |
+| `ExecuteUpdateAsync` | Single-entity upsert | `PostgresService.cs:20` | ✅ Correct                                      |
+| `SaveChangesAsync`   | Bulk insert          | `PostgresService.cs:39` | ⚠️ Keep — bulk `AddRange` is correct pattern  |
+| `ExecuteDeleteAsync` | Bulk delete          | —                       | ❌ Never used (introduced via repos in this plan) |
+
+### ILike / EF.Functions.Like Future Use (research §3.1)
+
+`EF.Functions.ILike` / `EF.Functions.Like` not referenced anywhere in codebase. Greenfield capability — for future lookups:
+
+| Entity   | String Field | Query Pattern                             | Current DB Index                      |
+| -------- | ------------ | ----------------------------------------- | ------------------------------------- |
+| `Artist` | `Name`       | Lookup by name before insert              | `idx_artists_name` (unique)           |
+| `Track`  | `Title`      | Lookup by title + artist_id before insert | `idx_tracks_title`                    |
+| `Album`  | `Title`      | Lookup by title + artist_id before insert | `idx_albums_title` (unique composite) |
+
+Adding `ILike` is scoped to `09-sync-service-updates.md` Task 3.

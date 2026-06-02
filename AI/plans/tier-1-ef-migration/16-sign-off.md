@@ -13,11 +13,11 @@
 ## Prerequisites
 
 - T1-15 completed (Testcontainers green, all entity integration tests pass)
-- All 16 T1 plan files (00–15) exist at `C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration\`
+- All 16 T1 plan files (00–15) exist at `/home/lance/Scripts/AI\plans\tier-1-ef-migration\`
 - Git history contains commits prefixed `feat(t1-XX):` for all 16 phases
 
 ```powershell
-$planDir = 'C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration'
+$planDir = '/home/lance/Scripts/AI\plans\tier-1-ef-migration'
 $planCount = (Get-ChildItem $planDir -Filter '*.md').Count
 Write-Host "Plan files: $planCount of 16" -ForegroundColor $(if ($planCount -eq 16) { 'Green' } else { 'Red' })
 ```
@@ -39,7 +39,7 @@ Write-Host "Running dotnet build..."
 
 ### Step 1: Write test
 
-Create `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\BuildVerificationTests.cs`:
+Create `/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\BuildVerificationTests.cs`:
 
 ```csharp
 using System.Text.RegularExpressions;
@@ -138,8 +138,8 @@ public sealed class BuildVerificationTests
 ### Step 2: Readback
 
 ```powershell
-New-Item -ItemType Directory -Force -Path C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\BuildVerificationTests.cs'
+New-Item -ItemType Directory -Force -Path /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\BuildVerificationTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -147,7 +147,7 @@ Test-Path $file
 ### Step 3: Run test (expect GREEN — build must be clean before proceeding)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --filter "BuildVerificationTests" 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --filter "BuildVerificationTests" 2>&1
 ```
 
 Expected: GREEN — all 3 tests pass. Build is clean with 0 errors.
@@ -157,7 +157,7 @@ If RED: Fix build errors before continuing. This is a hard gate.
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\BuildVerificationTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\BuildVerificationTests.cs
 git commit -m "feat(t1-16): add build verification tests for tier 1 sign-off"
 ```
 
@@ -168,13 +168,13 @@ git commit -m "feat(t1-16): add build verification tests for tier 1 sign-off"
 ### Step 0: Preflight
 
 ```powershell
-$planDir = 'C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration'
+$planDir = '/home/lance/Scripts/AI\plans\tier-1-ef-migration'
 Get-ChildItem $planDir -Filter '*.md' | Select-Object Name | Sort-Object Name
 ```
 
 ### Step 1: Write test
 
-Create `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\PlanInventoryTests.cs`:
+Create `/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\PlanInventoryTests.cs`:
 
 ```csharp
 using FluentAssertions;
@@ -185,7 +185,7 @@ namespace Scripts.Tests.SignOff;
 public sealed class PlanInventoryTests
 {
     private static readonly string PlanDir =
-        @"C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration";
+        @"/home/lance/Scripts/AI\plans\tier-1-ef-migration";
 
     private static readonly string[] RequiredPlans =
     {
@@ -245,7 +245,7 @@ public sealed class PlanInventoryTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\PlanInventoryTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\PlanInventoryTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -253,7 +253,7 @@ Test-Path $file
 ### Step 3: Run test (expect GREEN — all plan files are being written now)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --filter "PlanInventoryTests" 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --filter "PlanInventoryTests" 2>&1
 ```
 
 Expected: GREEN — `All_17_Plan_Files_Exist` and `Plan_Files_Are_Non_Empty` pass.
@@ -261,7 +261,7 @@ Expected: GREEN — `All_17_Plan_Files_Exist` and `Plan_Files_Are_Non_Empty` pas
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\PlanInventoryTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\PlanInventoryTests.cs
 git commit -m "feat(t1-16): add plan file inventory verification tests"
 ```
 
@@ -273,12 +273,12 @@ git commit -m "feat(t1-16): add plan file inventory verification tests"
 
 ```powershell
 # Run full test suite and capture results
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --logger "console;verbosity=detailed" 2>&1 | Tee-Object -FilePath C:\Windows\TEMP\kilo\t1-16-test-results.txt
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --logger "console;verbosity=detailed" 2>&1 | Tee-Object -FilePath C:\Windows\TEMP\kilo\t1-16-test-results.txt
 ```
 
 ### Step 1: Write test
 
-Create `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs`:
+Create `/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs`:
 
 ```csharp
 using System.Text.RegularExpressions;
@@ -349,15 +349,15 @@ public sealed class TestSuiteHealthTests
     {
         var testDirs = new[]
         {
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Environment",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Guards",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\CompiledModel",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Logging",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Language",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Infrastructure",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Integration",
-            @"C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Environment",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Guards",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\CompiledModel",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Logging",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Language",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Infrastructure",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\Integration",
+            @"/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff",
         };
 
         var missing = new List<string>();
@@ -377,7 +377,7 @@ public sealed class TestSuiteHealthTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -385,7 +385,7 @@ Test-Path $file
 ### Step 3: Run test (expect GREEN — all tests pass)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --filter "TestSuiteHealthTests" 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --filter "TestSuiteHealthTests" 2>&1
 ```
 
 Expected: GREEN. If any test fails, the corresponding phase's work is incomplete. Fix before proceeding.
@@ -393,7 +393,7 @@ Expected: GREEN. If any test fails, the corresponding phase's work is incomplete
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\TestSuiteHealthTests.cs
 git commit -m "feat(t1-16): add test suite health verification tests"
 ```
 
@@ -405,12 +405,12 @@ git commit -m "feat(t1-16): add test suite health verification tests"
 
 ```powershell
 docker ps 2>&1
-docker compose -f C:\Users\Lance\Dev\Scripts\docker-compose.yml config 2>&1
+docker compose -f /home/lance/Scripts/docker-compose.yml config 2>&1
 ```
 
 ### Step 1: Write test
 
-Create `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs`:
+Create `/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs`:
 
 ```csharp
 using FluentAssertions;
@@ -471,7 +471,7 @@ public sealed class EnvironmentVerificationTests
     [Test]
     public void Dot_Env_File_Exists()
     {
-        var envPath = @"C:\Users\Lance\Dev\Scripts\.env";
+        var envPath = @"/home/lance/Scripts/.env";
         File.Exists(envPath).Should().BeTrue(
             ".env file must exist with PGCONNSTR"
         );
@@ -480,7 +480,7 @@ public sealed class EnvironmentVerificationTests
     [Test]
     public void Dot_Env_Contains_PGCONNSTR()
     {
-        var envPath = @"C:\Users\Lance\Dev\Scripts\.env";
+        var envPath = @"/home/lance/Scripts/.env";
         var content = File.ReadAllText(envPath);
         content.Should().Contain("PGCONNSTR",
             ".env must define PGCONNSTR"
@@ -509,7 +509,7 @@ public sealed class EnvironmentVerificationTests
 
         process.ExitCode.Should().Be(0);
 
-        var compiledModelDir = @"C:\Users\Lance\Dev\Scripts\csharp\CompiledModels";
+        var compiledModelDir = @"/home/lance/Scripts/csharp/CompiledModels";
         Directory.Exists(compiledModelDir).Should().BeTrue();
         Directory.GetFiles(compiledModelDir, "*.cs").Should().NotBeEmpty();
     }
@@ -532,11 +532,11 @@ public sealed class EnvironmentVerificationTests
 ### Step 2: Readback + Run
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs'
 Test-Path $file
 # Expected: True
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --filter "EnvironmentVerificationTests" 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --filter "EnvironmentVerificationTests" 2>&1
 ```
 
 Expected: GREEN — Docker running, compose valid, .env exists, compiled model regenerates, log directory correct.
@@ -544,7 +544,7 @@ Expected: GREEN — Docker running, compose valid, .env exists, compiled model r
 ### Step 3: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\EnvironmentVerificationTests.cs
 git commit -m "feat(t1-16): add environment verification tests for sign-off"
 ```
 
@@ -556,7 +556,7 @@ git commit -m "feat(t1-16): add environment verification tests for sign-off"
 
 ```powershell
 # Verify all tests are green one final time
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 If ALL tests pass:
@@ -568,7 +568,7 @@ git tag -a t1-sign-off -m "Tier 1 EF Core Migration sign-off: 17 phases complete
 
 ### Step 1: Write test
 
-Create `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\GitTagTests.cs`:
+Create `/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\GitTagTests.cs`:
 
 ```csharp
 using FluentAssertions;
@@ -650,11 +650,11 @@ public sealed class GitTagTests
 ### Step 2: Readback + Run
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\GitTagTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\GitTagTests.cs'
 Test-Path $file
 # Expected: True
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --filter "GitTagTests" 2>&1
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx --filter "GitTagTests" 2>&1
 ```
 
 Expected: GREEN — `t1-sign-off` tag exists, commits cover all required phase prefixes.
@@ -662,8 +662,8 @@ Expected: GREEN — `t1-sign-off` tag exists, commits cover all required phase p
 ### Step 3: Final commit for sign-off tests
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\SignOff\
-git add C:\Users\Lance\Dev\Scripts\AI\plans\tier-1-ef-migration\16-sign-off.md
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\SignOff\
+git add /home/lance/Scripts/AI\plans\tier-1-ef-migration\16-sign-off.md
 git commit -m "feat(t1-16): add sign-off gate verification tests"
 ```
 
@@ -675,8 +675,8 @@ Execute in order. ALL must pass before tagging.
 
 | # | Check | Command | Expect |
 |---|-------|---------|--------|
-| 1 | Build clean | `dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx` | 0 errors |
-| 2 | All tests green | `dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx` | All pass |
+| 1 | Build clean | `dotnet build /home/lance/Scripts/csharp/Scripts.slnx` | 0 errors |
+| 2 | All tests green | `dotnet test /home/lance/Scripts/csharp/Scripts.slnx` | All pass |
 | 3 | 17 plan files | `Get-ChildItem AI/plans/tier-1-ef-migration/*.md | Measure-Object` | Count=17 |
 | 4 | Docker running | `docker ps` | Exit 0 |
 | 5 | Compiled model | `Test-Path csharp/CompiledModels/ScriptsDbContextModel.cs` | True |

@@ -38,7 +38,7 @@ internal sealed class EnvironmentVerificationTests
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "docker",
-                Arguments = "compose -f C:\\Users\\Lance\\Dev\\Scripts\\docker-compose.yml config",
+                Arguments = $"compose -f {TestPaths.Combine("docker-compose.yml")} config",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -76,7 +76,7 @@ internal sealed class EnvironmentVerificationTests
     [Test]
     public void Compiled_Model_Directory_Exists()
     {
-        var compiledModelDir = @"C:\Users\Lance\Dev\Scripts\csharp\CompiledModels";
+        var compiledModelDir = Path.Combine(TestPaths.CSharpRoot, "CompiledModels");
         Directory.Exists(compiledModelDir).Should().BeTrue(
             "CompiledModels directory must exist after EF Core compiled model generation"
         );

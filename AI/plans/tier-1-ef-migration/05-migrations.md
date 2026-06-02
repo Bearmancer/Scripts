@@ -47,8 +47,8 @@
 ## Task 1: Register PostgreSQL Extensions in OnModelCreating
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs`
 
 ### Step 0: Preflight
 
@@ -58,13 +58,13 @@
 # What: Add mb.HasPostgresExtension("unaccent") and mb.HasPostgresExtension("pg_trgm")
 # Expected: OnModelCreating includes both extension registrations before ApplyConfigurationsFromAssembly
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'HasPostgresExtension'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'HasPostgresExtension'
 # Expected: 0 matches
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs`
 
 ```csharp
 using TUnit;
@@ -127,15 +127,15 @@ public sealed class MigrationGenerateTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Migrations\MigrationGenerateTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm baseline
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "MigrationGenerateTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "MigrationGenerateTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed` (tests validate model discovery, not extension registration — the real verification is in Task 2)
@@ -146,7 +146,7 @@ Current state: extensions not registered. Tests pass because they only verify th
 
 ### Step 4: Write minimal implementation
 
-Update `OnModelCreating` in `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs`:
+Update `OnModelCreating` in `/home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs`:
 
 ```csharp
 #pragma warning disable CS0168, IDE0059, IDE0060, CA2000, CS8604
@@ -183,15 +183,15 @@ internal sealed class ScriptsDbContext : DbContext
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContext.cs -Pattern 'HasPostgresExtension'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\ScriptsDbContext.cs -Pattern 'HasPostgresExtension'
 # Expected: 2 matches (unaccent, pg_trgm)
 ```
 
 ### Step 5: Run — confirm build clean
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "MigrationGenerateTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "MigrationGenerateTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `3 passed, 0 failed`
@@ -199,9 +199,9 @@ Expected: `3 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/ScriptsDbContext.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Migrations/MigrationGenerateTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-05): register unaccent and pg_trgm extensions in OnModelCreating"
+git -C /home/lance/Scripts add csharp/src/Data/ScriptsDbContext.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Migrations/MigrationGenerateTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-05): register unaccent and pg_trgm extensions in OnModelCreating"
 ```
 
 ---
@@ -221,11 +221,11 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-05): register unaccent and 
 # What: Run dotnet ef migrations add InitialCreate
 # Expected: Migration files created in Migrations/ directory
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations
+Test-Path /home/lance/Scripts/csharp/src\Data\Migrations
 # Expected: False (no directory yet)
 
 # Load .env for EF CLI
-Get-Content C:\Users\Lance\Dev\Scripts\.env | ForEach-Object {
+Get-Content /home/lance/Scripts/.env | ForEach-Object {
     if ($_ -match '^([^#][^=]+)=(.+)$') {
         [System.Environment]::SetEnvironmentVariable($Matches[1], $Matches[2])
     }
@@ -242,7 +242,7 @@ Since this is a code-generation step (not test-driven in the traditional sense),
 # The project is currently monolithic CSharpScripts.csproj.
 # Migrations folder goes under src/Data but the .csproj is at csharp/ level.
 dotnet ef migrations add InitialCreate `
-    --project C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj `
+    --project /home/lance/Scripts/csharp/CSharpScripts.csproj `
     --output-dir src\Data\Migrations `
     2>&1
 ```
@@ -257,7 +257,7 @@ Done. To undo this action, use 'ef migrations remove'
 Verify migration files created:
 
 ```powershell
-$migrationsDir = 'C:\Users\Lance\Dev\Scripts\csharp\src\Data\Migrations'
+$migrationsDir = '/home/lance/Scripts/csharp/src\Data\Migrations'
 Test-Path $migrationsDir
 # Expected: True
 
@@ -309,8 +309,8 @@ Select-String -Path $migrationFile.FullName -Pattern 'f_unaccent|gin_trgm'
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/Migrations/
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-05): generate InitialCreate migration with unaccent, pg_trgm, and functional indexes"
+git -C /home/lance/Scripts add csharp/src/Data/Migrations/
+git -C /home/lance/Scripts commit -m "feat(t1-05): generate InitialCreate migration with unaccent, pg_trgm, and functional indexes"
 ```
 
 ---
@@ -341,7 +341,7 @@ $env:PGCONNSTR -match 'Host='
 
 ```powershell
 dotnet ef database update `
-    --project C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj `
+    --project /home/lance/Scripts/csharp/CSharpScripts.csproj `
     2>&1
 ```
 
@@ -387,7 +387,7 @@ Expected output:
 
 Create a real-PostgreSQL verification test:
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Migrations\MigrationApplyTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Migrations\MigrationApplyTests.cs`
 
 ```csharp
 using TUnit;
@@ -435,7 +435,7 @@ public sealed class MigrationApplyTests
 Run:
 
 ```powershell
-dotnet test --filter "MigrationApplyTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "MigrationApplyTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -443,8 +443,8 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/Migrations/MigrationApplyTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-05): apply InitialCreate migration and add schema verification tests"
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/Migrations/MigrationApplyTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-05): apply InitialCreate migration and add schema verification tests"
 ```
 
 ---
@@ -453,7 +453,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-05): apply InitialCreate mi
 
 ```powershell
 # Confirm all migration tests pass
-dotnet test --filter "Scripts.Tests.Migrations" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.Migrations" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -464,3 +464,36 @@ Passed MigrationApplyTests (2 tests)
 ```
 
 **→ Proceed to `06-repositories.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/MIGRATIONS-EXTENSIONS-consolidated.md and research/DBCONTEXT-CONFIGURATION-consolidated.md (extension registration) -->
+
+Sources:
+- `AI/plans/research/MIGRATIONS-EXTENSIONS-consolidated.md` (all sections) — consolidated 2026-06-01; dir deleted
+- `AI/plans/research/DBCONTEXT-CONFIGURATION-consolidated.md` (extension registration §1.3, §1.4) — consolidated 2026-06-01; dir deleted
+
+Content already covered: no migrations exist (Task 2 Step 0), extensions registered in OnModelCreating (Task 1), functional indexes (Task 2 Step 4), `dotnet ef` command with monolithic project (Task 2 Step 3), NuGet versions (already in `00-environment.md`).
+
+### Blockers & Prerequisites (research §5)
+
+| #   | Item                                                                          | Status                                                  |
+| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 1   | `05-migrations.md` plan file                                                  | ✅ This file                                              |
+| 2   | Phases 02-04 completed (entity refactoring, dbcontext config, entity configs) | ⚠️ Depends on prior phases                                |
+| 3   | `$env:PGCONNSTR` loaded and DB running                                        | ⚠️ Verify at runtime                                     |
+| 4   | `dotnet ef` CLI tool available                                                | ✅ Via `Microsoft.EntityFrameworkCore.Tools`             |
+| 5   | Solution file (`.slnx`)                                                       | ❌ Does not exist — built via `.csproj` directly (deferred to T2) |
+| 6   | Modular project structure (Data/CLI separation)                               | ❌ Project is monolithic `CSharpScripts.csproj` (deferred to T2) |
+
+### NuGet Versions (research §3)
+
+| Package                                 | Version |
+| --------------------------------------- | ------- |
+| `Microsoft.EntityFrameworkCore`         | 10.0.8  |
+| `Microsoft.EntityFrameworkCore.Design`  | 10.0.8  |
+| `Microsoft.EntityFrameworkCore.Tools`   | 10.0.8  |
+| `Npgsql`                                | 10.0.2  |
+| `Npgsql.EntityFrameworkCore.PostgreSQL` | 10.0.1  |

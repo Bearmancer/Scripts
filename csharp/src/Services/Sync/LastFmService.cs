@@ -1,6 +1,5 @@
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
-using Scrobble = Scripts.Models.Scrobble;
 
 namespace Scripts.Services.Sync.LastFm;
 
@@ -18,8 +17,8 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 	)
 	{
 		Log.Debug(messageTemplate: "FetchScrobblesSinceAsync entry {FetchAfter}", fetchAfter);
-		List<Scrobble> existingScrobbles = await LoadScrobblesAsync();
-		List<Scrobble> newScrobbles = [];
+		List<LastFmScrobble> existingScrobbles = await LoadScrobblesAsync();
+		List<LastFmScrobble> newScrobbles = [];
 
 		var isIncremental = fetchAfter is { };
 		var page = DetermineStartPage(fetchAfter: fetchAfter, state: state);
@@ -28,7 +27,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 
 		while (!ct.IsCancellationRequested)
 		{
-			List<Scrobble>? batch = await FetchPageAsync(page: page, ct: ct);
+			List<LastFmScrobble>? batch = await FetchPageAsync(page: page, ct: ct);
 
 			if (ct.IsCancellationRequested || batch is null || batch.Count == 0)
 				break;
@@ -43,7 +42,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 
 			if (fetchAfter is { })
 			{
-				List<Scrobble> freshScrobbles = new(capacity: batch.Count);
+				List<LastFmScrobble> freshScrobbles = new(capacity: batch.Count);
 				foreach (var track in batch)
 				{
 					if (track.PlayedAt > fetchAfter)
@@ -113,13 +112,13 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 	}
 
 	private static async Task SaveMergedScrobblesAsync(
-		List<Scrobble> existing,
-		List<Scrobble> newOnes
+		List<LastFmScrobble> existing,
+		List<LastFmScrobble> newOnes
 	)
 	{
 		HashSet<DateTimeOffset?> existingTimes = [];
 		existingTimes.UnionWith(existing.Select(s => s.PlayedAt));
-		List<Scrobble> merged = new(capacity: existing.Count + newOnes.Count);
+		List<LastFmScrobble> merged = new(capacity: existing.Count + newOnes.Count);
 		foreach (var newScrobble in newOnes)
 		{
 			if (!existingTimes.Contains(item: newScrobble.PlayedAt))
@@ -133,7 +132,7 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 		);
 	}
 
-	private async Task<List<Scrobble>?> FetchPageAsync(int page, CancellationToken ct)
+	private async Task<List<LastFmScrobble>?> FetchPageAsync(int page, CancellationToken ct)
 	{
 		Log.Debug(messageTemplate: "FetchPageAsync entry {Page}", page);
 		PagedResponse<Track>? response = await Resilience.ExecuteAsync(
@@ -148,11 +147,11 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 			return null;
 		}
 
-		List<Scrobble> result = new(capacity: response.Count);
+		List<LastFmScrobble> result = new(capacity: response.Count);
 		foreach (var track in response)
 		{
 			result.Add(
-				new Scrobble(
+				new LastFmScrobble(
 					track.Name
 						?? throw new InvalidOperationException($"{nameof(track.Name)} is null"),
 					track.Artist?.Name ?? "",
@@ -165,8 +164,8 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 		return result;
 	}
 
-	internal static async Task<List<Scrobble>> LoadScrobblesAsync() =>
-		await StateManager.LoadStateAsync<List<Scrobble>>(
+	internal static async Task<List<LastFmScrobble>> LoadScrobblesAsync() =>
+		await StateManager.LoadStateAsync<List<LastFmScrobble>>(
 			fileName: StateManager.LastFmScrobblesFile
 		);
 

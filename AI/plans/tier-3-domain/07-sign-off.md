@@ -79,12 +79,12 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "git not found
 dotnet --version | Select-String "^10\." || throw ".NET 10 SDK not found"
 
 # T3 depends on T2 sign-off — Scripts.slnx must exist
-if (-not (Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx')) {
+if (-not (Test-Path '/home/lance/Scripts/csharp/Scripts.slnx')) {
     throw 'Tier 2 sign-off required — Scripts.slnx not found. Run T2 plans first.'
 }
 
 # Verify all T3 commits are present
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 Write-Host "=== T3 commit history ==="
 git log --oneline --grep="t3-" -8
@@ -112,12 +112,12 @@ Write-Host "All T3 commits verified."
 ### Step 1.1 — Create test file
 
 ```powershell
-$dir = "C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3"
+$dir = "/home/lance/Scripts/csharp/tests\Scripts.Tests\T3"
 New-Item -ItemType Directory -Path $dir -Force -ErrorAction Stop
 Test-Path $dir | Should -Be $true
 ```
 
-Create file `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\T3\T307_Tier3SignOffTests.cs`:
+Create file `/home/lance/Scripts/csharp/tests\Scripts.Tests\T3\T307_Tier3SignOffTests.cs`:
 
 ```csharp
 using System;
@@ -131,7 +131,7 @@ namespace Scripts.Tests.T3;
 
 public class T307_Tier3SignOffTests
 {
-    private const string SrcDir = @"C:\Users\Lance\Dev\Scripts\csharp\src";
+    private const string SrcDir = @"/home/lance/Scripts/csharp/src";
 
     // ==================== Domain Boundary Tests ====================
 
@@ -311,9 +311,9 @@ public class T307_Tier3SignOffTests
 ### Step 1.2 — Run to confirm current state (expected GREEN after all phases)
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T307_Tier3SignOffTests" `
     2>&1 | Tee-Object -Variable testOutput
 
@@ -332,10 +332,10 @@ Write-Host ($testOutput -join "`n")
 **Expected Outcome:** All tests pass with zero failures.
 
 ```powershell
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
 Write-Host "Running full test suite..."
-$testOutput = dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+$testOutput = dotnet test /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 Write-Host ($testOutput -join "`n")
 
 # Assert zero failures
@@ -368,10 +368,10 @@ Total tests: <N>
 ```powershell
 Write-Host "Clean build verification..."
 
-dotnet clean   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
-dotnet restore C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx -ErrorAction Stop
+dotnet clean   /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
+dotnet restore /home/lance/Scripts/csharp/Scripts.slnx -ErrorAction Stop
 
-$buildOutput = dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx --no-restore 2>&1
+$buildOutput = dotnet build /home/lance/Scripts/csharp/Scripts.slnx --no-restore 2>&1
 Write-Host ($buildOutput -join "`n")
 
 # Parse: Build succeeded with 0 error(s) and 0 warning(s)
@@ -390,7 +390,7 @@ Write-Host "Build: CLEAN (0 errors)"
 **Expected Outcome:** Zero leak findings.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 if (Get-Command gitleaks -ErrorAction SilentlyContinue) {
     $leakOutput = gitleaks detect --no-git 2>&1
@@ -415,7 +415,7 @@ if (Get-Command gitleaks -ErrorAction SilentlyContinue) {
 **Expected Outcome:** All T3 tests pass.
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "FullyQualifiedName~T3" `
     2>&1 | Tee-Object -Variable t3BatchOutput
 
@@ -439,7 +439,7 @@ Write-Host "All T3 tests: GREEN"
 **Expected Outcome:** Commit `feat(t3-07)` in git log with the sign-off test file.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 git add csharp/tests/Scripts.Tests/T3/T307_Tier3SignOffTests.cs 2>&1
 
@@ -462,7 +462,7 @@ Write-Host "Committed: t3-07"
 **Expected Outcome:** Tag `t3-sign-off` exists and references a commit containing the sign-off test.
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 # Verify we're on the right branch
 $branch = git branch --show-current
@@ -496,7 +496,7 @@ git show t3-sign-off --no-patch 2>&1 | Write-Host
 ## Task 8 — Push tag to origin
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 git push origin t3-sign-off -ErrorAction Stop 2>&1 | Tee-Object -Variable pushOut
 
@@ -509,7 +509,7 @@ Write-Host "Tag pushed: t3-sign-off"
 ## Sign-Off Summary
 
 ```powershell
-Set-Location C:\Users\Lance\Dev\Scripts -ErrorAction Stop
+Set-Location /home/lance/Scripts -ErrorAction Stop
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  TIER 3 SIGN-OFF — COMPLETE           " -ForegroundColor Cyan

@@ -161,7 +161,7 @@ These rules apply to every agent executing any plan in any tier.
 3. **No I/O Presumptions** — Every file create/delete/move MUST be followed by `Test-Path`
 4. **No Encoding Presumptions** — Explicitly `-Encoding UTF8`
 5. **No Exit Code Presumptions** — Capture `2>&1`, run Regex assertions
-6. **No Path Presumptions** — Absolute paths only: `C:\Users\Lance\Dev\Scripts\...`
+6. **No Path Presumptions** — Absolute paths only: `/home/lance/Scripts/...`
 7. **No State Presumptions** — Log: State → Reason → What → Expected Outcome before each mutation
 8. **No NuGet Presumptions** — `dotnet restore` before every build/test
 9. **No Deletion Presumptions** — `.bak.YYYYMMDD_HHmmss` before any deletion
@@ -247,3 +247,52 @@ These rules apply to every agent executing any plan in any tier.
 | [06-documentation.md](tier-4-hardening/06-documentation.md) | Final docs, onboarding guide | 🔒 |
 | [07-oci-deployment.md](tier-4-hardening/07-oci-deployment.md) | Migrate DB to OCI Docker + WinSCP config | 🔒 |
 | [08-sign-off.md](tier-4-hardening/08-sign-off.md) | Release-ready verification | 🔒 |
+
+---
+
+## Parallel Opportunities
+
+Within Tier 1, after T1-00 + T1-01 + T1-02 land (foundation + entity extraction + refactor), these groups are independent and safe to parallelize across worker agents:
+
+| Group | Plans | Reason independent |
+| ----- | ----- | ------------------ |
+| **Schema & indexes** | T1-03, T1-04, T1-05 | Pure DbContext/config changes; no runtime code paths |
+| **Runtime patterns** | T1-06, T1-08, T1-10 | Repository/cache/EF10 query rewrites; downstream of schema |
+| **Cross-cutting** | T1-09, T1-11, T1-12, T1-13 | Sync service, compiled model, logging, Lingua — all touch DbContext but distinct namespaces |
+| **Tests** | T1-14, T1-15 | Resilience + Testcontainers — own packages, own test projects |
+| **Cleanup** | T1-02 (Mbid), T1-07 (state), T1-16 (sign-off) | Sign-off gates the tier |
+
+CPM (Critical Path Method) per `00-environment.md`:
+- **Critical path:** 00 → 01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 15 → 16
+- **Float available on:** 12, 13, 14, 15 (touch different files from critical-path items)
+- **Hard parallel only after 06 lands** (repositories define the interface; everything downstream consumes it)
+
+---
+
+## Drift Corrections (2026-06-01)
+
+Verified against MS Learn (2026) and current NuGet (TUnit 1.48.6, Testcontainers 4.12.0):
+
+| Plan | Drift | Fix |
+| ---- | ----- | --- |
+| T1-11 | Plan claimed EF auto-uses compiled model without `.UseModel()` call | Added Task 3: `.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance)` in `OnConfiguring` |
+| T1-14 | 28 assertions used TUnit 0.9.0 `Assert.Equal(x,y)` syntax; tests `void` not `async Task` | Rewritten to `await Assert.That(x).IsEqualTo(y)`; all tests `async Task` |
+| T1-15 | TUnit 0.9.0 + Testcontainers 3.10.0 (9 assertions); FluentAssertions concern | Bumped to TUnit 1.48.6 + Testcontainers 4.12.0; assertions rewritten; FluentAssertions 7.0.0 retained (Apache 2.0; 8+ is dual-licensed) |
+
+Windows path correction: 46 files in `AI/plans/` updated from `C:\Users\Lance\Dev\Scripts\` to `/home/lance/Scripts/` (~525 replacements total).
+
+---
+
+## Recently Removed (2026-06-01)
+
+| What | Why | Where now |
+| ---- | --- | --------- |
+| `AGENTS.md` (root) | User-authorized deletion; rules either obsolete or repoducible from skills | `~/.agents/skills/` (canonical agent rules) |
+| `AI/skills/debugger/SKILL.md` | 99% duplicate of `AI/skills/systematic-debugging/SKILL.md` | `AI/skills/systematic-debugging/SKILL.md` |
+| `AI/research/` (9 files) | Whitespace-only dups of `AI/plans/research/` | `AI/plans/research/` deleted 2026-06-01; content merged into `tier-1-ef-migration/0X-*.md` Research Provenance sections |
+| `AI/plans/research/` (9 files) | Already merged inline | Content in tier-1 plan Research Provenance sections; source paths preserved with "consolidated 2026-06-01; dir deleted" annotation |
+| `.kiro/` (specs dir) | Orphaned: 2 non-`.md` files, zero refs anywhere in repo | (gone) |
+| `AI/plans/plan-phase-24..27.md` | Pre-EF era, superseded by tier-1..4 work | (gone) |
+| `AI/plans/20260527-merge-non-doc-branches-into-main.md` | One-off merge log, action items done | (gone) |
+
+Single backup retained at `.bak-20260601_210857/` (covers AGENTS.md, `AI/skills/debugger/`, `AI/research/` only — per user instruction "1 backup, no more").

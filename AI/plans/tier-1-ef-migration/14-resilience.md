@@ -6,7 +6,7 @@
 
 **Architecture:** Npgsql's `EnableRetryOnFailure` is added to `DbContextRegistration.AddScriptsDbContext()` and `ScriptsDbContextFactory.CreateDbContext()` with `maxRetryCount: 3` and `maxRetryDelay: 30s`. The legacy `Infrastructure/Resilience.cs` (199 lines, uses Console logging, creates new pipelines per call, lacks circuit breaker) is backed up and deleted. `RetryExhaustedException` is added to `Core/Resilience.cs` for better error diagnostics when all retries are exhausted.
 
-**Tech Stack:** C# 14 / .NET 10 / EF Core 10 / Npgsql 10 / Polly 8.6.6 / PostgreSQL 18 / TUnit / FluentAssertions
+**Tech Stack:** C# 14 / .NET 10 / EF Core 10 / Npgsql 10 / Polly 8.6.6 / PostgreSQL 18 / TUnit 1.48.6 / FluentAssertions 7.0.0 (Apache 2.0)
 
 ---
 
@@ -14,19 +14,20 @@
 
 - T1-13 completed (Lingua migration green)
 - `Scripts.Tests` project exists
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs` exists (271 lines, Polly v8, circuit breaker)
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs` exists (199 lines, legacy duplicate)
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs` exists (14 lines)
-- `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs` exists (17 lines)
+- TUnit 1.48.6+ installed (current as of 2026-05; 0.x syntax will not compile)
+- `/home/lance/Scripts/csharp/src\Core\Resilience.cs` exists (271 lines, Polly v8, circuit breaker)
+- `/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs` exists (199 lines, legacy duplicate)
+- `/home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs` exists (14 lines)
+- `/home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs` exists (17 lines)
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Resilience.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs
+Test-Path /home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs
 # Expected: True
 ```
 
@@ -35,9 +36,9 @@ Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs
 ## Task 1 — Add EnableRetryOnFailure to DbContextRegistration and Factory
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs`
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs`
 
 ### Step 0: Preflight
 
@@ -47,22 +48,22 @@ Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs
 # What: Add .EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: 30s) to both paths.
 # Expected: Npgsql retry configured, build passes.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs
+Get-Content /home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs
 # Expected: opts.UseNpgsql(connectionString: connStr) — NO retry
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs
+Get-Content /home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs
 # Expected: optionsBuilder.UseNpgsql(connectionString: connStr) — NO retry
 
-New-Item -ItemType Directory -Force -Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience'
+New-Item -ItemType Directory -Force -Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience'
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs
 using System.Text.RegularExpressions;
-using FluentAssertions;
 using TUnit;
+using TUnit.Assertions;
 
 namespace Scripts.Tests.Resilience;
 
@@ -71,49 +72,51 @@ public sealed class DbRetryPolicyTests
     [Test]
     public async Task DbContextRegistration_Contains_EnableRetryOnFailure()
     {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs";
         var content = await File.ReadAllTextAsync(filePath);
 
-        content.Should().Contain("EnableRetryOnFailure",
-            "because Npgsql transient errors must be retried automatically"
-        );
+        // because Npgsql transient errors must be retried automatically
+        await Assert.That(content).Contains("EnableRetryOnFailure");
     }
 
     [Test]
     public async Task DbContextRegistration_RetryCount_Is_Three()
     {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs";
         var content = await File.ReadAllTextAsync(filePath);
 
         var match = Regex.Match(content, @"maxRetryCount:\s*(\d+)");
-        match.Success.Should().BeTrue("because maxRetryCount must be specified");
+        // because maxRetryCount must be specified
+        await Assert.That(match.Success).IsTrue();
 
         var count = int.Parse(match.Groups[1].Value);
-        count.Should().Be(3, "because 3 retries is the standard for transient DB errors");
+        // because 3 retries is the standard for transient DB errors
+        await Assert.That(count).IsEqualTo(3);
     }
 
     [Test]
     public async Task DbContextFactory_Contains_EnableRetryOnFailure()
     {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs";
         var content = await File.ReadAllTextAsync(filePath);
 
-        content.Should().Contain("EnableRetryOnFailure",
-            "because dotnet ef commands also need retry on transient errors"
-        );
+        // because dotnet ef commands also need retry on transient errors
+        await Assert.That(content).Contains("EnableRetryOnFailure");
     }
 
     [Test]
     public async Task DbContextFactory_RetryDelay_Is_Thirty_Seconds()
     {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs";
         var content = await File.ReadAllTextAsync(filePath);
 
         var match = Regex.Match(content, @"maxRetryDelay:\s*TimeSpan\.FromSeconds\(\s*(\d+)");
-        match.Success.Should().BeTrue("because maxRetryDelay must be specified");
+        // because maxRetryDelay must be specified
+        await Assert.That(match.Success).IsTrue();
 
         var seconds = int.Parse(match.Groups[1].Value);
-        seconds.Should().Be(30, "because 30s max retry delay is sufficient for transient DB issues");
+        // because 30s max retry delay is sufficient for transient DB issues
+        await Assert.That(seconds).IsEqualTo(30);
     }
 }
 ```
@@ -121,7 +124,7 @@ public sealed class DbRetryPolicyTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -129,7 +132,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — no EnableRetryOnFailure yet)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DbRetryPolicyTests" 2>&1
 ```
 
@@ -143,7 +146,7 @@ Two files need modification:
 
 ### Step 5: Implement
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs` line 12:**
+**Edit `/home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs` line 12:**
 
 OLD:
 ```csharp
@@ -161,7 +164,7 @@ NEW:
 			)));
 ```
 
-**Edit `C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs` line 14:**
+**Edit `/home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs` line 14:**
 
 OLD:
 ```csharp
@@ -182,7 +185,7 @@ NEW:
 **Verify build:**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -190,7 +193,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "DbRetryPolicyTests" 2>&1
 ```
 
@@ -199,9 +202,9 @@ Expected: GREEN — all 4 tests pass.
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Data\DbContextRegistration.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Data\ScriptsDbContextFactory.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs
+git add /home/lance/Scripts/csharp/src\Data\DbContextRegistration.cs
+git add /home/lance/Scripts/csharp/src\Data\ScriptsDbContextFactory.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\DbRetryPolicyTests.cs
 git commit -m "feat(t1-14): add enable retry on failure to npgsql db context paths"
 ```
 
@@ -210,9 +213,9 @@ git commit -m "feat(t1-14): add enable retry on failure to npgsql db context pat
 ## Task 2 — Delete Legacy Infrastructure/Resilience.cs
 
 **Files:**
-- Backup: `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs` → `Resilience.cs.bak.YYYYMMDD_HHmmss`
-- Delete: `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs`
+- Backup: `/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs` → `Resilience.cs.bak.YYYYMMDD_HHmmss`
+- Delete: `/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs`
 
 ### Step 0: Preflight
 
@@ -224,7 +227,7 @@ git commit -m "feat(t1-14): add enable retry on failure to npgsql db context pat
 # What: Backup to .bak file, delete, verify build still passes.
 # Expected: File deleted, build succeeds, tests pass.
 
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs'
+$file = '/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs'
 Test-Path $file
 # Expected: True
 
@@ -232,51 +235,49 @@ Test-Path $file
 # Expected: 199
 
 # Verify no callers exist
-Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\*.cs -Recurse | Select-String "CSharpScripts.Infrastructure" -SimpleMatch
+Get-ChildItem /home/lance/Scripts/csharp/src\*.cs -Recurse | Select-String "CSharpScripts.Infrastructure" -SimpleMatch
 # Expected: (no output — no callers)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs
-using FluentAssertions;
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs
 using TUnit;
+using TUnit.Assertions;
 
 namespace Scripts.Tests.Resilience;
 
 public sealed class InfrastructureResilienceDeletedTests
 {
     [Test]
-    public void Infrastructure_Resilience_cs_Does_Not_Exist()
+    public async Task Infrastructure_Resilience_cs_Does_Not_Exist()
     {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs";
 
-        File.Exists(filePath).Should().BeFalse(
-            "because Infrastructure/Resilience.cs is a legacy duplicate superseded by Core/Resilience.cs"
-        );
+        // because Infrastructure/Resilience.cs is a legacy duplicate superseded by Core/Resilience.cs
+        await Assert.That(File.Exists(filePath)).IsFalse();
     }
 
     [Test]
-    public void Infrastructure_Resilience_Bak_Exists()
+    public async Task Infrastructure_Resilience_Bak_Exists()
     {
-        var bakDir = @"C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure";
+        var bakDir = @"/home/lance/Scripts/csharp/src\Infrastructure";
         var bakFiles = Directory.GetFiles(bakDir, "Resilience.cs.bak.*");
 
-        bakFiles.Should().NotBeEmpty(
-            "because a timestamped .bak file must be created before deletion"
-        );
+        // because a timestamped .bak file must be created before deletion
+        await Assert.That(bakFiles).IsNotEmpty();
     }
 
     [Test]
-    public void Build_Succeeds_After_Infrastructure_Resilience_Deletion()
+    public async Task Build_Succeeds_After_Infrastructure_Resilience_Deletion()
     {
         var process = new System.Diagnostics.Process
         {
             StartInfo = new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "dotnet",
-                Arguments = "build C:\\Users\\Lance\\Dev\\Scripts\\csharp\\CSharpScripts.csproj --no-restore",
+                Arguments = "build /home/lance/Scripts/csharp/CSharpScripts.csproj --no-restore",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -289,9 +290,8 @@ public sealed class InfrastructureResilienceDeletedTests
         var error = process.StandardError.ReadToEnd();
         process.WaitForExit();
 
-        process.ExitCode.Should().Be(0,
-            $"because deleting dead code must not break the build.\nStdOut: {output}\nStdErr: {error}"
-        );
+        // because deleting dead code must not break the build
+        await Assert.That(process.ExitCode).IsEqualTo(0);
     }
 }
 ```
@@ -299,7 +299,7 @@ public sealed class InfrastructureResilienceDeletedTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -307,7 +307,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — Infrastructure/Resilience.cs still exists)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "InfrastructureResilienceDeletedTests" 2>&1
 ```
 
@@ -322,8 +322,8 @@ Must backup and delete the file. The backup timestamp format is `yyyyMMdd_HHmmss
 ```powershell
 # Create timestamped backup
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$source = 'C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs'
-$backup = "C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs.bak.$timestamp"
+$source = '/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs'
+$backup = "/home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs.bak.$timestamp"
 
 Copy-Item -Path $source -Destination $backup -ErrorAction Stop
 Test-Path $backup
@@ -335,7 +335,7 @@ Test-Path $source
 # Expected: False
 
 # Verify build still passes
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj --no-restore 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj --no-restore 2>&1
 ```
 
 Expected: Backup created. Original deleted. Build succeeded with 0 errors.
@@ -343,7 +343,7 @@ Expected: Backup created. Original deleted. Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "InfrastructureResilienceDeletedTests" 2>&1
 ```
 
@@ -355,9 +355,9 @@ Expected: GREEN — all 3 tests pass:
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs.bak.*
-git rm C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Resilience.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs
+git add /home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs.bak.*
+git rm /home/lance/Scripts/csharp/src\Infrastructure\Resilience.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\InfrastructureResilienceDeletedTests.cs
 git commit -m "feat(t1-14): delete legacy infrastructure resilience duplicate after backup"
 ```
 
@@ -366,8 +366,8 @@ git commit -m "feat(t1-14): delete legacy infrastructure resilience duplicate af
 ## Task 3 — Add RetryExhaustedException to Core/Resilience.cs
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Core\Resilience.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs`
 
 ### Step 0: Preflight
 
@@ -379,79 +379,75 @@ git commit -m "feat(t1-14): delete legacy infrastructure resilience duplicate af
 # What: Add RetryExhaustedException class definition to Core/Resilience.cs.
 # Expected: New exception type available, build passes.
 
-Get-Content C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs | Select-String "RetryExhaustedException"
+Get-Content /home/lance/Scripts/csharp/src\Core\Resilience.cs | Select-String "RetryExhaustedException"
 # Expected: (no output — exception not defined in Core)
 ```
 
 ### Step 1: Write test
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs
-using FluentAssertions;
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs
 using TUnit;
+using TUnit.Assertions;
 
 namespace Scripts.Tests.Resilience;
 
 public sealed class RetryExhaustedExceptionTests
 {
     [Test]
-    public void RetryExhaustedException_Is_Defined()
+    public async Task RetryExhaustedException_Is_Defined()
     {
         var exType = Type.GetType("CSharpScripts.Core.RetryExhaustedException, tools");
 
-        exType.Should().NotBeNull(
-            "because Core/Resilience.cs must define RetryExhaustedException"
-        );
+        // because Core/Resilience.cs must define RetryExhaustedException
+        await Assert.That(exType).IsNotNull();
     }
 
     [Test]
-    public void RetryExhaustedException_Is_Exception_Subclass()
+    public async Task RetryExhaustedException_Is_Exception_Subclass()
     {
         var exType = Type.GetType("CSharpScripts.Core.RetryExhaustedException, tools");
 
-        exType.Should().NotBeNull();
-        exType!.IsSubclassOf(typeof(Exception)).Should().BeTrue(
-            "because RetryExhaustedException must inherit from Exception"
-        );
+        await Assert.That(exType).IsNotNull();
+        // because RetryExhaustedException must inherit from Exception
+        await Assert.That(exType!.IsSubclassOf(typeof(Exception))).IsTrue();
     }
 
     [Test]
-    public void RetryExhaustedException_Constructor_Accepts_Operation_And_InnerException()
+    public async Task RetryExhaustedException_Constructor_Accepts_Operation_And_InnerException()
     {
         var exType = Type.GetType("CSharpScripts.Core.RetryExhaustedException, tools");
 
-        exType.Should().NotBeNull();
+        await Assert.That(exType).IsNotNull();
 
         var constructor = exType!.GetConstructor([typeof(string), typeof(Exception)]);
-        constructor.Should().NotBeNull(
-            "because the exception must accept operation name and inner exception"
-        );
+        // because the exception must accept operation name and inner exception
+        await Assert.That(constructor).IsNotNull();
 
         var inner = new InvalidOperationException("test inner");
         var instance = constructor!.Invoke(["TestOperation", inner]) as Exception;
 
-        instance.Should().NotBeNull();
-        instance!.Message.Should().Contain("TestOperation");
-        instance!.InnerException.Should().Be(inner);
+        await Assert.That(instance).IsNotNull();
+        await Assert.That(instance!.Message).Contains("TestOperation");
+        await Assert.That(instance!.InnerException).IsEqualTo(inner);
     }
 
     [Test]
-    public void RetryExhaustedException_Constructor_Accepts_Operation_Only()
+    public async Task RetryExhaustedException_Constructor_Accepts_Operation_Only()
     {
         var exType = Type.GetType("CSharpScripts.Core.RetryExhaustedException, tools");
 
-        exType.Should().NotBeNull();
+        await Assert.That(exType).IsNotNull();
 
         var constructor = exType!.GetConstructor([typeof(string)]);
-        constructor.Should().NotBeNull(
-            "because the exception must accept operation name without inner exception"
-        );
+        // because the exception must accept operation name without inner exception
+        await Assert.That(constructor).IsNotNull();
 
         var instance = constructor!.Invoke(["TestOperationOnly"]) as Exception;
 
-        instance.Should().NotBeNull();
-        instance!.Message.Should().Contain("TestOperationOnly");
-        instance!.InnerException.Should().BeNull();
+        await Assert.That(instance).IsNotNull();
+        await Assert.That(instance!.Message).Contains("TestOperationOnly");
+        await Assert.That(instance!.InnerException).IsNull();
     }
 }
 ```
@@ -459,7 +455,7 @@ public sealed class RetryExhaustedExceptionTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -467,7 +463,7 @@ Test-Path $file
 ### Step 3: Run test (expect RED — RetryExhaustedException not defined)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "RetryExhaustedExceptionTests" 2>&1
 ```
 
@@ -479,7 +475,7 @@ Add a `RetryExhaustedException` class at the end of `Core/Resilience.cs` (after 
 
 ### Step 5: Implement
 
-Append to `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs` after the last class member (after line 271):
+Append to `/home/lance/Scripts/csharp/src\Core\Resilience.cs` after the last class member (after line 271):
 
 ```csharp
 
@@ -505,7 +501,7 @@ public sealed class RetryExhaustedException : Exception
 **Verify build:**
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\CSharpScripts.csproj 2>&1
+dotnet build /home/lance/Scripts/csharp/CSharpScripts.csproj 2>&1
 ```
 
 Expected: Build succeeded with 0 errors.
@@ -513,7 +509,7 @@ Expected: Build succeeded with 0 errors.
 ### Step 6: Run test (expect GREEN)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "RetryExhaustedExceptionTests" 2>&1
 ```
 
@@ -522,8 +518,8 @@ Expected: GREEN — all 4 tests pass.
 ### Step 7: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\src\Core\Resilience.cs
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs
+git add /home/lance/Scripts/csharp/src\Core\Resilience.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\RetryExhaustedExceptionTests.cs
 git commit -m "feat(t1-14): add retry exhausted exception to core resilience"
 ```
 
@@ -532,7 +528,7 @@ git commit -m "feat(t1-14): add retry exhausted exception to core resilience"
 ## Task 4 — Polly v8 Retry and Circuit Breaker Behavior Tests
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs`
 
 ### Step 0: Preflight
 
@@ -544,7 +540,7 @@ git commit -m "feat(t1-14): add retry exhausted exception to core resilience"
 # What: Create integration tests using Polly's built-in pipeline testing capability.
 # Expected: Tests pass, confirming retry tries 3+ times and circuit breaker opens after failures.
 
-$testFile = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs'
+$testFile = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs'
 Test-Path $testFile
 # Expected: False
 ```
@@ -552,12 +548,12 @@ Test-Path $testFile
 ### Step 1: Write tests
 
 ```csharp
-// C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs
-using FluentAssertions;
+// /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using TUnit;
+using TUnit.Assertions;
 
 namespace Scripts.Tests.Resilience;
 
@@ -596,9 +592,8 @@ public sealed class PollyBehaviorTests
             // expected after all retries exhausted
         }
 
-        attemptCount.Should().Be(3,
-            "because the pipeline must retry 3 times before failing"
-        );
+        // because the pipeline must retry 3 times before failing
+        await Assert.That(attemptCount).IsEqualTo(3);
     }
 
     [Test]
@@ -648,9 +643,8 @@ public sealed class PollyBehaviorTests
             await Task.Delay(10);
         }
 
-        circuitStates.Should().Contain(CircuitState.Open,
-            "because the circuit breaker must open after 3 consecutive failures"
-        );
+        // because the circuit breaker must open after 3 consecutive failures
+        await Assert.That(circuitStates).Contains(CircuitState.Open);
     }
 
     [Test]
@@ -680,10 +674,9 @@ public sealed class PollyBehaviorTests
             return ValueTask.FromResult("success");
         });
 
-        result.Should().Be("success");
-        attemptCount.Should().Be(1,
-            "because the pipeline must not retry when the first attempt succeeds"
-        );
+        await Assert.That(result).IsEqualTo("success");
+        // because the pipeline must not retry when the first attempt succeeds
+        await Assert.That(attemptCount).IsEqualTo(1);
     }
 }
 ```
@@ -691,7 +684,7 @@ public sealed class PollyBehaviorTests
 ### Step 2: Readback
 
 ```powershell
-$file = 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs'
+$file = '/home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs'
 Test-Path $file
 # Expected: True
 ```
@@ -699,7 +692,7 @@ Test-Path $file
 ### Step 3: Run test (expect GREEN — Polly v8 is already configured correctly)
 
 ```powershell
-dotnet test C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx `
+dotnet test /home/lance/Scripts/csharp/Scripts.slnx `
     --filter "PollyBehaviorTests" 2>&1
 ```
 
@@ -708,7 +701,7 @@ Expected: GREEN — all 3 tests pass. Polly v8 v8.6.6 is already referenced and 
 ### Step 4: Commit
 
 ```powershell
-git add C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs
+git add /home/lance/Scripts/csharp/tests\Scripts.Tests\Resilience\PollyBehaviorTests.cs
 git commit -m "feat(t1-14): add polly v8 retry and circuit breaker behavior tests"
 ```
 
@@ -727,3 +720,14 @@ git commit -m "feat(t1-14): add polly v8 retry and circuit breaker behavior test
 - [ ] `dotnet test` — InfrastructureResilienceDeletedTests: 3/3 PASS
 - [ ] `dotnet test` — RetryExhaustedExceptionTests: 4/4 PASS
 - [ ] `dotnet test` — PollyBehaviorTests: 3/3 PASS
+- [ ] All TUnit 1.x assertions use `await Assert.That(...).IsXxx()` syntax (NOT `Assert.Equal` or `.Should()` from FluentAssertions unless intentional)
+
+---
+
+## Research Provenance
+
+<!-- from research/ADVANCED-FEATURES-consolidated.md (Section 5: Resilience & Retry Policies) -->
+
+Source: `AI/plans/research/ADVANCED-FEATURES-consolidated.md` (Section 5) — consolidated 2026-06-01; dir deleted
+
+Content already covered: `EnableRetryOnFailure(3, 30s)` in `DbContextRegistration` and `ScriptsDbContextFactory` (Task 1), `RetryExhaustedException` (Task 2), `Infrastructure/Resilience.cs` delete (Task 3). Core/Resilience.cs Polly v8 surface (circuit breaker 50% / 3-min window / 30-sec break, rate limiter Last.fm 1/sec, retry 10 attempts exponential + jitter, per-service timeout 30s-120s) is referenced as pre-existing baseline in Task 2 Prerequisites.

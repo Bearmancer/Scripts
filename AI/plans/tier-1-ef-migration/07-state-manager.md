@@ -47,8 +47,8 @@
 ## Task 1: Create StateManager.cs in Data/State/ and Update Namespace
 
 **Files:**
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs`
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs`
+- Create: `/home/lance/Scripts/csharp/src\Data\State\StateManager.cs`
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs`
 
 ### Step 0: Preflight
 
@@ -58,16 +58,16 @@
 # What: Copy the file to Data/State/, change namespace to CSharpScripts.Data.State
 # Expected: File exists in new location with updated namespace
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State
+Test-Path /home/lance/Scripts/csharp/src\Data\State
 # Expected: False
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs`
 
 ```csharp
 using TUnit;
@@ -132,15 +132,15 @@ public sealed class StateManagerNamespaceTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerNamespaceTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerNamespaceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerNamespaceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `Type.GetType("CSharpScripts.Data.State.StateManager...")` returns null.
@@ -154,10 +154,10 @@ StateManager does not exist in `CSharpScripts.Data.State` namespace. Proceed to 
 Create directory and copy the file:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State
+New-Item -ItemType Directory -Force -Path /home/lance/Scripts/csharp/src\Data\State
 ```
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs`
+File: `/home/lance/Scripts/csharp/src\Data\State\StateManager.cs`
 
 Copy the entire contents of `Core/Persistence/StateManager.cs` but change the namespace line:
 
@@ -183,26 +183,26 @@ internal static class StateManager
 }
 ```
 
-The implementation copies lines 1-361 from `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs`, changing only the namespace declaration from `namespace CSharpScripts.Core;` to `namespace CSharpScripts.Data.State;`.
+The implementation copies lines 1-361 from `/home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs`, changing only the namespace declaration from `namespace CSharpScripts.Core;` to `namespace CSharpScripts.Data.State;`.
 
 Verify:
 
 ```powershell
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\State\StateManager.cs
 # Expected: True
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs -Pattern 'namespace CSharpScripts.Data.State'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\State\StateManager.cs -Pattern 'namespace CSharpScripts.Data.State'
 # Expected: 1 match
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs -Pattern 'CSharpScripts.Core'
+Select-String -Path /home/lance/Scripts/csharp/src\Data\State\StateManager.cs -Pattern 'CSharpScripts.Core'
 # Expected: 0 matches
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerNamespaceTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerNamespaceTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `5 passed, 0 failed`
@@ -210,9 +210,9 @@ Expected: `5 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/Data/State/StateManager.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerNamespaceTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): create StateManager in Data/State namespace"
+git -C /home/lance/Scripts add csharp/src/Data/State/StateManager.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerNamespaceTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-07): create StateManager in Data/State namespace"
 ```
 
 ---
@@ -220,7 +220,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): create StateManager in
 ## Task 2: Add Global Using for CSharpScripts.Data.State
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs`
+- Modify: `/home/lance/Scripts/csharp/src\GlobalUsings.cs`
 
 ### Step 0: Preflight
 
@@ -230,7 +230,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): create StateManager in
 # What: Add global using CSharpScripts.Data.State;
 # Expected: All existing callers continue to compile
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs -Pattern 'CSharpScripts.Data.State'
+Select-String -Path /home/lance/Scripts/csharp/src\GlobalUsings.cs -Pattern 'CSharpScripts.Data.State'
 # Expected: 0 matches
 ```
 
@@ -238,7 +238,7 @@ Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs -Patte
 
 Add a compile-time verification test:
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerGlobalUsingTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerGlobalUsingTests.cs`
 
 ```csharp
 using TUnit;
@@ -271,15 +271,15 @@ public sealed class StateManagerGlobalUsingTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerGlobalUsingTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerGlobalUsingTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm current state
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerGlobalUsingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerGlobalUsingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 If tests pass: `2 passed, 0 failed` — proceed to add global using for forward compatibility.
@@ -291,7 +291,7 @@ Global using for `CSharpScripts.Core` already exists (line 10 in GlobalUsings.cs
 
 ### Step 4: Write minimal implementation
 
-Add after the existing `global using CSharpScripts.Data;` line (line 12) in `C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs`:
+Add after the existing `global using CSharpScripts.Data;` line (line 12) in `/home/lance/Scripts/csharp/src\GlobalUsings.cs`:
 
 ```csharp
 global using System.Collections.Frozen;
@@ -330,15 +330,15 @@ global using SpectreTable = Spectre.Console.Table;
 Verify:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\GlobalUsings.cs -Pattern 'CSharpScripts.Data.State'
+Select-String -Path /home/lance/Scripts/csharp/src\GlobalUsings.cs -Pattern 'CSharpScripts.Data.State'
 # Expected: 1 match
 ```
 
 ### Step 5: Run — confirm build clean
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerGlobalUsingTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerGlobalUsingTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: `2 passed, 0 failed`
@@ -346,9 +346,9 @@ Expected: `2 passed, 0 failed`
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts add csharp/src/GlobalUsings.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerGlobalUsingTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): add global using for CSharpScripts.Data.State"
+git -C /home/lance/Scripts add csharp/src/GlobalUsings.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerGlobalUsingTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-07): add global using for CSharpScripts.Data.State"
 ```
 
 ---
@@ -356,10 +356,10 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): add global using for C
 ## Task 3: Delete Infrastructure StateManager Duplicate
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs` (DELETE)
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs` (DELETE)
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Logger.cs:236,305` (verify uses new namespace)
-- Create: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs`
+- Modify: `/home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs` (DELETE)
+- Modify: `/home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs` (DELETE)
+- Modify: `/home/lance/Scripts/csharp/src\Infrastructure\Logger.cs:236,305` (verify uses new namespace)
+- Create: `/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs`
 
 ### Step 0: Preflight
 
@@ -369,19 +369,19 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): add global using for C
 # What: Backup both old files, delete them, verify build still passes
 # Expected: Core/Persistence and Infrastructure copies deleted, only Data/State/ version remains
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs
+Test-Path /home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs
+Test-Path /home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs
 # Expected: True
 
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Data\State\StateManager.cs
+Test-Path /home/lance/Scripts/csharp/src\Data\State\StateManager.cs
 # Expected: True (created in Task 1)
 ```
 
 ### Step 1: Write the failing test
 
-File: `C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs`
+File: `/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs`
 
 ```csharp
 using TUnit;
@@ -406,7 +406,7 @@ public sealed class StateManagerDeleteTests
         // May still resolve via global using -> Data.State. The old namespace path should not resolve.
         // Core namespace has global using CSharpScripts.Core, so StateManager would resolve to Data.State.
         // This test verifies the old file path is gone.
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs";
+        var filePath = @"/home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs";
         System.IO.File.Exists(filePath).Should().BeFalse(because: "Core/Persistence/StateManager.cs must be deleted");
     }
 
@@ -422,15 +422,15 @@ public sealed class StateManagerDeleteTests
 ### Step 2: Read-back
 
 ```powershell
-Test-Path 'C:\Users\Lance\Dev\Scripts\csharp\tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs'
+Test-Path '/home/lance/Scripts/csharp/tests\Scripts.Tests\StateManager\StateManagerDeleteTests.cs'
 # Expected: True
 ```
 
 ### Step 3: Run — confirm RED
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerDeleteTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerDeleteTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: FAIL — `Core/Persistence/StateManager.cs` still exists on disk, and `Infrastructure.StateManager` type still resolves.
@@ -444,25 +444,25 @@ Both old files exist. Proceed to delete them after backup.
 ```powershell
 # Backup Infrastructure StateManager
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$infraBackup = "C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs.bak.$timestamp"
-Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs $infraBackup -Force
+$infraBackup = "/home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs.bak.$timestamp"
+Copy-Item /home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs $infraBackup -Force
 Test-Path $infraBackup
 # Expected: True
 
 # Delete Infrastructure StateManager
-Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs -Force
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\StateManager.cs
+Remove-Item /home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs -Force
+Test-Path /home/lance/Scripts/csharp/src\Infrastructure\StateManager.cs
 # Expected: False
 
 # Backup Core/Persistence StateManager
-$coreBackup = "C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs.bak.$timestamp"
-Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs $coreBackup -Force
+$coreBackup = "/home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs.bak.$timestamp"
+Copy-Item /home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs $coreBackup -Force
 Test-Path $coreBackup
 # Expected: True
 
 # Delete Core/Persistence StateManager
-Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs -Force
-Test-Path C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs
+Remove-Item /home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs -Force
+Test-Path /home/lance/Scripts/csharp/src\Core\Persistence\StateManager.cs
 # Expected: False
 ```
 
@@ -471,22 +471,22 @@ Now update `Infrastructure/Logger.cs` — it references `StateManager.JsonCompac
 Verify Logger resolves:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Infrastructure\Logger.cs -Pattern 'StateManager'
+Select-String -Path /home/lance/Scripts/csharp/src\Infrastructure\Logger.cs -Pattern 'StateManager'
 # Expected: 2 matches (lines 236, 305) — must still compile
 ```
 
 Also check the legacy `LastFm/LastFmService.cs` — it references `CSharpScripts.Infrastructure.StateManager`. Since this file is compiled (not excluded), it may break:
 
 ```powershell
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs -Pattern 'StateManager'
+Select-String -Path /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs -Pattern 'StateManager'
 # Expected: may contain references — if so, handle in Task 4 or proceed to build test
 ```
 
 ### Step 5: Run — confirm GREEN
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManagerDeleteTests" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManagerDeleteTests" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: Build succeeds (all references resolve correctly), `3 passed, 0 failed`.
@@ -500,10 +500,10 @@ If build fails due to `Logger.cs` ambiguity:
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Infrastructure/StateManager.cs
-git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Core/Persistence/StateManager.cs
-git -C C:\Users\Lance\Dev\Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerDeleteTests.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): delete duplicate StateManager files, keep Data.State version only"
+git -C /home/lance/Scripts rm csharp/src/Infrastructure/StateManager.cs
+git -C /home/lance/Scripts rm csharp/src/Core/Persistence/StateManager.cs
+git -C /home/lance/Scripts add csharp/tests/Scripts.Tests/StateManager/StateManagerDeleteTests.cs
+git -C /home/lance/Scripts commit -m "feat(t1-07): delete duplicate StateManager files, keep Data.State version only"
 ```
 
 ---
@@ -511,7 +511,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): delete duplicate State
 ## Task 4: Handle Legacy LastFm/LastFmService.cs Reference
 
 **Files:**
-- Modify: `C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs` (DELETE or STUB)
+- Modify: `/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs` (DELETE or STUB)
 
 ### Step 0: Preflight
 
@@ -521,7 +521,7 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): delete duplicate State
 # What: Check if the file still compiles; if not, delete it (it's the duplicate being removed in T1-09)
 # Expected: Build passes with legacy file deleted or resolved
 
-Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs -Pattern 'StateManager' 2>&1
+Select-String -Path /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs -Pattern 'StateManager' 2>&1
 # If 0 matches or file doesn't cause build error: skip this task, go to Final Verification
 # If matches found AND build fails: proceed
 ```
@@ -529,7 +529,7 @@ Select-String -Path C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\L
 ### Step 3: Verify build status
 
 ```powershell
-dotnet build C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 If build SUCCEEDS: This task is complete — skip to Final Verification.
@@ -543,21 +543,21 @@ Build failed because legacy `LastFm/LastFmService.cs` references now-deleted `CS
 
 ```powershell
 $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$legacyBackup = "C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs.bak.$timestamp"
-Copy-Item C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs $legacyBackup -Force
-Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm\LastFmService.cs -Force
+$legacyBackup = "/home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs.bak.$timestamp"
+Copy-Item /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs $legacyBackup -Force
+Remove-Item /home/lance/Scripts/csharp/src\Services\Sync\LastFm\LastFmService.cs -Force
 
 # Also remove the now-empty LastFm/ directory if it exists
-if ((Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0) {
-    Remove-Item C:\Users\Lance\Dev\Scripts\csharp\src\Services\Sync\LastFm -Force -Recurse
+if ((Get-ChildItem /home/lance/Scripts/csharp/src\Services\Sync\LastFm -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0) {
+    Remove-Item /home/lance/Scripts/csharp/src\Services\Sync\LastFm -Force -Recurse
 }
 ```
 
 ### Step 5: Run — confirm build clean
 
 ```powershell
-dotnet build   C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
-dotnet test   --filter "StateManager" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet build   /home/lance/Scripts/csharp/Scripts.slnx 2>&1
+dotnet test   --filter "StateManager" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected: Build succeeds, all StateManager tests pass.
@@ -565,8 +565,8 @@ Expected: Build succeeds, all StateManager tests pass.
 ### Step 6: Commit
 
 ```powershell
-git -C C:\Users\Lance\Dev\Scripts rm csharp/src/Services/Sync/LastFm/LastFmService.cs
-git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): delete legacy LastFmService duplicate (Infrastructure StateManager dependent)"
+git -C /home/lance/Scripts rm csharp/src/Services/Sync/LastFm/LastFmService.cs
+git -C /home/lance/Scripts commit -m "feat(t1-07): delete legacy LastFmService duplicate (Infrastructure StateManager dependent)"
 ```
 
 ---
@@ -575,11 +575,11 @@ git -C C:\Users\Lance\Dev\Scripts commit -m "feat(t1-07): delete legacy LastFmSe
 
 ```powershell
 # Confirm only one StateManager.cs exists
-Get-ChildItem C:\Users\Lance\Dev\Scripts\csharp\src -Recurse -Filter 'StateManager.cs' | Select-Object FullName
+Get-ChildItem /home/lance/Scripts/csharp/src -Recurse -Filter 'StateManager.cs' | Select-Object FullName
 # Expected: exactly 1 file: ...Data\State\StateManager.cs
 
 # Run all state manager tests
-dotnet test --filter "Scripts.Tests.StateManager" C:\Users\Lance\Dev\Scripts\csharp\Scripts.slnx 2>&1
+dotnet test --filter "Scripts.Tests.StateManager" /home/lance/Scripts/csharp/Scripts.slnx 2>&1
 ```
 
 Expected:
@@ -591,3 +591,38 @@ Passed StateManagerDeleteTests (3 tests)
 ```
 
 **→ Proceed to `08-release-cache.md`**
+
+---
+
+## Research Provenance
+
+<!-- from research/STATE-MANAGEMENT-consolidated.md -->
+
+Source: `AI/plans/research/STATE-MANAGEMENT-consolidated.md` (consolidated 2026-06-01; dir deleted)
+
+Content already covered: Core vs Infrastructure duplicate analysis (Tasks 1, 4), StateManager usage table (Prerequisites), target location `Data/State` (Architecture), `GlobalUsings` update (Task 1).
+
+### StateManager Consumers (research §2.1, §2.2)
+
+Active callers of `StateManager` (Core):
+
+| Consumer                    | File                                                                         | Methods Called                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| ScrobbleSyncOrchestrator    | `src/Orchestrators/ScrobbleSyncOrchestrator.cs:34,173,176`                   | `LoadStateAsync<FetchState>()`, `SaveStateAsync()`                                        |
+| YouTubePlaylistOrchestrator | `src/Orchestrators/YouTubePlaylistOrchestrator.cs:41,51,261,685,714,792,796` | `LoadStateAsync<YouTubeFetchState>()`, `SaveStateAsync()`, `MigratePlaylistFiles()`      |
+| LastFmService (modern)      | `src/Services/Sync/LastFmService.cs:130,166,169`                             | `SaveStateAsync()`, `LoadStateAsync<List<Scrobble>>()`, `Delete()`                        |
+| CleanResetCommand           | `src/CLI/Clean/CleanResetCommand.cs:53,58,67,72`                             | `LoadStateAsync<>()`, `DeleteLastFmStates()`, `DeleteAllYouTubeStates()`                  |
+| CleanCacheCommand           | `src/CLI/Clean/CleanCacheCommand.cs:31,39`                                   | `DeleteLastFmStates()`, `DeleteAllYouTubeStates()`                                        |
+| MusicSearchCommand          | `src/CLI/MusicSearchCommand.cs:792,807,840,892,1007`                         | `DeleteReleaseCache()`, `LoadReleaseCache<>()`, `SaveReleaseCache<>()`                    |
+
+`JsonIndented` / `JsonCompact` static fields: TranslationClient, MusicBrainzService, Infrastructure/Logger, SyncCommands (legacy). After the move, the new namespace `CSharpScripts.Data.State` resolves these via the added `global using` in `GlobalUsings.cs`.
+
+### 5-Phase Migration Plan (research §4)
+
+Reference steps for the move (already implemented in Tasks 1-4 with slight variation):
+
+- **Phase A — Create target location:** mkdir `Data/State/`, move `Core/Persistence/StateManager.cs` → `Data/State/StateManager.cs`, move `ReleaseProgressCache.cs` co-located, delete empty `Core/Persistence/`.
+- **Phase B — Namespace update:** `namespace CSharpScripts.Core;` → `namespace CSharpScripts.Data.State;`.
+- **Phase C — Add `global using`:** add `global using CSharpScripts.Data.State;` to `GlobalUsings.cs`.
+- **Phase D — Update callers:** all consumers using `global using CSharpScripts.Core;` already have `CSharpScripts.Data;` globalled; same class name `StateManager` resolves correctly.
+- **Phase E — Clean up Infrastructure duplicate:** remove `Infrastructure/StateManager.cs`, update `Logger.cs` reference, delete legacy `LastFm/LastFmService.cs` (in T1-09).

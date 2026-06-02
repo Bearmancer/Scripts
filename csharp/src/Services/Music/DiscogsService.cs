@@ -18,12 +18,10 @@ internal sealed class DiscogsService : IMusicService, IDisposable
 		var validToken =
 			token
 			?? throw new ArgumentException(message: "Discogs token is required", nameof(token));
-#pragma warning disable CA2000
 		HttpClient = new HttpClient(
 			new HttpClientHandler { CheckCertificateRevocationList = true },
 			disposeHandler: true
 		);
-#pragma warning restore CA2000
 		Client = new DiscogsClient(
 			httpClient: HttpClient,
 			new ApiQueryBuilder(new DiscogsClientConfig(token: validToken))
