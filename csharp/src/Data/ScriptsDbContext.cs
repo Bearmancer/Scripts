@@ -1,5 +1,8 @@
+using System.Text.Json;
 using Scripts.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Scripts.Data;
 
@@ -8,6 +11,27 @@ internal sealed class ScriptsDbContext : DbContext
 	public ScriptsDbContext(DbContextOptions<ScriptsDbContext> options)
 		: base(options: options) =>
 		ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		base.OnConfiguring(optionsBuilder);
+		// Compiled model breaks InMemory provider (missing key comparers); use OnModelCreating instead.
+		var inMemory = optionsBuilder.Options.Extensions
+			.Any(e => e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true);
+		var noCompiledModel = System.Environment.GetEnvironmentVariable("SCRIPTS_NO_COMPILED_MODEL") is not null;
+		Console.WriteLine($"[SCRIPTS_CTX] OnConfiguring: inMemory={inMemory} noCompiledModel={noCompiledModel}");
+		if (inMemory || noCompiledModel)
+			return;
+		try
+		{
+			optionsBuilder.UseModel(MyCompiledModels.ScriptsDbContextModel.Instance);
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"[SCRIPTS] UseModel FAILED: {ex.GetType().Name}: {ex.Message}");
+			throw;
+		}
+	}
 
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
@@ -36,24 +60,32 @@ internal sealed class ScriptsDbContext : DbContext
 
 		if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
 		{
-			var jsonConverter =
-				new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<
-					System.Text.Json.JsonDocument,
-					string
-				>(
-					v => v.RootElement.ToString(),
-					v =>
-						System.Text.Json.JsonDocument.Parse(
-							v,
-							new System.Text.Json.JsonDocumentOptions()
-						)
-				);
+			var jsonConverter = new ValueConverter<JsonDocument, string>(
+				v => v.RootElement.ToString(),
+				v => JsonDocument.Parse(v, new JsonDocumentOptions()));
 
 			foreach (var entityType in mb.Model.GetEntityTypes())
 			foreach (var property in entityType.GetProperties())
 			{
-				if (property.ClrType == typeof(System.Text.Json.JsonDocument))
+				if (property.ClrType == typeof(JsonDocument))
 					property.SetValueConverter(jsonConverter);
+			}
+		}
+		else
+		{
+			// EF Core 10.0.8 OriginalValuesFactoryFactory NRE workaround: explicit value
+			// comparers prevent the lazy-init race in GetValueComparer.
+			foreach (var entityType in mb.Model.GetEntityTypes())
+			foreach (var property in entityType.GetProperties())
+			{
+				if (property.ClrType == typeof(string))
+				{
+					var comparer = new ValueComparer<string>(
+						(l, r) => string.Equals(l, r),
+						v => v.GetHashCode(),
+						v => v);
+					property.SetValueComparer(comparer);
+				}
 			}
 		}
 	}
