@@ -7,12 +7,6 @@ internal sealed class GlobalSetup
     [Before(Assembly)]
     public static async Task LoadDotEnvAsync(AssemblyHookContext context)
     {
-        // Force ScriptsDbContext to skip the shared compiled model for tests — its
-        // shared lazy state races under concurrent first-access, producing NRE deep
-        // inside EF Core (RuntimeProperty.GetValueComparer, OriginalValuesFactory).
-        // Using OnModelCreating per DbContext options instance keeps the test safe.
-        System.Environment.SetEnvironmentVariable("SCRIPTS_NO_COMPILED_MODEL", "1");
-
         // TestPaths.RepoRoot is compiler-anchored via [CallerFilePath] and validated
         // against AGENTS.md — reliable regardless of output directory layout.
         var envFile = Path.Combine(TestPaths.RepoRoot, ".env");
