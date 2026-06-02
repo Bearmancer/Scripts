@@ -73,16 +73,20 @@ internal sealed class ScriptsDbContext : DbContext
 		}
 		else
 		{
-			// EF Core 10.0.8 OriginalValuesFactoryFactory NRE workaround: explicit value
-			// comparers prevent the lazy-init race in GetValueComparer.
+			// EF Core 10.0.8 OriginalValuesFactoryFactory NRE workaround:
+			// explicit value comparers prevent the lazy-init race in GetValueComparer.
+			// The hash function MUST be null-safe so materialising a row with a
+			// nullable string column (e.g. ReleaseProgress.Composer) does not throw
+			// NullReferenceException from inside the non-capturing lazy initializer.
+			// Equality is ordinal to match the previous semantics.
 			foreach (var entityType in mb.Model.GetEntityTypes())
 			foreach (var property in entityType.GetProperties())
 			{
 				if (property.ClrType == typeof(string))
 				{
 					var comparer = new ValueComparer<string>(
-						(l, r) => string.Equals(l, r),
-						v => v.GetHashCode(),
+						(l, r) => string.Equals(l, r, StringComparison.Ordinal),
+						v => v == null ? 0 : StringComparer.Ordinal.GetHashCode(v),
 						v => v);
 					property.SetValueComparer(comparer);
 				}
