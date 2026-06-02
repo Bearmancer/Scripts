@@ -13,6 +13,12 @@ namespace Scripts.Tests.DbContext;
 /// policy picks up on the next <c>dotnet restore</c>. The justification for
 /// each is documented inline in <see cref="SingleThreadedParallelLimit"/> and
 /// <c>GlobalSetup.cs</c>.
+/// <para>
+/// Located under <c>DbContext/</c> rather than the project root because the
+/// workarounds exist specifically to mask the EF Core runtime property race
+/// that surfaces through the DbContext change tracker; the retention
+/// guards therefore belong with the other DbContext regression tests.
+/// </para>
 /// </summary>
 internal sealed class WorkaroundRetentionTests
 {
@@ -41,7 +47,8 @@ internal sealed class WorkaroundRetentionTests
 	{
 		// If this fails, the [ParallelLimiter<SingleThreadedParallelLimit>]
 		// attribute on AssemblyInfo.cs was removed and the assembly is no
-		// longer single-threaded - re-introducing the 56/220 NRE failure mode.
+		// longer single-threaded - re-introducing the 56/213 NRE failure mode
+		// documented in research/20260602-efcore-1008-race-condition-research.md.
 		var assembly = typeof(SingleThreadedParallelLimit).Assembly;
 		var attributes = assembly.GetCustomAttributes(inherit: true)
 			.Select(a => a.GetType().Name)
@@ -57,6 +64,8 @@ internal sealed class WorkaroundRetentionTests
 		// The env-var is the switch that bypasses the compiled model in
 		// ScriptsDbContext.OnConfiguring. Removing the SetEnvironmentVariable
 		// re-enables the broken code path on the next test run.
+
+		// Reflection check: confirm the assembly-start hook is still wired.
 		var globalSetup = typeof(GlobalSetup);
 		var method = globalSetup.GetMethod(
 			"LoadDotEnvAsync",
@@ -65,10 +74,25 @@ internal sealed class WorkaroundRetentionTests
 		method.Should().NotBeNull(
 			"GlobalSetup.LoadDotEnvAsync must exist as the assembly-start hook");
 
-		// Confirm the method body references the env var name as a string
-		// literal. This is a deliberately narrow string check: it does not
-		// parse IL, it just keeps the variable name itself under test.
-		var body = method!.GetMethodBody();
-		body.Should().NotBeNull();
+		// Source-text check: confirm the file content itself still contains
+		// the env-var literal. This is the only check that catches a refactor
+		// that renames the variable or removes the SetEnvironmentVariable call
+		// without otherwise breaking the hook signature. A pure reflection
+		// check would not see the literal (string literals live in the
+		// metadata #US heap, not the method body); a behaviour check would
+		// require constructing a TUnit AssemblyHookContext, which is sealed.
+		// The source-text check is the right granularity for "did the literal
+		// survive the refactor" and is robust to the rest of the file
+		// changing.
+		var sourcePath = TestPaths.Combine("csharp", "tests", "Scripts.Tests", "GlobalSetup.cs");
+		File.Exists(sourcePath).Should().BeTrue(
+			$"the GlobalSetup.cs file must exist at {sourcePath}");
+
+		var source = File.ReadAllText(sourcePath);
+		source.Should().Contain("SCRIPTS_NO_COMPILED_MODEL",
+			"GlobalSetup.cs must reference the SCRIPTS_NO_COMPILED_MODEL env-var " +
+			"so ScriptsDbContext.OnConfiguring skips the broken compiled model path");
+		source.Should().Contain("SetEnvironmentVariable",
+			"GlobalSetup.cs must call SetEnvironmentVariable to install the env-var");
 	}
 }

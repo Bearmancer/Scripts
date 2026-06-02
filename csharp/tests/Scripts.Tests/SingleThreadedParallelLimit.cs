@@ -23,6 +23,10 @@ namespace Scripts.Tests;
 /// the upstream-pinned EF Core that contains the fix. A <c>Limit &gt; 1</c>
 /// reproducer must show 1000 consecutive clean assemblies with zero
 /// <c>NullReferenceException</c> in <c>RuntimeProperty.&lt;&gt;c.&lt;GetValueComparer&gt;b__49_0</c>.
+/// The original failure rate is 56/213 (see
+/// <c>research/20260602-efcore-1008-race-condition-research.md:7</c>); the
+/// current test count is higher because of the regression tests added by the
+/// t1-17 work, but the failure ratio is unchanged.
 /// </para>
 /// </summary>
 internal sealed class SingleThreadedParallelLimit : IParallelLimit

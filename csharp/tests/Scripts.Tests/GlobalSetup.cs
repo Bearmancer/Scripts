@@ -28,7 +28,12 @@ internal sealed class GlobalSetup
         // This workaround is the smallest unit that addresses #1: it forces
         // every non-InMemory DbContext to use OnModelCreating, which the
         // production path has never relied on. Removing it re-exposes the
-        // 56/220 NRE failure mode documented in the research note above.
+        // 56/213 NRE failure mode documented in the research note above
+        // (56/213 is the original figure in
+        // research/20260602-efcore-1008-race-condition-research.md:7; the
+        // current test count is higher because the regression tests
+        // added by this work bring it to ~224, but the failure-rate
+        // ratio is unchanged).
         // Do not remove without first pinning a release that contains the
         // EF fix at runtime/.../RuntimeProperty.cs and the related
         // NonCapturingLazyInitializer overloads.
