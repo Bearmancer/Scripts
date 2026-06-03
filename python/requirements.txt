@@ -1,0 +1,14 @@
+basedpyright
+chardet
+deflacue
+ffmpeg-python
+google-auth
+gspread
+pathvalidate
+Pillow
+py3createtorrent
+pylast
+pyperclip
+rich
+tqdm
+unidecode

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<GenerateProgramFile>false</GenerateProgramFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="*" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
+		<PackageReference Include="TUnit" Version="*" />
+		<PackageReference Include="Testcontainers.PostgreSql" Version="*" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Scripts.csproj" />
+	</ItemGroup>
+</Project>

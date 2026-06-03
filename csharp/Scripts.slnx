@@ -1,0 +1,18 @@
+<Solution>
+	<Folder Name="/csharp/">
+		<Project Path="Scripts.csproj" />
+	</Folder>
+
+	<Folder Name="/tests/">
+		<Project Path="tests/Scripts.Tests/Scripts.Tests.csproj" />
+	</Folder>
+
+	<Folder Name="/artifacts/">
+		<File Path="../.editorconfig" />
+		<File Path="../.env" />
+		<File Path="../.kilo" />
+		<File Path="../.gemini" />
+		<File Path="../docker-compose.yml" />
+		<File Path="../GEMINI.md" />
+	</Folder>
+</Solution>

@@ -1,0 +1,8 @@
+﻿Id,Public Id,Name,Issues,Created By Id,Created By Name,Creation Date,Modification Date
+25006df7-6fad-4ede-ac68-755ccd3c9a35,12,OCI Kilo Agent Dysfunction Analysis,,9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-05-05T00:45:32.811Z,2026-05-05T00:45:32.811Z
+70d889f0-293e-4fd7-8439-3d3f9a0ef7f5,5,Scripts,"Fix SACD script,Azure,Create ps1 commit collation script,Use batched CRUD for Google Sheets,Fibery Migration Mega-Issue: Scripts → Fibery (Google Sheets, CSV, JSON)",9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-04-25T06:21:07.459Z,2026-05-04T09:08:54.733Z
+845ae084-0c24-4572-9b5a-b195a3bb7981,11,Network Architecture Audit & Simplification,,9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-05-04T12:22:40.759Z,2026-05-04T12:22:40.759Z
+a8954b8f-8a16-48e3-abf2-50ef172f49e7,3,Music,"Fix SACD script,Link IDrive to rclone,Fibery Migration Mega-Issue: Scripts → Fibery (Google Sheets, CSV, JSON)",9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-04-25T06:21:07.459Z,2026-05-04T09:08:54.733Z
+b9c4b957-01f4-4d90-a11d-572f1e14663f,8,Miscellaneous,,9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-04-25T06:21:07.459Z,2026-05-04T14:18:33.040Z
+c37a8cf0-85b7-401a-8169-a9b85692ec45,4,Media Server,,9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-04-25T06:21:07.459Z,2026-05-04T14:18:33.040Z
+edbb5c4a-14ed-4912-becf-6a4f831ac912,7,DSAs,Push Dharma DSA to Kanishk,9774352c-d472-4d7f-a38f-6ccf14e98723,Kanishk Nishar,2026-04-25T06:21:07.459Z,2026-04-30T03:54:13.715Z

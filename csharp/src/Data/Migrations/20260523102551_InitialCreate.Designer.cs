@@ -1,0 +1,263 @@
+using System;
+using System.Text.Json;
+using Scripts.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace Scripts.src.Data.Migrations
+{
+    [DbContext(typeof(ScriptsDbContext))]
+    [Migration("20260523102551_InitialCreate")]
+    partial class InitialCreate
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Scripts.Data.Entities.Album", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("ReleaseDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("Albums");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Artist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<JsonDocument>("Metadata")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Artists");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.ExecutionLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExitCode")
+                        .HasColumnType("integer");
+
+                    b.Property<JsonDocument>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ExecutionLogs");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.FailedTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FailedTasks");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Scrobble", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ScrobbledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TrackId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrackId");
+
+                    b.ToTable("Scrobbles");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Track", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlbumId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlbumId");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("Tracks");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Video", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PlaylistId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("YoutubeId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Videos");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Album", b =>
+                {
+                    b.HasOne("Scripts.Data.Entities.Artist", "Artist")
+                        .WithMany("Albums")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Scrobble", b =>
+                {
+                    b.HasOne("Scripts.Data.Entities.Track", "Track")
+                        .WithMany("Scrobbles")
+                        .HasForeignKey("TrackId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Track");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Track", b =>
+                {
+                    b.HasOne("Scripts.Data.Entities.Album", "Album")
+                        .WithMany("Tracks")
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Scripts.Data.Entities.Artist", "Artist")
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Album");
+
+                    b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Album", b =>
+                {
+                    b.Navigation("Tracks");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Artist", b =>
+                {
+                    b.Navigation("Albums");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Track", b =>
+                {
+                    b.Navigation("Scrobbles");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}

@@ -1,0 +1,148 @@
+import atexit
+import json
+import logging
+import uuid
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, cast
+
+from rich.console import Console
+from rich.logging import RichHandler
+
+
+class JsonFileHandler(logging.Handler):
+	"""Custom logging handler that writes structured JSON logs with session tracking."""
+
+	log_path: Path
+	lock_path: Path
+	session_id: str
+	started_at: str
+	session_closed: bool
+
+	def __init__(self, service_name: str) -> None:
+		super().__init__()
+		self.log_path = Path.home() / ".toolkit" / "logs" / f"{service_name}.json"
+		self.lock_path = self.log_path.with_suffix(".lock")
+		self.session_id = str(uuid.uuid4())
+		self.started_at = datetime.now(UTC).isoformat()
+		self.session_closed = False
+
+		self.log_path.parent.mkdir(parents=True, exist_ok=True)
+		self._handle_stale_lock()
+		self._write_lock()
+
+		self._append_entry({
+			"timestamp": self.started_at,
+			"type": "session_start",
+			"session_id": self.session_id,
+		})
+
+		atexit.register(self.close)
+
+	def emit(self, record: logging.LogRecord) -> None:
+		log_entry: dict[str, Any] = {
+			"timestamp": datetime.now(UTC).isoformat(),
+			"type": "log",
+			"session_id": self.session_id,
+			"level": record.levelname,
+			"message": self.format(record),
+			"source": {
+				"module": record.module,
+				"function": record.funcName,
+				"line": record.lineno,
+			},
+		}
+
+		if hasattr(record, "data"):
+			log_entry["data"] = record.data
+
+		self._append_entry(log_entry)
+
+	def close(self) -> None:
+		if not self.session_closed:
+			self._append_entry({
+				"timestamp": datetime.now(UTC).isoformat(),
+				"type": "session_end",
+				"session_id": self.session_id,
+			})
+			self._delete_lock()
+			self.session_closed = True
+		super().close()
+
+	def _handle_stale_lock(self) -> None:
+		if not self.lock_path.exists():
+			return
+
+		lock_content = self.lock_path.read_text(encoding="utf-8")
+		parts = lock_content.split("|", maxsplit=1)
+		if len(parts) != 2:
+			self._delete_lock()
+			return
+		stale_session_id, stale_started_at = parts
+
+		self._append_entry({
+			"timestamp": datetime.now(UTC).isoformat(),
+			"type": "session_crash",
+			"session_id": stale_session_id,
+			"started_at": stale_started_at,
+		})
+		self._delete_lock()
+
+	def _write_lock(self) -> None:
+		self.lock_path.write_text(
+			f"{self.session_id}|{self.started_at}", encoding="utf-8"
+		)
+
+	def _delete_lock(self) -> None:
+		if self.lock_path.exists():
+			self.lock_path.unlink()
+
+	def _append_entry(self, entry: dict[str, Any]) -> None:
+		entries = self._load_entries()
+		entries.append(entry)
+		self.log_path.write_text(
+			json.dumps(entries, indent=2, ensure_ascii=False), encoding="utf-8"
+		)
+
+	def _load_entries(self) -> list[dict[str, Any]]:
+		if not self.log_path.exists():
+			return []
+		content = self.log_path.read_text(encoding="utf-8").strip()
+		if not content:
+			return []
+		try:
+			data = json.loads(content)
+		except json.JSONDecodeError:
+			return []
+		if isinstance(data, list):
+			return cast("list[dict[str, Any]]", data)
+		return []
+
+
+def configure_logging(service_name: str = "toolkit") -> logging.Logger:
+	"""Configure and return a logger with console and JSON file handlers."""
+	logger = logging.getLogger("toolkit")
+	logger.setLevel(logging.DEBUG)
+
+	if not logger.handlers:
+		console = Console(width=200, highlight=False)
+		console_handler = RichHandler(
+			console=console,
+			show_time=True,
+			show_path=False,
+			rich_tracebacks=True,
+			markup=True,
+		)
+		console_handler.setLevel(logging.DEBUG)
+		logger.addHandler(console_handler)
+
+		json_handler = JsonFileHandler(service_name)
+		json_handler.setLevel(logging.DEBUG)
+		logger.addHandler(json_handler)
+
+	return logger
+
+
+def get_logger(service_name: str = "toolkit") -> logging.Logger:
+	"""Get or create a configured logger for the specified service."""
+	return configure_logging(service_name)
