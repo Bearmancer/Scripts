@@ -65,7 +65,9 @@ internal sealed class WorkaroundRetentionTests
 		// ScriptsDbContext.OnConfiguring. Removing the SetEnvironmentVariable
 		// re-enables the broken code path on the next test run.
 
-		// Reflection check: confirm the assembly-start hook is still wired.
+		// Reflection check: confirm the assembly-start hook is still wired
+		// and is annotated with [Before(Assembly)] so TUnit invokes it
+		// before any test runs.
 		var globalSetup = typeof(GlobalSetup);
 		var method = globalSetup.GetMethod(
 			"LoadDotEnvAsync",
@@ -74,25 +76,44 @@ internal sealed class WorkaroundRetentionTests
 		method.Should().NotBeNull(
 			"GlobalSetup.LoadDotEnvAsync must exist as the assembly-start hook");
 
-		// Source-text check: confirm the file content itself still contains
-		// the env-var literal. This is the only check that catches a refactor
-		// that renames the variable or removes the SetEnvironmentVariable call
-		// without otherwise breaking the hook signature. A pure reflection
-		// check would not see the literal (string literals live in the
-		// metadata #US heap, not the method body); a behaviour check would
-		// require constructing a TUnit AssemblyHookContext, which is sealed.
-		// The source-text check is the right granularity for "did the literal
-		// survive the refactor" and is robust to the rest of the file
-		// changing.
-		var sourcePath = TestPaths.Combine("csharp", "tests", "Scripts.Tests", "GlobalSetup.cs");
-		File.Exists(sourcePath).Should().BeTrue(
-			$"the GlobalSetup.cs file must exist at {sourcePath}");
+		var beforeAttribute = method!.GetCustomAttributes(inherit: true)
+			.Select(a => a.GetType().Name)
+			.Any(n => n.Contains("Before"));
+		beforeAttribute.Should().BeTrue(
+			"the assembly-start hook must be annotated with [Before(Assembly)] (or equivalent) " +
+			"so TUnit invokes it before any test runs");
 
-		var source = File.ReadAllText(sourcePath);
-		source.Should().Contain("SCRIPTS_NO_COMPILED_MODEL",
-			"GlobalSetup.cs must reference the SCRIPTS_NO_COMPILED_MODEL env-var " +
-			"so ScriptsDbContext.OnConfiguring skips the broken compiled model path");
-		source.Should().Contain("SetEnvironmentVariable",
-			"GlobalSetup.cs must call SetEnvironmentVariable to install the env-var");
+		// Source-text check: confirm the file content itself still contains
+		// the env-var literal AND the SetEnvironmentVariable call. A pure
+		// reflection check would not see the literal (string literals live in
+		// the metadata #US heap, not the method body); a behaviour check
+		// would require constructing a TUnit AssemblyHookContext, which is
+		// sealed. The source-text check is the right granularity for "did
+		// the literal survive the refactor" and is robust to the rest of the
+		// file changing. We scan every .cs file in the TestsRoot to make
+		// the check resilient to the file being renamed or split (e.g.
+		// GlobalSetup.cs -> EnvVarSetup.cs + DotEnvLoader.cs).
+		var testRoot = TestPaths.TestsRoot;
+		Directory.Exists(testRoot).Should().BeTrue(
+			$"the test root must exist at {testRoot}");
+
+		var csFiles = Directory.EnumerateFiles(testRoot, "*.cs", SearchOption.AllDirectories)
+			.Where(f => !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+				&& !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+			.ToList();
+
+		csFiles.Should().NotBeEmpty(
+			$"the test project at {testRoot} must contain at least one .cs source file");
+
+		var foundFileWithEnvVar = csFiles
+			.Select(f => (path: f, content: File.ReadAllText(f)))
+			.FirstOrDefault(t =>
+				t.content.Contains("SCRIPTS_NO_COMPILED_MODEL", StringComparison.Ordinal)
+				&& t.content.Contains("SetEnvironmentVariable", StringComparison.Ordinal));
+
+		foundFileWithEnvVar.path.Should().NotBeNullOrEmpty(
+			"some .cs file in the test project must contain both " +
+			"\"SCRIPTS_NO_COMPILED_MODEL\" and \"SetEnvironmentVariable\" so the " +
+			"assembly-start hook actually installs the env-var");
 	}
 }

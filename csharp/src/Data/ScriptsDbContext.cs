@@ -58,6 +58,30 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.SourceRecordConfiguration());
 		mb.ApplyConfiguration(new Configuration.ReleaseProgressConfiguration());
 
+		// Apply the null-safe string value comparer unconditionally so it is
+		// exercised by every provider path (InMemory included). The previous
+		// implementation only set the comparer in the non-InMemory branch,
+		// which meant the InMemory unit tests could not actually prove the
+		// fix - they were getting EF Core's default null-safe comparer.
+		//
+		// The hash function MUST be null-safe so materialising a row with a
+		// nullable string column (e.g. ReleaseProgress.Composer) does not
+		// throw NullReferenceException from inside EF Core 10.0.8's
+		// non-capturing lazy initializer (RuntimeProperty.GetValueComparer).
+		// Equality uses StringComparison.Ordinal to match the prior semantics.
+		foreach (var entityType in mb.Model.GetEntityTypes())
+		foreach (var property in entityType.GetProperties())
+		{
+			if (property.ClrType == typeof(string))
+			{
+				var comparer = new ValueComparer<string>(
+					(l, r) => string.Equals(l, r, StringComparison.Ordinal),
+					v => v == null ? 0 : StringComparer.Ordinal.GetHashCode(v),
+					v => v);
+				property.SetValueComparer(comparer);
+			}
+		}
+
 		if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
 		{
 			var jsonConverter = new ValueConverter<JsonDocument, string>(
@@ -69,27 +93,6 @@ internal sealed class ScriptsDbContext : DbContext
 			{
 				if (property.ClrType == typeof(JsonDocument))
 					property.SetValueConverter(jsonConverter);
-			}
-		}
-		else
-		{
-			// EF Core 10.0.8 OriginalValuesFactoryFactory NRE workaround:
-			// explicit value comparers prevent the lazy-init race in GetValueComparer.
-			// The hash function MUST be null-safe so materialising a row with a
-			// nullable string column (e.g. ReleaseProgress.Composer) does not throw
-			// NullReferenceException from inside the non-capturing lazy initializer.
-			// Equality is ordinal to match the previous semantics.
-			foreach (var entityType in mb.Model.GetEntityTypes())
-			foreach (var property in entityType.GetProperties())
-			{
-				if (property.ClrType == typeof(string))
-				{
-					var comparer = new ValueComparer<string>(
-						(l, r) => string.Equals(l, r, StringComparison.Ordinal),
-						v => v == null ? 0 : StringComparer.Ordinal.GetHashCode(v),
-						v => v);
-					property.SetValueComparer(comparer);
-				}
 			}
 		}
 	}

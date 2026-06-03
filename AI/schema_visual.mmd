@@ -1,0 +1,133 @@
+---
+title: PostgreSQL Schema Overview
+---
+erDiagram
+    direction TB
+
+    %% DATABASE 1: YOUTUBE PLAYLISTS %%
+
+    playlists {
+        uuid id PK "gen_random_uuid()"
+        varchar playlist_id UK "YouTube playlist ID"
+        text title
+        integer video_count
+        varchar etag "Change detection"
+        timestamptz last_updated
+        timestamptz created_at
+    }
+
+    playlist_videos {
+        uuid id PK "gen_random_uuid()"
+        uuid playlist_id FK "playlists.id"
+        integer video_id FK "videos.id"
+        integer position "Order in playlist"
+        timestamptz added_at
+    }
+
+    videos {
+        integer id PK "IDENTITY ALWAYS"
+        text url UK
+        text title "Original language"
+        text translated_title "English"
+        text description "Original"
+        text translated_description "English"
+        timestamptz translated_at
+        varchar detected_language "ISO 639-1"
+        text channel_name
+        date upload_date
+        timestamptz synced_at
+        jsonb metadata
+    }
+
+    playlists ||--o{ playlist_videos : "has"
+    videos ||--o{ playlist_videos : "in playlist"
+
+    %% DATABASE 2: FIBERY NOTES AND LOGS %%
+
+    fibery_entities {
+        uuid id PK "gen_random_uuid()"
+        varchar fibery_id UK "Fibery system ID"
+        varchar entity_type "Document, Task, Project"
+        jsonb raw_data "API response"
+        timestamptz synced_at
+    }
+
+    execution_logs {
+        integer id PK "IDENTITY BY DEFAULT"
+        text session_id
+        integer exit_code
+        jsonb payload
+        timestamptz timestamp
+    }
+
+    failed_tasks {
+        uuid id PK "gen_random_uuid()"
+        text task_name
+        text error_message
+        timestamptz timestamp
+    }
+
+    source_records {
+        uuid id PK "gen_random_uuid()"
+        text source_id "Fibery entity UUID"
+        text entity_type
+        jsonb raw_data
+    }
+
+    execution_logs ||--o{ failed_tasks : "may produce"
+    fibery_entities ||--o{ source_records : "maps to"
+
+    %% DATABASE 3: LASTFM SCROBBLES UTC 24H %%
+
+    artists {
+        integer id PK "IDENTITY ALWAYS"
+        text name UK "Trigram index"
+        jsonb metadata
+    }
+
+    albums {
+        integer id PK "IDENTITY ALWAYS"
+        integer artist_id FK "artists.id"
+        text title
+        date release_date
+    }
+
+    tracks {
+        integer id PK "IDENTITY ALWAYS"
+        integer album_id FK "albums.id"
+        integer artist_id FK "artists.id"
+        text title
+        integer duration_seconds
+    }
+
+    scrobbles {
+        bigint id PK "IDENTITY ALWAYS"
+        integer track_id FK "tracks.id"
+        timestamptz scrobbled_at "UTC 24h"
+        varchar platform "LASTFM, WEB"
+    }
+
+    %% release_progress is standalone MusicBrainz staging data %%
+
+    release_progress {
+        bigint id PK "IDENTITY BY DEFAULT"
+        text release_id "MusicBrainz"
+        integer disc_number
+        integer track_number
+        text title
+        text artist
+        text composer
+        text conductor
+        text orchestra
+        jsonb soloists
+        text recording_venue
+        integer recording_year
+        text duration
+        text work_name
+        timestamptz created_at
+    }
+
+    artists ||--o{ albums : "produces"
+    artists ||--o{ tracks : "records"
+    albums ||--o{ tracks : "contains"
+    tracks ||--o{ scrobbles : "scrobbled as"

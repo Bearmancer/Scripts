@@ -131,8 +131,16 @@ internal sealed class NullSafeComparerCompiledModelTests : DatabaseTestBase
 	{
 		// Sanity check on the live compiled-model path: with the comparer fix
 		// in place, building a ScriptsDbContext against a real database and
-		// running a trivial query must not throw, even with the assembly-wide
-		// parallel limiter still in effect at the time of this test.
+		// inspecting the model must not throw. This test does not insert or
+		// query any data: a fuller round-trip test would conflate the
+		// comparer regression with the upstream EF Core 10.0.8
+		// RuntimeProperty.GetValueComparer TOCTOU race (documented in
+		// research/20260602-efcore-1008-race-condition-research.md), which
+		// is a separate bug and is the reason WorkaroundRetentionTests pins
+		// the SCRIPTS_NO_COMPILED_MODEL env-var and the
+		// SingleThreadedParallelLimit. The InMemory unit tests in
+		// NullSafeStringComparerTests above prove the comparer contract
+		// directly without that interference.
 		await using var context = Fixture.GetContext();
 		var model = context.Model;
 		model.Should().NotBeNull();

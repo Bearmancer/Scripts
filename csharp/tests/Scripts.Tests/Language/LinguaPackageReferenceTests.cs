@@ -169,12 +169,19 @@ internal sealed class LinguaPackageReferenceTests
 	private static string? ResolvePackageVersion(JsonDocument doc, string packageId)
 	{
 		if (!doc.RootElement.TryGetProperty("targets", out var targets)) return null;
-		if (!targets.TryGetProperty("net10.0", out var tfm)) return null;
 
 		// The version is encoded in the property name: "<PackageId>/<Version>".
-		foreach (var prop in tfm.EnumerateObject())
-			if (prop.Name.StartsWith($"{packageId}/", StringComparison.Ordinal))
-				return prop.Name.Substring(packageId.Length + 1);
+		// We do not assume a specific TFM - we walk every TFM key under
+		// "targets" and pick the first match. The TFM-agnostic walk also
+		// makes the test resilient to multi-targeting or a future TFM bump.
+		foreach (var tfm in targets.EnumerateObject())
+		{
+			foreach (var prop in tfm.Value.EnumerateObject())
+			{
+				if (prop.Name.StartsWith($"{packageId}/", StringComparison.Ordinal))
+					return prop.Name.Substring(packageId.Length + 1);
+			}
+		}
 
 		return null;
 	}
