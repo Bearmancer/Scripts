@@ -405,7 +405,7 @@ End-to-end checks before declaring phase B + C complete.
 
 ## Traceability: Old Tier Plans → MASTER_PLAN
 
-The repository previously contained 47 tier plan files across 4 tiers (T1–T4) in `AI/plans/tier-{1,2,3,4}-*/`. These were created, deleted, and re-created multiple times. The current MASTER_PLAN consolidates all pending work into a single file. Below is the item-level mapping.
+The repository previously contained 45 tier plan files across 4 tiers (T1–T4) in `AI/plans/tier-{1,2,3,4}-*/`. These were created, deleted, and re-created multiple times. The current MASTER_PLAN consolidates all pending work into a single file. Below is the item-level mapping.
 
 ### Tier 1 (EF Core Migration — 17 phases)
 
@@ -416,14 +416,14 @@ The repository previously contained 47 tier plan files across 4 tiers (T1–T4) 
 | T1-02 | Entity Refactoring | — | ✅ Done | MBID removal tests pass |
 | T1-03 | DbContext Config | — | ✅ Done | NoTracking, ApplyConfigurationsFromAssembly |
 | T1-04 | Entity Configurations | B1 (schema support) | ✅ Done (base) | 10 configs exist; B1 adds `ToTable(name, schema)` |
-| T1-05 | Database Migrations | B2 (schema migration) | ✅ Done (base) | 6 migrations exist; B2 adds schema migration |
+|| T1-05 | Database Migrations | B2 (schema migration) | ✅ Done (base) | 7 migrations exist; B2 adds schema migration |
 | T1-06 | Repository Pattern | — | ✅ Done | 5 repos + interfaces + ResilienceFactory |
 | T1-07 | State Manager Migration | — | ✅ Done | Single StateManager remains |
 | T1-08 | Release Cache Migration | — | ✅ Done | ReleaseProgressService wired, CSV cache deleted |
 | T1-09 | Sync Service Updates | — | ✅ Done | LastFmService has IDbContextFactory |
 | T1-10 | EF10 Query Upgrades | — | ✅ Done | Guard tests written and passing |
 | T1-11 | Compiled Model | — | ✅ Done | CompiledModelTests pass (but C2: bypassed in CI) |
-| T1-12 | Logging Relocation | **A5** | ✅ Code in place | Commits `f8cbd19` + `e29ccab`; `Paths.LogDirectory` correct; `ServiceType.Sheets` removed from Core enum (but `Infrastructure/Logger.cs:319` still has Sheets — see F1.C1 note) |
+|| T1-12 | Logging Relocation | **A5** | ✅ Code in place | Commits `f8cbd19` + `e29ccab`; `Paths.LogDirectory` correct; `ServiceType.Sheets` removed from `Core/Log.cs:9` internal enum (but `Infrastructure/Logger.cs:319` public enum still has Sheets — see F1.C1 note) |
 | T1-13 | Lingua Migration | **A6** | ✅ Code in place | Commit `1e3aea9`; `LanguageIdentifier.cs` uses Lingua; duplicate `using Lingua;` at lines 1+3 (F1.C4) |
 | T1-14 | Resilience Policies | F1.C1 (audit fix) | ⚠️ No-Op | Marked done but `EnableRetryOnFailure` never wired; F1 fixes |
 | T1-15 | Testcontainers | — | ✅ Done | DatabaseTestFixture uses local Postgres |
@@ -451,12 +451,12 @@ Findings from a post-commit code review of the cascade-gate override in commit `
 
 | ID | File:Line | Issue | Fix |
 |----|-----------|-------|-----|
-| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. **Note**: `csharp/src/Infrastructure/Resilience.cs` (197 lines) is NOT dead — it has 30+ active call sites in `GoogleSheetsService.cs`. Do NOT delete it. Instead, migrate `GoogleSheetsService` to `Core.Resilience` (Polly v8) before removing. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. Migrate `GoogleSheetsService.cs` from `Infrastructure.Resilience` to `Core.Resilience`. Only then delete `Infrastructure/Resilience.cs`. Verify `RetryExhaustedException` lands in `csharp/src/Core/Resilience.cs` per the original plan. |
-| C2 | `csharp/tests/Scripts.Tests/GlobalSetup.cs:14` | T1-16 compiled model is bypassed in tests via `SCRIPTS_NO_COMPILED_MODEL=1`. Root cause: EF Core 10.0.8 upstream TOCTOU race. Means t1-16 deliverable is unverifiable in CI. | Either fix the upstream race (file EF Core issue, pin to a non-buggy version) or move the `SCRIPTS_NO_COMPILED_MODEL` toggle to a runtime config so CI can opt in. Add a test that fails with a clear error when the env var is set. |
-| C3 | `csharp/src/Data/ScriptsDbContext.cs:23,33` | `Console.WriteLine` debug diagnostics in production code. | Remove the two debug lines. If diagnostics are needed, inject and use `ILogger`. |
+|| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. **Note**: `csharp/src/Infrastructure/Resilience.cs` (197 lines) is NOT dead — it has 29 active call sites in `GoogleSheetsService.cs`. Do NOT delete it. Instead, migrate `GoogleSheetsService` to `Core.Resilience` (Polly v8) before removing. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. Migrate `GoogleSheetsService.cs` from `Infrastructure.Resilience` to `Core.Resilience`. Only then delete `Infrastructure/Resilience.cs`. Verify `RetryExhaustedException` lands in `csharp/src/Core/Resilience.cs` per the original plan. |
+|| C2 | `csharp/tests/Scripts.Tests/GlobalSetup.cs:43` | T1-16 compiled model is bypassed in tests via `SCRIPTS_NO_COMPILED_MODEL=1`. Root cause: EF Core 10.0.8 upstream TOCTOU race. Means t1-16 deliverable is unverifiable in CI. | Either fix the upstream race (file EF Core issue, pin to a non-buggy version) or move the `SCRIPTS_NO_COMPILED_MODEL` toggle to a runtime config so CI can opt in. Add a test that fails with a clear error when the env var is set. |
+|| C3 | `csharp/src/Data/ScriptsDbContext.cs:22,31` | `Console.WriteLine` debug diagnostics in production code. | Remove the two debug lines. If diagnostics are needed, inject and use `ILogger`. |
 | C4 | `csharp/src/Services/Language/LanguageIdentifier.cs:1,3` | `using Lingua;` declared twice. | Delete the duplicate on line 3. |
-| C5 | Semver comparison in version-check code | `string.Compare` is used for semver comparison, which gives wrong results (e.g., `"1.9.0" > "1.10.0"` is `true` lexicographically). | Replace with a proper semver parser. `System.Version` is insufficient; use a small helper that compares numeric segments. |
-| C6 | `csharp/tests/Scripts.Tests/.../LinguaPackageReferenceTests.cs:94-114` | Tests hit `api.nuget.org` during test runs. Breaks offline CI and makes the suite non-deterministic. | Mock the NuGet API or move these to an integration test category excluded from the default run. |
+|| C5 | ~~Semver comparison in version-check code~~ | **Resolved in prior commit.** `LinguaPackageReferenceTests.cs:128-156` documents that `CompareSemver` was added as a regression guard. No remaining `string.Compare` for semver in `src/`. | Remove this item or confirm no residual usage. |
+|| C6 | ~~`LinguaPackageReferenceTests.cs:94-114` — Tests hit `api.nuget.org`~~ | **Factually wrong.** Lines 106-108 explicitly state: "We do NOT hit the network." Tests read from local `csharp/obj/project.assets.json`. | Remove this item — it is a false finding from the original audit. |
 
 **Verify F1**: `grep -rn "EnableRetryOnFailure" csharp/src/Data/` shows 2 matches; `grep -rn "Console.WriteLine" csharp/src/Data/ScriptsDbContext.cs` returns nothing; `grep -c "using Lingua" csharp/src/Services/Language/LanguageIdentifier.cs` returns 1; no `new DefaultAzureCredential` outside DI (cross-ref C1 from Phase C).
 
@@ -466,10 +466,10 @@ Findings from a post-commit code review of the cascade-gate override in commit `
 
 | ID | File | Issue | Fix |
 |----|------|-------|-----|
-| I1 | `csharp/tests/Scripts.Tests/Infrastructure/PostgresFixture.cs` | Concurrency model is not thread-safe. Multiple parallel test classes share a single fixture instance without synchronization. | Add a `SemaphoreSlim` around fixture initialization, or switch to `IAsyncLifetime` per test class. |
-| I2 | `csharp/tests/Scripts.Tests/Infrastructure/PostgresFixture.cs` | `DisposeAsync` is not idempotent. Calling it twice (e.g., from a teardown hook + a using statement) throws. | Add a `_disposed` guard or use `Interlocked.Exchange` on a dispose flag. |
-| I3 | `csharp/tests/Scripts.Tests/Infrastructure/` | Three layers of concurrency control (xUnit `[Collection]`, Polly retry, custom semaphore). Redundant and confusing. | Pick one. Recommended: xUnit `[CollectionDefinition]` for serial PG access; remove the custom semaphore and Polly retry. |
-| I4 | `csharp/tests/Scripts.Tests/Infrastructure/TestDbInitializer.cs` | `TRUNCATE` statements hardcode table names that no longer match after the 3-schema migration. | Use a `pg_tables` query to enumerate and truncate, or read table names from the DbContext model. |
+|| I1 | `csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs` | Concurrency model is not thread-safe. Multiple parallel test classes share a single fixture instance without synchronization. | Add a `SemaphoreSlim` around fixture initialization, or switch to `IAsyncLifetime` per test class. |
+|| I2 | `csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs` | `DisposeAsync` is not idempotent. Calling it twice (e.g., from a teardown hook + a using statement) throws. | Add a `_disposed` guard or use `Interlocked.Exchange` on a dispose flag. |
+|| I3 | `csharp/tests/Scripts.Tests/DbContext/` | Three layers of concurrency control (xUnit `[Collection]`, Polly retry, custom semaphore). Redundant and confusing. | Pick one. Recommended: xUnit `[CollectionDefinition]` for serial PG access; remove the custom semaphore and Polly retry. |
+|| I4 | `csharp/tests/Scripts.Tests/DatabaseTestBase.cs:79-84` | `TRUNCATE` statements hardcode table names that no longer match after the 3-schema migration. | Use a `pg_tables` query to enumerate and truncate, or read table names from the DbContext model. |
 | I5 | (same as C2) | t1-16 compiled model unverifiable in CI. | (see C2 fix) |
 
 **Verify F2**: Test suite runs in parallel with no fixture-related flakes; `TRUNCATE` succeeds after the B-schema migration lands.
@@ -524,7 +524,7 @@ The EF layer is currently 'dead' — entities exist but are not wired to consume
 
 ---
 
-**Note on the working-tree state of this file**: `AI/plans/MASTER_PLAN.md` is currently untracked (`git status` shows `?? AI/plans/MASTER_PLAN.md`). It must be `git add`ed and committed before the next planning session treats it as authoritative. The plan-introduces-adr D2 is similarly uncommitted (directory `AI/plans/adr/` is missing from the working tree).
+**Note on the working-tree state of this file**: `AI/plans/MASTER_PLAN.md` is committed (see `44d97af`). The ADR directory `AI/plans/adr/` is still missing from the working tree — D2 has not been created yet.
 
 ## Execution Order & Dependencies
 
@@ -697,7 +697,7 @@ Phase F done when (P0 — audit, do first):
 - [ ] M4: Commit `8941eeb` re-audited; cascade-gate override policy documented and enforced
 - [ ] M5: Tests split by `[Trait("Category", "Unit")]` and `[Trait("Category", "Integration")]`; default run = unit only
 - [ ] M6: Commits between `cbb4a62` and `8941eeb` audited; either `cbb4a62` reverted or debugging branch justified in writing
-- [ ] `AI/plans/MASTER_PLAN.md` is committed to git (currently `?? AI/plans/MASTER_PLAN.md`)
+- [x] `AI/plans/MASTER_PLAN.md` is committed to git (`44d97af`)
 
 Phase G done when:
 
