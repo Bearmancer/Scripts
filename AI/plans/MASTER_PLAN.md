@@ -147,8 +147,9 @@ All active work captured from this chat session. Items are sequenced by dependen
 | [B. EF Core 3-Schema Migration](#b-ef-core-3-schema-migration) | Entity config, migration, compiled models, validation | 4 | A complete |
 | [C. Azure Identity Fixes](#c-azure-identity-fixes) | DI registration, scope fix, error string, cleanup | 4 | A1 (SDK pin) |
 | [D. Documentation](#d-documentation) | MASTER_PLAN update, ADR | 2 | independent (anytime) |
-| [E. Verification](#e-verification) | Azure CLI, full build/test | 2 | B + C complete |
+| [E. Verification](#e-verification) | Azure CLI, full build/test | 2 | B + C complete, A3, A4, F2 |
 | [F. Post-Commit Code Review Audit](#f-post-commit-code-review-audit) | Critical bugs (C1-C6), infra regressions (I1-I5), meta (M1-M6) from commit `8941eeb` audit | 3 | nothing (highest priority — fixes regressions in already-shipped tier-1 work) |
+| [G. Wire Up EF Layer](#g-wire-up-ef-layer) | Audit repository usage, wire repositories to consumer code, update DbContextRegistration | 3 | B complete |
 
 **Entity-to-Schema Mapping** (confirmed for phase B):
 
@@ -385,22 +386,22 @@ End-to-end checks before declaring phase B + C complete.
 - **Pass conditions**: `az account show` returns a non-empty `id`, `tenantId`, and `name` matching the expected subscription
 - **Verification result (2026-06-05)**:
   - `az version` -> `azure-cli: 2.86.0`, `account extension: 0.2.5`
-  - `az account show` exit 0; subscription `id: 234dbe5e-0909-4a45-984f-697b0c0e9833`, `name: Azure`, `tenantId: dc484652-0680-432f-b2fe-8cb07cd8d7a5`, `user: kanishknishar@outlook.com`, `state: Enabled`
+  - `az account show` exit 0; subscription `id: <subscription-id>`, `name: Azure`, `tenantId: <tenant-id>`, `user: <user-email>`, `state: Enabled`
   - `az account get-access-token` exit 0; returned a valid Bearer token (expires `2026-06-06 00:01:16 UTC`). End-to-end CLI path is confirmed working on this machine.
 - **Effort**: Quick (5 min)
+---
 
-#### E2. Full Build + Test
+#### E2. Full Build & Test
 
-- **What**: Full solution build and test run.
+- **What**: End-to-end verification that the entire solution compiles and all tests pass after Phases A–C complete.
 - **Commands**:
   ```bash
-  dotnet build csharp/Scripts.slnx   # 0 errors
-  dotnet test csharp/Scripts.slnx    # all tests pass
+  dotnet build csharp/Scripts.slnx
+  dotnet test csharp/Scripts.slnx
   ```
-- **Pass conditions**: 0 errors, 0 new warnings, all guard tests (EF11GuardTests, Ef11ForbiddenPatternsTests, Ef10ReplacementPatternTests) pass
-- **Effort**: Quick (depends on suite size)
-
----
+- **Pass conditions**: `dotnet build` returns 0 errors; `dotnet test` passes all non-skipped tests
+- **Blocked by**: A3, A4, B4, C2, C3, C4, F2 (PostgresFixture fixes must land first so the full test suite can run)
+- **Effort**: Quick (10 min)
 
 ## Traceability: Old Tier Plans → MASTER_PLAN
 
@@ -422,8 +423,8 @@ The repository previously contained 47 tier plan files across 4 tiers (T1–T4) 
 | T1-09 | Sync Service Updates | — | ✅ Done | LastFmService has IDbContextFactory |
 | T1-10 | EF10 Query Upgrades | — | ✅ Done | Guard tests written and passing |
 | T1-11 | Compiled Model | — | ✅ Done | CompiledModelTests pass (but C2: bypassed in CI) |
-| T1-12 | Logging Relocation | **A5** | ❌ Not Started | **Added to MASTER_PLAN in this revision** |
-| T1-13 | Lingua Migration | **A6** | ❌ Not Started | **Added to MASTER_PLAN in this revision** |
+| T1-12 | Logging Relocation | **A5** | ✅ Code in place | Commits `f8cbd19` + `e29ccab`; `Paths.LogDirectory` correct; `ServiceType.Sheets` removed from Core enum (but `Infrastructure/Logger.cs:319` still has Sheets — see F1.C1 note) |
+| T1-13 | Lingua Migration | **A6** | ✅ Code in place | Commit `1e3aea9`; `LanguageIdentifier.cs` uses Lingua; duplicate `using Lingua;` at lines 1+3 (F1.C4) |
 | T1-14 | Resilience Policies | F1.C1 (audit fix) | ⚠️ No-Op | Marked done but `EnableRetryOnFailure` never wired; F1 fixes |
 | T1-15 | Testcontainers | — | ✅ Done | DatabaseTestFixture uses local Postgres |
 | T1-16 | Sign-off Gate | E2 (full build/test) | ❌ Blocked | Blocked on T1-12, T1-13 |
@@ -450,7 +451,7 @@ Findings from a post-commit code review of the cascade-gate override in commit `
 
 | ID | File:Line | Issue | Fix |
 |----|-----------|-------|-----|
-| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. `csharp/src/Infrastructure/Resilience.cs` (199 lines) is still present as a dead duplicate. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. Delete `csharp/src/Infrastructure/Resilience.cs`. Verify `RetryExhaustedException` lands in `csharp/src/Core/Resilience.cs` per the original plan. |
+| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. **Note**: `csharp/src/Infrastructure/Resilience.cs` (197 lines) is NOT dead — it has 30+ active call sites in `GoogleSheetsService.cs`. Do NOT delete it. Instead, migrate `GoogleSheetsService` to `Core.Resilience` (Polly v8) before removing. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. Migrate `GoogleSheetsService.cs` from `Infrastructure.Resilience` to `Core.Resilience`. Only then delete `Infrastructure/Resilience.cs`. Verify `RetryExhaustedException` lands in `csharp/src/Core/Resilience.cs` per the original plan. |
 | C2 | `csharp/tests/Scripts.Tests/GlobalSetup.cs:14` | T1-16 compiled model is bypassed in tests via `SCRIPTS_NO_COMPILED_MODEL=1`. Root cause: EF Core 10.0.8 upstream TOCTOU race. Means t1-16 deliverable is unverifiable in CI. | Either fix the upstream race (file EF Core issue, pin to a non-buggy version) or move the `SCRIPTS_NO_COMPILED_MODEL` toggle to a runtime config so CI can opt in. Add a test that fails with a clear error when the env var is set. |
 | C3 | `csharp/src/Data/ScriptsDbContext.cs:23,33` | `Console.WriteLine` debug diagnostics in production code. | Remove the two debug lines. If diagnostics are needed, inject and use `ILogger`. |
 | C4 | `csharp/src/Services/Language/LanguageIdentifier.cs:1,3` | `using Lingua;` declared twice. | Delete the duplicate on line 3. |
@@ -492,9 +493,36 @@ Findings from a post-commit code review of the cascade-gate override in commit `
 
 ---
 
-**Source / provenance**: All findings (C1-C6, I1-I5, M1-M6) originate from the post-commit code review recorded in the staged `AI/chat.json` (final messages, lines 6400-6494). Review subject: commit `8941eeb` ("feat(t1-16): EF10 compiled model regeneration + all 47 plans marked done in INDEX.md (cascade-gate override per user directive)").
+### G. Wire Up EF Layer
 
-**Why this phase was added late**: The original 5-phase plan (A-E) covered forward-looking work identified at the start of the session. The post-commit audit was performed AFTER the master plan was written and is therefore captured here as Phase F rather than folded into the earlier phases. C1 and C2 in particular are P0 because they represent silent regressions in deliverables marked complete by the cascade-gate override.
+The EF layer is currently 'dead' — entities exist but are not wired to consumer code. This phase revives the repository pattern so that the 3-schema migration (Phase B) actually has consumers.
+
+#### G1. Audit Repository Usage
+
+- **What**: Determine which of the 5 repositories (AlbumRepository, ArtistRepository, TrackRepository, ScrobbleRepository, FiberyEntityRepository) are actually called by consumer code (CLI commands, services, orchestrators).
+- **Deliverable**: `csharp/docs/repository-usage-audit.md` — matrix of repository × consumer, with call-count and last-used-commit.
+- **Effort**: Short (2 hours)
+
+#### G2. Wire Repositories to Consumer Code
+
+- **What**: Update CLI commands and services to use the repository interfaces instead of direct `ScriptsDbContext` access.
+- **Files**: `csharp/src/CLI/`, `csharp/src/Services/`, `csharp/src/Orchestrators/` — any file that currently calls `context.Albums.AddAsync()` etc. directly.
+- **Pattern**: Inject `IAlbumRepository` (etc.) via constructor; replace direct `context.SaveChangesAsync()` with repository method calls.
+- **Verify**: `grep -rn "context\.Albums\." csharp/src/` returns no matches (all album operations go through the repository).
+- **Effort**: Short (4-8 hours)
+
+#### G3. Update DbContextRegistration
+
+- **What**: Register all 5 repositories in DI via `csharp/src/Data/DbContextRegistration.cs`.
+- **Pattern**:
+  ```csharp
+  services.AddScoped<IAlbumRepository, AlbumRepository>();
+  // ... (4 more)
+  ```
+- **Verify**: `dotnet build csharp/Scripts.csproj` passes; `dotnet test csharp/Scripts.slnx` passes.
+- **Effort**: Quick (30 min)
+
+---
 
 **Note on the working-tree state of this file**: `AI/plans/MASTER_PLAN.md` is currently untracked (`git status` shows `?? AI/plans/MASTER_PLAN.md`). It must be `git add`ed and committed before the next planning session treats it as authoritative. The plan-introduces-adr D2 is similarly uncommitted (directory `AI/plans/adr/` is missing from the working tree).
 
@@ -504,7 +532,7 @@ Strict dependency graph. Tasks within the same wave can run in parallel.
 
 ```
 Wave 0 (no blockers)
-  A1, A2, A3, A4, A5, A6, F1  # F1 is P0 audit; A5/A6 are old T1-12/T1-13 carryovers; all parallel in Wave 0
+  A1, A2, A3, A4, A5, A6, F1  # F1 is P0 audit; A5/A6 are old T1-12/T1-13 carryovers; A6 must complete BEFORE F1.C4 (both touch LanguageIdentifier.cs)
 
 Wave 1 (depends on A1 -- SDK pin)
   C1, C2, C3, C4
@@ -513,16 +541,25 @@ Wave 2 (depends on Wave 0 complete)
   B1
 
 Wave 3 (depends on B1)
-  B2, C2 (AzureCredentialManager can be removed during B1-B2 window)
+  B2  # C2 moved to Wave 1 (was duplicated here erroneously)
 
 Wave 4 (depends on B2)
   B3
 
 Wave 5 (depends on B3 + Wave 1)
-  B4, E1, E2
+  B4, E1
 
 Wave 6 (independent, can run anytime after Wave 0)
-  D1 (done), D2, F2, F3  # F2/F3 are audit/process work, no code coupling
+  D1 (done), D2, F2, F3, E2  # F2 must complete BEFORE E2 (PostgresFixture fixes needed for test suite)
+
+Wave 7 (depends on B4 complete — Phase G: wire EF layer to consumers)
+  G1 (audit)  # must complete before G2
+
+Wave 8 (depends on G1)
+  G2 (wire repositories)  # must complete before G3
+
+Wave 9 (depends on G2)
+  G3 (DI registration)
 ```
 
 ### Blocking Matrix
@@ -546,10 +583,13 @@ Wave 6 (independent, can run anytime after Wave 0)
 | D1 | nothing | nothing (done) |
 | D2 | nothing | nothing (independent) |
 | E1 | nothing | C1, C4 |
-| E2 | nothing | A3, A4, B4, C2, C3, C4 |
+| E2 | nothing | A3, A4, B4, C2, C3, C4, F2 |
 | F1 | E1, E2 (E2 should re-run after C1 fix lands) | nothing (P0; run in Wave 0) |
 | F2 | E2 (full test suite) | F1 (fix PostgresFixture before re-running full suite) |
 | F3 | nothing | nothing (process work, no code coupling) |
+|| G1 | nothing | B4 (schema migration must complete first) |
+|| G2 | G3 | G1 (audit must complete before wiring) |
+|| G3 | E2 (DI registration affects test suite) | G2 (wiring must complete before registration) |
 
 ---
 
@@ -559,8 +599,6 @@ These task pairs (or groups) can run concurrently because they touch independent
 
 | Wave | Group A | Group B | Reason |
 |------|---------|---------|--------|
-| Wave | Group A | Group B | Reason |
-|------|---------|---------|--------|
 | Wave 0 | A1 (SDK pin) | A2 (Docker) | Different files; no shared state |
 | Wave 0 | A3 (test compile) | A4 (PlanInventoryTests) | A3 fixes the csproj, A4 fixes a single test file |
 | Wave 0 | A5 (Logging Relocation) | A6 (Lingua Migration) | A5 touches `Core/Paths.cs`, `Core/Log.cs`, `Core/ServiceType.cs`; A6 touches `Services/Language/LanguageIdentifier.cs`. No overlap. |
@@ -568,10 +606,13 @@ These task pairs (or groups) can run concurrently because they touch independent
 | Wave 1 | C1 (DI registration, new file) | C3 (error string fix) | Different files; C3 doesn't need C1 |
 | Wave 1 | C1, C2, C3, C4 | B1 | C touches `Core/Auth`, `Services/`, `CLI/`; B touches `Data/Configuration/`. No overlap. |
 | Wave 6 | D2 (ADR) | anything in Waves 0-5 | Pure documentation work, no code coupling |
-| Wave 0 | F1 (critical bug audit) | A1-A6 (infrastructure fixes) | F1 touches `csharp/src/Data/`, `csharp/src/Services/Language/`, `csharp/src/Infrastructure/`. A1-A6 touch `global.json`, `docker-compose.yml`, `.env.example`, test csproj, `Core/`, `Services/`. No overlap. |
+| Wave 0 | F1.C1-C3, F1.C5-C6 (critical bug audit) | A1-A6 (infrastructure fixes) | F1.C1 touches `csharp/src/Data/`, F1.C5 touches version-check code, F1.C6 touches tests. A1-A6 touch `global.json`, `docker-compose.yml`, `.env.example`, test csproj, `Core/`, `Services/`. **EXCEPTION**: F1.C4 and A6 both touch `LanguageIdentifier.cs` — A6 must complete first (sequenced in Wave 0). |
 | Wave 0 | F1.C5 (semver) | F1.C6 (NuGet test network) | Both are small, independent test/code changes. |
 | Wave 6 | F2 (test infra) | D2 (ADR) | F2 touches test infrastructure; D2 is a markdown file. No coupling. |
 | Wave 6 | F3 (process) | D2 (ADR) | F3 is commit-message/CI-config work; D2 is a markdown file. |
+| Wave 7 | G1 (audit repositories) | (nothing — solo task) | G1 touches `csharp/src/` read-only; no concurrent work needed |
+| Wave 8 | G2 (wire repositories) | D2 (ADR) | G2 touches `csharp/src/CLI/`, `Services/`, `Orchestrators/`; D2 is a markdown file. No coupling. |
+| Wave 9 | G3 (DI registration) | D2 (ADR) | G3 touches `csharp/src/Data/DbContextRegistration.cs`; D2 is a markdown file. No coupling. |
 
 **Explicitly sequential** (do NOT parallelize):
 
@@ -643,7 +684,7 @@ Phase E done when:
 Phase F done when (P0 — audit, do first):
 
 - [ ] C1: `grep -rn "EnableRetryOnFailure" csharp/src/Data/` shows matches in BOTH `DbContextRegistration.cs` AND `ScriptsDbContextFactory.cs`
-- [ ] C1: `csharp/src/Infrastructure/Resilience.cs` is deleted; `csharp/src/Core/Resilience.cs` contains `RetryExhaustedException` and is the sole resilience helper
+- [ ] C1: `GoogleSheetsService.cs` migrated from `Infrastructure.Resilience` to `Core.Resilience`; `csharp/src/Infrastructure/Resilience.cs` deleted; `csharp/src/Core/Resilience.cs` contains `RetryExhaustedException` and is the sole resilience helper
 - [ ] C2: `SCRIPTS_NO_COMPILED_MODEL` is no longer set in `GlobalSetup.cs`; a test exists that fails if the env var is set without an explicit opt-in
 - [ ] C3: `grep -n "Console.WriteLine" csharp/src/Data/ScriptsDbContext.cs` returns nothing
 - [ ] C4: `grep -c "using Lingua" csharp/src/Services/Language/LanguageIdentifier.cs` returns 1
@@ -657,6 +698,14 @@ Phase F done when (P0 — audit, do first):
 - [ ] M5: Tests split by `[Trait("Category", "Unit")]` and `[Trait("Category", "Integration")]`; default run = unit only
 - [ ] M6: Commits between `cbb4a62` and `8941eeb` audited; either `cbb4a62` reverted or debugging branch justified in writing
 - [ ] `AI/plans/MASTER_PLAN.md` is committed to git (currently `?? AI/plans/MASTER_PLAN.md`)
+
+Phase G done when:
+
+- [ ] `csharp/docs/repository-usage-audit.md` exists with repository × consumer matrix
+- [ ] `grep -rn "context\.Albums\." csharp/src/` returns no matches (all operations go through repositories)
+- [ ] All 5 repositories registered in `DbContextRegistration.cs`
+- [ ] `dotnet build csharp/Scripts.csproj` passes
+- [ ] `dotnet test csharp/Scripts.slnx` passes
 ---
 
 ## Refactor Master Plan
