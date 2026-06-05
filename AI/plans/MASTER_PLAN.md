@@ -261,6 +261,8 @@ The main work. Move 10 entities from `public` into 3 domain schemas (youtube, mu
 #### B2. Migration Generation
 
 - **What**: Generate a migration that physically moves tables between schemas without dropping data.
+- **Pre-flight audit**: Before running, query `SELECT conname, conrelid::regclass, confrelid::regclass FROM pg_constraint WHERE contype = 'f'` to find cross-schema FKs. Drop and recreate any FKs with schema-qualified references (e.g., `public.tablename`) as unqualified so they survive `SET SCHEMA`. Check column defaults for schema-qualified function calls (e.g., `public.uuid_generate_v4()`) and re-qualify after move.
+- **Transaction wrap**: Wrap all `ALTER TABLE ... SET SCHEMA` calls in a single `BEGIN...COMMIT` transaction. A partial failure currently leaves the database in a split-schema state with no automatic rollback. Capture `pg_dump --schema-only` + row counts before. Document the manual recovery SQL in a `ROLLBACK.md` per the Operational Done gap (artistry finding).
 - **Command**:
   ```bash
   dotnet ef migrations add SchemaMigration --project csharp --startup-project csharp
@@ -451,7 +453,7 @@ Findings from a post-commit code review of the cascade-gate override in commit `
 
 | ID | File:Line | Issue | Fix |
 |----|-----------|-------|-----|
-|| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. **Note**: `csharp/src/Infrastructure/Resilience.cs` (197 lines) is NOT dead — it has 29 active call sites in `GoogleSheetsService.cs`. Do NOT delete it. Instead, migrate `GoogleSheetsService` to `Core.Resilience` (Polly v8) before removing. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. Migrate `GoogleSheetsService.cs` from `Infrastructure.Resilience` to `Core.Resilience`. Only then delete `Infrastructure/Resilience.cs`. Verify `RetryExhaustedException` lands in `csharp/src/Core/Resilience.cs` per the original plan. |
+|| C1 | `csharp/src/Data/DbContextRegistration.cs:13` and `csharp/src/Data/ScriptsDbContextFactory.cs:13` | T1-14 retry policy is a no-op. Both call sites use bare `opts.UseNpgsql(connStr)` with no `EnableRetryOnFailure`. Commit `c09170d` claimed Polly v8 `ResiliencePipeline` retry was added, but it was never wired. **Note**: `csharp/src/Infrastructure/Resilience.cs` (197 lines) is NOT dead — it has 29 active call sites in `GoogleSheetsService.cs`. Do NOT delete it. Instead, migrate `GoogleSheetsService` to `Core.Resilience` (Polly v8) before removing. | Add `opts.UseNpgsql(connStr, npg => npg.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null))` to both sites. **Migration is NOT a namespace swap** — `Core.Resilience` uses Polly v8 `ResiliencePipeline<T>` keyed by `ServiceType`; `Infrastructure.Resilience` uses custom `SemaphoreSlim` with `ExecuteAsync<T>(string, Func<Task<T>>)` API. Rewriting 29 call sites in `GoogleSheetsService.cs` is a 2-4h rewrite, not the 3h total F1 estimate. Move `RetryExhaustedException` from `Infrastructure/Resilience.cs:182` to `Core/Resilience.cs` and update all `using` statements in `CLI/SyncCommands.cs` (4 references). Only then delete `Infrastructure/Resilience.cs`. |
 || C2 | `csharp/tests/Scripts.Tests/GlobalSetup.cs:43` | T1-16 compiled model is bypassed in tests via `SCRIPTS_NO_COMPILED_MODEL=1`. Root cause: EF Core 10.0.8 upstream TOCTOU race. Means t1-16 deliverable is unverifiable in CI. | Either fix the upstream race (file EF Core issue, pin to a non-buggy version) or move the `SCRIPTS_NO_COMPILED_MODEL` toggle to a runtime config so CI can opt in. Add a test that fails with a clear error when the env var is set. |
 || C3 | `csharp/src/Data/ScriptsDbContext.cs:22,31` | `Console.WriteLine` debug diagnostics in production code. | Remove the two debug lines. If diagnostics are needed, inject and use `ILogger`. |
 | C4 | `csharp/src/Services/Language/LanguageIdentifier.cs:1,3` | `using Lingua;` declared twice. | Delete the duplicate on line 3. |
@@ -531,8 +533,11 @@ The EF layer is currently 'dead' — entities exist but are not wired to consume
 Strict dependency graph. Tasks within the same wave can run in parallel.
 
 ```
-Wave 0 (no blockers)
-  A1, A2, A3, A4, A5, A6, F1  # F1 is P0 audit; A5/A6 are old T1-12/T1-13 carryovers; A6 must complete BEFORE F1.C4 (both touch LanguageIdentifier.cs)
+Wave 0a (no blockers)
+  A1, A2, A5, A6, F1  # F1 is P0 audit; A5/A6 are old T1-12/T1-13 carryovers; A6 must complete BEFORE F1.C4 (both touch LanguageIdentifier.cs)
+
+Wave 0b (depends on A1 -- SDK pin)
+  A3, A4  # A3/A4 analyze against SDK 11 preview; must wait for A1's SDK 10.0.300 pin
 
 Wave 1 (depends on A1 -- SDK pin)
   C1, C2, C3, C4
@@ -549,8 +554,8 @@ Wave 4 (depends on B2)
 Wave 5 (depends on B3 + Wave 1)
   B4, E1
 
-Wave 6 (independent, can run anytime after Wave 0)
-  D1 (done), D2, F2, F3, E2  # F2 must complete BEFORE E2 (PostgresFixture fixes needed for test suite)
+Wave 6 (mixed: D1/D2/F2/F3 are independent after Wave 0; E2 is the most-blocked item in the plan and is NOT independent)
+  D1 (done), D2, F2, F3, E2  # F2 must complete BEFORE E2 (PostgresFixture fixes needed for test suite); E2 is also blocked by G3 (Wave 9)
 
 Wave 7 (depends on B4 complete — Phase G: wire EF layer to consumers)
   G1 (audit)  # must complete before G2
@@ -583,8 +588,8 @@ Wave 9 (depends on G2)
 | D1 | nothing | nothing (done) |
 | D2 | nothing | nothing (independent) |
 | E1 | nothing | C1, C4 |
-| E2 | nothing | A3, A4, B4, C2, C3, C4, F2 |
-| F1 | E1, E2 (E2 should re-run after C1 fix lands) | nothing (P0; run in Wave 0) |
+| E2 | nothing | A3, A4, B4, C2, C3, C4, F2, G3 (G3 affects DI; full test suite needs repositories registered) |
+| F1 | E1, E2 (E2 should re-run after C1 fix lands) | nothing (P0; run in Wave 0a) — BUT F1.C4 is blocked by A6 (intra-wave dependency on LanguageIdentifier.cs) |
 | F2 | E2 (full test suite) | F1 (fix PostgresFixture before re-running full suite) |
 | F3 | nothing | nothing (process work, no code coupling) |
 || G1 | nothing | B4 (schema migration must complete first) |
