@@ -3,7 +3,7 @@
 > Single source of truth for navigating the Scripts repo and tracking pending work. Start here, then follow the links below to dive into any subsystem or pending task.
 
 **Last updated**: 2026-06-05
-**Status**: Pending work captured across 6 phases (A through F). See [Pending Work](#pending-work). Phase F captures the post-commit code review audit of commit `8941eeb` (cascade-gate override) and is the highest priority — it fixes critical regressions in the tier-1 deliverables that are already shipped.
+**Status**: Pending work captured across 7 phases (A through G). See [Pending Work](#pending-work). Phase F captures the post-commit code review audit of commit `8941eeb` (cascade-gate override) and is the highest priority — it fixes critical regressions in the tier-1 deliverables that are already shipped. Phase G wires the EF layer to consumer code.
 
 ---
 
@@ -137,7 +137,7 @@ Curated reference material. Four active areas:
 
 ## Pending Work
 
-All active work captured from this chat session. Items are sequenced by dependency (what blocks what) and grouped into 6 phases. See [Execution Order](#execution-order--dependencies) for the full graph and [Parallelization](#parallelization-opportunities) for tasks that can run concurrently.
+All active work captured from this chat session. Items are sequenced by dependency (what blocks what) and grouped into 7 phases. See [Execution Order](#execution-order--dependencies) for the full graph and [Parallelization](#parallelization-opportunities) for tasks that can run concurrently.
 
 ### Summary
 
