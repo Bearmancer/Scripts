@@ -423,7 +423,7 @@ The repository previously contained 45 tier plan files across 4 tiers (T1–T4) 
 | T1-09 | Sync Service Updates | — | ✅ Done | LastFmService has IDbContextFactory |
 | T1-10 | EF10 Query Upgrades | — | ✅ Done | Guard tests written and passing |
 | T1-11 | Compiled Model | — | ✅ Done | CompiledModelTests pass (but C2: bypassed in CI) |
-|| T1-12 | Logging Relocation | **A5** | ✅ Code in place | Commits `f8cbd19` + `e29ccab`; `Paths.LogDirectory` correct; `ServiceType.Sheets` removed from `Core/Log.cs:9` internal enum (but `Infrastructure/Logger.cs:319` public enum still has Sheets — see F1.C1 note) |
+|| T1-12 | Logging Relocation | **A5** | ✅ Code in place | Commits `f8cbd19` + `e29ccab`; `Paths.LogDirectory` correct; `ServiceType.Sheets` removed from `Core/Log.cs:9` internal enum (but `Infrastructure/Logger.cs:319` public enum still has Sheets — see A5 follow-up) |
 | T1-13 | Lingua Migration | **A6** | ✅ Code in place | Commit `1e3aea9`; `LanguageIdentifier.cs` uses Lingua; duplicate `using Lingua;` at lines 1+3 (F1.C4) |
 | T1-14 | Resilience Policies | F1.C1 (audit fix) | ⚠️ No-Op | Marked done but `EnableRetryOnFailure` never wired; F1 fixes |
 | T1-15 | Testcontainers | — | ✅ Done | DatabaseTestFixture uses local Postgres |
@@ -688,7 +688,7 @@ Phase F done when (P0 — audit, do first):
 - [ ] C2: `SCRIPTS_NO_COMPILED_MODEL` is no longer set in `GlobalSetup.cs`; a test exists that fails if the env var is set without an explicit opt-in
 - [ ] C3: `grep -n "Console.WriteLine" csharp/src/Data/ScriptsDbContext.cs` returns nothing
 - [ ] C4: `grep -c "using Lingua" csharp/src/Services/Language/LanguageIdentifier.cs` returns 1
-- [ ] C5: Semver comparison replaced with a numeric-segment helper; unit test covers `1.9.0 < 1.10.0` and `1.10.0 > 1.9.0`
+- [x] C5: Semver comparison replaced with a numeric-segment helper; unit test covers `1.9.0 < 1.10.0` and `1.10.0 > 1.9.0` (already met by `CompareSemver` at `LinguaPackageReferenceTests.cs:128-156`)
 - [ ] C6: `LinguaPackageReferenceTests` is in an integration test category, excluded from the default `dotnet test` run
 - [ ] I1-I4: Test suite runs in parallel with no fixture-related flakes; `TRUNCATE` succeeds against the post-migration 3-schema database
 - [ ] M1: CI fails on `[DBG]` markers (analyzer or grep check)
@@ -711,7 +711,8 @@ Phase G done when:
 ## Refactor Master Plan
 
 The C# namespace refactor (`CSharpScripts.*` -> `Scripts.*`), access modifier enforcement, and path consolidation were completed before this work began. The plan is preserved at:
-
+- **`AI/plans/atlas-planning-handoff.md`** (~1009 lines) -- detailed 3-schema migration + Azure remediation handoff (untracked in git: `?? AI/plans/atlas-planning-handoff.md`)
+- **`AI/plans/planning-handoff-summary.md`** (169 lines) -- high-level summary of decisions (untracked in git)
 - **`AI/plans/atlas-planning-handoff.md`** (1007 lines) -- detailed 3-schema migration + Azure remediation handoff
 - **`AI/plans/planning-handoff-summary.md`** (169 lines) -- high-level summary of decisions
 
