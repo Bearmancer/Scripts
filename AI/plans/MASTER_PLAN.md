@@ -715,13 +715,7 @@ Phase G done when:
 
 ## Refactor Master Plan
 
-The C# namespace refactor (`CSharpScripts.*` -> `Scripts.*`), access modifier enforcement, and path consolidation were completed before this work began. The plan is preserved at:
-- **`AI/plans/atlas-planning-handoff.md`** (~1009 lines) -- detailed 3-schema migration + Azure remediation handoff (untracked in git: `?? AI/plans/atlas-planning-handoff.md`)
-- **`AI/plans/planning-handoff-summary.md`** (169 lines) -- high-level summary of decisions (untracked in git)
-- **`AI/plans/atlas-planning-handoff.md`** (1007 lines) -- detailed 3-schema migration + Azure remediation handoff
-- **`AI/plans/planning-handoff-summary.md`** (169 lines) -- high-level summary of decisions
-
-If you need to see the original refactor scope, the historical `csharp/plans/refactor_plan.md` was deleted in this revision (it was a different scope: namespace rename only).
+The C# namespace refactor (`CSharpScripts.*` -> `Scripts.*`), access modifier enforcement, and path consolidation were completed before this work began. The plan's content is fully consolidated into this MASTER_PLAN.md; the original handoff documents have been removed (their content is captured in the 7 phases above). The historical `csharp/plans/refactor_plan.md` was also deleted in this revision (it was a different scope: namespace rename only).
 
 ---
 
