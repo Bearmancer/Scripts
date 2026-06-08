@@ -22,10 +22,10 @@ internal sealed class MusicTranslateCommand : BaseAsyncCommand<MusicTranslateCom
 				if (!AzureTranslationService.IsConfigured && !settings.DryRun)
 				{
 					Ui.Error(
-						message: "AZURE_TRANSLATOR_KEY is not set. Set it or use --dry-run to preview."
+						message: "AZURE_TRANSLATOR_ENDPOINT is not set. Set it or use --dry-run to preview."
 					);
 					throw new InvalidOperationException(
-						message: "AZURE_TRANSLATOR_KEY environment variable is required"
+						message: "AZURE_TRANSLATOR_ENDPOINT environment variable is required"
 					);
 				}
 

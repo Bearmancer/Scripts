@@ -32,8 +32,6 @@ internal static class Program
 			return 1;
 		}
 
-		AzureCredentialManager.EnsureCredentials();
-
 		try
 		{
 			Console.CancelKeyPress += (_, e) =>
@@ -48,6 +46,9 @@ internal static class Program
 			};
 
 			ServiceCollection services = new();
+			services.AddTransient<MusicTranslateCommand>();
+			services.AddTransient<CloudUsageCommand>();
+			services.AddTransient<ReadCommand>();
 			ServiceProvider = services.BuildServiceProvider();
 
 			SpectreTypeRegistrar registrar = new(serviceProvider: ServiceProvider);

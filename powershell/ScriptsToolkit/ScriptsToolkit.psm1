@@ -1,20 +1,11 @@
-#Requires -Version 7
+
 
 using namespace System.IO
 
 $Script:MediaExtensions = @('.mp4', '.mkv', '.avi', '.mp3', '.flac', '.wav', '.webm', '.m4a', '.opus', '.ogg')
 
 function Get-MediaFiles {
-	<#
-	.SYNOPSIS
-		Enumerate media files in a directory.
-	.PARAMETER Directory
-		Directory to search.
-	.PARAMETER Recurse
-		Recurse into subdirectories.
-	.EXAMPLE
-		Get-MediaFiles -Directory (Get-Item ./videos) -Recurse
-	#>
+	
 	[CmdletBinding()]
 	param(
 		[Parameter(Mandatory)]
@@ -27,33 +18,7 @@ function Get-MediaFiles {
 }
 
 function Invoke-Whisper {
-	<#
-	.SYNOPSIS
-		Transcribe media files via whisper-ctranslate2 (run through uvx).
-	.DESCRIPTION
-		Walks a file or directory, skips files that already have a sibling .srt,
-		and writes subtitles next to the source. Defaults to English and the
-		distil-large-v3.5 model.
-	.PARAMETER Path
-		Media file or directory of media files. Defaults to the current directory.
-	.PARAMETER Recurse
-		Recurse into subdirectories when Path is a directory.
-	.PARAMETER Language
-		Whisper language code. Default: eng.
-	.PARAMETER Model
-		Whisper model name. Default: distil-large-v3.5.
-	.EXAMPLE
-		whisp ./interview.mp4
-	.EXAMPLE
-		whisp ./Spoken\ Word -Recurse
-	.EXAMPLE
-		whisp ./podcast.mp3 -Language en -Model large-v3
-	.EXAMPLE
-		whisp ./episodes -WhatIf
-	.NOTES
-		Requires uv (https://docs.astral.sh/uv/) and ffmpeg on PATH.
-		'whisp' is the alias.
-	#>
+	
 	[CmdletBinding(SupportsShouldProcess)]
 	[Alias('whisp')]
 	param(

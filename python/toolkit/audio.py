@@ -342,7 +342,7 @@ def convert_audio(directory: Path, fmt: AudioFormat = "all") -> None:
 		for tier in tier_bar:
 			tier_sr = tier["sample_rate"]
 			tier_bd = tier["bit_depth"]
-			tier_bar.set_postfix_str(f"{tier_bd}-bit/{tier_sr // 1000}kHz")
+			tier_bar.set_postfix_str(f"{tier_bd}-bit/{tier_sr 
 			flac_directory_conversion(directory, tier, position=1)
 
 	if fmt in ["mp3", "all"]:
@@ -362,7 +362,7 @@ def flac_directory_conversion(
 
 	for f in tqdm(
 		flac_files,
-		desc=f"{bit_depth}-bit/{sample_rate // 1000}kHz",
+		desc=f"{bit_depth}-bit/{sample_rate 
 		position=position,
 		leave=False,
 	):

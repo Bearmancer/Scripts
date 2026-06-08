@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 275.6 2510" width="275.6" height="2510" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+</defs>
+<rect x="56.500000000000014" y="40" width="162.6" height="208" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="56.500000000000014" y="40" width="162.6" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="56" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;youtube.videos&quot;</text>
+<line x1="56.500000000000014" y1="72" x2="219.10000000000002" y2="72" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="62.500000000000014" y="76" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="71.72000000000001" y="83" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="88.94000000000001" y="83" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="211.10000000000002" y="83" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="64.50000000000001" y="105" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="211.10000000000002" y="105" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Url</tspan></text>
+<text x="64.50000000000001" y="127" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="211.10000000000002" y="127" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<text x="64.50000000000001" y="149" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="211.10000000000002" y="149" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Description</tspan></text>
+<text x="64.50000000000001" y="171" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="211.10000000000002" y="171" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ChannelName</tspan></text>
+<text x="64.50000000000001" y="193" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">date</tspan></text>
+<text x="211.10000000000002" y="193" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">UploadDate</tspan></text>
+<text x="64.50000000000001" y="215" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+<text x="211.10000000000002" y="215" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">SyncedAt</tspan></text>
+<text x="64.50000000000001" y="237" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="211.10000000000002" y="237" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Metadata</tspan></text>
+<rect x="67.80000000000001" y="298" width="140" height="98" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="67.80000000000001" y="298" width="140" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="314" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.artists&quot;</text>
+<line x1="67.80000000000001" y1="330" x2="207.8" y2="330" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="73.80000000000001" y="334" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="83.02000000000001" y="341" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="100.24000000000001" y="341" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="199.8" y="341" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="75.80000000000001" y="363" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="199.8" y="363" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Name</tspan></text>
+<text x="75.80000000000001" y="385" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="199.8" y="385" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Metadata</tspan></text>
+<rect x="67.80000000000001" y="446" width="140" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="67.80000000000001" y="446" width="140" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="462" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.albums&quot;</text>
+<line x1="67.80000000000001" y1="478" x2="207.8" y2="478" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="73.80000000000001" y="482" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="83.02000000000001" y="489" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="100.24000000000001" y="489" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="199.8" y="489" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<rect x="73.80000000000001" y="504" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="83.02000000000001" y="511" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="100.24000000000001" y="511" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="199.8" y="511" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ArtistId</tspan></text>
+<text x="75.80000000000001" y="533" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="199.8" y="533" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<text x="75.80000000000001" y="555" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">date</tspan></text>
+<text x="199.8" y="555" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ReleaseDate</tspan></text>
+<rect x="59.80000000000001" y="616" width="156" height="186" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="59.80000000000001" y="616" width="156" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="632" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.tracks&quot;</text>
+<line x1="59.80000000000001" y1="648" x2="215.8" y2="648" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="65.80000000000001" y="652" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="75.02000000000001" y="659" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="92.24000000000001" y="659" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="659" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<rect x="65.80000000000001" y="674" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="75.02000000000001" y="681" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="92.24000000000001" y="681" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="681" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">AlbumId</tspan></text>
+<rect x="65.80000000000001" y="696" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="75.02000000000001" y="703" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="92.24000000000001" y="703" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="703" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ArtistId</tspan></text>
+<rect x="65.80000000000001" y="718" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="75.02000000000001" y="725" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="92.24000000000001" y="725" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="725" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">WorkId</tspan></text>
+<rect x="65.80000000000001" y="740" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="75.02000000000001" y="747" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="92.24000000000001" y="747" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="747" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">MovementId</tspan></text>
+<text x="67.80000000000001" y="769" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="207.8" y="769" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<text x="67.80000000000001" y="791" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="207.8" y="791" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">DurationSeconds</tspan></text>
+<rect x="46.60000000000001" y="852" width="182.4" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="46.60000000000001" y="852" width="182.4" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="868" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.scrobbles&quot;</text>
+<line x1="46.60000000000001" y1="884" x2="229" y2="884" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="52.60000000000001" y="888" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="61.82000000000001" y="895" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="79.04" y="895" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">long</tspan></text>
+<text x="221" y="895" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<rect x="52.60000000000001" y="910" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="61.82000000000001" y="917" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="79.04" y="917" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="221" y="917" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">TrackId</tspan></text>
+<text x="54.60000000000001" y="939" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+<text x="221" y="939" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ScrobbledAt</tspan></text>
+<text x="54.60000000000001" y="961" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar_50</tspan></text>
+<text x="221" y="961" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Platform</tspan></text>
+<rect x="67.80000000000001" y="1022" width="140" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="67.80000000000001" y="1022" width="140" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="1038" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.works&quot;</text>
+<line x1="67.80000000000001" y1="1054" x2="207.8" y2="1054" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="73.80000000000001" y="1058" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="83.02000000000001" y="1065" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="100.24000000000001" y="1065" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="199.8" y="1065" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="75.80000000000001" y="1087" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="199.8" y="1087" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<text x="75.80000000000001" y="1109" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="199.8" y="1109" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Composer</tspan></text>
+<text x="75.80000000000001" y="1131" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="199.8" y="1131" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Metadata</tspan></text>
+<rect x="50.72500000000001" y="1192" width="174.15" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="50.72500000000001" y="1192" width="174.15" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="1208" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;classical.movements&quot;</text>
+<line x1="50.72500000000001" y1="1224" x2="224.875" y2="1224" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="56.72500000000001" y="1228" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="65.94500000000001" y="1235" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="83.165" y="1235" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="216.875" y="1235" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<rect x="56.72500000000001" y="1250" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="65.94500000000001" y="1257" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="83.165" y="1257" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="216.875" y="1257" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">WorkId</tspan></text>
+<text x="58.72500000000001" y="1279" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="216.875" y="1279" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Position</tspan></text>
+<text x="58.72500000000001" y="1301" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="216.875" y="1301" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<rect x="40" y="1362" width="195.60000000000002" height="384" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="1362" width="195.60000000000002" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="1378" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;music.release_progress&quot;</text>
+<line x1="40" y1="1394" x2="235.60000000000002" y2="1394" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="46" y="1398" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="55.22" y="1405" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="72.44" y="1405" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">long</tspan></text>
+<text x="227.60000000000002" y="1405" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="48" y="1427" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1427" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ReleaseId</tspan></text>
+<text x="48" y="1449" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="227.60000000000002" y="1449" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">DiscNumber</tspan></text>
+<text x="48" y="1471" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="227.60000000000002" y="1471" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">TrackNumber</tspan></text>
+<text x="48" y="1493" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1493" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Title</tspan></text>
+<text x="48" y="1515" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1515" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Duration</tspan></text>
+<text x="48" y="1537" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="227.60000000000002" y="1537" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">RecordingYear</tspan></text>
+<text x="48" y="1559" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1559" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Composer</tspan></text>
+<text x="48" y="1581" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1581" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">WorkName</tspan></text>
+<text x="48" y="1603" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1603" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Conductor</tspan></text>
+<text x="48" y="1625" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1625" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Orchestra</tspan></text>
+<text x="48" y="1647" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="227.60000000000002" y="1647" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Soloists</tspan></text>
+<text x="48" y="1669" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1669" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Artist</tspan></text>
+<text x="48" y="1691" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1691" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">RecordingVenue</tspan></text>
+<text x="48" y="1713" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="227.60000000000002" y="1713" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">RecordingId</tspan></text>
+<text x="48" y="1735" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+<text x="227.60000000000002" y="1735" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">CreatedAt</tspan></text>
+<rect x="40" y="1796" width="195.60000000000002" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="1796" width="195.60000000000002" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="1812" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;fibery.fibery_entities&quot;</text>
+<line x1="40" y1="1828" x2="235.60000000000002" y2="1828" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="46" y="1832" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="55.22" y="1839" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="72.44" y="1839" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+<text x="227.60000000000002" y="1839" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="48" y="1861" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar_255</tspan></text>
+<text x="227.60000000000002" y="1861" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">FiberyId</tspan></text>
+<text x="48" y="1883" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar_100</tspan></text>
+<text x="227.60000000000002" y="1883" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">EntityType</tspan></text>
+<text x="48" y="1905" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="227.60000000000002" y="1905" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">RawData</tspan></text>
+<rect x="43.575" y="1966" width="188.45000000000002" height="120" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="43.575" y="1966" width="188.45000000000002" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="1982" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;public.source_records&quot;</text>
+<line x1="43.575" y1="1998" x2="232.02500000000003" y2="1998" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="49.575" y="2002" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="58.795" y="2009" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="76.015" y="2009" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+<text x="224.02500000000003" y="2009" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="51.575" y="2031" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="224.02500000000003" y="2031" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">SourceId</tspan></text>
+<text x="51.575" y="2053" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="224.02500000000003" y="2053" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">EntityType</tspan></text>
+<text x="51.575" y="2075" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="224.02500000000003" y="2075" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">RawData</tspan></text>
+<rect x="43.575" y="2136" width="188.45000000000002" height="142" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="43.575" y="2136" width="188.45000000000002" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="2152" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;public.execution_logs&quot;</text>
+<line x1="43.575" y1="2168" x2="232.02500000000003" y2="2168" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="49.575" y="2172" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="58.795" y="2179" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="76.015" y="2179" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="224.02500000000003" y="2179" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="51.575" y="2201" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+<text x="224.02500000000003" y="2201" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Timestamp</tspan></text>
+<text x="51.575" y="2223" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="224.02500000000003" y="2223" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">SessionId</tspan></text>
+<text x="51.575" y="2245" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">jsonb</tspan></text>
+<text x="224.02500000000003" y="2245" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Payload</tspan></text>
+<text x="51.575" y="2267" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="224.02500000000003" y="2267" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ExitCode</tspan></text>
+<rect x="49.90000000000002" y="2328" width="175.79999999999998" height="142" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="49.90000000000002" y="2328" width="175.79999999999998" height="32" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="137.8" y="2344" text-anchor="middle" dy="0.35em" font-size="13" font-weight="700" fill="var(--_text)">&quot;public.failed_tasks&quot;</text>
+<line x1="49.90000000000002" y1="2360" x2="225.7" y2="2360" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="55.90000000000002" y="2364" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="65.12000000000002" y="2371" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+<text x="82.34000000000002" y="2371" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+<text x="217.7" y="2371" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Id</tspan></text>
+<text x="57.90000000000002" y="2393" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="217.7" y="2393" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">TaskName</tspan></text>
+<text x="57.90000000000002" y="2415" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+<text x="217.7" y="2415" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ErrorMessage</tspan></text>
+<text x="57.90000000000002" y="2437" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+<text x="217.7" y="2437" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">Timestamp</tspan></text>
+<rect x="55.90000000000002" y="2452" width="18.439999999999998" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+<text x="65.12000000000002" y="2459" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+<text x="82.34000000000002" y="2459" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+<text x="217.7" y="2459" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">ExecutionLogId</tspan></text>
+</svg>

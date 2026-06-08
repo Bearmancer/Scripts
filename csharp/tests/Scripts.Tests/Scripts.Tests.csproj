@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<GenerateProgramFile>false</GenerateProgramFile>
+		<UseMicrosoftTestingPlatform>true</UseMicrosoftTestingPlatform>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,5 +20,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Scripts.csproj" />
+		<ProjectReference Include="..\..\src\Mcp\Mcp.csproj" />
 	</ItemGroup>
 </Project>

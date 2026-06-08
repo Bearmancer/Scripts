@@ -1,11 +1,10 @@
 using Scripts.Data.Entities;
-using Scripts.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 
 namespace Scripts.Data.Repositories;
 
-internal sealed class AlbumRepository : IAlbumRepository
+internal sealed class AlbumRepository
 {
 	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory;
 	private readonly ResiliencePipeline _resiliencePipeline;

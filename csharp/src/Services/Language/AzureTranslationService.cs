@@ -1,6 +1,5 @@
 using Azure;
 using Azure.AI.Translation.Text;
-using Azure.Identity;
 
 namespace Scripts.Services.Language;
 
@@ -11,11 +10,11 @@ internal static class AzureTranslationService
 	)
 		? null
 		: new TextTranslationClient(
-			new DefaultAzureCredential(),
+			Core.Auth.AzureAuth.Credential,
 			new Uri(Secrets.AzureTranslatorEndpoint)
 		);
 
-	internal static bool IsConfigured => Client is not null;
+	internal static bool IsConfigured => !IsNullOrWhiteSpace(Secrets.AzureTranslatorEndpoint);
 
 	internal static async Task<TranslationResult?> TranslateAsync(
 		string text,

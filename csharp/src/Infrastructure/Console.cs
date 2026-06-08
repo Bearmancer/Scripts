@@ -459,9 +459,9 @@ public static class Console
 	#endregion
 }
 
-/// <summary>
-/// A progress column that displays task descriptions with a fixed width for vertical alignment.
-/// </summary>
+
+
+
 public sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
 {
 	public Justify Alignment { get; set; } = Justify.Left;

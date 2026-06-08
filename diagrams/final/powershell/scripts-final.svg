@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2546.7250000000004 720" width="2546.7250000000004" height="720" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="4.8" refX="8" refY="2.4" orient="auto">
+    <polygon points="0 0, 8 2.4, 0 4.8" fill="var(--_arrow)" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="4.8" refX="0" refY="2.4" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
+  </marker>
+</defs>
+<rect x="1998.6750000000002" y="56" width="304.8000000000002" height="152" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="1998.6750000000002" y="56" width="304.8000000000002" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="2010.6750000000002" y="70" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">Profile &amp; Entry</text>
+<rect x="40" y="40" width="1938.6750000000002" height="640" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="40" width="1938.6750000000002" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">PowerShell Modules</text>
+<rect x="671.9750000000004" y="312" width="1286.6999999999998" height="348" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="671.9750000000004" y="312" width="1286.6999999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="683.9750000000004" y="326" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">ScriptsToolkit Module</text>
+<rect x="60.00000000000006" y="76" width="591.9750000000001" height="584" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="60.00000000000006" y="76" width="591.9750000000001" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="72.00000000000006" y="90" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">AgentChats Module</text>
+<rect x="2323.4750000000004" y="56" width="183.25" height="152" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="2323.4750000000004" y="56" width="183.25" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="2335.4750000000004" y="70" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">Standalone Scripts</text>
+<polyline points="1375.5000000000002,404 1375.5000000000002,424 998.3500000000003,424 998.3500000000003,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="1375.5000000000002,404 1375.5000000000002,424 1254.5500000000002,424 1254.5500000000002,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="1375.5000000000002,404 1375.5000000000002,424 1496.4500000000003,424 1496.4500000000003,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="1375.5000000000002,404 1375.5000000000002,424 1777.6750000000002,424 1777.6750000000002,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="423.3125000000001,168 423.3125000000001,368" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="423.3125000000001,404 423.3125000000001,424 322.0250000000001,424 322.0250000000001,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="423.3125000000001,404 423.3125000000001,424 524.6000000000001,424 524.6000000000001,604" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<rect x="2020.6750000000002" y="132" width="260.8" height="36" rx="0" ry="0" fill="#fdf" stroke="#333" stroke-width="2px;" />
+<rect x="1291.5750000000003" y="368" width="167.85000000000002" height="36" rx="0" ry="0" fill="#f9f" stroke="#333" stroke-width="2px;" />
+<rect x="693.9750000000001" y="604" width="167.85000000000002" height="36" rx="0" ry="0" fill="#f9f" stroke="#333" stroke-width="2px;" />
+<rect x="885.8250000000003" y="604" width="225.05" height="36" rx="0" ry="0" fill="#bbf" stroke="#333" stroke-width="1px;" />
+<rect x="1134.8750000000002" y="604" width="239.35000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1398.2250000000004" y="604" width="196.45000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1618.6750000000002" y="604" width="318" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="353.6875000000001" y="132" width="139.25" height="36" rx="0" ry="0" fill="#f9f" stroke="#333" stroke-width="2px;" />
+<rect x="82.00000000000006" y="604" width="139.25" height="36" rx="0" ry="0" fill="#f9f" stroke="#333" stroke-width="2px;" />
+<rect x="314.3625000000001" y="368" width="217.9" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="245.25000000000009" y="604" width="153.55" height="36" rx="0" ry="0" fill="#bbf" stroke="#333" stroke-width="1px;" />
+<rect x="422.8000000000001" y="604" width="203.60000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="2345.4750000000004" y="132" width="139.25" height="36" rx="0" ry="0" fill="#fdf" stroke="#333" stroke-width="2px;" />
+<text x="2151.0750000000003" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">Microsoft.PowerShell_profile.ps1</text>
+<text x="1375.5000000000002" y="386" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">ScriptsToolkit.psm1</text>
+<text x="777.9000000000001" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">ScriptsToolkit.psd1</text>
+<text x="998.3500000000003" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Assert-NetworkAvailable()&quot;</text>
+<text x="1254.5500000000002" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Assert-CommandExists([string</text>
+<text x="1496.4500000000003" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Test-SrtExists([string</text>
+<text x="1777.6750000000002" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Get-MediaFiles([System.IO.DirectoryInfo</text>
+<text x="423.3125000000001" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">AgentChats.psm1</text>
+<text x="151.62500000000006" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">AgentChats.psd1</text>
+<text x="423.3125000000001" y="386" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Export-AgentChats([string</text>
+<text x="322.0250000000001" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;New-SessionId()&quot;</text>
+<text x="524.6000000000001" y="622" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;_Write-ChatJson([string</text>
+<text x="2415.1000000000004" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">Install-Env.ps1</text>
+</svg>

@@ -8,7 +8,7 @@ internal sealed class FiberyEntityConfiguration : IEntityTypeConfiguration<Fiber
 {
 	public void Configure(EntityTypeBuilder<FiberyEntity> b)
 	{
-		b.ToTable(name: "fibery_entities");
+		b.ToTable(name: "fibery_entities", schema: "fibery");
 		b.HasKey(static e => e.Id);
 		b.Property(static e => e.Id).HasDefaultValueSql(sql: "gen_random_uuid()");
 		b.Property(static e => e.FiberyId).HasColumnType(typeName: "varchar(255)").IsRequired();

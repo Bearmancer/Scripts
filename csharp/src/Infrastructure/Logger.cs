@@ -292,7 +292,6 @@ public static class Logger
 				ServiceType.LastFm => "lastfm.jsonl",
 				ServiceType.YouTube => "youtube.jsonl",
 				ServiceType.Music => "musicbrainz.jsonl",
-				ServiceType.Sheets => "sheets.jsonl",
 				_ => "general.jsonl",
 			}
 		);
@@ -316,7 +315,6 @@ public enum ServiceType
 {
 	LastFm,
 	YouTube,
-	Sheets,
 	Music,
 }
 

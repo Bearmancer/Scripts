@@ -337,7 +337,7 @@ def add_timestamp(
 	"""Add timestamp overlay to image."""
 	draw = ImageDraw.Draw(image)
 	font = ImageFont.truetype(font_path, font_size)
-	timestamp_text = f"{int(timestamp // 60):02}:{int(timestamp % 60):02}"
+	timestamp_text = f"{int(timestamp 
 
 	text_width, text_height = font.getbbox(timestamp_text)[2:]
 	text_position = (image.width - text_width - 20, image.height - text_height - 20)
@@ -382,10 +382,10 @@ def add_filename_to_header(
 
 	draw.rectangle(((0, 0), (image_width, header_size)), fill=(240, 240, 240))
 
-	y_offset = (header_size - (len(text_lines) * (font.size + 5))) // 2
+	y_offset = (header_size - (len(text_lines) * (font.size + 5))) 
 	for line in text_lines:
 		text_width, _ = font.getbbox(line)[2:]
-		text_position = ((image_width - text_width) // 2, y_offset)
+		text_position = ((image_width - text_width) 
 		draw.text(text_position, line, font=font, fill=(0, 0, 0, 255))
 		y_offset += font.size + 5
 
@@ -420,7 +420,7 @@ def create_thumbnail_grid(
 		img = extract_frame(video_path, timestamp, video_info, width)
 		if img:
 			col = idx % columns
-			row = idx // columns
+			row = idx 
 			x = col * width
 			y = 100 + row * target_height
 			grid_image.paste(img, (x, y))

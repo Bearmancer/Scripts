@@ -1,0 +1,113 @@
+erDiagram
+    "youtube.videos" {
+        int Id PK
+        text Url UNIQUE
+        text Title
+        text Description
+        text ChannelName
+        date UploadDate
+        timestamptz SyncedAt
+        jsonb Metadata
+    }
+
+    "music.artists" {
+        int Id PK
+        text Name UNIQUE
+        jsonb Metadata
+    }
+
+    "music.albums" {
+        int Id PK
+        int ArtistId FK
+        text Title
+        date ReleaseDate
+    }
+
+    "music.tracks" {
+        int Id PK
+        int AlbumId FK
+        int ArtistId FK
+        int WorkId FK
+        int MovementId FK
+        text Title
+        int DurationSeconds
+    }
+
+    "music.scrobbles" {
+        long Id PK
+        int TrackId FK
+        timestamptz ScrobbledAt
+        varchar_50 Platform
+    }
+
+    "music.works" {
+        int Id PK
+        text Title
+        text Composer
+        jsonb Metadata
+    }
+
+    "classical.movements" {
+        int Id PK
+        int WorkId FK
+        int Position
+        text Title
+    }
+
+    "music.release_progress" {
+        long Id PK
+        text ReleaseId
+        int DiscNumber
+        int TrackNumber
+        text Title
+        text Duration
+        int RecordingYear
+        text Composer
+        text WorkName
+        text Conductor
+        text Orchestra
+        jsonb Soloists
+        text Artist
+        text RecordingVenue
+        text RecordingId
+        timestamptz CreatedAt
+    }
+
+    "fibery.fibery_entities" {
+        uuid Id PK
+        varchar_255 FiberyId
+        varchar_100 EntityType
+        jsonb RawData
+    }
+
+    "public.source_records" {
+        uuid Id PK
+        text SourceId
+        text EntityType
+        jsonb RawData
+    }
+
+    "public.execution_logs" {
+        int Id PK
+        timestamptz Timestamp
+        text SessionId
+        jsonb Payload
+        int ExitCode
+    }
+
+    "public.failed_tasks" {
+        uuid Id PK
+        text TaskName
+        text ErrorMessage
+        timestamptz Timestamp
+        int ExecutionLogId FK
+    }
+
+    "music.albums" }o--|| "music.artists" : "ArtistId"
+    "music.tracks" }o--o| "music.albums" : "AlbumId"
+    "music.tracks" }o--o| "music.artists" : "ArtistId"
+    "music.tracks" }o--o| "music.works" : "WorkId"
+    "music.tracks" }o--o| "classical.movements" : "MovementId"
+    "music.scrobbles" }o--|| "music.tracks" : "TrackId"
+    "classical.movements" }o--|| "music.works" : "WorkId"
+    "public.failed_tasks" }o--o| "public.execution_logs" : "ExecutionLogId"

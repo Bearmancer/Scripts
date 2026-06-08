@@ -18,5 +18,11 @@ internal sealed class FailedTaskConfiguration : IEntityTypeConfiguration<FailedT
 			.HasDefaultValueSql(sql: "CURRENT_TIMESTAMP");
 		b.HasIndex(static e => e.TaskName).HasDatabaseName(name: "idx_failed_tasks_task_name");
 		b.HasIndex(static e => e.Timestamp).HasDatabaseName(name: "idx_failed_tasks_timestamp");
+		b.HasIndex(static e => e.ExecutionLogId).HasDatabaseName(name: "idx_failed_tasks_execution_log_id");
+
+		b.HasOne(static e => e.ExecutionLog)
+			.WithMany(static l => l.FailedTasks)
+			.HasForeignKey(static e => e.ExecutionLogId)
+			.OnDelete(DeleteBehavior.SetNull);
 	}
 }

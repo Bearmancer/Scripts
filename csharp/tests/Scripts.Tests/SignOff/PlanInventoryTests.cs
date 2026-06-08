@@ -5,59 +5,48 @@ namespace Scripts.Tests.SignOff;
 
 internal sealed class PlanInventoryTests
 {
-    private static readonly string PlanDir =
-        TestPaths.Combine("AI", "plans", "tier-1-ef-migration");
-
-    private static readonly string[] RequiredPlans =
-    {
-        "00-environment.md",
-        "01-entities.md",
-        "02-entity-refactoring.md",
-        "03-dbcontext-config.md",
-        "04-entity-configurations.md",
-        "05-migrations.md",
-        "06-repositories.md",
-        "07-state-manager.md",
-        "08-release-cache.md",
-        "09-sync-service-updates.md",
-        "10-ef10-queries.md",
-        "11-compiled-model.md",
-        "12-logging.md",
-        "13-lingua.md",
-        "14-resilience.md",
-        "15-testcontainers.md",
-        "16-sign-off.md",
-    };
+    private static readonly string PlanDir = TestPaths.Combine("AI", "plans");
+    private static readonly string MasterPlan = Path.Combine(PlanDir, "MASTER_PLAN.md");
 
     [Test]
-    public void All_17_Plan_Files_Exist()
+    public void Master_Plan_Exists()
     {
-        var missing = new List<string>();
-        foreach (var plan in RequiredPlans)
-        {
-            var path = Path.Combine(PlanDir, plan);
-            if (!File.Exists(path))
-                missing.Add(plan);
-        }
-
-        missing.Should().BeEmpty(
-            $"All 17 plan files must exist. Missing: {string.Join(", ", missing)}"
+        File.Exists(MasterPlan).Should().BeTrue(
+            $"The consolidated plan file must exist at {TestPaths.Relative(MasterPlan)}"
         );
     }
 
     [Test]
-    public void Plan_Files_Are_Non_Empty()
+    public void Master_Plan_Is_Non_Empty()
     {
-        var empty = new List<string>();
-        foreach (var plan in RequiredPlans)
-        {
-            var path = Path.Combine(PlanDir, plan);
-            if (File.Exists(path) && new FileInfo(path).Length == 0)
-                empty.Add(plan);
-        }
+        new FileInfo(MasterPlan).Length.Should().BeGreaterThan(0,
+            $"Plan file must not be empty"
+        );
+    }
 
-        empty.Should().BeEmpty(
-            $"Plan files must not be empty. Empty: {string.Join(", ", empty)}"
+    [Test]
+    public void Master_Plan_Is_Only_Root_Level_Plan_File()
+    {
+        
+        
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "MASTER_PLAN.md",
+            "INDEX.md",
+        };
+
+        var topLevelMd = Directory.GetFiles(PlanDir, "*.md")
+            .Select(f => Path.GetFileName(f)!)
+            .ToArray();
+
+        var unexpected = topLevelMd.Where(f => !allowed.Contains(f!)).ToArray();
+
+        unexpected.Should().BeEmpty(
+            because: $"Only MASTER_PLAN.md and INDEX.md (sentinel) should exist directly under AI/plans/. Unexpected: {string.Join(", ", unexpected)}"
+        );
+
+        topLevelMd.Should().Contain("MASTER_PLAN.md",
+            because: "MASTER_PLAN.md must be present as the consolidated plan file"
         );
     }
 }

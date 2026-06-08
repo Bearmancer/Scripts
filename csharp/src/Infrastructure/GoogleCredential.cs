@@ -75,10 +75,10 @@ public static class GoogleCredentials
 		}
 	}
 
-	/// <summary>
-	/// Forces re-authentication by clearing cached credentials.
-	/// Call this when API calls fail due to expired/revoked tokens.
-	/// </summary>
+	
+	
+	
+	
 	public static void ForceReauthentication()
 	{
 		CachedCredential = null;

@@ -1,7 +1,7 @@
 using Scripts.Infrastructure;
 using Google.Apis.Drive.v3.Data;
 using Console = Scripts.Infrastructure.Console;
-using Resilience = Scripts.Infrastructure.Resilience;
+using Resilience = Scripts.Core.Resilience;
 
 namespace Scripts.Services.Sync.Google;
 

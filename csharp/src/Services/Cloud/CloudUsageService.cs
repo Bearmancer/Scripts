@@ -1,7 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text;
 using Azure.Core;
-using Azure.Identity;
 
 namespace Scripts.Services.Cloud;
 
@@ -24,8 +23,7 @@ internal static class CloudUsageService
 					+ "Run 'az login' and set AZURE_SUBSCRIPTION_ID to your subscription ID."
 			);
 
-		TokenCredential credential = new DefaultAzureCredential();
-		AccessToken token = await credential.GetTokenAsync(
+		var token = await Core.Auth.AzureAuth.Credential.GetTokenAsync(
 			new TokenRequestContext([ManagementScope]),
 			cancellationToken: ct
 		);

@@ -19,5 +19,5 @@ internal sealed record ReleaseProgress
 	public string? Artist { get; set; }
 	public string? RecordingVenue { get; set; }
 	public string? RecordingId { get; set; }
-	public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+	public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

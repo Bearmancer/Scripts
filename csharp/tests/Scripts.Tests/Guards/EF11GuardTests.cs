@@ -5,8 +5,8 @@ namespace Scripts.Tests.Guards;
 
 internal class EF11GuardTests
 {
-	// Use TestPaths (CallerFilePath on TestPaths.cs, 3 levels up to repo root) rather than
-	// an ad-hoc CallerFilePath here — which was also using the wrong relative depth.
+	
+	
 	private static readonly string[] SourceDirectories = [ TestPaths.SrcRoot ];
 
 	[Test]

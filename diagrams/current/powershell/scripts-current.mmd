@@ -1,0 +1,93 @@
+graph TD
+    %% Nodes Styling
+    classDef script fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef function fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef data fill:#dfd,stroke:#333,stroke-width:1px;
+
+    subgraph ProfileSection [Profile & Registration]
+        Profile[Microsoft.PowerShell_profile.ps1]:::script
+        RegProfile[Register-AgentChatsProfile.ps1]:::script
+        RegProfile -- "Appends dot-source" --> Profile
+        Profile -- "Loads" --> ExportAgentChatsScript
+    end
+
+    subgraph AgentChatsSection [Agent Chat Export]
+        ExportAgentChatsScript[Export-AgentChats.ps1]:::script
+        
+        ExportAgentChatsFunc["Export-AgentChats([string]$Agent, [string]$OutputDir)"]:::function
+        NewSessionIdFunc["New-SessionId()"]:::function
+        WriteChatJsonFunc["_Write-ChatJson([string]$Path, [object]$SessionObj)"]:::function
+        
+        ProcessClaudeDevFunc["_Process-ClaudeDev([string]$rootDir, [string]$OutputDir, [string]$AgentName)"]:::function
+        
+        ExportAgyFunc["_Export-AgyChats([string]$OutputDir)"]:::function
+        ExportClineFunc["_Export-ClineChats([string]$OutputDir)"]:::function
+        ExportKiloFunc["_Export-KiloCodeChats([string]$OutputDir)"]:::function
+        ExportCodexFunc["_Export-CodexChats([string]$OutputDir)"]:::function
+        ExportOpenCodeFunc["_Export-OpenCodeChats([string]$OutputDir)"]:::function
+
+        ExportAgentChatsScript --> ExportAgentChatsFunc
+        ExportAgentChatsFunc --> ExportAgyFunc
+        ExportAgentChatsFunc --> ExportClineFunc
+        ExportAgentChatsFunc --> ExportKiloFunc
+        ExportAgentChatsFunc --> ExportCodexFunc
+        ExportAgentChatsFunc --> ExportOpenCodeFunc
+        
+        ExportClineFunc --> ProcessClaudeDevFunc
+        ExportKiloFunc --> ProcessClaudeDevFunc
+        
+        ExportAgyFunc --> NewSessionIdFunc
+        ExportClineFunc --> NewSessionIdFunc
+        ExportKiloFunc --> NewSessionIdFunc
+        ExportCodexFunc --> NewSessionIdFunc
+        ExportOpenCodeFunc --> NewSessionIdFunc
+        
+        ExportAgyFunc --> WriteChatJsonFunc
+        ProcessClaudeDevFunc --> WriteChatJsonFunc
+        ExportCodexFunc --> WriteChatJsonFunc
+        ExportOpenCodeFunc --> WriteChatJsonFunc
+    end
+
+    subgraph ToolkitSection [Scripts Toolkit]
+        ToolkitData[ScriptsToolkit.Data.ps1]:::script
+        AzureSetup[AzureQuickSetup.ps1]:::script
+        RemoveComments[Remove-CodeComments.ps1]:::script
+        
+        AssertNet["Assert-NetworkAvailable()"]:::function
+        AssertCmd["Assert-CommandExists([string]$Command)"]:::function
+        TestSrt["Test-SrtExists([string]$FilePath)"]:::function
+        GetMedia["Get-MediaFiles([System.IO.DirectoryInfo]$Directory)"]:::function
+        
+        RemoveTrailing["Remove-TrailingComment([string]$Line, [string[]]$Tokens, [string[]]$StrDelims)"]:::function
+        
+        ToolkitData --> AssertNet
+        ToolkitData --> AssertCmd
+        ToolkitData --> TestSrt
+        ToolkitData --> GetMedia
+        
+        RemoveComments --> RemoveTrailing
+        
+        AzureSetup -- "Uses Azure CLI" --> AZCLI[Azure CLI / azd]:::data
+    end
+
+    subgraph EnvSection [Environment Setup]
+        InstallEnv[Install-Env.ps1]:::script
+        WriteStep["Write-Step([string]$msg)"]:::function
+        WriteOk["Write-Ok([string]$msg)"]:::function
+        WriteWarn["Write-Warn([string]$msg)"]:::function
+        WriteDo["Write-Do([string]$msg)"]:::function
+        
+        InstallEnv --> WriteStep
+        InstallEnv --> WriteOk
+        InstallEnv --> WriteWarn
+        InstallEnv --> WriteDo
+        InstallEnv -- "Uses" --> Winget[Winget]:::data
+        InstallEnv -- "Uses" --> VSCode[VS Code CLI]:::data
+        InstallEnv -- "Uses" --> WSL[WSL2]:::data
+    end
+
+    %% Data Flows
+    ExportAgentChatsFunc -- "Input: Agent Name" --> ExportAgentChatsFunc
+    WriteChatJsonFunc -- "Output: .json files" --> ChatJSON[Chat JSON Files]:::data
+    AzureSetup -- "Output: Azure RG/Storage" --> AzureCloud[Azure Cloud]:::data
+    InstallEnv -- "Output: Installed Tools" --> SystemEnv[System Environment]:::data

@@ -1,11 +1,10 @@
 using Scripts.Data.Entities;
-using Scripts.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 
 namespace Scripts.Data.Repositories;
 
-internal sealed class TrackRepository : ITrackRepository
+internal sealed class TrackRepository
 {
 	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory;
 	private readonly ResiliencePipeline _resiliencePipeline;

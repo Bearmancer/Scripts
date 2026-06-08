@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """Personal toolkit for audio, video, and file operations."""
 
 from __future__ import annotations

@@ -8,10 +8,12 @@ internal sealed class TrackConfiguration : IEntityTypeConfiguration<Track>
 {
 	public void Configure(EntityTypeBuilder<Track> b)
 	{
-		b.ToTable(name: "tracks");
+		b.ToTable(name: "tracks", schema: "music");
 		b.Property(static t => t.Id).UseIdentityAlwaysColumn();
-		b.Property(static t => t.AlbumId).HasColumnType(typeName: "integer");
-		b.Property(static t => t.ArtistId).HasColumnType(typeName: "integer");
+		b.Property(static t => t.AlbumId).HasColumnType(typeName: "integer").IsRequired(false);
+		b.Property(static t => t.ArtistId).HasColumnType(typeName: "integer").IsRequired(false);
+		b.Property(static t => t.WorkId).HasColumnType(typeName: "integer").IsRequired(false);
+		b.Property(static t => t.MovementId).HasColumnType(typeName: "integer").IsRequired(false);
 		b.Property(static t => t.Title).HasColumnType(typeName: "text").IsRequired();
 		b.Property(static t => t.DurationSeconds).HasColumnType(typeName: "integer");
 		b.HasIndex(static t => t.ArtistId);
@@ -23,18 +25,31 @@ internal sealed class TrackConfiguration : IEntityTypeConfiguration<Track>
 
 		b.HasIndex(static t => t.Title)
 			.HasDatabaseName(name: "idx_tracks_title_unaccent")
-			.HasFilter("true");
+			.HasMethod("gin");
 
 		b.HasIndex(static t => t.Title)
 			.HasDatabaseName(name: "idx_tracks_title_trgm")
-			.HasFilter("true");
+			.HasMethod("gin")
+			.HasOperators("gin_trgm_ops");
 
 		b.HasOne(static t => t.Artist)
 			.WithMany(static a => a.Tracks)
-			.HasForeignKey(static t => t.ArtistId);
+			.HasForeignKey(static t => t.ArtistId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		b.HasOne(static t => t.Album)
 			.WithMany(static a => a.Tracks)
-			.HasForeignKey(static t => t.AlbumId);
+			.HasForeignKey(static t => t.AlbumId)
+			.OnDelete(DeleteBehavior.Restrict);
+
+		b.HasOne(static t => t.MusicWork)
+			.WithMany(static w => w.Tracks)
+			.HasForeignKey(static t => t.WorkId)
+			.OnDelete(DeleteBehavior.Restrict);
+
+		b.HasOne(static t => t.Movement)
+			.WithMany(static m => m.Tracks)
+			.HasForeignKey(static t => t.MovementId)
+			.OnDelete(DeleteBehavior.Restrict);
 	}
 }

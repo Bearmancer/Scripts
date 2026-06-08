@@ -8,9 +8,9 @@ internal sealed class AlbumConfiguration : IEntityTypeConfiguration<Album>
 {
 	public void Configure(EntityTypeBuilder<Album> b)
 	{
-		b.ToTable(name: "albums");
+		b.ToTable(name: "albums", schema: "music");
 		b.Property(static a => a.Id).UseIdentityAlwaysColumn();
-		b.Property(static a => a.ArtistId).HasColumnType(typeName: "integer");
+		b.Property(static a => a.ArtistId).HasColumnType(typeName: "integer").IsRequired(false);
 		b.Property(static a => a.Title).HasColumnType(typeName: "text").IsRequired();
 		b.Property(static a => a.ReleaseDate).HasColumnType(typeName: "date");
 		b.HasIndex(static a => a.ArtistId);
@@ -21,14 +21,16 @@ internal sealed class AlbumConfiguration : IEntityTypeConfiguration<Album>
 
 		b.HasIndex(static a => a.Title)
 			.HasDatabaseName(name: "idx_albums_title_unaccent")
-			.HasFilter("true");
+			.HasMethod("gin");
 
 		b.HasIndex(static a => a.Title)
 			.HasDatabaseName(name: "idx_albums_title_trgm")
-			.HasFilter("true");
+			.HasMethod("gin")
+			.HasOperators("gin_trgm_ops");
 
 		b.HasOne(static a => a.Artist)
 			.WithMany(static a => a.Albums)
-			.HasForeignKey(static a => a.ArtistId);
+			.HasForeignKey(static a => a.ArtistId)
+			.OnDelete(DeleteBehavior.Restrict);
 	}
 }

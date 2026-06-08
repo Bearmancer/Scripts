@@ -10,7 +10,7 @@ internal sealed class LinguaPackageReferenceTests
 	private static readonly string CsprojPath = TestPaths.Combine("csharp", "Scripts.csproj");
 	private static readonly string LockFilePath = TestPaths.Combine("csharp", "obj", "project.assets.json");
 
-	// Strict stable semver with no prerelease tag, no leading "v".
+	
 	private static readonly Regex StableSemverPattern =
 		new(@"^(?<maj>\d+)\.(?<min>\d+)\.(?<patch>\d+)$", RegexOptions.Compiled);
 
@@ -33,11 +33,11 @@ internal sealed class LinguaPackageReferenceTests
 	[Test]
 	public async Task Csproj_Lingua_Version_Is_Floating()
 	{
-		// Repo policy: always use latest NuGet (per "use * not hardcoded versions" rule).
-		// Version="*" means NuGet picks the latest stable on every restore.
-		// This is a deliberate, intentional choice - NOT a violation. The
-		// wildcard is what allows Lingua to track its upstream stable releases
-		// without forcing csproj edits.
+		
+		
+		
+		
+		
 		var xml = await File.ReadAllTextAsync(CsprojPath);
 		var doc = System.Xml.Linq.XDocument.Parse(xml);
 		var ns = doc.Root!.GetDefaultNamespace();
@@ -56,11 +56,11 @@ internal sealed class LinguaPackageReferenceTests
 	[Test]
 	public void Csproj_Does_Not_Contain_EF_Related_Version_Pin_Regression()
 	{
-		// Guard against an accidental future change that pins the EF Core
-		// packages to a specific version, breaking the EF-compatibility
-		// exception documented in the prompt pack. The repo policy is
-		// "Version=\"*\"" for every package, including EF; any version pin
-		// for an EF package must be a deliberate, reviewed change.
+		
+		
+		
+		
+		
 		var xml = File.ReadAllText(CsprojPath);
 		var doc = System.Xml.Linq.XDocument.Parse(xml);
 		var ns = doc.Root!.GetDefaultNamespace();
@@ -98,15 +98,15 @@ internal sealed class LinguaPackageReferenceTests
 	[Test]
 	public async Task Resolved_Lingua_Version_Is_Stable_Semver_From_Offline_Lock_File()
 	{
-		// Deterministic, offline validation:
-		// - The csproj says Version="*".
-		// - NuGet restore resolves "*" to some concrete stable semver and
-		//   records that resolution in csharp/obj/project.assets.json.
-		// - We assert the resolved version is a stable semver (no prerelease).
-		// - We do NOT hit the network. We do NOT compare against a live
-		//   nuget.org index. A "*" restore always picks the latest stable
-		//   the upstream feed serves at restore time, but that target is
-		//   inherently moving and out of scope for a deterministic test.
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		File.Exists(LockFilePath).Should().BeTrue(
 			$"dotnet restore must have produced {LockFilePath}");
 
@@ -117,8 +117,8 @@ internal sealed class LinguaPackageReferenceTests
 		resolvedVersion.Should().NotBeNull(
 			"because SearchPioneer.Lingua must appear in the resolved package graph");
 
-		// Use a semver-aware parser - never a string compare. "1.10.0" must
-		// sort after "1.9.0", which an ordinal string compare gets wrong.
+		
+		
 		var semver = TryParseStableSemver(resolvedVersion!);
 		semver.Should().NotBeNull(
 			$"because resolved version '{resolvedVersion}' must be a stable semver (no prerelease tag)");
@@ -127,10 +127,10 @@ internal sealed class LinguaPackageReferenceTests
 	[Test]
 	public void SemverAwareCompare_Orders_TwoDigitMinor_Above_SingleDigitMinor()
 	{
-		// Regression guard: a previous implementation used
-		// string.Compare(s, latest, StringComparison.Ordinal) > 0 to pick the
-		// "latest" stable. That breaks semver: "1.10.0" < "1.9.0" lexicographically.
-		// The deterministic validator must use semver-aware comparison.
+		
+		
+		
+		
 		CompareSemver("1.10.0", "1.9.0").Should().BeGreaterThan(0,
 			"because 1.10.0 is newer than 1.9.0 under semver ordering");
 		CompareSemver("1.9.0", "1.10.0").Should().BeLessThan(0,
@@ -170,10 +170,10 @@ internal sealed class LinguaPackageReferenceTests
 	{
 		if (!doc.RootElement.TryGetProperty("targets", out var targets)) return null;
 
-		// The version is encoded in the property name: "<PackageId>/<Version>".
-		// We do not assume a specific TFM - we walk every TFM key under
-		// "targets" and pick the first match. The TFM-agnostic walk also
-		// makes the test resilient to multi-targeting or a future TFM bump.
+		
+		
+		
+		
 		foreach (var tfm in targets.EnumerateObject())
 		{
 			foreach (var prop in tfm.Value.EnumerateObject())

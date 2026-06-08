@@ -42,3 +42,4 @@ global using SpectreProgress = Spectre.Console.Progress;
 global using SpectreTable = Spectre.Console.Table;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Scripts.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Scripts.Mcp")]

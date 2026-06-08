@@ -1,18 +1,4 @@
-<#
-.SYNOPSIS
-    End-to-end Azure account setup from scratch - minimal complexity path.
 
-.DESCRIPTION
-    Automates Azure subscription setup after creating an account.
-    Uses az CLI exclusively for all operations.
-    Handles missing DAC account gracefully with interactive prompts.
-
-.USAGE
-    .\AzureQuickSetup.ps1 [-SubscriptionName "my-sub"] [-Region "eastus"]
-
-.NOTES
-    Requires: Azure CLI installed, internet connection
-#>
 
 param(
     [string]$SubscriptionName,
@@ -23,9 +9,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# ============================================
-# STEP 1: Verify Azure CLI Installation
-# ============================================
+
+
+
 Write-Host "=== Azure CLI Verification ===" -ForegroundColor Cyan
 
 $azExists = Get-Command az -ErrorAction SilentlyContinue
@@ -36,16 +22,16 @@ if (-not $azExists) {
 $azVersion = az version --output json 2>&1 | ConvertFrom-Json
 Write-Host "Azure CLI version: $($azVersion.'azure-cli')" -ForegroundColor Green
 
-# ============================================
-# STEP 2: Check Account Login Status
-# ============================================
+
+
+
 Write-Host "`n=== Account Login Status ===" -ForegroundColor Cyan
 
 $account = az account show --output json 2>&1 | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0 -or -not $account) {
     Write-Host "Not logged in. Initiating login..." -ForegroundColor Yellow
     
-    # Check if azd is available for better UX
+    
     $azdAvailable = Get-Command azd -ErrorAction SilentlyContinue
     if ($azdAvailable) {
         Write-Host "Using Azure Developer CLI for login..." -ForegroundColor Cyan
@@ -64,14 +50,14 @@ if ($LASTEXITCODE -ne 0 -or -not $account) {
 Write-Host "✓ Logged in as: $($account.user.name)" -ForegroundColor Green
 Write-Host "✓ Tenant: $($account.tenantId)" -ForegroundColor Green
 
-# ============================================
-# STEP 3: Handle Subscription Selection
-# ============================================
+
+
+
 Write-Host "`n=== Subscription Setup ===" -ForegroundColor Cyan
 
 $subs = az account list --output json 2>&1 | ConvertFrom-Json
 
-# If no subscriptions, need to create one via portal
+
 if ($subs.Count -eq 0) {
     Write-Host "No subscriptions found." -ForegroundColor Yellow
     Write-Host "New Azure accounts need subscription created in Azure portal first:" -ForegroundColor Cyan
@@ -84,7 +70,7 @@ if ($subs.Count -eq 0) {
     throw "Subscription required. Create one in portal, then re-run this script."
 }
 
-# Set or select subscription
+
 if (-not $SubscriptionName) {
     Write-Host "Available subscriptions:" -ForegroundColor Cyan
     $subs | Format-Table name, id, state -AutoSize
@@ -103,20 +89,20 @@ if (-not $targetSub) {
     throw "Invalid subscription name."
 }
 
-# Set active subscription
+
 az account set --subscription $targetSub.id
 Write-Host "✓ Active subscription: $($targetSub.name)" -ForegroundColor Green
 
-# ============================================
-# STEP 4: Set Default Region
-# ============================================
+
+
+
 Write-Host "`n=== Region Configuration ===" -ForegroundColor Cyan
 
 if (-not $Region) {
     $Region = Read-Host "Enter preferred region (e.g., eastus, westeurope)"
 }
 
-# Verify region is valid
+
 $validRegions = az account list-locations --output json | ConvertFrom-Json | 
     Where-Object { $_.metadata.regionType -ne "Pseudo" } | 
     Select-Object -ExpandProperty name
@@ -128,9 +114,9 @@ if ($validRegions -notcontains $Region) {
 az configure --defaults location=$Region
 Write-Host "✓ Default region set to: $Region" -ForegroundColor Green
 
-# ============================================
-# STEP 5: Create Resource Group
-# ============================================
+
+
+
 Write-Host "`n=== Resource Group Creation ===" -ForegroundColor Cyan
 
 if (-not $ResourceGroup) {
@@ -156,9 +142,9 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "✓ Resource group already exists: $ResourceGroup" -ForegroundColor Green
 }
 
-# ============================================
-# STEP 6: Enable Required Providers
-# ============================================
+
+
+
 Write-Host "`n=== Enabling Resource Providers ===" -ForegroundColor Cyan
 
 $providers = @(
@@ -178,9 +164,9 @@ foreach ($provider in $providers) {
 
 Write-Host "✓ All providers registered" -ForegroundColor Green
 
-# ============================================
-# STEP 7: Create Storage Account (Optional but Recommended)
-# ============================================
+
+
+
 Write-Host "`n=== Creating Storage Account (Optional) ===" -ForegroundColor Cyan
 
 $createStorage = Read-Host "Create a storage account for scripts? (y/n)"
@@ -203,9 +189,9 @@ if ($createStorage -eq 'y') {
     }
 }
 
-# ============================================
-# STEP 8: Summary and Next Steps
-# ============================================
+
+
+
 Write-Host "`n" + "="*50 -ForegroundColor Green
 Write-Host "AZURE SETUP COMPLETE" -ForegroundColor Green
 Write-Host "="*50 -ForegroundColor Green

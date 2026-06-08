@@ -1,0 +1,505 @@
+﻿I need to take the "Inventory of Concerns" and "User Questions" and turn them into targeted research tasks.
+Some are architectural (Why is `public` schema separate? Why is `failed_tasks` different from `execution_logs`?).
+    - The "Public" schema's role: Is the current `execution_logs` / `failed_tasks` / `source_records` split optimal? I should look for patterns for "Infrastructure Logging" in PG.
+I will now launch a series of targeted research tasks. I'll group them by "Technical Domain".
+*   **Domain 3: Infrastructure Logging Patterns** -> Execution logs vs Failed tasks vs Source records.
+Let's map the "Concerns" to "Research Tasks".
+*   `proposed-refactor.md` L8, 9, 132, 133, 181, 182, 246 -> **DB Fundamentals Task**.
+*   `proposed-refactor.md` L116, 117 -> **DB Fundamentals Task**.
+*   `proposed-refactor.md` L139, 140, 146, 148, 152, 156, 157, 159, 161, 166 -> **Infra Logging Task**.
+*   `proposed-refactor.md` L44-47, 82-88 -> **Music Domain Split Task**.
+*   `MASTER_PLAN.md` L502-506 (Fixture issues) -> **EF Concurrency/Testing Task**.
+*   `0001-ef-core-3-schema-architecture.md` L96-98 (Performance/Migration) -> **EF Performance Task**.
+**Tool: task**
+Background task launched.
+Background Task ID: bg_4dbad3f7
+System notifies on completion. Use `background_output` with task_id="bg_4dbad3f7" to check.
+<task_metadata>
+background_task_id: bg_4dbad3f7
+</task_metadata>
+to continue: task(task_id="ses_15e2814ebffed3sUg06Lz2i7cx", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_7c495f20
+System notifies on completion. Use `background_output` with task_id="bg_7c495f20" to check.
+<task_metadata>
+background_task_id: bg_7c495f20
+</task_metadata>
+to continue: task(task_id="ses_15e27fadfffeArf1ICkaCXE0bn", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+  "prompt": "[CONTEXT]: Planning a Master Plan. The user is questioning the \"Public\" schema's infrastructure layout.\n[GOAL]: Determine the optimal pattern for \"Infrastructure Logging\" in a PostgreSQL database.\n[REQUEST]: Analyze the following proposed tables:\n- `execution_logs`: (Id, Timestamp, SessionId, Payload, ExitCode)\n- `failed_tasks`: (Id, TaskName, ErrorMessage, Timestamp, ExecutionLogId)\n- `source_records`: (Id, SourceId, EntityType, RawData)\n\n[QUESTIONS]:\n1. Is it redundant to have `failed_tasks` separate from `execution_logs`? Should failures just be a state/column in `execution_logs`?\n2. What is the purpose of `source_records` (mapping external IDs to internal IDs) in a modern EF Core app? Is there a better way to handle \"Source-to-Internal\" ID mapping?\n3. What is the best way to implement `SessionId` to group related executions?\n\n[REQUEST]: Search for \"Postgres execution logging patterns\" and \"External ID mapping patterns\". Recommend a \"Simplified Infrastructure Schema\".",
+Background task launched.
+Background Task ID: bg_b83b051e
+System notifies on completion. Use `background_output` with task_id="bg_b83b051e" to check.
+<task_metadata>
+background_task_id: bg_b83b051e
+</task_metadata>
+to continue: task(task_id="ses_15e27e2beffe9aPZgfay4lEKDC", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_05f62d0a
+System notifies on completion. Use `background_output` with task_id="bg_05f62d0a" to check.
+<task_metadata>
+background_task_id: bg_05f62d0a
+</task_metadata>
+to continue: task(task_id="ses_15e27d05dffekNrcRSS4CGSeiD", load_skills=[], run_in_background=false, prompt="...")
+-   **Visual/Doc Deliverables**: The final output of my planning phase (which will be a work plan) must include or point to a single, comprehensive Mermaid diagram and a highly detailed EF Reference document. Since I am a *planner*, I will design these as tasks for the implementer, or create the drafts/specs for them in `.omo/drafts/`.
+Wait, I should check if any of the already running tasks need "Firecrawl deep dive" adjustment. The Librarian agent was tasked with EF Core research. I might need to refine that or add a new task if the Librarian's results are too surface-level.
+  "content": "# Unified Architecture Specification (Draft)\n\n**Status**: Draft / Synthesis Phase\n**Goal**: Merge architecture sprawl into a single, decision-complete reference.\n\n## 1. Core Database Principles\n- **Infrastructure**: 1 PostgreSQL Database $\\rightarrow$ 4 Logical Schemas.\n- **Deletion Policy**: \n    - **No Hard Deletes**: Normal operations cannot delete records.\n    - **RESTRICT/NO ACTION**: All Foreign Keys use these to prevent accidental cascading loss.\n    - **No Soft-Delete**: No `IsDeleted` flags.\n    - **Cleanup**: Date-based bulk deletes during resync only.\n- **Timezones**: Internally `timestamptz` (UTC). External presentation converted to IST.\n- **Indexing**: Convention `idx_{table}_{columns}`.\n\n## 2. Schema Definitions\n\n### 📺 `youtube` Schema\n*Purpose: Scraped YouTube playlist metadata.*\n- **Table: `videos`**\n    - Column Order: Title, Translated Title, Description, Translated Description, Channel Name, Upload Date, Duration, URL.\n    - Naming: `TranslatedTitle`, `TranslatedDescription`.\n    - Constraints: Unique URL, Trigram index on titles.\n\n### 🎵 `music` Schema\n*Purpose: Last.fm scrobble data.*\n- **Table: `artists`**, **`albums`**, **`tracks`**, **`scrobbles`**.\n- **Refactor**: Classical music ranking moved to a separate `classical` schema.\n- **Cleanup**: Remove `albums.ReleaseDate`.\n- **Validation**: Verify if `scrobbles.Platform` is provided by API.\n\n### 🎻 `classical` Schema (NEW)\n*Purpose: Classical music ranking and recording tracking.*\n- **Table: `release_progress`**\n    - Column Rename: `CreatedAt` $\\rightarrow$ `RecordingDate`.\n    - Goal: Avoid excessive nulls by separating from standard music tracks.\n\n### 🛠️ `work` Schema\n*Purpose: Native work tracker (Linear-esque).*\n- **Table: `projects`**, **`issues`**.\n- **Simplification**: Remove `Priority`, `PrioritySort`, `Estimate`.\n- **Structure**: Project $\\rightarrow$ Issue (1:N), Issue $\\rightarrow$ Issue (Self-referencing).\n\n### ⚙️ `public` Schema\n*Purpose: Technical infrastructure and logging.*\n- **Table: `execution_logs`**, **`failed_tasks`**, **`source_records`**.\n- **Optimization**: [Pending research on redundancy between logs and failures].\n\n## 3. Visualizations & Documentation (Planned)\n- **Master Diagram**: A single comprehensive Mermaid diagram showing all 4 schemas and their inter-relations.\n- **EF Reference Doc**: An exhaustive guide explaining every type, field, purpose, and relationship for every entity.\n\n## 4. Open Questions / Unresolved\n- [To be filled from research results]\n",
+[BACKGROUND TASK RESULT READY]
+**3 tasks still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_4dbad3f7")` to retrieve this result when ready.
+[BACKGROUND TASK RESULT READY]
+**2 tasks still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_b83b051e")` to retrieve this result when ready.
+[BACKGROUND TASK RESULT READY]
+**1 task still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_05f62d0a")` to retrieve this result when ready.
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+The user wants me to synthesize the research results and move toward a "decision-complete" work plan. I have several background tasks that have completed.
+*   `bg_b83b051e`: Infrastructure Logging (Execution logs vs Failed tasks, Source records, SessionId).
+  "task_id": "bg_4dbad3f7"
+Task Result
+Task ID: bg_4dbad3f7
+  "task_id": "bg_b83b051e"
+Task Result
+Task ID: bg_b83b051e
+`failed_tasks` (Id, TaskName, ErrorMessage, Timestamp, ExecutionLogId)
+1.  Redundancy of `failed_tasks` vs `execution_logs`.
+1.  Is it redundant to have `failed_tasks` separate from `execution_logs`?
+`execution_logs` stores the execution attempt. `failed_tasks` stores the specific error.
+- `execution_logs`: (Id, Timestamp, CorrelationId, TaskName, Payload, Status, ErrorMessage, DurationMs)
+1.  **Failed Tasks:** Redundant. Suggest merging into `execution_logs` with `Status` and `ErrorMessage`.
+### 1. `failed_tasks` vs `execution_logs`
+*   **Recommendation:** Merge `failed_tasks` into `execution_logs`. Add a `Status` enum (e.g., `Succeeded`, `Failed`, `Skipped`) and a nullable `ErrorMessage` column. 
+    TaskName TEXT NOT NULL,
+  "task_id": "bg_05f62d0a"
+Task Result
+Task ID: bg_05f62d0a
+  "task_id": "bg_7c495f20"
+Task Result
+Task ID: bg_7c495f20
+Wait, the `background_output` should return the *final* result of the task. If the agent just output its plan, it means it didn't finish the synthesis. I should probably check the task status or, better yet, just ask for the specific synthesis of the EF Core topics since I have a general agent/librarian.
+However, looking at the other tasks:
+Only `bg_7c495f20` (EF Core Research) is missing the "meat".
+1.  Rerun a targeted `librarian` task to get the *actual* synthesis for the EF Core topics.
+2.  While that runs, I will update the draft `.omo/drafts/unified-architecture.md` with the findings from the other three tasks.
+**Tool: task**
+Background task launched.
+Background Task ID: bg_09afc667
+System notifies on completion. Use `background_output` with task_id="bg_09afc667" to check.
+<task_metadata>
+background_task_id: bg_09afc667
+</task_metadata>
+to continue: task(task_id="ses_15e2567d3ffeI3TkTJLdWyMLhQ", load_skills=[], run_in_background=false, prompt="...")
+  "newString": "### ⚙️ `public` Schema\n*Purpose: Technical infrastructure and logging.*\n- **Table: `execution_logs`**\n    - Columns: Id, Timestamp, CorrelationId (Groups related executions), TaskName, Payload, Status (Succeeded/Failed/Partial), ErrorMessage, DurationMs, ExitCode.\n- **Refactor**: Merged `failed_tasks` into `execution_logs` to remove redundancy.\n- **ID Mapping**: Move `source_records` functionality directly into target entities as `ExternalId` and `SourceSystem` columns to eliminate bottlenecks and joins.",
+  "oldString": "### ⚙️ `public` Schema\n*Purpose: Technical infrastructure and logging.*\n- **Table: `execution_logs`**, **`failed_tasks`**, **`source_records`**.\n- **Optimization**: [Pending research on redundancy between logs and failures]."
+5.  **Public Schema**: Simplified infrastructure logging (merged `failed_tasks`, moved `source_records` to target entities).
+    *   Merged `failed_tasks` into `execution_logs` with a `Status` enum and `ErrorMessage` column.
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+  "task_id": "bg_09afc667"
+Task Result
+Task ID: bg_09afc667
+  "task_id": "bg_09afc667"
+Task ID: bg_09afc667
+**Tool: task**
+  "prompt": "[CONTEXT]: The previous librarian task (bg_09afc667) failed to return any results despite being marked complete. I need the actual final recommendations for EF Core 10.\n[GOAL]: Provide a definitive \"Gold Standard\" implementation guide for the following four items.\n[REQUEST]: \n1. **Schema-per-Domain Pattern**: Exact EF Core 10 configuration for managing multiple schemas (`youtube`, `music`, `work`, `public`) in one `DbContext`. Include `ToTable(name, schema)` and migration warnings (e.g., how to handle cross-schema FKs).\n2. **EF Core Concurrency in Tests**: The best pattern for a shared PostgreSQL fixture in TUnit/xUnit. Compare `IAsyncLifetime` + `SemaphoreSlim` vs `CollectionFixture`. I need the one that ensures thread-safety and isolation without ruining performance.\n3. **Metadata Storage (jsonb vs Structured)**: Clear \"Tipping Point\" criteria for EF Core 10. When do I move from a `jsonb` column to a structured table? (Indexing, Query volume, Consistency requirements).\n4. **Compiled Models in CI/CD**: Resolution for the TOCTOU race (unverifiable in CI). Provide the specific build pipeline flow: should they be checked into Git, generated as a build artifact, or handled via a specific runtime toggle?\n\n[TOOLING]: Use Firecrawl/Exa. Return FINAL RECOMMENDATIONS only. No plans.",
+Task completed in 2m 3s.
+    modelBuilder.Entity<Task>().ToTable("Tasks", schema: "work");
+<task_metadata>
+task_id: ses_15e2396b9ffeq0RGiO1Zf4WPC2
+</task_metadata>
+to continue: task(task_id="ses_15e2396b9ffeq0RGiO1Zf4WPC2", load_skills=[], run_in_background=false, prompt="...")
+3.  **Lean Infrastructure**: Redundancy removed from logging (merging `failed_tasks` into `execution_logs`) and optimized ID mapping (distributing `ExternalId` to entities).
+5.  I launched 4 more research tasks (Concepts Guide, EF Gold Standards, Infrastructure Logging, Classical Music Schema).
+7.  I received the results from those research tasks.
+    *   **Log Redundancy**: `failed_tasks` is **redundant**. I've merged it into `execution_logs`. Now, every run is one row with a `Status` (Succeeded/Failed) and an `ErrorMessage`.
+    *   I will use a `task` to have a `general` agent create the "Comprehensive Architectural Guide" because it requires a lot of writing and structuring, and I (Atlas) should orchestrate the creation of this high-fidelity document.
+        4.  A `task` to formalize this into the `unified-architecture.md` and a new `EF_REFERENCE.md`.
+    *   *Purpose*: For you. When you are talking about a task, you don't say "Let's look at UUID 550e8400." You say "Let's look at SCRIPTS-123."
+    PUBLIC-EXECUTION-LOGS ||--o{ PUBLIC-FAILED-TASKS : "logs"
+| **Identifier?** | The human-friendly ID (`SCRIPTS-123`). Distinct from the machine UUID (`Id`). Used for CLI display and task reference. |
+2. **Songs with no album or no artist**: This is a real data problem. Last.fm scrobbles sometimes come with incomplete metadata - a track might not have an album name, or the artist might be unknown/missing. The current schema has `ArtistId` as FK (NOT NULL) in tracks, and `AlbumId` as FK (NOT NULL/allowed nullable?) in tracks. This needs to be thought through.
+- Artist names can be weird or missing in edge cases.
+For ArtistId being nullable - in the current schema it's shown as NOT NULL implicitly. But what if Last.fm sends a scrobble with missing artist data? We'd need a placeholder artist too.
+2. "Songs with no album or artist" = They're probing edge cases. Real data has gaps. The schema needs to handle missing parent entities gracefully rather than crashing.
+3. Explains nullable FK design for missing data
+**Your question**: Real Last.fm data sometimes has missing fields. What happens?
+MANDATORY delegate_task params: ALWAYS include load_skills and run_in_background when calling delegate_task. Evaluate available skills before dispatch - pass task-appropriate skills when relevant, pass [] ONLY when no skill matches the task domain.
+Example: delegate_task(subagent_type="explore", prompt="...", run_in_background=true, load_skills=[])
+1. No if an entity has 0 "instances" it should be purged; 2. Explicate handling of NULL vs empty for an artist/album/song for cleanup; 3. Assess integration into PGSQL of default val when last.fm offers none; 4. Why null for album id and artistId?; 5. Artist and album can be missing so I am confused why yous ay that artist has to be not null; 6. How would PGSQL handle tracks complexity of a single movement being present in different ways, i.e. Beethoven 5.I has distinct artists, albums but REFER to the same thing i.e. much as I ?Saw Her Standing There even when sung live by Macca is the same "work" as Beatles I Saw Her Standing There
+2. **Explicate handling of NULL vs empty for artist/album/song for cleanup** - If an Artist has no name (or it's empty), what happens? How does cleanup handle NULL vs empty-string vs missing data?
+4. **Why null for album id and artistId?** - They're questioning my previous recommendation. They want to understand the reasoning. ArtistId being NOT NULL assumed every scrobble has an artist, but the user says artists can be missing too.
+5. **Artist and album can be missing so I am confused why you say that artist has to be not null** - Direct contradiction. They're telling me my assumption was wrong. Both Artist and Album can be missing.
+For question 5: The user is right. I incorrectly assumed Artist is always present. Last.fm CAN return scrobbles with missing artist data (rare, but possible). And for the audio extraction/classical use case, a track might be identified by composer and work name rather than artist.
+- ArtistId: NULLABLE (an artist can be unknown/missing)
+- AlbumId: NULLABLE (an album can be unknown/missing)
+But wait - the user said "Artist and album can be missing". If ArtistId is NULL, then RESTRICT on ArtistId doesn't apply. The artist row can be deleted even with tracks pointing to NULL? No - RESTRICT only applies to actual FK references. If ArtistId is NULL, there's no FK reference to enforce.
+But the user explicitly said "Artist and album can be missing so I am confused why you say that artist has to be not null."
+3. PGSQL defaults for missing API data
+5. Artist and album CAN be missing — pointing out my flawed assumption
+**Tool: task**
+Background task launched.
+Background Task ID: bg_4ff9c641
+System notifies on completion. Use `background_output` with task_id="bg_4ff9c641" to check.
+<task_metadata>
+background_task_id: bg_4ff9c641
+</task_metadata>
+to continue: task(task_id="ses_15c5b2b00ffe0Q3CGmLvO0JS89", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_49f98ddb
+System notifies on completion. Use `background_output` with task_id="bg_49f98ddb" to check.
+<task_metadata>
+background_task_id: bg_49f98ddb
+</task_metadata>
+to continue: task(task_id="ses_15c5b1effffeOnfFBFpPGddO0g", load_skills=[], run_in_background=false, prompt="...")
+Let me wait for the background tasks to complete before proceeding. I've launched an explore agent for codebase entity discovery and a librarian for MusicBrainz data model research. I need to wait for their results before I can do the oracle consultation and give the user comprehensive answers.
+| 3 | **PGSQL defaults for missing API data** | You want **declarative DB rules**, not application-level null-checking. If the API skips a field, the DB should handle the default automatically. |
+| 5 | **Artist AND album can both be missing** | This isn't just edge-case handling — it's a **first-class design state**. The model must admit tracks that have neither parent. |
+   - PGSQL-level default handling for missing API data
+[BACKGROUND TASK RESULT READY]
+**1 task still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_4ff9c641")` to retrieve this result when ready.
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+Both background tasks are complete. Let me retrieve their outputs.
+  "task_id": "bg_4ff9c641"
+Task Result
+Task ID: bg_4ff9c641
+    - (and others like `ExecutionLog.cs`, `FailedTask.cs`, etc.)
+    - `DbSet<FailedTask> FailedTasks`
+    - `FailedTask`: `failed_tasks` (default schema)
+**THE SUBAGENT JUST CLAIMED THIS TASK IS DONE. THEY ARE PROBABLY LYING.**
+   - Does this code ACTUALLY do what the task required? (Re-read the task, compare line by line)
+   - Scope creep? Did the subagent touch things or add features NOT in the task spec?
+**If this task produced anything a user would SEE or INTERACT with, you MUST launch it and verify yourself.**
+**PHASE 4: GATE DECISION - Should you proceed to the next task?**
+- **All 3 YES** - Proceed: mark task complete, move to next.
+- **Any NO** - Reject: resume with `task_id`, fix the specific issue.
+**DO NOT proceed to the next task until all 4 phases are complete and the gate passes.**
+task(task_id="ses_15c5b2b00ffe0Q3CGmLvO0JS89", load_skills=[], prompt="fix: [describe the specific failure]")
+**PREFERRED REUSE SESSION FOR THE CURRENT TOP-LEVEL PLAN TASK**
+- Start a fresh subagent session only when reuse is unavailable or would cross task boundaries.
+Count pending vs completed tasks. This is your ground truth for what comes next.
+2. Mark the completed task as `completed` using `todowrite`
+**STEP 7: EXECUTE QA TASKS (IF ANY)**
+If QA tasks exist in your todo list:
+- Mark each QA task complete after successful verification
+**STEP 8: PROCEED TO NEXT PENDING TASK**
+- Run `todoread` AGAIN to identify the next `pending` task
+  "task_id": "bg_49f98ddb"
+Task Result
+Task ID: bg_49f98ddb
+**THE SUBAGENT JUST CLAIMED THIS TASK IS DONE. THEY ARE PROBABLY LYING.**
+   - Does this code ACTUALLY do what the task required? (Re-read the task, compare line by line)
+   - Scope creep? Did the subagent touch things or add features NOT in the task spec?
+**If this task produced anything a user would SEE or INTERACT with, you MUST launch it and verify yourself.**
+**PHASE 4: GATE DECISION - Should you proceed to the next task?**
+- **All 3 YES** - Proceed: mark task complete, move to next.
+- **Any NO** - Reject: resume with `task_id`, fix the specific issue.
+**DO NOT proceed to the next task until all 4 phases are complete and the gate passes.**
+task(task_id="ses_15c5b1effffeOnfFBFpPGddO0g", load_skills=[], prompt="fix: [describe the specific failure]")
+**PREFERRED REUSE SESSION FOR THE CURRENT TOP-LEVEL PLAN TASK**
+- Start a fresh subagent session only when reuse is unavailable or would cross task boundaries.
+Count pending vs completed tasks. This is your ground truth for what comes next.
+2. Mark the completed task as `completed` using `todowrite`
+**STEP 7: EXECUTE QA TASKS (IF ANY)**
+If QA tasks exist in your todo list:
+- Mark each QA task complete after successful verification
+**STEP 8: PROCEED TO NEXT PENDING TASK**
+- Run `todoread` AGAIN to identify the next `pending` task
+Both background tasks completed successfully. Let me analyze the results:
+4. **PGSQL defaults**: How to handle missing API data at the database level?
+Recommendation: Use NULL for missing data, NOT empty strings. This way:
+**Question 3: PGSQL Default Values for Missing API Data**
+The user wants the database to handle missing API data automatically.
+Excellent. Both background tasks are complete. I now have:
+**Tool: task**
+  "prompt": "[ORACLE: Architectural Synthesis]\n\nYou are advising on a design for a PostgreSQL schema used by a .NET 10 EF Core project for personal music/video/work automation. The user has 6 questions that reveal a need for a fundamental redesign of the existing `music` schema. I need your synthesis.\n\n## CONTEXT\n\n**Current State** (from codebase exploration):\n```\nmusic.artists (Id INT PK, Name TEXT, Metadata JSONB)\nmusic.albums (Id INT PK, ArtistId INT NOT NULL, Title TEXT, ReleaseDate DATE)\nmusic.tracks (Id INT PK, AlbumId INT NOT NULL, ArtistId INT NOT NULL, Title TEXT, DurationSeconds INT)\nmusic.scrobbles (Id BIGINT PK, TrackId INT NOT NULL, ScrobbledAt TIMESTAMPTZ, Platform VARCHAR(50))\n```\n\nAll FKs are currently non-nullable and use RESTRICT (no cascade deletes).\n\n**MusicBrainz Gold Standard** (from librarian research):\n- **Work** = Abstract composition (e.g., \"I Saw Her Standing There\" by Lennon/McCartney)\n- **Recording** = Specific performance/audio capture (Beatles studio 1963, McCartney live 2009)\n- Multiple Recordings link to the same Work via `l_recording_work` relationship table\n- Artists link as composers to Works, and as performers to Recordings\n\n**User's Requirements** (from conversation):\n1. **Full cascade purge (L1→L2→L3)**: If a Track has 0 scrobbles, delete it. If an Album has 0 tracks, delete it. If an Artist has 0 tracks AND 0 albums, delete it.\n2. **Artist and album CAN be missing** — tracks may have no artist or no album.\n3. **NULL = \"API provided nothing\"** — not a sentinel/default.\n4. **Work abstraction**: Two different recordings of the \"same song\" should be linkable. User gave example: \"I Saw Her Standing There\" by Beatles (1963) vs McCartney (live 2009) are the same \"work\" — just like Beethoven's 5th, Movement I performed by Karajan/Berlin vs Bernstein/Vienna.\n5. **PGSQL-level defaults** for missing API data.\n6. **Sync-driven** — data comes from APIs, not manual entry. Cleanup is date-based range deletion + re-pull.\n\n## QUESTIONS FOR ORACLE\n\n### Q1: Schema Design — Should there be a universal `works` (compositions) table?\n\nThe user's question #6 reveals they want a Work abstraction for ALL music, not just classical. Currently I proposed separate `classical` schema with its own `works` table. But the user correctly notes that the problem is universal: different recordings of the same pop song have the same relationship as different performances of a classical work.\n\n**Decision needed**: Should we:\n- A) Create a single `music.works` table shared by ALL music (pop + classical), and move classical-specific metadata (catalogue numbers, movements) into a separate `classical.works_detail` / `classical.movements` table?\n- B) Keep `classical` schema fully separate with its own `works` table, and also add a `pop_works` table in `music` schema?\n- C) Don't create works at all — use a simpler approach (normalize on track title + artist)?\n\n### Q2: FK Nullability — Should ArtistId, AlbumId, WorkId be nullable?\n\nThe user says \"Artist and album can be missing.\" Currently they are NOT NULL.\n\n**Trade-offs**:\n- **NULLABLE**: Truthful (no forced placeholder). But RESTRICT is bypassed for NULL-ref rows. Cleanup (L1→L2→L3) works cleanly: tracks with ArtistId=NULL never counted toward an artist's reference count.\n- **NOT NULL + \"Unknown Artist\" sentinel**: RESTRICT works fully. But creates fake entities that never get cleaned up because tracks always point to them.\n\n**Decision needed**: Which approach serves the user's \"sync-first, purge-orphans\" model better?\n\n### Q3: Full Cascade Purge Implementation\n\nThe user asserts: \"If an entity has 0 instances, it should be purged.\"\n\nTrace a full cleanup cycle:\n1. User runs: `DELETE FROM scrobbles WHERE date >= '2025-01-01' AND date < '2025-06-01'`\n2. L1: `DELETE FROM tracks WHERE id NOT IN (SELECT DISTINCT track_id FROM scrobbles)`\n3. L2: `DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks)`\n4. L3: `DELETE FROM artists WHERE id NOT IN (SELECT DISTINCT artist_id FROM tracks) AND id NOT IN (SELECT DISTINCT artist_id FROM albums)`\n\n**Risks**: \n- A track is deleted (L1) but immediately re-created by the next sync\n- An artist is deleted (L3) but a new scrobble comes in for that artist name\n- Race conditions if scrobbles are being inserted while cleanup runs\n\n**Decision needed**: Is this pattern safe for a sync-driven workflow? Should L1-L3 be wrapped in a transaction with the sync? Should there be a \"cooldown\" period before L3 runs?\n\n### Q4: PGSQL Defaults for Missing API Data\n\nThe user wants DB-level defaults when the API provides no data.\n\n**Example scenarios**:\n- Artist name missing → store NULL, not ''\n- Album title missing → store NULL\n- Track duration missing → store NULL (INTERVAL type)\n- Platform missing → store NULL\n- Metadata → store '{}'::jsonb (empty object)\n\n**Decision needed**: Is a NULL-based approach (no sentinel values) the right call? Any edge cases where a sentinel is better?\n\n### Q5: Cross-schema relationship design\n\nIf a shared `works` table exists:\n- Where does it live? `music.works`? `public.works`?\n- The `classical` schema has `movements`, `performers`, `venues` — do these reference `music.tracks` or can they reference `music.works`?\n- Does a `classical.movement` link to `works` or to `tracks`?\n\nExample:\n```\nWork: \"Symphony No 5, Op. 67\" (in music.works)\n  ├── Movement: \"I. Allegro con brio\" (in classical.movements, FK → works)\n  │     └── Track: Karajan/Berlin, 1963 (in music.tracks, FK → works AND movements)\n  └── Track: McCartney live \"Saw Her Standing There\" (in music.tracks, FK → works)\n```\n\nIs this the right pattern? Or should classical have its own track abstraction?\n\n---\n\nPlease provide your analysis and recommendations for each of the 5 questions, with specific schema-level guidance. The user wants a clean, implementable design that matches their \"sync-first, purge-orphans, no-sentinel-values\" philosophy."
+Task completed in 43s.
+Sync-driven, purge-orphans (L1 $\rightarrow$ L2 $\rightarrow$ L3), no sentinel values (NULL = missing), Work abstraction (universal).
+        2.  Artist/Album can be missing (nullable).
+        *   *Analysis*: User says "Artist and album can be missing."
+        *   *Analysis*: User wants NULL for missing data, except for JSONB.
+2. Alter `music.tracks` to make `ArtistId` and `AlbumId` nullable to support missing API data.
+<task_metadata>
+task_id: ses_15c58ff5cffe9QAIsYzFoE8JaD
+</task_metadata>
+**THE SUBAGENT JUST CLAIMED THIS TASK IS DONE. THEY ARE PROBABLY LYING.**
+   - Does this code ACTUALLY do what the task required? (Re-read the task, compare line by line)
+   - Scope creep? Did the subagent touch things or add features NOT in the task spec?
+**If this task produced anything a user would SEE or INTERACT with, you MUST launch it and verify yourself.**
+**PHASE 4: GATE DECISION - Should you proceed to the next task?**
+- **All 3 YES** - Proceed: mark task complete, move to next.
+- **Any NO** - Reject: resume with `task_id`, fix the specific issue.
+**DO NOT proceed to the next task until all 4 phases are complete and the gate passes.**
+task(task_id="ses_15c58ff5cffe9QAIsYzFoE8JaD", load_skills=[], prompt="fix: [describe the specific failure]")
+**PREFERRED REUSE SESSION FOR THE CURRENT TOP-LEVEL PLAN TASK**
+- Start a fresh subagent session only when reuse is unavailable or would cross task boundaries.
+Count pending vs completed tasks. This is your ground truth for what comes next.
+2. Mark the completed task as `completed` using `todowrite`
+**STEP 7: EXECUTE QA TASKS (IF ANY)**
+If QA tasks exist in your todo list:
+- Mark each QA task complete after successful verification
+**STEP 8: PROCEED TO NEXT PENDING TASK**
+- Run `todoread` AGAIN to identify the next `pending` task
+to continue: task(task_id="ses_15c58ff5cffe9QAIsYzFoE8JaD", load_skills=[], run_in_background=false, prompt="...")
+| **No data** | `NULL` | The API gave us nothing. This is the common case for missing data. | Last.fm returns a scrobble with no album name |
+### ❓ Q3: PGSQL Defaults for Missing API Data
+    name TEXT,                                          -- NULL when missing
+    title TEXT,                                          -- NULL when missing
+    release_date DATE,                                   -- NULL when missing
+    duration INTERVAL,                                     -- NULL when missing
+**Because you said they can be missing.** I was wrong before when I said `ArtistId` must be NOT NULL. You corrected me.
+### ❓ Q5: Artist and Album CAN Be Missing
+**Your question**: "Artist and album can be missing so I am confused why you say that artist has to be not null."
+| 2 | NULL vs empty | NOT NULL everywhere | **NULL = missing API data**, `''` = explicit blank (rare) |
+| 5 | Artist can be missing | Sentinels required | **No sentinels ever**. NULL means "doesn't exist in API" |
+| 2 | Make `ArtistId`, `AlbumId` nullable on `music.tracks` | Truthful modeling of missing API data |
+> I've reported it to Last.fm: https://support.last.fm/t/regression-date-missing-from-nowplaying-in-user-getrecenttracks/69875?u=hvk
+    // Handle missing album
+**NULL is both safer and has equal or less total ceremony** once you centralize the display logic with computed properties. The C# compiler actively helps you find missing null checks. With sentinels, the compiler is silent while your data rots.
+The **application** (your C# code) is responsible for deciding what to do when data is missing. If you forget a null check, your app crashes or shows blank text.
+With **NULL = missing API data**:
+MANDATORY delegate_task params: ALWAYS include load_skills and run_in_background when calling delegate_task. Evaluate available skills before dispatch - pass task-appropriate skills when relevant, pass [] ONLY when no skill matches the task domain.
+Example: delegate_task(subagent_type="explore", prompt="...", run_in_background=true, load_skills=[])
+@Momus - Plan Critic 1. Explain risk/explain DB practices vis-a-vis ID creation for use cases such as mine/explain discouraged v encouraged i.e. retaining stub artists/album if in future they would be repopulated; 2. Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap; 3. tracks duration is never null; 4. explain scrobbles<-->platform; 5. JSONB cannot be null; 6. Explicate Unknown Artist v NULL - why is sentinel not applicable for null and why is clean purge better or sentinel neverp urge better or why is unknown artist fake data -- both mean the same thing no -- NULL or unknown artist; 7. Explain why blocked by restrict track points to artist 5 even means; 8. Wait how can artist id EVER be null - isn't that autogenerated?; 9. Are you confusing ID with string of metadata values?; 10. No idea what Restrict safety net is; 11. Composer != Conductor != Singer != Writer (latter for pop) - (first is true in pop but not classical; 12. jazz is not a work type; 13. Catalogue type and num are optional - how to have a strongly typed checked set of values that will expand i.e. KV yes for Mozart but what if Laanggaard is to be added and then BWV - not a defined set you know at show time but at the same time you want to prevent KV K Kochel pollution of tags; 14. Vast majority of works are multi movement - why is that a different table? 15. Let's not get lost into classical specifics for now. First fix scrobble/work tracking/music table. 16. Querying BTW is intended to not need opening a database server and writing SQL query but remotely on phone using simple search with fuzzy matching, regex or literal; 17. Update findings to Hqub.lastfm specifically (i.e. C# user custom API library), 18. Drop platform from last.fm scrobble since it is not supported; 19. Is "nullable ref" intended to be separate to "null" in Q2 Design A? 20. What is "DisplayArtist" - why is artist having two names? 21. I am confused by Q3 - are you saying we using sync code or not? Is the idea sync code display code no longer need fallback values? 22. Why must C# MUST check nullable? 
+But wait - the user said "Use the above message and context to generate a prompt and call the task tool with subagent: Momus - Plan Critic"
+Actually, the user said "use the above message and context to generate a prompt and call the task tool with subagent: Momus - Plan Critic"
+2. MusicBrainz/Hqub for missing metadata - need to research what the actual library returns
+**Tool: task**
+  "prompt": "[MOMUS - PLAN CRITIC]\n\nYou are being called to evaluate a design discussion for a PostgreSQL/EF Core schema for a personal music/video/work automation project. The user has raised 22 clarification points that reveal confusion, corrections, and gaps in the current design proposals. Your job: critique the clarity, completeness, and correctness of the proposed design.\n\n## CONTEXT\n\nThe project is a solo-dev automation toolkit. It syncs data from Last.fm (scrobbles), YouTube, and a work tracker into a single PostgreSQL database with 4 schemas (`youtube`, `music`, `work`, `public`). The user syncs data via API, does NOT manually enter data, and wants auto-cleanup of orphaned records.\n\nThe discussion has been about designing a `music` schema that:\n- Links Artists → Albums → Tracks → Scrobbles (1:N chain)\n- Adds a universal `works` table for composition abstraction (same song, different recordings)\n- Splits classical music into a separate `classical` schema\n- Uses RESTRICT FK constraints (no cascade deletes)\n- Supports nullable ArtistId, AlbumId, WorkId for missing API data\n- Implements L1→L2→L3 auto-purge (delete tracks/albums/artists with zero references)\n\n## THE USER'S 22 CLARIFICATION POINTS\n\nThe user just posted the following numbered points. They contain corrections to my assumptions, confusion about my terminology, and new requirements. EVALUATE EACH ONE:\n\n### ID/Database Fundamentals\n1. \"Explain risk/explain DB practices vis-a-vis ID creation for use cases such as mine/explain discouraged v encouraged i.e. retaining stub artists/album if in future they would be repopulated\"\n   - The user is asking about SURROGATE vs NATURAL keys. Should Artist ID be auto-generated (int identity) or based on name? What about stubs that get repopulated?\n\n### API Data Quality (Hqub.Lastfm + MusicBrainz)\n2. \"Research what musicbrainz return when no artist exist or rather what hqub does for missing metadata\"\n   - Hqub.Lastfm is a C# NuGet library for Last.fm API. Need to know what it returns for missing fields (null? empty string? throws?)\n   - MusicBrainz API behavior for missing composer/artist fields\n\n### Schema Field Corrections\n3. \"tracks duration is never null\" — User is correcting schema assumption. Track duration may always be present from API.\n\n4. \"explain scrobbles<-->platform\" — User wants to understand the Platform column situation. (Researcher found: API does NOT return platform/source. User agrees to drop it per point 18.)\n\n5. \"JSONB cannot be null\" — User states JSONB should NOT be null. Must have DEFAULT '{}'::jsonb.\n\n### NULL vs Sentinel Debate\n6. \"Explicate Unknown Artist v NULL - why is sentinel not applicable for null and why is clean purge better or sentinel never purge better or why is unknown artist fake data -- both mean the same thing no -- NULL or unknown artist\"\n   - CRITICAL CHALLENGE. User is saying: \"NULL and 'Unknown Artist' sentinel both mean 'we don't know the artist.' Why is one 'fake data' but the other isn't? They semantically mean the same thing.\"\n   - User wants you to reconcile this. What is the ACTUAL difference in terms of data integrity and cleanup?\n\n### RESTRICT Mechanism\n7. \"Explain why blocked by restrict track points to artist 5 even means\"\n   - User doesn't understand the RESTRICT mechanism explanation. Needs a concrete trace of what happens when DELETE is attempted.\n\n8. \"Wait how can artist id EVER be null - isn't that autogenerated?\"\n   - MAJOR CONFUSION. User is confusing Artist.Id (the PK, auto-generated) with Track.ArtistId (the FK, nullable per design). This means my explanation was unclear about which \"id\" I was discussing.\n\n9. \"Are you confusing ID with string of metadata values?\"\n   - User suspects I'm conflating the internal numeric ID with the display name/metadata value.\n\n10. \"No idea what Restrict safety net is\"\n    - Needs a crystal-clear explanation of RESTRICT with a concrete example of what it prevents.\n\n### Classical/Music Domain Corrections\n11. \"Composer != Conductor != Singer != Writer (latter for pop) - (first is true in pop but not classical\"\n    - User is correcting my over-simplification. The role hierarchy differs between pop and classical:\n      - Pop: Writer (composer) ≠ Performer (singer)\n      - Classical: Composer ≠ Conductor ≠ Singer ≠ Orchestra\n\n12. \"jazz is not a work type\"\n    - User rejecting my proposed `work_type` enum values. Jazz is a genre, not a \"type\" in the same way classical/pop are.\n\n13. \"Catalogue type and num are optional - how to have a strongly typed checked set of values that will expand\"\n    - Desired: A validated set of catalogue types (e.g., \"Op\", \"BWV\", \"KV\") that:\n      - Is strongly typed (can't enter \"Köchel\" as \"K\" or \"KV\" inconsistently)\n      - CAN expand over time (Laanggaard → \"L\", Bach → \"BWV\")\n      - Prevents pollution (no \"KKK\" or typos)\n    - How to design this in PostgreSQL/EF Core?\n\n14. \"Vast majority of works are multi movement - why is that a different table?\"\n    - User questioning the normalization. If most tracks are multi-movement, why not put movement info directly on the works table?\n\n15. \"Let's not get lost into classical specifics for now. First fix scrobble/work tracking/music table.\"\n    - REDIRECTION. Classical schema is out of scope for now. Focus on the core music schema first.\n\n### Query/Usage Requirements\n16. \"Querying BTW is intended to not need opening a database server and writing SQL query but remotely on phone using simple search with fuzzy matching, regex or literal\"\n    - CRITICAL REQUIREMENT. The user wants to query from a phone. This means:\n      - Must support fuzzy/unaccent matching\n      - Must support regex patterns\n      - API endpoint, not direct SQL\n      - Implications for indexing (trigram indexes, unaccent)\n\n### Corrections to My Prior Answers\n17. \"Update findings to Hqub.lastfm specifically (i.e. C# user custom API library)\"\n    - My research used the raw Last.fm API docs. The user uses the Hqub.Lastfm C# wrapper. Need to check THAT library's behavior specifically.\n\n18. \"Drop platform from last.fm scrobble since it is not supported\"\n    - Confirmed. Remove Platform column from scrobbles.\n\n### Terminology Confusion\n19. \"Is 'nullable ref' intended to be separate to 'null' in Q2 Design A?\"\n    - User confused by my use of \"nullable reference types\" (C# `Artist?`) vs SQL `NULL`. Are these the same concept?\n\n20. \"What is 'DisplayArtist' - why is artist having two names?\"\n    - User confused by the computed property pattern. Why would I introduce a SECOND name field when the entity already has `Name`?\n\n21. \"I am confused by Q3 - are you saying we using sync code or not? Is the idea sync code display code no longer need fallback values?\"\n    - My Q3 answer was unclear. The user wants to know: does the sync code need to handle missing data? Does the display code? Or does one of them NOT need fallback values?\n\n22. \"Why must C# MUST check nullable?\"\n    - User asking about the fundamental reason for null checks in C#. Is it a language requirement? A runtime safety thing? What happens if you DON'T check?\n\n## YOUR TASK AS MOMUS\n\nFor each of the 22 points:\n1. **Evaluate my prior explanation**: Was it clear? Complete? Correct? If flawed, what was the specific error (wrong assumption, unclear terminology, missing context)?\n2. **Identify the user's actual need**: What is the user really asking for behind each question?\n3. **Assess design soundness**: Is the current proposed design correct given this new information? If not, what must change?\n4. **Recommendation**: How should I proceed with each point?\n\n## OVERALL EVALUATION\n\nAfter analyzing all 22 points:\n- Is the current schema design salvageable or does it need a fundamental re-think?\n- What are the top 3-5 things I need to fix IMMEDIATELY in my explanations and design?\n- What is still unclear or under-specified?\n\nOutput as a structured critique. Be blunt. Do not soften."
+Background task launched.
+Background Task ID: bg_55a922d8
+System notifies on completion. Use `background_output` with task_id="bg_55a922d8" to check.
+<task_metadata>
+background_task_id: bg_55a922d8
+</task_metadata>
+to continue: task(task_id="ses_15c49f6ceffeuFPzeSkD0lVol5", load_skills=[], run_in_background=false, prompt="...")
+  "task_id": "bg_55a922d8",
+Task Result
+Task ID: bg_55a922d8
+    - Critical Blockers (missing info, contradictions).
+The user provided a very long prompt that looks like it might be a system prompt or a set of instructions for me, followed by a specific task for "MOMUS". But I am the "practical work plan reviewer".
+"[MOMUS - PLAN CRITIC] ... Your job: critique the clarity, completeness, and correctness of the proposed design. ... Your TASK as MOMUS ... Output as a structured critique."
+**THE SUBAGENT JUST CLAIMED THIS TASK IS DONE. THEY ARE PROBABLY LYING.**
+   - Does this code ACTUALLY do what the task required? (Re-read the task, compare line by line)
+   - Scope creep? Did the subagent touch things or add features NOT in the task spec?
+**If this task produced anything a user would SEE or INTERACT with, you MUST launch it and verify yourself.**
+**PHASE 4: GATE DECISION - Should you proceed to the next task?**
+- **All 3 YES** - Proceed: mark task complete, move to next.
+- **Any NO** - Reject: resume with `task_id`, fix the specific issue.
+**DO NOT proceed to the next task until all 4 phases are complete and the gate passes.**
+task(task_id="ses_15c49f6ceffeuFPzeSkD0lVol5", load_skills=[], prompt="fix: [describe the specific failure]")
+**PREFERRED REUSE SESSION FOR THE CURRENT TOP-LEVEL PLAN TASK**
+- Start a fresh subagent session only when reuse is unavailable or would cross task boundaries.
+Count pending vs completed tasks. This is your ground truth for what comes next.
+2. Mark the completed task as `completed` using `todowrite`
+**STEP 7: EXECUTE QA TASKS (IF ANY)**
+If QA tasks exist in your todo list:
+- Mark each QA task complete after successful verification
+**STEP 8: PROCEED TO NEXT PENDING TASK**
+- Run `todoread` AGAIN to identify the next `pending` task
+The user explicitly wanted the "Momus - Plan Critic" agent (the one that evaluates work plans against clarity, verifiability, and completeness standards). But the task routed it to a different Momus implementation that checks plan file paths.
+Actually, looking at the available agent types from the task function description:
+Looking more carefully at the task() function description, the available subagent types are listed as:
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+Momus's response indicates it mis-interpreted its role. It treated the input as a "practical work plan reviewer" task rather than the "MOMUS - Plan Critic" role I intended. It rejected because there was no `.omo/plans/*.md` path, which is correct for that agent type, but I used `subagent_type="momus"` which should have given me the correct Momus agent.
+Let me reconsider the user's actual request. They said "Use the above message and context to generate a prompt and call the task tool with subagent: Momus - Plan Critic." But Momus is designed as a plan reviewer for formal plan documents, not as a design dialogue critic.
+2. **Hqub.Lastfm for missing metadata** - Need to research what the C# library returns for null/empty fields.
+MANDATORY delegate_task params: ALWAYS include load_skills and run_in_background when calling delegate_task. Evaluate available skills before dispatch - pass task-appropriate skills when relevant, pass [] ONLY when no skill matches the task domain.
+Example: delegate_task(subagent_type="explore", prompt="...", run_in_background=true, load_skills=[])
+@Metis - Plan Consultant @Momus - Plan Critic 1. Explain risk/explain DB practices vis-a-vis ID creation for use cases such as mine/explain discouraged v encouraged i.e. retaining stub artists/album if in future they would be repopulated; 2. Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap; 3. tracks duration is never null; 4. explain scrobbles<-->platform; 5. JSONB cannot be null; 6. Explicate Unknown Artist v NULL - why is sentinel not applicable for null and why is clean purge better or sentinel neverp urge better or why is unknown artist fake data -- both mean the same thing no -- NULL or unknown artist; 7. Explain why blocked by restrict track points to artist 5 even means; 8. Wait how can artist id EVER be null - isn't that autogenerated?; 9. Are you confusing ID with string of metadata values?; 10. No idea what Restrict safety net is; 11. Composer != Conductor != Singer != Writer (latter for pop) - (first is true in pop but not classical; 12. jazz is not a work type; 13. Catalogue type and num are optional - how to have a strongly typed checked set of values that will expand i.e. KV yes for Mozart but what if Laanggaard is to be added and then BWV - not a defined set you know at show time but at the same time you want to prevent KV K Kochel pollution of tags; 14. Vast majority of works are multi movement - why is that a different table? 15. Let's not get lost into classical specifics for now. First fix scrobble/work tracking/music table. 16. Querying BTW is intended to not need opening a database server and writing SQL query but remotely on phone using simple search with fuzzy matching, regex or literal; 17. Update findings to Hqub.lastfm specifically (i.e. C# user custom API library), 18. Drop platform from last.fm scrobble since it is not supported; 19. Is "nullable ref" intended to be separate to "null" in Q2 Design A? 20. What is "DisplayArtist" - why is artist having two names? 21. I am confused by Q3 - are you saying we using sync code or not? Is the idea sync code display code no longer need fallback values? 22. Why must C# MUST check nullable? 
+Use the above message and context to generate a prompt and call the task tool with subagent: Metis - Plan Consultant
+Actually, the user said "Use the above message and context to generate a prompt and call the task tool with subagent: Metis - Plan Consultant"
+**Tool: task**
+  "prompt": "[METIS - PLAN CONSULTANT]\n\nYou are a pre-planning consultant. Your job: analyze the user's request to identify hidden intentions, ambiguities, and AI failure points BEFORE a plan is formed.\n\n## CONTEXT\n\nI am designing a PostgreSQL/EF Core schema for a personal solo-dev automation project. The project syncs data from Last.fm (scrobbles/music), YouTube, and a work tracker into a single PostgreSQL database with 4 schemas (`youtube`, `music`, `work`, `public`).\n\nWe've been discussing the `music` schema design for several turns. The user has now posted 22 points of confusion/correction. I need you to analyze these points to understand:\n\n1. What the user REALLY wants (their hidden intentions)\n2. Where my explanations have been ambiguous or wrong\n3. Where I (the AI) made incorrect assumptions\n4. What I need to fix before creating a plan\n\n## THE USER'S 22 POINTS\n\n### ID/Database Fundamentals\n1. \"Explain risk/explain DB practices vis-a-vis ID creation for use cases such as mine/explain discouraged v encouraged i.e. retaining stub artists/album if in future they would be repopulated\"\n2. \"Research what musicbrainz return when no artist exist or rather what hqub does for missing metadata\"\n3. \"tracks duration is never null\"\n4. \"explain scrobbles<-->platform\"\n5. \"JSONB cannot be null\"\n6. \"Explicate Unknown Artist v NULL - why is sentinel not applicable for null and why is clean purge better or sentinel never purge better or why is unknown artist fake data -- both mean the same thing no -- NULL or unknown artist\"\n7. \"Explain why blocked by restrict track points to artist 5 even means\"\n8. \"Wait how can artist id EVER be null - isn't that autogenerated?\"\n9. \"Are you confusing ID with string of metadata values?\"\n10. \"No idea what Restrict safety net is\"\n11. \"Composer != Conductor != Singer != Writer (latter for pop)\"\n12. \"jazz is not a work type\"\n13. \"Catalogue type and num are optional - how to have a strongly typed checked set of values that will expand\"\n14. \"Vast majority of works are multi movement - why is that a different table?\"\n15. \"Let's not get lost into classical specifics for now. First fix scrobble/work tracking/music table.\"\n16. \"Querying intended to not need opening database server but remotely on phone using simple search with fuzzy matching, regex or literal\"\n17. \"Update findings to Hqub.lastfm specifically\"\n18. \"Drop platform from last.fm scrobble since it is not supported\"\n19. \"Is 'nullable ref' intended to be separate to 'null' in Q2 Design A?\"\n20. \"What is 'DisplayArtist' - why is artist having two names?\"\n21. \"Confused by Q3 - are you saying we using sync code or not?\"\n22. \"Why must C# MUST check nullable?\"\n\n## YOUR ANALYSIS TASKS\n\n### Task 1: Identify Hidden Intentions\nFor each point, what is the user REALLY asking? What's the deeper concern behind the surface question? Group them into themes.\n\n### Task 2: Identify AI Failure Points\nWhere did I (the AI) make incorrect assumptions, use unclear terminology, or fail to understand the user's context? Be specific.\n\n### Task 3: Identify Ambiguities\nWhat is still unclear about the design? What questions remain unanswered? What needs more precision?\n\n### Task 4: Prioritization\nWhich of these 22 points are:\n- **BLOCKING**: Must be resolved before any plan can proceed\n- **IMPORTANT**: Should be resolved but not blocking\n- **DEFERABLE**: Can be decided later during implementation\n\n### Task 5: Recommend Correction Strategy\nWhat specific actions should I take to fix each category of failure? What research is needed? What explanations need redoing?\n\n## OUTPUT\n\nProvide a structured analysis covering Tasks 1-5. Be direct. Identify the failure modes explicitly. Do not sugarcoat."
+Fix missing directories too
+First add missing directories
+The user wants me to fix missing directories first.
+Then they want me to address the 22 questions/concerns, but they've requested a specific method: splitting the task into smaller chunks (resequencing shared concerns into groups of 5 or fewer).
+1. Fix missing directories. The user mentioned "First add missing directories." I should check what directories are missing.
+   - I should check if there are other directories mentioned in the plan that are missing.
+Wait, before I do any of that, I must "First add missing directories".
+Let's check for missing directories.
+Missing directories created. I will now address your 22 points in **logical chunks of 5 or fewer**, as requested, to ensure every detail is handled without skipping.
+- **Discouraged (Stubbing)**: Creating "stub" artists for missing data is generally discouraged because it creates "fake" entities that never get cleaned up. Using `NULL` is the professional way to say "This data doesn't exist."
+2. "Use the above message and context to generate a prompt and call the task tool with subagent: Metis - Plan Consultant"
+3. Call `task(subagent_type="metis", ...)` in parallel for each chunk.
+**Tool: task**
+Background task launched.
+Background Task ID: bg_426aafc5
+System notifies on completion. Use `background_output` with task_id="bg_426aafc5" to check.
+<task_metadata>
+background_task_id: bg_426aafc5
+</task_metadata>
+to continue: task(task_id="ses_15c466430ffe3hxsgCUhplZhzR", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+  "prompt": "[METIS - PLAN CONSULTANT]\n[CHUNK 2: API & METADATA]\nAnalyze the following user points to identify hidden intentions, ambiguities, and AI failure points:\n2. \"Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap\"\n3. \"tracks duration is never null\"\n4. \"explain scrobbles<-->platform\"\n5. \"JSONB cannot be null\"\n17. \"Update findings to Hqub.lastfm specifically (i.e. C# user custom API library)\"\n18. \"Drop platform from last.fm scrobble since it is not supported\"\n\nCONTEXT: Syncing from Last.fm via Hqub.lastfm library.\nGOAL: Identify failure points in previous API assumptions and determine the correct approach for missing metadata and the `Platform` column.",
+Background task launched.
+Background Task ID: bg_cdd85008
+System notifies on completion. Use `background_output` with task_id="bg_cdd85008" to check.
+<task_metadata>
+background_task_id: bg_cdd85008
+</task_metadata>
+to continue: task(task_id="ses_15c464ffcffemtcYSc6F3I0A7p", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_c06bd997
+System notifies on completion. Use `background_output` with task_id="bg_c06bd997" to check.
+<task_metadata>
+background_task_id: bg_c06bd997
+</task_metadata>
+to continue: task(task_id="ses_15c463c05ffeC7BbgsBhbJ0i4A", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+**Tool: task**
+I had previously launched 5 parallel `task` calls to `Metis - Plan Consultant` to analyze the 22 points in chunks.
+1. Check which tasks actually succeeded.
+2. Re-launch the interrupted tasks.
+**Tool: task**
+Background task launched.
+Background Task ID: bg_3e1c9430
+System notifies on completion. Use `background_output` with task_id="bg_3e1c9430" to check.
+<task_metadata>
+background_task_id: bg_3e1c9430
+</task_metadata>
+to continue: task(task_id="ses_15c4575afffeKBFUBZigNIh3Mf", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_ea7cd552
+System notifies on completion. Use `background_output` with task_id="bg_ea7cd552" to check.
+<task_metadata>
+background_task_id: bg_ea7cd552
+</task_metadata>
+to continue: task(task_id="ses_15c455da9ffellPHpxu75ZEpuR", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_58e61e75
+System notifies on completion. Use `background_output` with task_id="bg_58e61e75" to check.
+<task_metadata>
+background_task_id: bg_58e61e75
+</task_metadata>
+to continue: task(task_id="ses_15c454de2ffeHfFUQ8c3A2Gjd2", load_skills=[], run_in_background=false, prompt="...")
+[BACKGROUND TASK RESULT READY]
+**2 tasks still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_3e1c9430")` to retrieve this result when ready.
+[BACKGROUND TASK RESULT READY]
+**1 task still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_ea7cd552")` to retrieve this result when ready.
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+MANDATORY delegate_task params: ALWAYS include load_skills and run_in_background when calling delegate_task. Evaluate available skills before dispatch - pass task-appropriate skills when relevant, pass [] ONLY when no skill matches the task domain.
+Example: delegate_task(subagent_type="explore", prompt="...", run_in_background=true, load_skills=[])
+  "task_id": "bg_ea7cd552"
+Task not found: bg_ea7cd552
+  "task_id": "bg_58e61e75"
+Task not found: bg_58e61e75
+**Tool: task**
+Background task launched.
+Background Task ID: bg_a14c277b
+System notifies on completion. Use `background_output` with task_id="bg_a14c277b" to check.
+<task_metadata>
+background_task_id: bg_a14c277b
+</task_metadata>
+to continue: task(task_id="ses_15c1d0dc2ffemPyAXtPgMraRat", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+  "prompt": "[METIS - PLAN CONSULTANT]\n[CHUNK 2: API & METADATA]\nAnalyze the following user points to identify hidden intentions, ambiguities, and AI failure points:\n2. \"Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap\"\n3. \"tracks duration is never null\"\n4. \"explain scrobbles<-->platform\"\n5. \"JSONB cannot be null\"\n17. \"Update findings to Hqub.lastfm specifically (i.e. C# user custom API library)\"\n18. \"Drop platform from last.fm scrobble since it is not supported\"\n\nCONTEXT: Syncing from Last.fm via Hqub.lastfm library. Bleeding edge exclusively.\nGOAL: Identify failure points in previous API assumptions and determine the correct approach for missing metadata and the `Platform` column.",
+Background task launched.
+Background Task ID: bg_51be7905
+System notifies on completion. Use `background_output` with task_id="bg_51be7905" to check.
+<task_metadata>
+background_task_id: bg_51be7905
+</task_metadata>
+to continue: task(task_id="ses_15c1cfbf9ffeYbqdy9kr9wtuD9", load_skills=[], run_in_background=false, prompt="...")
+**Tool: task**
+Background task launched.
+Background Task ID: bg_62cc72a7
+System notifies on completion. Use `background_output` with task_id="bg_62cc72a7" to check.
+<task_metadata>
+background_task_id: bg_62cc72a7
+</task_metadata>
+to continue: task(task_id="ses_15c1ce5dfffekLVpqeT5nde82L", load_skills=[], run_in_background=false, prompt="...")
+- **Anti-pattern detection**: tables without PK, nullable FK, orphan tables, naming inconsistencies, reserved words, type mismatches, wide tables, missing FK indexes
+Use the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.
+The user's request is very specific: "No delegate all in small chunks to @Metis - Plan Consultant". They want me to delegate the 22 points to Metis in small chunks. I already did that, but the user also said "First add missing directories" (which I did) and "Try re-deploying chunks 1-3" (which I did).
+1. "No delegate all in small chunks to @Metis - Plan Consultant" - Wait, "No delegate all" might mean "Don't do it all at once" or "Don't delegate at all"? But the very next sentence is "Use the above message and context to generate a prompt and call the task tool with subagent: Metis - Plan Consultant".
+But the user's prompt also says: "First add missing directories". I did that. "Try re-deploying chunks 1-3". I did that. "try reading chunk 4-5". I'm doing that now.
+  "task_id": "bg_3e1c9430"
+Task not found: bg_3e1c9430
+  "task_id": "bg_ea7cd552"
+Task not found: bg_ea7cd552
+  "task_id": "bg_58e61e75"
+Task not found: bg_58e61e75
+Wait, the `background_output` calls failed with "Task not found". This is strange because the `<system-reminder>` said they were complete.
+Looking at the task IDs:
+The new task IDs from the re-deployment are:
+I was trying to read the OLD task IDs (`bg_3e1c9430`, `bg_ea7cd552`, `bg_58e61e75`). Those tasks are gone because I re-deployed them.
+I must read the NEW task IDs.
+`[BACKGROUND TASK COMPLETED] [ALL BACKGROUND TASKS COMPLETE]`
+  "task_id": "bg_a14c277b"
+Task Result
+Task ID: bg_a14c277b
+  "task_id": "bg_51be7905"
+# Task Status
+| Task ID | `bg_51be7905` |
+> **Note**: No need to wait explicitly - the system will notify you when this task completes.
+2. "Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap"
+  "task_id": "bg_62cc72a7"
+# Task Status
+| Task ID | `bg_62cc72a7` |
+> **Note**: No need to wait explicitly - the system will notify you when this task completes.
+- **Stubbing**: The user wants to know if keeping a "stub" artist (an artist with an ID but no name) is better than using NULL when data is missing, so that if the data is repopulated later, the relationship is already there.
+[BACKGROUND TASK RESULT READY]
+**2 tasks still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_a14c277b")` to retrieve this result when ready.
+[BACKGROUND TASK RESULT READY]
+**1 task still in progress.** You WILL be notified when ALL complete.
+Use `background_output(task_id="bg_62cc72a7")` to retrieve this result when ready.
+[BACKGROUND TASK COMPLETED]
+[ALL BACKGROUND TASKS COMPLETE]
+Use `background_output(task_id="<id>")` to retrieve each result.
+  "task_id": "bg_a14c277b"
+Task Result
+Task ID: bg_a14c277b
+  "task_id": "bg_62cc72a7"
+Task Result
+Task ID: bg_62cc72a7
+1.  **Semantic Gap**: The user views `NULL` and "Unknown Artist" as semantically identical ("both mean the same thing"). They are missing the distinction between *absence of a value* (NULL) and *a value representing absence* (Sentinel).
+  "task_id": "bg_51be7905"
+Task Result
+Task ID: bg_51be7905
+2. "Research what musicbrainz return when no artist exist or rather what hqub does for missing metadatap"
+   - Intent: Understand how missing metadata is handled by MusicBrainz and the `Hqub.lastfm` library.
+   - Ambiguity: "missing metadatap" (typo for metadata). Does "no artist exist" mean the artist is not found in MusicBrainz, or the field is null in the API response?
+This looks like a **Research** and **Mid-sized Task** hybrid. The user is asking for research on API behavior (MusicBrainz/Hqub) and specifying changes to the data model (Drop platform, JSONB constraints).
+I need to launch `explore` and `librarian` agents to understand `Hqub.lastfm` and MusicBrainz's behavior regarding missing metadata.
+The user is correcting previous assumptions. This is a "Course Correction" research task.
+3. Launch `librarian` agent to research MusicBrainz API behavior for missing artists and `Hqub.lastfm` (if it's a public library, though the user says "custom API library", so it might be internal).
+- Point 2: "missing metadatap" -> Typo for metadata. Ambiguity: Does "no artist exist" mean a 404, an empty list, or a specific error object?
+- MUST: Create a test case that simulates a "Missing Artist" response from MusicBrainz and verify that the system handles it gracefully (e.g., logs a warning and continues) rather than crashing.
+- `Artist?` means: "Hey, this might be missing. Don't just call `.Name`, or you'll crash."
+- **Hqub.lastfm**: We are updating all logic to match the `Hqub.lastfm` wrapper's behavior. If the library returns a `null` for a missing artist, we map that to a `NULL` in the DB.
+| **Nullability** | Nullable FKs (`ArtistId?`) | Truthful representation of missing API data. |
+- **The "Constraint"**: Nullability is a tool to tell the developer: "This data might be missing; you MUST handle this case."
+| **Scalars** (Names, Dates) | **Pure `NULL`** | To distinguish "Missing" from "Empty". | **Cost**: More `?.` and `??` operators in C#. |
+Time out. So fields have meaningful null to indicate a value is missing vs explicitly not having a value. Isn't JSONB same logic? Like empty JSONB would indicate no raw value but that would also mean no values at all since JSONB is the starting point
+They're saying: "If NULL in a scalar field means 'missing value', then NULL in JSONB should also mean 'missing value'. An empty JSON object `{}` is still a value (it's an object with no keys), whereas NULL is the absence of the object itself."
+- `ArtistId` $\rightarrow$ `NULL` (Missing)
+- `AlbumId` $\rightarrow$ `NULL` (Missing)
+- `Metadata` $\rightarrow$ `NULL` (Missing)
+2.  **Absolute Honesty**: Your database now tells you exactly what the API provided. If a field is `NULL`, it's because it was missing. Period.
+- It's consistent with our "Pure NULL" design. A missing movement is just a `NULL` pointer.
+- **No separate `failed_tasks` table**: Merge into `execution_logs` with Status enum and ErrorMessage column
+78:     - Columns: Id, Timestamp, CorrelationId (Groups related executions), TaskName, Payload, Status (Succeeded/Failed/Partial), ErrorMessage, DurationMs, ExitCode.
+79: - **Refactor**: Merged `failed_tasks` into `execution_logs` to remove redundancy.
+86: ## 4. Open Questions / Unresolved
+  "content": "# Music Schema — Final ER Diagram\n\n**Status**: Draft  \n**Purpose**: Comprehensive Mermaid ER diagram for all music (pop + classical), with nullable demarcation and rationale.\n\n---\n\n## 1. SQL Terms Glossary (ELI5)\n\n| Term | Plain English | Example |\n|------|---------------|---------|\n| **PK** (Primary Key) | A unique identifier for each row. No two rows can share the same PK. Cannot be NULL. | `Artist.Id` — each artist has a unique number |\n| **FK** (Foreign Key) | A pointer to another table's PK. Establishes a relationship. CAN be NULL (meaning \"no relationship\"). | `Track.ArtistId` — points to `Artist.Id`. NULL = \"artist unknown\" |\n| **NOT NULL** | A rule that says a column MUST have a value. Cannot be empty. | `Track.Name` — every track must have a name |\n| **NULLABLE** (NULL allowed) | A column that CAN be empty/unknown. No value required. | `Track.AlbumId` — track might not belong to any album |\n| **RESTRICT** | A safety lock: blocks deletion of a parent row if children still reference it. | Can't delete `Artist` while `Track` rows point to it |\n| **Cascade Purge** | Our custom cleanup: delete orphaned children AFTER sync completes. NOT a DB constraint. | After sync: delete tracks with 0 scrobbles → then albums → then artists |\n| **Unique Constraint** | A rule that says no two rows can share the same value in this column. | `Artist.Name` — no duplicate artist names |\n| **Index** | A performance booster: speeds up searches on specific columns. | `idx_tracks_artist_id` — fast lookup of all tracks by artist |\n| **Trigram Index** | A special index for fuzzy text matching. Enables \"sounds like\" searches. | Search \"beatl\" finds \"Beatles\" |\n\n---\n\n## 2. Mermaid ER Diagram — Music Schema\n\n```mermaid\nerDiagram\n    %% ============================================================\n    %% MUSIC SCHEMA — Pop + Classical (Universal Works Table)\n    %% ============================================================\n    %% \n    %% LEGEND:\n    %%   PK = Primary Key (unique row identifier, NOT NULL)\n    %%   FK = Foreign Key (pointer to another table's PK, CAN be NULL)\n    %%   UK = Unique Constraint (no duplicates allowed)\n    %%   \n    %%   Relationship Notation:\n    %%   ||--o{ = One (mandatory) to Zero-or-Many (optional)\n    %%   ||--|{ = One (mandatory) to One-or-Many (required)\n    %%   o|--o{ = Zero-or-One (optional) to Zero-or-Many (optional)\n    %%   \n    %%   NULLABLE columns marked with \"?\" suffix\n    %%   NOT NULL columns have no suffix\n    %% ============================================================\n\n    %% ====================\n    %% CORE ENTITIES\n    %% ====================\n\n    ARTISTS {\n        int Id PK \"Auto-generated unique ID\"\n        string Name UK \"NOT NULL — Artist name (e.g., 'Beatles', 'Chopin')\"\n        string NameLower \"NOT NULL — Lowercase for case-insensitive search\"\n        string ExternalId \"NULLABLE — Last.fm artist MBID\"\n        string SourceSystem \"NULLABLE — 'lastfm', 'musicbrainz', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    ALBUMS {\n        int Id PK \"Auto-generated unique ID\"\n        string Name UK \"NOT NULL — Album name (e.g., 'Abbey Road')\"\n        string NameLower \"NOT NULL — Lowercase for case-insensitive search\"\n        string ExternalId \"NULLABLE — Last.fm album MBID\"\n        string SourceSystem \"NULLABLE — 'lastfm', 'musicbrainz', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    WORKS {\n        int Id PK \"Auto-generated unique ID\"\n        string Name \"NOT NULL — Work name (e.g., 'Symphony No. 5', 'Yesterday')\"\n        string NameLower \"NOT NULL — Lowercase for case-insensitive search\"\n        string Composer \"NULLABLE — Composer name (e.g., 'Beethoven', 'Lennon/McCartney')\"\n        string ComposerLower \"NULLABLE — Lowercase for case-insensitive search\"\n        string CatalogueNumber \"NULLABLE — Köchel, Opus, BWV (e.g., 'K. 525', 'Op. 67')\"\n        string KeySignature \"NULLABLE — Musical key (e.g., 'C minor', 'G major')\"\n        string ExternalId \"NULLABLE — MusicBrainz Work MBID\"\n        string SourceSystem \"NULLABLE — 'musicbrainz', 'lastfm', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    TRACKS {\n        int Id PK \"Auto-generated unique ID\"\n        string Name \"NOT NULL — Track name (e.g., 'Let It Be', 'Moonlight Sonata')\"\n        string NameLower \"NOT NULL — Lowercase for case-insensitive search\"\n        int DurationMs \"NOT NULL — Duration in milliseconds (NEVER NULL)\"\n        int ArtistId FK \"NULLABLE — Points to ARTISTS.Id. NULL = artist unknown\"\n        int AlbumId FK \"NULLABLE — Points to ALBUMS.Id. NULL = album unknown\"\n        int WorkId FK \"NULLABLE — Points to WORKS.Id. NULL = not linked to a work\"\n        int MovementId FK \"NULLABLE — Points to MOVEMENTS.Id. NULL = whole work (not a movement)\"\n        string ExternalId \"NULLABLE — Last.fm track MBID\"\n        string SourceSystem \"NULLABLE — 'lastfm', 'musicbrainz', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    SCROBBLES {\n        int Id PK \"Auto-generated unique ID\"\n        int TrackId FK \"NOT NULL — Points to TRACKS.Id (scrobble MUST have a track)\"\n        timestamp ScrobbleDate \"NOT NULL — When the track was played (UTC)\"\n        timestamp ScrobbleDateLocal \"NULLABLE — Local time for display (IST)\"\n        string ExternalId \"NULLABLE — Last.fm scrobble timestamp\"\n        string SourceSystem \"NULLABLE — 'lastfm', 'pano', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n    }\n\n    %% ====================\n    %% CLASSICAL ENTITIES\n    %% ====================\n\n    MOVEMENTS {\n        int Id PK \"Auto-generated unique ID\"\n        int WorkId FK \"NOT NULL — Points to WORKS.Id (movement belongs to a work)\"\n        int Position \"NOT NULL — Order in work (1, 2, 3...)\"\n        string Name \"NULLABLE — Movement name (e.g., 'Allegro', 'Adagio')\"\n        string NameLower \"NULLABLE — Lowercase for case-insensitive search\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    RECORDINGS {\n        int Id PK \"Auto-generated unique ID\"\n        int WorkId FK \"NOT NULL — Points to WORKS.Id (recording is of a work)\"\n        string RecordingDate \"NULLABLE — When recorded (e.g., '1962', '1995-03-15')\"\n        string Medium \"NULLABLE — Recording medium (e.g., 'Studio', 'Live', 'Vinyl')\"\n        string ExternalId \"NULLABLE — MusicBrainz Recording MBID\"\n        string SourceSystem \"NULLABLE — 'musicbrainz', 'lastfm', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    PERFORMERS {\n        int Id PK \"Auto-generated unique ID\"\n        string Name UK \"NOT NULL — Performer name (e.g., 'Karajan', 'Vienna Philharmonic')\"\n        string NameLower \"NOT NULL — Lowercase for case-insensitive search\"\n        string Type \"NULLABLE — 'Conductor', 'Orchestra', 'Soloist', 'Ensemble'\"\n        string ExternalId \"NULLABLE — MusicBrainz Artist MBID\"\n        string SourceSystem \"NULLABLE — 'musicbrainz', 'lastfm', etc.\"\n        jsonb Metadata \"NULLABLE — Raw API response (Pure NULL design)\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n        timestamp UpdatedAt \"NOT NULL — When record was last updated\"\n    }\n\n    RECORDING_PERFORMERS {\n        int RecordingId PK, FK \"NOT NULL — Points to RECORDINGS.Id\"\n        int PerformerId PK, FK \"NOT NULL — Points to PERFORMERS.Id\"\n        string Role \"NULLABLE — 'Conductor', 'Piano', 'First Violin', etc.\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n    }\n\n    %% ====================\n    %% CROSS-DOMAIN MAPPING\n    %% ====================\n\n    SCROBBLE_CLASSICAL_MAP {\n        int ScrobbleId PK, FK \"NOT NULL — Points to SCROBBLES.Id\"\n        int RecordingId FK \"NULLABLE — Points to RECORDINGS.Id. NULL = no classical match\"\n        int WorkId FK \"NULLABLE — Points to WORKS.Id. NULL = no classical match\"\n        float Confidence \"NOT NULL — Match confidence (0.0 - 1.0)\"\n        string MatchMethod \"NULLABLE — 'fingerprint', 'metadata', 'manual'\"\n        timestamp CreatedAt \"NOT NULL — When record was created\"\n    }\n\n    %% ====================\n    %% RELATIONSHIPS\n    %% ====================\n\n    %% Pop Music Relationships\n    ARTISTS ||--o{ TRACKS : \"performs\"\n    ALBUMS ||--o{ TRACKS : \"contains\"\n    TRACKS ||--|{ SCROBBLES : \"generates\"\n\n    %% Work Relationships (Pop + Classical)\n    WORKS ||--o{ TRACKS : \"spawns\"\n    \n    %% Classical Relationships\n    WORKS ||--|{ MOVEMENTS : \"divides into\"\n    WORKS ||--o{ RECORDINGS : \"captured as\"\n    RECORDINGS ||--o{ RECORDING_PERFORMERS : \"features\"\n    PERFORMERS ||--o{ RECORDING_PERFORMERS : \"participates in\"\n\n    %% Cross-Domain Mapping\n    SCROBBLES ||--o| SCROBBLE_CLASSICAL_MAP : \"maps to classical\"\n    RECORDINGS ||--o| SCROBBLE_CLASSICAL_MAP : \"identified from scrobble\"\n    WORKS ||--o| SCROBBLE_CLASSICAL_MAP : \"linked via recording\"\n```\n\n---\n\n## 3. Nullability Demarcation — Visual Guide\n\n| Column | Nullable? | Rationale |\n|--------|-----------|-----------|\n| **ARTISTS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **ARTISTS.Name** | ❌ NOT NULL | Every artist must have a name |\n| **ARTISTS.ExternalId** | ✅ NULLABLE | Might not have Last.fm MBID (e.g., manual entry) |\n| **ARTISTS.Metadata** | ✅ NULLABLE | Pure NULL design — no default `{}` |\n| **ALBUMS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **ALBUMS.Name** | ❌ NOT NULL | Every album must have a name |\n| **ALBUMS.ExternalId** | ✅ NULLABLE | Might not have Last.fm MBID |\n| **ALBUMS.Metadata** | ✅ NULLABLE | Pure NULL design — no default `{}` |\n| **WORKS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **WORKS.Name** | ❌ NOT NULL | Every work must have a name |\n| **WORKS.Composer** | ✅ NULLABLE | Pop works might not have a composer (e.g., \"Yesterday\") |\n| **WORKS.CatalogueNumber** | ✅ NULLABLE | Only classical works have Köchel/Opus numbers |\n| **WORKS.ExternalId** | ✅ NULLABLE | Might not have MusicBrainz MBID |\n| **WORKS.Metadata** | ✅ NULLABLE | Pure NULL design — no default `{}` |\n| **TRACKS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **TRACKS.Name** | ❌ NOT NULL | Every track must have a name |\n| **TRACKS.DurationMs** | ❌ NOT NULL | Track duration is always known (enforced by API) |\n| **TRACKS.ArtistId** | ✅ NULLABLE | Artist might be unknown (Pano Scrobbler edge cases) |\n| **TRACKS.AlbumId** | ✅ NULLABLE | Album might be unknown (frequent in Last.fm data) |\n| **TRACKS.WorkId** | ✅ NULLABLE | Most tracks aren't linked to a formal work |\n| **TRACKS.MovementId** | ✅ NULLABLE | NULL = whole work; non-NULL = specific movement |\n| **TRACKS.ExternalId** | ✅ NULLABLE | Might not have Last.fm MBID |\n| **TRACKS.Metadata** | ✅ NULLABLE | Pure NULL design — no default `{}` |\n| **SCROBBLES.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **SCROBBLES.TrackId** | ❌ NOT NULL | Every scrobble MUST have a track |\n| **SCROBBLES.ScrobbleDate** | ❌ NOT NULL | Scrobble timestamp is always present |\n| **SCROBBLES.ScrobbleDateLocal** | ✅ NULLABLE | Might not have local time (edge cases) |\n| **SCROBBLES.ExternalId** | ✅ NULLABLE | Might not have Last.fm timestamp |\n| **SCROBBLES.Metadata** | ✅ NULLABLE | Pure NULL design — no default `{}` |\n| **MOVEMENTS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **MOVEMENTS.WorkId** | ❌ NOT NULL | Every movement belongs to a work |\n| **MOVEMENTS.Position** | ❌ NOT NULL | Movement order is always known |\n| **MOVEMENTS.Name** | ✅ NULLABLE | Some movements have no name (e.g., \"Movement 1\") |\n| **RECORDINGS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **RECORDINGS.WorkId** | ❌ NOT NULL | Every recording is of a work |\n| **RECORDINGS.RecordingDate** | ✅ NULLABLE | Might not know when recorded |\n| **RECORDINGS.ExternalId** | ✅ NULLABLE | Might not have MusicBrainz MBID |\n| **PERFORMERS.Id** | ❌ NOT NULL | PK — must uniquely identify each row |\n| **PERFORMERS.Name** | ❌ NOT NULL | Every performer must have a name |\n| **PERFORMERS.Type** | ✅ NULLABLE | Might not know performer type |\n| **RECORDING_PERFORMERS.RecordingId** | ❌ NOT NULL | Composite PK — must identify recording |\n| **RECORDING_PERFORMERS.PerformerId** | ❌ NOT NULL | Composite PK — must identify performer |\n| **RECORDING_PERFORMERS.Role** | ✅ NULLABLE | Might not know specific role |\n\n---\n\n## 4. Data Flow Examples\n\n### Example 1: Pop Music (Beatles — \"Let It Be\")\n\n```\nARTISTS (Id=1, Name=\"Beatles\")\n    ↓ 1:N\nALBUMS (Id=1, Name=\"Let It Be\")\n    ↓ 1:N\nTRACKS (Id=1, Name=\"Let It Be\", ArtistId=1, AlbumId=1, WorkId=NULL, MovementId=NULL)\n    ↓ 1:N\nSCROBBLES (Id=1, TrackId=1, ScrobbleDate=\"2026-06-07T14:30:00Z\")\n```\n\n**Key Points:**\n- `Track.WorkId = NULL` — not linked to a formal \"work\" (it's a simple pop song)\n- `Track.MovementId = NULL` — not a movement (whole track)\n- `Track.ArtistId = 1` — linked to Beatles\n- `Track.AlbumId = 1` — linked to album\n\n---\n\n### Example 2: Single-Movement Classical (Scriabin — Poem of Ecstasy)\n\n```\nARTISTS (Id=2, Name=\"Scriabin\")\n    ↓ 1:N\nWORKS (Id=1, Name=\"Poem of Ecstasy\", Composer=\"Scriabin\", CatalogueNumber=\"Op. 54\")\n    ↓ 1:N\nTRACKS (Id=2, Name=\"Poem of Ecstasy\", ArtistId=2, AlbumId=NULL, WorkId=1, MovementId=NULL)\n    ↓ 1:N\nSCROBBLES (Id=2, TrackId=2, ScrobbleDate=\"2026-06-07T15:00:00Z\")\n```\n\n**Key Points:**\n- `Track.WorkId = 1` — linked to formal work\n- `Track.MovementId = NULL` — **single-movement work** (no movements table entry)\n- `Track.AlbumId = NULL` — might not know album (scrobble data incomplete)\n- **No MOVEMENTS row created** — design handles this via nullable MovementId\n\n---\n\n### Example 3: Multi-Movement Classical (Beethoven — Symphony No. 3 \"Eroica\")\n\n```\nARTISTS (Id=3, Name=\"Beethoven\")\n    ↓ 1:N\nWORKS (Id=2, Name=\"Symphony No. 3 'Eroica'\", Composer=\"Beethoven\", CatalogueNumber=\"Op. 55\")\n    ↓ 1:N\nMOVEMENTS [\n    (Id=1, WorkId=2, Position=1, Name=\"Adagio molto - Allegro con brio\"),\n    (Id=2, WorkId=2, Position=2, Name=\"Marcia funebre: Adagio assai\"),\n    (Id=3, WorkId=2, Position=3, Name=\"Scherzo: Allegro vivace\"),\n    (Id=4, WorkId=2, Position=4, Name=\"Finale: Allegro molto\")\n]\n    ↓ 1:N\nTRACKS [\n    (Id=3, Name=\"Movement 1\", ArtistId=3, WorkId=2, MovementId=1),\n    (Id=4, Name=\"Movement 2\", ArtistId=3, WorkId=2, MovementId=2),\n    (Id=5, Name=\"Movement 3\", ArtistId=3, WorkId=2, MovementId=3),\n    (Id=6, Name=\"Movement 4\", ArtistId=3, WorkId=2, MovementId=4)\n]\n    ↓ 1:N\nSCROBBLES (Id=3, TrackId=3, ScrobbleDate=\"2026-06-07T16:00:00Z\")\n```\n\n**Key Points:**\n- `Track.WorkId = 2` — linked to formal work\n- `Track.MovementId = 1..4` — **multi-movement work** (each track links to specific movement)\n- `MOVEMENTS` table has 4 rows — one per movement\n- **Movement.Name** can be NULL if movement has no name (rare)\n\n---\n\n## 5. Rationale for Design Choices\n\n### 5.1 Universal Works Table\n**Decision**: Single `WORKS` table for ALL music (pop + classical).\n\n**Rationale**:\n- Pop songs can be \"works\" (e.g., \"Yesterday\" as a composition)\n- Classical symphonies are definitely \"works\"\n- Avoids schema pollution (separate tables for pop vs classical works)\n- `WORKS.Composer` is NULLABLE — pop works might not have a formal composer\n- `WORKS.CatalogueNumber` is NULLABLE — only classical works have Köchel/Opus numbers\n\n### 5.2 Nullable Foreign Keys\n**Decision**: `ArtistId`, `AlbumId`, `WorkId`, `MovementId` are all NULLABLE on `TRACKS`.\n\n**Rationale**:\n- **ArtistId**: Pano Scrobbler sometimes doesn't report artist (edge cases)\n- **AlbumId**: Last.fm frequently returns empty album names (user's data shows this)\n- **WorkId**: Most tracks aren't linked to formal works (only classical + some pop)\n- **MovementId**: NULL = whole work; non-NULL = specific movement. No fake \"Single Movement\" rows.\n\n### 5.3 Pure NULL Design (No Defaults)\n**Decision**: JSONB fields are NULLABLE with NO default `{}`.\n\n**Rationale**:\n- `DEFAULT '{}'::jsonb` contradicts \"Pure NULL\" philosophy\n- NULL = \"absence of data\" (honest)\n- Sentinel `{}` = \"a known value that means empty\" (fake, pollutes queries)\n- C# handles via computed properties: `Metadata?.Property ?? \"default\"`\n\n### 5.4 Track.DurationMs NOT NULL\n**Decision**: Duration is enforced as NOT NULL.\n\n**Rationale**:\n- Last.fm API always returns duration for tracks\n- If duration is missing, it's a data quality issue (should be flagged)\n- Enables reliable \"total listening time\" calculations\n\n### 5.5 Platform Column Removed\n**Decision**: `SCROBBLES.Platform` dropped.\n\n**Rationale**:\n- Last.fm API does NOT return source/platform data\n- User's Pano Scrobbler data doesn't include platform\n- Avoids storing fake/placeholder data\n\n### 5.6 RESTRICT on All FKs\n**Decision**: No CASCADE, no soft delete. RESTRICT everywhere.\n\n**Rationale**:\n- Blocks accidental deletion of parent while children exist\n- Forces explicit cleanup via cascade purge (L1→L2→L3)\n- Prevents \"oops I deleted an artist and lost all their tracks\"\n\n### 5.7 Cascade Purge (L1→L2→L3)\n**Decision**: Post-sync cleanup deletes orphaned records in order.\n\n**Rationale**:\n- **L1**: Delete tracks with 0 scrobbles (stale data)\n- **L2**: Delete albums with 0 tracks (orphaned)\n- **L3**: Delete artists with 0 tracks AND 0 albums (fully orphaned)\n- Runs in single transaction (all or nothing)\n- Prevents accumulation of \"dead\" records over time\n\n---\n\n## 6. Indexes (Performance Boosters)\n\n```sql\n-- Text search indexes (trigram for fuzzy matching)\nCREATE INDEX idx_artists_name_lower ON music.artists USING gin(name_lower gin_trgm_ops);\nCREATE INDEX idx_albums_name_lower ON music.albums USING gin(name_lower gin_trgm_ops);\nCREATE INDEX idx_tracks_name_lower ON music.tracks USING gin(name_lower gin_trgm_ops);\nCREATE INDEX idx_works_name_lower ON music.works USING gin(name_lower gin_trgm_ops);\nCREATE INDEX idx_works_composer_lower ON music.works USING gin(composer_lower gin_trgm_ops);\n\n-- Foreign key indexes (speed up joins)\nCREATE INDEX idx_tracks_artist_id ON music.tracks(artist_id);\nCREATE INDEX idx_tracks_album_id ON music.tracks(album_id);\nCREATE INDEX idx_tracks_work_id ON music.tracks(work_id);\nCREATE INDEX idx_tracks_movement_id ON music.tracks(movement_id);\nCREATE INDEX idx_scrobbles_track_id ON music.scrobbles(track_id);\nCREATE INDEX idx_movements_work_id ON classical.movements(work_id);\nCREATE INDEX idx_recordings_work_id ON classical.recordings(work_id);\nCREATE INDEX idx_recording_performers_recording_id ON classical.recording_performers(recording_id);\nCREATE INDEX idx_recording_performers_performer_id ON classical.recording_performers(performer_id);\n\n-- Scrobble date index (for date range queries)\nCREATE INDEX idx_scrobbles_date ON music.scrobbles(scrobble_date);\n```\n\n---\n\n## 7. Next Steps\n\n1. **Update `unified-architecture.md`** with this final ER diagram\n2. **Create `EF_REFERENCE.md`** — exhaustive doc explaining every entity, field, type, and relationship\n3. **Update `MASTER_PLAN.md`** with all resolved decisions\n4. **Generate work plan** in `.omo/plans/*.md`\n"

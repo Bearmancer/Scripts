@@ -5,16 +5,16 @@ using Polly.Retry;
 
 namespace Scripts.Data.Repositories;
 
-/// <summary>
-/// Factory for creating Polly resilience pipelines configured for database operations.
-/// Handles transient Npgsql errors with retry and circuit breaker patterns.
-/// </summary>
+
+
+
+
 internal static class RepositoryResilienceFactory
 {
-	/// <summary>
-	/// Creates a resilience pipeline for database operations.
-	/// Retries on transient connection errors, opens circuit breaker on repeated failures.
-	/// </summary>
+	
+	
+	
+	
 	public static ResiliencePipeline CreateDatabasePipeline()
 	{
 		return new ResiliencePipelineBuilder()
@@ -40,9 +40,9 @@ internal static class RepositoryResilienceFactory
 			.Build();
 	}
 
-	/// <summary>
-	/// Determines if an Npgsql exception is transient and should be retried.
-	/// </summary>
+	
+	
+	
 	private static bool IsTransientError(NpgsqlException ex)
 	{
 		return ex.SqlState switch

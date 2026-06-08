@@ -256,6 +256,36 @@ internal static class Resilience
 		Func<Task> action,
 		CancellationToken ct = default
 	) => ExecuteAsync($"Music.{service}", action: action, ct: ct);
+
+	public static T Execute<T>(
+		string operation,
+		Func<T> action,
+		CancellationToken ct = default
+	) =>
+		ExecuteAsync<T>(
+			operation: operation,
+			action: () => Task.FromResult(result: action()),
+			ct: ct
+		)
+			.GetAwaiter()
+			.GetResult();
+
+	public static void Execute(
+		string operation,
+		Action action,
+		CancellationToken ct = default
+	) =>
+		ExecuteAsync<object>(
+			operation: operation,
+			action: () =>
+			{
+				action();
+				return Task.FromResult<object>(result: null!);
+			},
+			ct: ct
+		)
+			.GetAwaiter()
+			.GetResult();
 }
 
 public sealed class DailyQuotaExceededException : Exception
@@ -274,4 +304,19 @@ public sealed class DailyQuotaExceededException : Exception
 		Service = service;
 
 	internal string Service { get; }
+}
+
+public sealed class RetryExhaustedException(
+	string operation,
+	int attempts,
+	TimeSpan totalWait,
+	Exception inner
+)
+	: Exception(
+		$"{operation} failed after {attempts} retries ({totalWait:hh\\:mm\\:ss} total wait). Last error: {inner.Message}",
+		inner
+	)
+{
+	internal int Attempts { get; } = attempts;
+	internal TimeSpan TotalWait { get; } = totalWait;
 }

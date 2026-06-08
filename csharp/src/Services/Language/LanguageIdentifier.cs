@@ -1,7 +1,5 @@
 using Lingua;
 
-using Lingua;
-
 namespace Scripts.Services.Language;
 
 internal static class LanguageIdentifier

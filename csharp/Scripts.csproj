@@ -16,6 +16,7 @@
 
 		<Compile Remove="src\Orchestrators\**" />
 		<Compile Remove="src\CLI\**" />
+		<Compile Remove="src\Mcp\**" />
 		<Compile Remove="src\Program.cs" />
 
 		<PackageReference Include="AngleSharp" Version="*" />

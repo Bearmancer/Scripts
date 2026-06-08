@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
+using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.Repositories;
 
-#pragma warning disable CA2000
-internal sealed class TestDbContextFactory(DbContextOptions<ScriptsDbContext> options) : IDbContextFactory<ScriptsDbContext>
+internal sealed class TestDbContextFactory(PostgresFixture fixture) : IDbContextFactory<ScriptsDbContext>
 {
-	public ScriptsDbContext CreateDbContext() => new(options);
+	public ScriptsDbContext CreateDbContext() => fixture.GetContext();
 
 	public ValueTask<ScriptsDbContext> CreateDbContextAsync() => ValueTask.FromResult(CreateDbContext());
 }

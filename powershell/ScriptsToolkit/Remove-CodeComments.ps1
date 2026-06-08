@@ -9,11 +9,11 @@ $ext = [System.IO.Path]::GetExtension($FilePath).ToLower()
 
 $langs = @{
   '.cs'   = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"""', '"', "@'", "'")
-    Preserve   = @('///')
+    Preserve   = @('
   }
   '.py'   = @{
     Line       = @('#')
@@ -79,22 +79,22 @@ $langs = @{
     Preserve   = @('#!/')
   }
   '.js'   = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'", '`')
     Preserve   = @()
   }
   '.ts'   = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'", '`')
-    Preserve   = @('///')
+    Preserve   = @('
   }
   '.tsx'  = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'", '`')
     Preserve   = @()
@@ -108,21 +108,21 @@ $langs = @{
   }
   '.css'  = @{
     Line       = @()
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'")
     Preserve   = @()
   }
   '.scss' = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'")
     Preserve   = @()
   }
   '.java' = @{
-    Line       = @('//')
-    BlockOpen  = '/*'   ; BlockClose = '*/'
+    Line       = @('
+    BlockOpen  = ''
     WholeLine  = $false ; SkipInline = $false
     Str        = @('"', "'")
     Preserve   = @()

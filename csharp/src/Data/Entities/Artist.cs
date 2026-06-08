@@ -2,9 +2,9 @@ using System.Text.Json;
 
 namespace Scripts.Data.Entities;
 
-/// <summary>
-/// Represents a music artist. Metadata is stored as JSONB (configured in ArtistConfiguration).
-/// </summary>
+
+
+
 public sealed class Artist
 {
 	public int Id { get; set; }

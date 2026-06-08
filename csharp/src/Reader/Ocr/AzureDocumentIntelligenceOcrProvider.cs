@@ -1,6 +1,5 @@
 using Azure;
 using Azure.AI.DocumentIntelligence;
-using Azure.Identity;
 
 namespace Scripts.Services.Read.Ocr;
 
@@ -20,7 +19,7 @@ internal sealed class AzureDocumentIntelligenceOcrProvider
 
 		Client = new DocumentIntelligenceClient(
 			new Uri(uriString: endpoint),
-			new DefaultAzureCredential()
+			Core.Auth.AzureAuth.Credential
 		);
 
 		ModelId = IsNullOrWhiteSpace(value: modelId) ? "prebuilt-layout" : modelId;

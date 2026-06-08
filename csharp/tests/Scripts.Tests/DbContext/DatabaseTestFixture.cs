@@ -4,11 +4,11 @@ using Npgsql;
 
 namespace Scripts.Tests.DbContext;
 
-/// <summary>
-/// Shared integration-test fixture backed by the local PostgreSQL instance ($PGCONNSTR).
-/// Drops and recreates the database on initialization so each test class gets a clean schema.
-/// No Testcontainers — the Docker Compose Postgres is already running.
-/// </summary>
+
+
+
+
+
 internal sealed class DatabaseTestFixture : IAsyncDisposable
 {
 	private string? _connectionString;
@@ -29,10 +29,10 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		await ctx.Database.MigrateAsync();
 	}
 
-	/// <summary>Returns a fresh context for every call — callers must dispose it.</summary>
+	
 	public ScriptsDbContext GetContext() => BuildContext();
 
-	/// <summary>Returns a factory that creates fresh contexts from the same connection string.</summary>
+	
 	public IDbContextFactory<ScriptsDbContext> GetContextFactory()
 	{
 		if (_connectionString is null)

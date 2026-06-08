@@ -105,7 +105,7 @@ internal static partial class EpubWriter
 	private static string BuildNavXhtml(string escapedTitle) =>
 		$"""
 			<?xml version="1.0" encoding="utf-8"?>
-			<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+			<html xmlns="http:
 			<head>
 			  <title>Navigation</title>
 			  <link href="style/nav.css" rel="stylesheet" type="text/css"/>

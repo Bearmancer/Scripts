@@ -15,7 +15,7 @@ internal sealed class ScrobbleConfigurationTests
 			.UseInMemoryDatabase(Guid.NewGuid().ToString())
 			.Options;
 		await using var context = new ScriptsDbContext(options);
-		// FindEntityType returns null for Scrobble in this InMemory setup; use GetEntityTypes() lookup instead.
+		
 		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
 		var prop = entityType?.FindProperty("Platform");
 

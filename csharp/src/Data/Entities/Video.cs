@@ -1,9 +1,9 @@
 namespace Scripts.Data.Entities;
 
-/// <summary>
-/// Represents a YouTube video tracked in a playlist.
-/// IsDeleted uses soft-delete to preserve history of removed videos.
-/// </summary>
+
+
+
+
 public sealed class Video
 {
 	public int Id { get; set; }

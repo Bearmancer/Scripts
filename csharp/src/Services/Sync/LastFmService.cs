@@ -1,9 +1,14 @@
 using Hqub.Lastfm;
 using Hqub.Lastfm.Entities;
+using Scripts.Data.Repositories;
 
 namespace Scripts.Services.Sync.LastFm;
 
-internal sealed class LastFmService(string apiKey, string username, IDbContextFactory<ScriptsDbContext> contextFactory)
+internal sealed class LastFmService(
+	string apiKey,
+	string username,
+	IDbContextFactory<ScriptsDbContext> contextFactory,
+	ArtistRepository artistRepository)
 {
 	private const int PerPage = 200;
 
@@ -179,9 +184,6 @@ internal sealed class LastFmService(string apiKey, string username, IDbContextFa
 
 	internal async Task<Scripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
 	{
-		await using var context = await contextFactory.CreateDbContextAsync(ct);
-		return await context.Artists
-			.AsNoTracking()
-			.FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, name), ct);
+		return await artistRepository.GetByFuzzyNameAsync(name, ct);
 	}
 }

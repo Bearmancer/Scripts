@@ -3,7 +3,6 @@ using TUnit;
 
 namespace Scripts.Tests.SignOff;
 
-#pragma warning disable CA2000
 internal sealed class EnvironmentVerificationTests
 {
     [Test]

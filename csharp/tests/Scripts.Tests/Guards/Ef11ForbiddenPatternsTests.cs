@@ -6,8 +6,8 @@ namespace Scripts.Tests.Guards;
 
 internal sealed class Ef11ForbiddenPatternsTests
 {
-    // Anchored via TestPaths (CallerFilePath-based), not AppContext.BaseDirectory which
-    // changes with TFM, output path, or custom build layouts.
+    
+    
     private static readonly string SourceRoot = TestPaths.SrcRoot;
 
     private static IEnumerable<string> EnumerateSourceFiles()

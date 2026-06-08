@@ -16,7 +16,7 @@ internal sealed class SyncServiceTests : DatabaseTestBase
 	{
 		var factory = Fixture.GetContextFactory();
 
-		var service = new LastFmService("test-api-key", "test-user", factory);
+		var service = new LastFmService("test-api-key", "test-user", factory, null!);
 		service.Should().NotBeNull();
 	}
 

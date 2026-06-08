@@ -1,4 +1,3 @@
-using Scripts.Data.Repositories.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 
@@ -11,11 +10,11 @@ internal static class RepositoryRegistration
 		var resiliencePipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
 
 		services.AddSingleton(resiliencePipeline);
-		services.AddScoped<IScrobbleRepository, ScrobbleRepository>();
-		services.AddScoped<IVideoRepository, VideoRepository>();
-		services.AddScoped<ITrackRepository, TrackRepository>();
-		services.AddScoped<IArtistRepository, ArtistRepository>();
-		services.AddScoped<IAlbumRepository, AlbumRepository>();
+		services.AddScoped<ScrobbleRepository>();
+		services.AddScoped<VideoRepository>();
+		services.AddScoped<TrackRepository>();
+		services.AddScoped<ArtistRepository>();
+		services.AddScoped<AlbumRepository>();
 
 		return services;
 	}
