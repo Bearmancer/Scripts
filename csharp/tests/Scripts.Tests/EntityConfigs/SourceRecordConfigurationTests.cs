@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -17,8 +15,8 @@ internal sealed class SourceRecordConfigurationTests
 		await using var context = new ScriptsDbContext(options);
 		var entityType = context.Model.FindEntityType(typeof(SourceRecord));
 
-		entityType.Should().NotBeNull();
-		entityType!.GetTableName().Should().Be("source_records");
+		await Assert.That(entityType).IsNotNull();
+		await Assert.That(entityType!.GetTableName()).IsEqualTo("source_records");
 	}
 
 	[Test]
@@ -30,10 +28,10 @@ internal sealed class SourceRecordConfigurationTests
 		await using var context = new ScriptsDbContext(options);
 		var entityType = context.Model.FindEntityType(typeof(SourceRecord));
 
-		entityType.Should().NotBeNull();
+		await Assert.That(entityType).IsNotNull();
 		var indexes = entityType!.GetIndexes().ToList();
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "SourceId"));
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "EntityType"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "SourceId"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "EntityType"));
 	}
 
 	[Test]
@@ -46,7 +44,14 @@ internal sealed class SourceRecordConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(SourceRecord));
 		var rawDataProp = entityType!.FindProperty("RawData");
 
-		rawDataProp.Should().NotBeNull();
-		rawDataProp!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("jsonb");
+		await Assert.That(rawDataProp).IsNotNull();
+		await Assert
+			.That(
+				rawDataProp!
+					.GetAnnotations()
+					.FirstOrDefault(a => a.Name == "Relational:ColumnType")
+					?.Value
+			)
+			.IsEqualTo("jsonb");
 	}
 }

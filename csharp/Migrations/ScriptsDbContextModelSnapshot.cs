@@ -18,7 +18,7 @@ namespace Scripts.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -109,18 +109,12 @@ namespace Scripts.Migrations
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId")
-                        .HasDatabaseName("idx_execution_logs_session_id");
-
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("idx_execution_logs_timestamp");
-
-                    b.ToTable("execution_logs", (string)null);
+                    b.ToTable("execution_logs", "work");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.FailedTask", b =>
@@ -189,6 +183,69 @@ namespace Scripts.Migrations
                     b.ToTable("fibery_entities", "fibery");
                 });
 
+            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Estimate")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PrioritySort")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TitleLower")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("issues", "work");
+                });
+
             modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
                 {
                     b.Property<int>("Id")
@@ -235,6 +292,101 @@ namespace Scripts.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("works", "music");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Playlist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChannelName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChannelNameLower")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlaylistId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TitleLower")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaylistId")
+                        .IsUnique();
+
+                    b.ToTable("playlists", "youtube");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.PlaylistVideo", b =>
+                {
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VideoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PlaylistId", "VideoId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("playlist_videos", "youtube");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameLower")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("projects", "work");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.ReleaseProgress", b =>
@@ -436,9 +588,13 @@ namespace Scripts.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ChannelName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ChannelNameLower")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -450,10 +606,20 @@ namespace Scripts.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<DateTimeOffset?>("SyncedAt")
-                        .HasColumnType("timestamptz");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TitleLower")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TranslatedDescription")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TranslatedTitle")
                         .HasColumnType("text");
 
                     b.Property<DateOnly?>("UploadDate")
@@ -463,26 +629,14 @@ namespace Scripts.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ChannelName")
-                        .HasDatabaseName("idx_videos_channel");
-
-                    b.HasIndex("Title")
-                        .HasDatabaseName("idx_videos_title_trgm");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Title"), "gin");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Title"), new[] { "gin_trgm_ops" });
-
-                    b.HasIndex("UploadDate")
-                        .HasDatabaseName("idx_videos_upload_date");
-
-                    b.HasIndex("Url")
-                        .IsUnique()
-                        .HasDatabaseName("idx_videos_url");
-
-                    b.HasIndex("ChannelName", "UploadDate")
-                        .HasDatabaseName("idx_videos_channel_upload_date");
+                    b.HasIndex("VideoId")
+                        .IsUnique();
 
                     b.ToTable("videos", "youtube");
                 });
@@ -507,6 +661,23 @@ namespace Scripts.Migrations
                     b.Navigation("ExecutionLog");
                 });
 
+            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
+                {
+                    b.HasOne("Scripts.Data.Entities.Issue", "Parent")
+                        .WithMany("SubTasks")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Scripts.Data.Entities.Project", "Project")
+                        .WithMany("Issues")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
                 {
                     b.HasOne("Scripts.Data.Entities.MusicWork", "MusicWork")
@@ -516,6 +687,25 @@ namespace Scripts.Migrations
                         .IsRequired();
 
                     b.Navigation("MusicWork");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.PlaylistVideo", b =>
+                {
+                    b.HasOne("Scripts.Data.Entities.Playlist", "Playlist")
+                        .WithMany("PlaylistVideos")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Scripts.Data.Entities.Video", "Video")
+                        .WithMany("PlaylistVideos")
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.Scrobble", b =>
@@ -577,6 +767,11 @@ namespace Scripts.Migrations
                     b.Navigation("FailedTasks");
                 });
 
+            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
+                {
+                    b.Navigation("SubTasks");
+                });
+
             modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
                 {
                     b.Navigation("Tracks");
@@ -589,9 +784,24 @@ namespace Scripts.Migrations
                     b.Navigation("Tracks");
                 });
 
+            modelBuilder.Entity("Scripts.Data.Entities.Playlist", b =>
+                {
+                    b.Navigation("PlaylistVideos");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Project", b =>
+                {
+                    b.Navigation("Issues");
+                });
+
             modelBuilder.Entity("Scripts.Data.Entities.Track", b =>
                 {
                     b.Navigation("Scrobbles");
+                });
+
+            modelBuilder.Entity("Scripts.Data.Entities.Video", b =>
+                {
+                    b.Navigation("PlaylistVideos");
                 });
 #pragma warning restore 612, 618
         }

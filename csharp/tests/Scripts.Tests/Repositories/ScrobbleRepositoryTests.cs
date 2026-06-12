@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -11,12 +9,18 @@ namespace Scripts.Tests.Repositories;
 [RequiresPgConnStr]
 internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 {
-
-	private static async Task<(Artist, Album, Track)> SetupArtistAlbumTrack(ScriptsDbContext context)
+	private static async Task<(Artist, Album, Track)> SetupArtistAlbumTrack(
+		ScriptsDbContext context
+	)
 	{
 		var artist = new Artist { Name = "Test Artist" };
 		var album = new Album { Artist = artist, Title = "Test Album" };
-		var track = new Track { Album = album, Artist = artist, Title = "Test Track" };
+		var track = new Track
+		{
+			Album = album,
+			Artist = artist,
+			Title = "Test Track",
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
@@ -38,17 +42,27 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 
 		var scrobbles = new[]
 		{
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow, Platform = "lastfm" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1), Platform = "spotify" }
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow,
+				Platform = "lastfm",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1),
+				Platform = "spotify",
+			},
 		};
 
 		var result = await repository.UpsertAsync(scrobbles);
 
-		result.Should().Be(2);
+		await Assert.That(result).IsEqualTo(2);
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Scrobbles.CountAsync();
-		count.Should().Be(2);
+		await Assert.That(count).IsEqualTo(2);
 	}
 
 	[Test]
@@ -58,7 +72,12 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		var scrobbledAt = DateTimeOffset.UtcNow;
-		var scrobble = new Scrobble { TrackId = track.Id, ScrobbledAt = scrobbledAt, Platform = "lastfm" };
+		var scrobble = new Scrobble
+		{
+			TrackId = track.Id,
+			ScrobbledAt = scrobbledAt,
+			Platform = "lastfm",
+		};
 		context.Scrobbles.Add(scrobble);
 		await context.SaveChangesAsync();
 
@@ -66,14 +85,22 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 		var factory = Fixture.GetContextFactory();
 		var repository = new ScrobbleRepository(factory, pipeline);
 
-		var updatedScrobbles = new[] { new Scrobble { TrackId = track.Id, ScrobbledAt = scrobbledAt, Platform = "spotify" } };
+		var updatedScrobbles = new[]
+		{
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = scrobbledAt,
+				Platform = "spotify",
+			},
+		};
 		var result = await repository.UpsertAsync(updatedScrobbles);
 
-		result.Should().Be(1);
+		await Assert.That(result).IsEqualTo(1);
 
 		await using var verifyContext = Fixture.GetContext();
 		var updated = await verifyContext.Scrobbles.FirstAsync();
-		updated.Platform.Should().Be("spotify");
+		await Assert.That(updated.Platform).IsEqualTo("spotify");
 	}
 
 	[Test]
@@ -83,8 +110,18 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		context.Scrobbles.AddRange(
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow, Platform = "lastfm" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1), Platform = "spotify" }
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow,
+				Platform = "lastfm",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1),
+				Platform = "spotify",
+			}
 		);
 		await context.SaveChangesAsync();
 
@@ -94,11 +131,11 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 
 		var result = await repository.DeleteByTrackIdAsync(track.Id);
 
-		result.Should().Be(2);
+		await Assert.That(result).IsEqualTo(2);
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Scrobbles.CountAsync();
-		count.Should().Be(0);
+		await Assert.That(count).IsEqualTo(0);
 	}
 
 	[Test]
@@ -109,9 +146,24 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 
 		var now = DateTimeOffset.UtcNow;
 		context.Scrobbles.AddRange(
-			new Scrobble { TrackId = track.Id, ScrobbledAt = now.AddHours(-2), Platform = "lastfm" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = now, Platform = "spotify" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = now.AddHours(-1), Platform = "lastfm" }
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = now.AddHours(-2),
+				Platform = "lastfm",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = now,
+				Platform = "spotify",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = now.AddHours(-1),
+				Platform = "lastfm",
+			}
 		);
 		await context.SaveChangesAsync();
 
@@ -121,10 +173,19 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByTrackIdAsync(track.Id);
 
-		result.Should().HaveCount(3);
-		result[0].ScrobbledAt.Should().BeCloseTo(now, TimeSpan.FromMilliseconds(1));
-		result[1].ScrobbledAt.Should().BeCloseTo(now.AddHours(-1), TimeSpan.FromMilliseconds(1));
-		result[2].ScrobbledAt.Should().BeCloseTo(now.AddHours(-2), TimeSpan.FromMilliseconds(1));
+		await Assert.That(result).Count().IsEqualTo(3);
+		await Assert
+			.That(result[0].ScrobbledAt)
+			.IsEqualTo(now)
+			.Within(TimeSpan.FromMilliseconds(1));
+		await Assert
+			.That(result[1].ScrobbledAt)
+			.IsEqualTo(now.AddHours(-1))
+			.Within(TimeSpan.FromMilliseconds(1));
+		await Assert
+			.That(result[2].ScrobbledAt)
+			.IsEqualTo(now.AddHours(-2))
+			.Within(TimeSpan.FromMilliseconds(1));
 	}
 
 	[Test]
@@ -134,9 +195,24 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 		var (_, _, track) = await SetupArtistAlbumTrack(context);
 
 		context.Scrobbles.AddRange(
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow, Platform = "lastfm" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1), Platform = "spotify" },
-			new Scrobble { TrackId = track.Id, ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-2), Platform = "lastfm" }
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow,
+				Platform = "lastfm",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-1),
+				Platform = "spotify",
+			},
+			new Scrobble
+			{
+				TrackId = track.Id,
+				ScrobbledAt = DateTimeOffset.UtcNow.AddHours(-2),
+				Platform = "lastfm",
+			}
 		);
 		await context.SaveChangesAsync();
 
@@ -146,7 +222,7 @@ internal sealed class ScrobbleRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByPlatformAsync("lastfm");
 
-		result.Should().HaveCount(2);
-		result.Should().AllSatisfy(s => s.Platform.Should().Be("lastfm"));
+		await Assert.That(result).Count().IsEqualTo(2);
+		await Assert.That(result).All(s => s.Platform == "lastfm");
 	}
 }

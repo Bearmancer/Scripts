@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -9,14 +7,14 @@ namespace Scripts.Tests.DbContext;
 internal sealed class DbContextSourceRecordDbSetTests
 {
 	[Test]
-	public void DbContext_HasSourceRecords_DbSet()
+	public async Task DbContext_HasSourceRecords_DbSet()
 	{
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("SourceRecordDbSetTest_" + Guid.NewGuid())
 			.Options;
 
 		using var context = new ScriptsDbContext(options);
-		context.SourceRecords.Should().NotBeNull();
+		await Assert.That(context.SourceRecords).IsNotNull();
 	}
 
 	[Test]
@@ -30,6 +28,6 @@ internal sealed class DbContextSourceRecordDbSetTests
 		var model = context.Model;
 
 		var sourceRecordType = model.FindEntityType(typeof(SourceRecord));
-		sourceRecordType.Should().NotBeNull(because: "SourceRecord entity must be discoverable by the model");
+		await Assert.That(sourceRecordType).IsNotNull();
 	}
 }

@@ -1,9 +1,7 @@
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
-using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
-using TUnit;
 
 namespace Scripts.Tests.DbContext;
 
@@ -25,30 +23,22 @@ internal sealed class ExplicitConfigurationTests
 			.Select(e => e.ClrType)
 			.ToList();
 
-		entityTypes.Should().HaveCount(10, "all 10 entity configurations must be applied explicitly");
+		await Assert.That(entityTypes).Count().IsEqualTo(10);
 
-		entityTypes.Should().Contain(typeof(Artist), "ArtistConfiguration must be applied");
-		entityTypes.Should().Contain(typeof(Album), "AlbumConfiguration must be applied");
-		entityTypes.Should().Contain(typeof(Track), "TrackConfiguration must be applied");
-		entityTypes.Should().Contain(typeof(Scrobble), "ScrobbleConfiguration must be applied");
-		entityTypes.Should().Contain(typeof(Video), "VideoConfiguration must be applied");
-		entityTypes
-			.Should()
-			.Contain(typeof(ExecutionLog), "ExecutionLogConfiguration must be applied");
-		entityTypes
-			.Should()
-			.Contain(typeof(FiberyEntity), "FiberyEntityConfiguration must be applied");
-		entityTypes.Should().Contain(typeof(FailedTask), "FailedTaskConfiguration must be applied");
-		entityTypes
-			.Should()
-			.Contain(typeof(SourceRecord), "SourceRecordConfiguration must be applied");
-		entityTypes
-			.Should()
-			.Contain(typeof(ReleaseProgress), "ReleaseProgressConfiguration must be applied");
+		await Assert.That(entityTypes).Contains(typeof(Artist));
+		await Assert.That(entityTypes).Contains(typeof(Album));
+		await Assert.That(entityTypes).Contains(typeof(Track));
+		await Assert.That(entityTypes).Contains(typeof(Scrobble));
+		await Assert.That(entityTypes).Contains(typeof(Video));
+		await Assert.That(entityTypes).Contains(typeof(ExecutionLog));
+		await Assert.That(entityTypes).Contains(typeof(FiberyEntity));
+		await Assert.That(entityTypes).Contains(typeof(FailedTask));
+		await Assert.That(entityTypes).Contains(typeof(SourceRecord));
+		await Assert.That(entityTypes).Contains(typeof(Data.Entities.ReleaseProgress));
 	}
 
 	[Test]
-	public void ScriptsDbContext_DoesNotUseApplyConfigurationsFromAssembly()
+	public async Task ScriptsDbContext_DoesNotUseApplyConfigurationsFromAssembly()
 	{
 		var contextType = typeof(ScriptsDbContext);
 		var onModelCreatingMethod = contextType.GetMethod(
@@ -56,16 +46,11 @@ internal sealed class ExplicitConfigurationTests
 			BindingFlags.NonPublic | BindingFlags.Instance
 		);
 
-		onModelCreatingMethod.Should().NotBeNull("OnModelCreating method must exist");
+		await Assert.That(onModelCreatingMethod).IsNotNull();
 
 		var methodBody = onModelCreatingMethod!.ToString();
 
-		methodBody
-			.Should()
-			.NotContain(
-				"ApplyConfigurationsFromAssembly",
-				"explicit ApplyConfiguration calls must be used instead of ApplyConfigurationsFromAssembly"
-			);
+		await Assert.That(methodBody).DoesNotContain("ApplyConfigurationsFromAssembly");
 	}
 
 	[Test]
@@ -92,7 +77,7 @@ internal sealed class ExplicitConfigurationTests
 			nameof(ExecutionLog),
 			nameof(FailedTask),
 			nameof(FiberyEntity),
-			nameof(ReleaseProgress),
+			nameof(Scripts.Data.Entities.ReleaseProgress),
 			nameof(Scrobble),
 			nameof(SourceRecord),
 			nameof(Track),
@@ -101,11 +86,6 @@ internal sealed class ExplicitConfigurationTests
 			.OrderBy(n => n)
 			.ToList();
 
-		configuredEntities
-			.Should()
-			.BeEquivalentTo(
-				expectedEntities,
-				"all 10 entity configurations must be applied together in OnModelCreating"
-			);
+		await Assert.That(configuredEntities).IsEquivalentTo(expectedEntities);
 	}
 }

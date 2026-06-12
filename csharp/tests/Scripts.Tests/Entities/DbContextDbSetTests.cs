@@ -1,8 +1,5 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
-using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
 
@@ -17,51 +14,51 @@ internal sealed class DbContextDbSetTests
 	}
 
 	[Test]
-	public void DbContext_HasArtists_DbSet()
+	public async Task DbContext_HasArtists_DbSet()
 	{
 		using var context = CreateContext();
-		context.Artists.Should().NotBeNull();
+		await Assert.That(context.Artists).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasAlbums_DbSet()
+	public async Task DbContext_HasAlbums_DbSet()
 	{
 		using var context = CreateContext();
-		context.Albums.Should().NotBeNull();
+		await Assert.That(context.Albums).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasTracks_DbSet()
+	public async Task DbContext_HasTracks_DbSet()
 	{
 		using var context = CreateContext();
-		context.Tracks.Should().NotBeNull();
+		await Assert.That(context.Tracks).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasScrobbles_DbSet()
+	public async Task DbContext_HasScrobbles_DbSet()
 	{
 		using var context = CreateContext();
-		context.Scrobbles.Should().NotBeNull();
+		await Assert.That(context.Scrobbles).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasVideos_DbSet()
+	public async Task DbContext_HasVideos_DbSet()
 	{
 		using var context = CreateContext();
-		context.Videos.Should().NotBeNull();
+		await Assert.That(context.Videos).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasExecutionLogs_DbSet()
+	public async Task DbContext_HasExecutionLogs_DbSet()
 	{
 		using var context = CreateContext();
-		context.ExecutionLogs.Should().NotBeNull();
+		await Assert.That(context.ExecutionLogs).IsNotNull();
 	}
 
 	[Test]
-	public void DbContext_HasFailedTasks_DbSet()
+	public async Task DbContext_HasFailedTasks_DbSet()
 	{
 		using var context = CreateContext();
-		context.FailedTasks.Should().NotBeNull();
+		await Assert.That(context.FailedTasks).IsNotNull();
 	}
 }

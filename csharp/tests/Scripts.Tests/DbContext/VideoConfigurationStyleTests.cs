@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -18,10 +16,10 @@ internal sealed class VideoConfigurationStyleTests
 		await using var context = new ScriptsDbContext(options);
 		var entityType = context.Model.FindEntityType(typeof(Video));
 
-		entityType.Should().NotBeNull();
+		await Assert.That(entityType).IsNotNull();
 		var urlProperty = entityType!.FindProperty("Url");
-		urlProperty.Should().NotBeNull();
-		urlProperty!.IsNullable.Should().BeFalse();
+		await Assert.That(urlProperty).IsNotNull();
+		await Assert.That(urlProperty!.IsNullable).IsFalse();
 	}
 
 	[Test]
@@ -35,7 +33,14 @@ internal sealed class VideoConfigurationStyleTests
 		var entityType = context.Model.FindEntityType(typeof(Video));
 		var metadataProp = entityType!.FindProperty("Metadata");
 
-		metadataProp.Should().NotBeNull();
-		metadataProp!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("jsonb");
+		await Assert.That(metadataProp).IsNotNull();
+		await Assert
+			.That(
+				metadataProp!
+					.GetAnnotations()
+					.FirstOrDefault(a => a.Name == "Relational:ColumnType")
+					?.Value
+			)
+			.IsEqualTo("jsonb");
 	}
 }

@@ -1,8 +1,4 @@
-
-using System;
-using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -14,155 +10,248 @@ using Scripts.Data.Entities;
 
 namespace MyCompiledModels
 {
-    [EntityFrameworkInternal]
-    public partial class TrackEntityType
-    {
-        public static RuntimeEntityType Create(RuntimeModel model, RuntimeEntityType baseEntityType = null)
-        {
-            var runtimeEntityType = model.AddEntityType(
-                "Scripts.Data.Entities.Track",
-                typeof(Track),
-                baseEntityType,
-                propertyCount: 5,
-                navigationCount: 3,
-                foreignKeyCount: 2,
-                unnamedIndexCount: 4,
-                keyCount: 1);
+	[EntityFrameworkInternal]
+	public static partial class TrackEntityType
+	{
+		public static RuntimeEntityType Create(
+			RuntimeModel model,
+			RuntimeEntityType baseEntityType = null
+		)
+		{
+			var runtimeEntityType = model.AddEntityType(
+				"Scripts.Data.Entities.Track",
+				typeof(Track),
+				baseEntityType,
+				propertyCount: 5,
+				navigationCount: 3,
+				foreignKeyCount: 2,
+				unnamedIndexCount: 4,
+				keyCount: 1
+			);
 
-            var id = runtimeEntityType.AddProperty(
-                "Id",
-                typeof(int),
-                propertyInfo: typeof(Track).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                valueGenerated: ValueGenerated.OnAdd,
-                afterSaveBehavior: PropertySaveBehavior.Throw,
-                sentinel: 0);
-            id.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn);
+			var id = runtimeEntityType.AddProperty(
+				"Id",
+				typeof(int),
+				propertyInfo: typeof(Track).GetProperty(
+					"Id",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<Id>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				valueGenerated: ValueGenerated.OnAdd,
+				afterSaveBehavior: PropertySaveBehavior.Throw,
+				sentinel: 0
+			);
+			id.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.IdentityAlwaysColumn
+			);
 
-            var albumId = runtimeEntityType.AddProperty(
-                "AlbumId",
-                typeof(int),
-                propertyInfo: typeof(Track).GetProperty("AlbumId", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<AlbumId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                sentinel: 0);
-            albumId.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            albumId.AddAnnotation("Relational:ColumnType", "integer");
+			var albumId = runtimeEntityType.AddProperty(
+				"AlbumId",
+				typeof(int),
+				propertyInfo: typeof(Track).GetProperty(
+					"AlbumId",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<AlbumId>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				sentinel: 0
+			);
+			albumId.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			albumId.AddAnnotation("Relational:ColumnType", "integer");
 
-            var artistId = runtimeEntityType.AddProperty(
-                "ArtistId",
-                typeof(int),
-                propertyInfo: typeof(Track).GetProperty("ArtistId", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<ArtistId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                sentinel: 0);
-            artistId.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            artistId.AddAnnotation("Relational:ColumnType", "integer");
+			var artistId = runtimeEntityType.AddProperty(
+				"ArtistId",
+				typeof(int),
+				propertyInfo: typeof(Track).GetProperty(
+					"ArtistId",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<ArtistId>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				sentinel: 0
+			);
+			artistId.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			artistId.AddAnnotation("Relational:ColumnType", "integer");
 
-            var durationSeconds = runtimeEntityType.AddProperty(
-                "DurationSeconds",
-                typeof(int?),
-                propertyInfo: typeof(Track).GetProperty("DurationSeconds", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<DurationSeconds>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                nullable: true);
-            durationSeconds.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            durationSeconds.AddAnnotation("Relational:ColumnType", "integer");
+			var durationSeconds = runtimeEntityType.AddProperty(
+				"DurationSeconds",
+				typeof(int?),
+				propertyInfo: typeof(Track).GetProperty(
+					"DurationSeconds",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<DurationSeconds>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				nullable: true
+			);
+			durationSeconds.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			durationSeconds.AddAnnotation("Relational:ColumnType", "integer");
 
-            var title = runtimeEntityType.AddProperty(
-                "Title",
-                typeof(string),
-                propertyInfo: typeof(Track).GetProperty("Title", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<Title>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
-            title.SetComparer(new ValueComparer<string>(
-                bool (string l, string r) => string.Equals(l, r, StringComparison.Ordinal),
-                int (string v) => (v == null ? 0 : StringComparer.Ordinal.GetHashCode(v)),
-                string (string v) => v));
-            title.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            title.AddAnnotation("Relational:ColumnType", "text");
+			var title = runtimeEntityType.AddProperty(
+				"Title",
+				typeof(string),
+				propertyInfo: typeof(Track).GetProperty(
+					"Title",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<Title>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
+			title.SetComparer(
+				new ValueComparer<string>(
+					bool (string l, string r) => string.Equals(l, r, StringComparison.Ordinal),
+					int (string v) => (v == null ? 0 : StringComparer.Ordinal.GetHashCode(v)),
+					string (string v) => v
+				)
+			);
+			title.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			title.AddAnnotation("Relational:ColumnType", "text");
 
-            var key = runtimeEntityType.AddKey(
-                new[] { id });
-            runtimeEntityType.SetPrimaryKey(key);
+			var key = runtimeEntityType.AddKey(new[] { id });
+			runtimeEntityType.SetPrimaryKey(key);
 
-            var index = runtimeEntityType.AddIndex(
-                new[] { albumId });
+			var index = runtimeEntityType.AddIndex(new[] { albumId });
 
-            var index0 = runtimeEntityType.AddIndex(
-                new[] { artistId });
+			var index0 = runtimeEntityType.AddIndex(new[] { artistId });
 
-            var index1 = runtimeEntityType.AddIndex(
-                new[] { title });
-            index1.AddAnnotation("Relational:Filter", "true");
-            index1.AddAnnotation("Relational:Name", "idx_tracks_title_trgm");
+			var index1 = runtimeEntityType.AddIndex(new[] { title });
+			index1.AddAnnotation("Relational:Filter", "true");
+			index1.AddAnnotation("Relational:Name", "idx_tracks_title_trgm");
 
-            var index2 = runtimeEntityType.AddIndex(
-                new[] { artistId, title },
-                unique: true);
-            index2.AddAnnotation("Relational:Name", "idx_tracks_artist_title");
+			var index2 = runtimeEntityType.AddIndex(new[] { artistId, title }, unique: true);
+			index2.AddAnnotation("Relational:Name", "idx_tracks_artist_title");
 
-            return runtimeEntityType;
-        }
+			return runtimeEntityType;
+		}
 
-        public static RuntimeForeignKey CreateForeignKey1(RuntimeEntityType declaringEntityType, RuntimeEntityType principalEntityType)
-        {
-            var runtimeForeignKey = declaringEntityType.AddForeignKey(new[] { declaringEntityType.FindProperty("AlbumId") },
-                principalEntityType.FindKey(new[] { principalEntityType.FindProperty("Id") }),
-                principalEntityType,
-                deleteBehavior: DeleteBehavior.Cascade,
-                required: true);
+		public static RuntimeForeignKey CreateForeignKey1(
+			RuntimeEntityType declaringEntityType,
+			RuntimeEntityType principalEntityType
+		)
+		{
+			var runtimeForeignKey = declaringEntityType.AddForeignKey(
+				new[] { declaringEntityType.FindProperty("AlbumId") },
+				principalEntityType.FindKey(new[] { principalEntityType.FindProperty("Id") }),
+				principalEntityType,
+				deleteBehavior: DeleteBehavior.Cascade,
+				required: true
+			);
 
-            var album = declaringEntityType.AddNavigation("Album",
-                runtimeForeignKey,
-                onDependent: true,
-                typeof(Album),
-                propertyInfo: typeof(Track).GetProperty("Album", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<Album>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+			var album = declaringEntityType.AddNavigation(
+				"Album",
+				runtimeForeignKey,
+				onDependent: true,
+				typeof(Album),
+				propertyInfo: typeof(Track).GetProperty(
+					"Album",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<Album>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
 
-            var tracks = principalEntityType.AddNavigation("Tracks",
-                runtimeForeignKey,
-                onDependent: false,
-                typeof(ICollection<Track>),
-                propertyInfo: typeof(Album).GetProperty("Tracks", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Album).GetField("<Tracks>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+			var tracks = principalEntityType.AddNavigation(
+				"Tracks",
+				runtimeForeignKey,
+				onDependent: false,
+				typeof(ICollection<Track>),
+				propertyInfo: typeof(Album).GetProperty(
+					"Tracks",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Album).GetField(
+					"<Tracks>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
 
-            return runtimeForeignKey;
-        }
+			return runtimeForeignKey;
+		}
 
-        public static RuntimeForeignKey CreateForeignKey2(RuntimeEntityType declaringEntityType, RuntimeEntityType principalEntityType)
-        {
-            var runtimeForeignKey = declaringEntityType.AddForeignKey(new[] { declaringEntityType.FindProperty("ArtistId") },
-                principalEntityType.FindKey(new[] { principalEntityType.FindProperty("Id") }),
-                principalEntityType,
-                deleteBehavior: DeleteBehavior.Cascade,
-                required: true);
+		public static RuntimeForeignKey CreateForeignKey2(
+			RuntimeEntityType declaringEntityType,
+			RuntimeEntityType principalEntityType
+		)
+		{
+			var runtimeForeignKey = declaringEntityType.AddForeignKey(
+				new[] { declaringEntityType.FindProperty("ArtistId") },
+				principalEntityType.FindKey(new[] { principalEntityType.FindProperty("Id") }),
+				principalEntityType,
+				deleteBehavior: DeleteBehavior.Cascade,
+				required: true
+			);
 
-            var artist = declaringEntityType.AddNavigation("Artist",
-                runtimeForeignKey,
-                onDependent: true,
-                typeof(Artist),
-                propertyInfo: typeof(Track).GetProperty("Artist", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Track).GetField("<Artist>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+			var artist = declaringEntityType.AddNavigation(
+				"Artist",
+				runtimeForeignKey,
+				onDependent: true,
+				typeof(Artist),
+				propertyInfo: typeof(Track).GetProperty(
+					"Artist",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Track).GetField(
+					"<Artist>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
 
-            var tracks = principalEntityType.AddNavigation("Tracks",
-                runtimeForeignKey,
-                onDependent: false,
-                typeof(ICollection<Track>),
-                propertyInfo: typeof(Artist).GetProperty("Tracks", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Artist).GetField("<Tracks>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+			var tracks = principalEntityType.AddNavigation(
+				"Tracks",
+				runtimeForeignKey,
+				onDependent: false,
+				typeof(ICollection<Track>),
+				propertyInfo: typeof(Artist).GetProperty(
+					"Tracks",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Artist).GetField(
+					"<Tracks>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
 
-            return runtimeForeignKey;
-        }
+			return runtimeForeignKey;
+		}
 
-        public static void CreateAnnotations(RuntimeEntityType runtimeEntityType)
-        {
-            runtimeEntityType.AddAnnotation("Relational:FunctionName", null);
-            runtimeEntityType.AddAnnotation("Relational:Schema", "music");
-            runtimeEntityType.AddAnnotation("Relational:SqlQuery", null);
-            runtimeEntityType.AddAnnotation("Relational:TableName", "tracks");
-            runtimeEntityType.AddAnnotation("Relational:ViewName", null);
-            runtimeEntityType.AddAnnotation("Relational:ViewSchema", null);
+		public static void CreateAnnotations(RuntimeEntityType runtimeEntityType)
+		{
+			runtimeEntityType.AddAnnotation("Relational:FunctionName", null);
+			runtimeEntityType.AddAnnotation("Relational:Schema", "music");
+			runtimeEntityType.AddAnnotation("Relational:SqlQuery", null);
+			runtimeEntityType.AddAnnotation("Relational:TableName", "tracks");
+			runtimeEntityType.AddAnnotation("Relational:ViewName", null);
+			runtimeEntityType.AddAnnotation("Relational:ViewSchema", null);
 
-            Customize(runtimeEntityType);
-        }
+			Customize(runtimeEntityType);
+		}
 
-        static partial void Customize(RuntimeEntityType runtimeEntityType);
-    }
+		static partial void Customize(RuntimeEntityType runtimeEntityType);
+	}
 }

@@ -112,11 +112,11 @@ dotnet_naming_rule.private_members_with_underscore.symbols = none
 dotnet_naming_rule.private_members_with_underscore.style = none
 dotnet_diagnostic.IDE1006.severity = none
 dotnet_diagnostic.CA1707.severity = none
-dotnet_diagnostic.IDE0001.severity = none
+dotnet_diagnostic.IDE0001.severity = warning
 dotnet_diagnostic.IDE0002.severity = none
 dotnet_diagnostic.IDE0003.severity = none
 dotnet_diagnostic.IDE0004.severity = none
-dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0005.severity = warning
 dotnet_diagnostic.IDE0007.severity = none
 dotnet_diagnostic.IDE0008.severity = none
 dotnet_diagnostic.IDE0009.severity = none
@@ -200,3 +200,43 @@ dotnet_style_prefer_collection_expression = true:suggestion
 
 # Discourage use of EF Functions extensions that may be EF11-only
 # Guard tests in Ef11ForbiddenPatternsTests.cs provide build-time enforcement
+
+[**/CompiledModels/**]
+generated_code = true
+
+[**/Migrations/**]
+generated_code = true
+
+[*.cs]
+# ──────────────────────────────────────────────────────────
+# Application vs Library Rules
+# Suppress FxCop rules designed for public NuGet libraries
+# that cause friction in modern C# applications.
+# ──────────────────────────────────────────────────────────
+
+# Trust NRTs: Don't require runtime throw-if-null at public boundaries
+dotnet_diagnostic.CA1062.severity = none
+
+# Modern Init: Allow setters on collection properties for object initializers
+dotnet_diagnostic.CA2227.severity = none
+
+# Modern Collections: Allow exposing List<T> instead of forcing Collection<T>
+dotnet_diagnostic.CA1002.severity = none
+
+# Simplicity: Allow using string for URLs instead of enforcing System.Uri
+dotnet_diagnostic.CA1054.severity = none
+dotnet_diagnostic.CA1055.severity = none
+dotnet_diagnostic.CA1056.severity = none
+dotnet_diagnostic.CA2234.severity = none
+
+# Simplicity: Do not force all 4 Exception constructors unless needed
+dotnet_diagnostic.CA1032.severity = none
+
+# Simplicity: Don't force rigid legacy Dispose(bool) pattern on sealed/app classes
+dotnet_diagnostic.CA1063.severity = none
+
+# Robustness: Allow catching generic Exception when logging and handling failures gracefully
+dotnet_diagnostic.CA1031.severity = none
+
+# Naming: Allow 'Console' class to exist despite Spectre.Console
+dotnet_diagnostic.CA1724.severity = none

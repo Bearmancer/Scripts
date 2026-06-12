@@ -4,10 +4,11 @@ using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.Repositories;
 
-internal sealed class TestDbContextFactory(PostgresFixture fixture) : IDbContextFactory<ScriptsDbContext>
+internal sealed class TestDbContextFactory(PostgresFixture fixture)
+	: IDbContextFactory<ScriptsDbContext>
 {
 	public ScriptsDbContext CreateDbContext() => fixture.GetContext();
 
-	public ValueTask<ScriptsDbContext> CreateDbContextAsync() => ValueTask.FromResult(CreateDbContext());
+	public ValueTask<ScriptsDbContext> CreateDbContextAsync() =>
+		ValueTask.FromResult(CreateDbContext());
 }
-#pragma warning restore CA2000

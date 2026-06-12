@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace Scripts.Data.Entities;
 
 internal sealed record ReleaseProgress

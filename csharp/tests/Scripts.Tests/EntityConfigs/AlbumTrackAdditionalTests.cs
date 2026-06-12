@@ -1,9 +1,6 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Tests.Attributes;
-using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.EntityConfigs;
 
@@ -16,7 +13,12 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
-		var album = new Album { Artist = artist, Title = "Test Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+		var album = new Album
+		{
+			Artist = artist,
+			Title = "Test Album",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
@@ -24,9 +26,8 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var retrieved = await context.Albums.FirstOrDefaultAsync(a => a.Title == "Test Album");
 
-		retrieved.Should().NotBeNull();
-		retrieved!.ArtistId.Should().Be(artist.Id);
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.ArtistId).IsEqualTo(artist.Id);
 	}
 
 	[Test]
@@ -40,19 +41,26 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		context.Artists.AddRange(artist1, artist2);
 		await context.SaveChangesAsync();
 
-		var album1 = new Album { ArtistId = artist1.Id, Title = "Album 1", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-		var album2 = new Album { ArtistId = artist2.Id, Title = "Album 2", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+		var album1 = new Album
+		{
+			ArtistId = artist1.Id,
+			Title = "Album 1",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
+		var album2 = new Album
+		{
+			ArtistId = artist2.Id,
+			Title = "Album 2",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
 
 		context.Albums.AddRange(album1, album2);
 		await context.SaveChangesAsync();
 
-		var artist1Albums = await context.Albums
-			.Where(a => a.ArtistId == artist1.Id)
-			.ToListAsync();
+		var artist1Albums = await context.Albums.Where(a => a.ArtistId == artist1.Id).ToListAsync();
 
-		artist1Albums.Should().HaveCount(1);
-		artist1Albums[0].Title.Should().Be("Album 1");
-
+		await Assert.That(artist1Albums).Count().IsEqualTo(1);
+		await Assert.That(artist1Albums[0].Title).IsEqualTo("Album 1");
 	}
 
 	[Test]
@@ -61,8 +69,19 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
-		var album = new Album { Artist = artist, Title = "Test Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-		var track = new Track { Album = album, Artist = artist, Title = "Test Track", DurationSeconds = 180 };
+		var album = new Album
+		{
+			Artist = artist,
+			Title = "Test Album",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
+		var track = new Track
+		{
+			Album = album,
+			Artist = artist,
+			Title = "Test Track",
+			DurationSeconds = 180,
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
@@ -71,9 +90,8 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var retrieved = await context.Tracks.FirstOrDefaultAsync(t => t.Title == "Test Track");
 
-		retrieved.Should().NotBeNull();
-		retrieved!.DurationSeconds.Should().Be(180);
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.DurationSeconds).IsEqualTo(180);
 	}
 
 	[Test]
@@ -82,26 +100,45 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
-		var album1 = new Album { Artist = artist, Title = "Album 1", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-		var album2 = new Album { Artist = artist, Title = "Album 2", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+		var album1 = new Album
+		{
+			Artist = artist,
+			Title = "Album 1",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
+		var album2 = new Album
+		{
+			Artist = artist,
+			Title = "Album 2",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.AddRange(album1, album2);
 		await context.SaveChangesAsync();
 
-		var track1 = new Track { AlbumId = album1.Id, ArtistId = artist.Id, Title = "Track 1", DurationSeconds = 180 };
-		var track2 = new Track { AlbumId = album2.Id, ArtistId = artist.Id, Title = "Track 2", DurationSeconds = 200 };
+		var track1 = new Track
+		{
+			AlbumId = album1.Id,
+			ArtistId = artist.Id,
+			Title = "Track 1",
+			DurationSeconds = 180,
+		};
+		var track2 = new Track
+		{
+			AlbumId = album2.Id,
+			ArtistId = artist.Id,
+			Title = "Track 2",
+			DurationSeconds = 200,
+		};
 
 		context.Tracks.AddRange(track1, track2);
 		await context.SaveChangesAsync();
 
-		var album1Tracks = await context.Tracks
-			.Where(t => t.AlbumId == album1.Id)
-			.ToListAsync();
+		var album1Tracks = await context.Tracks.Where(t => t.AlbumId == album1.Id).ToListAsync();
 
-		album1Tracks.Should().HaveCount(1);
-		album1Tracks[0].Title.Should().Be("Track 1");
-
+		await Assert.That(album1Tracks).Count().IsEqualTo(1);
+		await Assert.That(album1Tracks[0].Title).IsEqualTo("Track 1");
 	}
 
 	[Test]
@@ -111,25 +148,39 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var artist1 = new Artist { Name = "Artist 1" };
 		var artist2 = new Artist { Name = "Artist 2" };
-		var album = new Album { Artist = artist1, Title = "Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+		var album = new Album
+		{
+			Artist = artist1,
+			Title = "Album",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
 
 		context.Artists.AddRange(artist1, artist2);
 		context.Albums.Add(album);
 		await context.SaveChangesAsync();
 
-		var track1 = new Track { AlbumId = album.Id, ArtistId = artist1.Id, Title = "Track 1", DurationSeconds = 180 };
-		var track2 = new Track { AlbumId = album.Id, ArtistId = artist2.Id, Title = "Track 2", DurationSeconds = 200 };
+		var track1 = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist1.Id,
+			Title = "Track 1",
+			DurationSeconds = 180,
+		};
+		var track2 = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist2.Id,
+			Title = "Track 2",
+			DurationSeconds = 200,
+		};
 
 		context.Tracks.AddRange(track1, track2);
 		await context.SaveChangesAsync();
 
-		var artist1Tracks = await context.Tracks
-			.Where(t => t.ArtistId == artist1.Id)
-			.ToListAsync();
+		var artist1Tracks = await context.Tracks.Where(t => t.ArtistId == artist1.Id).ToListAsync();
 
-		artist1Tracks.Should().HaveCount(1);
-		artist1Tracks[0].Title.Should().Be("Track 1");
-
+		await Assert.That(artist1Tracks).Count().IsEqualTo(1);
+		await Assert.That(artist1Tracks[0].Title).IsEqualTo("Track 1");
 	}
 
 	[Test]
@@ -138,26 +189,48 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
-		var album = new Album { Artist = artist, Title = "Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
+		var album = new Album
+		{
+			Artist = artist,
+			Title = "Album",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
 		await context.SaveChangesAsync();
 
-		var track1 = new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Short Track", DurationSeconds = 120 };
-		var track2 = new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Medium Track", DurationSeconds = 180 };
-		var track3 = new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Long Track", DurationSeconds = 300 };
+		var track1 = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist.Id,
+			Title = "Short Track",
+			DurationSeconds = 120,
+		};
+		var track2 = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist.Id,
+			Title = "Medium Track",
+			DurationSeconds = 180,
+		};
+		var track3 = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist.Id,
+			Title = "Long Track",
+			DurationSeconds = 300,
+		};
 
 		context.Tracks.AddRange(track1, track2, track3);
 		await context.SaveChangesAsync();
 
-		var mediumTracks = await context.Tracks
-			.Where(t => t.DurationSeconds >= 150 && t.DurationSeconds <= 200)
+		var mediumTracks = await context
+			.Tracks.Where(t => t.DurationSeconds >= 150 && t.DurationSeconds <= 200)
 			.ToListAsync();
 
-		mediumTracks.Should().HaveCount(1);
-		mediumTracks[0].Title.Should().Be("Medium Track");
-
+		await Assert.That(mediumTracks).Count().IsEqualTo(1);
+		await Assert.That(mediumTracks[0].Title).IsEqualTo("Medium Track");
 	}
 
 	[Test]
@@ -167,7 +240,12 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var artist = new Artist { Name = "Test Artist" };
 		var originalDate = DateOnly.FromDateTime(DateTime.UtcNow);
-		var album = new Album { Artist = artist, Title = "Test Album", ReleaseDate = originalDate };
+		var album = new Album
+		{
+			Artist = artist,
+			Title = "Test Album",
+			ReleaseDate = originalDate,
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
@@ -180,9 +258,8 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var retrieved = await context.Albums.FirstOrDefaultAsync(a => a.Title == "Test Album");
 
-		retrieved.Should().NotBeNull();
-		retrieved!.ReleaseDate.Should().Be(newDate);
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.ReleaseDate).IsEqualTo(newDate);
 	}
 
 	[Test]
@@ -191,8 +268,19 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 
 		var artist = new Artist { Name = "Test Artist" };
-		var album = new Album { Artist = artist, Title = "Album", ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow) };
-		var track = new Track { Album = album, Artist = artist, Title = "Test Track", DurationSeconds = 180 };
+		var album = new Album
+		{
+			Artist = artist,
+			Title = "Album",
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
+		};
+		var track = new Track
+		{
+			Album = album,
+			Artist = artist,
+			Title = "Test Track",
+			DurationSeconds = 180,
+		};
 
 		context.Artists.Add(artist);
 		context.Albums.Add(album);
@@ -205,8 +293,7 @@ internal class AlbumTrackAdditionalTests : DatabaseTestBase
 
 		var retrieved = await context.Tracks.FirstOrDefaultAsync(t => t.Title == "Test Track");
 
-		retrieved.Should().NotBeNull();
-		retrieved!.DurationSeconds.Should().Be(200);
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.DurationSeconds).IsEqualTo(200);
 	}
 }

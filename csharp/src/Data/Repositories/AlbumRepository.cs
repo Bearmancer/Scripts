@@ -1,22 +1,14 @@
 using Scripts.Data.Entities;
-using Microsoft.EntityFrameworkCore;
-using Polly;
 
 namespace Scripts.Data.Repositories;
 
-internal sealed class AlbumRepository
-{
-	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory;
-	private readonly ResiliencePipeline _resiliencePipeline;
-
-	public AlbumRepository(
-		IDbContextFactory<ScriptsDbContext> contextFactory,
-		ResiliencePipeline resiliencePipeline
+internal sealed class AlbumRepository(
+	IDbContextFactory<ScriptsDbContext> contextFactory,
+	ResiliencePipeline resiliencePipeline
 	)
-	{
-		_contextFactory = contextFactory;
-		_resiliencePipeline = resiliencePipeline;
-	}
+{
+	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory = contextFactory;
+	private readonly ResiliencePipeline _resiliencePipeline = resiliencePipeline;
 
 	public async Task<Album?> GetByArtistAndTitleAsync(
 		int artistId,

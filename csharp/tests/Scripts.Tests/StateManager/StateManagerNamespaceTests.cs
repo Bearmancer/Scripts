@@ -1,53 +1,51 @@
-using TUnit;
-using FluentAssertions;
 using System.Text.Json;
 
 namespace Scripts.Tests.StateManager;
 
 internal sealed class StateManagerNamespaceTests
 {
-    [Test]
-    public void StateManager_ExistsIn_DataStateNamespace()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull(because: "StateManager must live in Scripts.Data.State namespace");
-    }
+	[Test]
+	public async Task StateManager_ExistsIn_DataStateNamespace()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+	}
 
-    [Test]
-    public void StateManager_HasJsonIndented_Option()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull();
-        var field = type!.GetField("JsonIndented");
-        field.Should().NotBeNull();
-        field!.FieldType.Should().Be<JsonSerializerOptions>();
-    }
+	[Test]
+	public async Task StateManager_HasJsonIndented_Option()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+		var field = type!.GetField("JsonIndented");
+		await Assert.That(field).IsNotNull();
+		await Assert.That(field!.FieldType).IsEqualTo(typeof(JsonSerializerOptions));
+	}
 
-    [Test]
-    public void StateManager_HasJsonCompact_Option()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull();
-        var field = type!.GetField("JsonCompact");
-        field.Should().NotBeNull();
-        field!.FieldType.Should().Be<JsonSerializerOptions>();
-    }
+	[Test]
+	public async Task StateManager_HasJsonCompact_Option()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+		var field = type!.GetField("JsonCompact");
+		await Assert.That(field).IsNotNull();
+		await Assert.That(field!.FieldType).IsEqualTo(typeof(JsonSerializerOptions));
+	}
 
-    [Test]
-    public void StateManager_HasLoadStateAsync_Method()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull();
-        var method = type!.GetMethod("LoadStateAsync");
-        method.Should().NotBeNull();
-    }
+	[Test]
+	public async Task StateManager_HasLoadStateAsync_Method()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+		var method = type!.GetMethod("LoadStateAsync");
+		await Assert.That(method).IsNotNull();
+	}
 
-    [Test]
-    public void StateManager_HasSaveStateAsync_Method()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull();
-        var method = type!.GetMethod("SaveStateAsync");
-        method.Should().NotBeNull();
-    }
+	[Test]
+	public async Task StateManager_HasSaveStateAsync_Method()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+		var method = type!.GetMethod("SaveStateAsync");
+		await Assert.That(method).IsNotNull();
+	}
 }

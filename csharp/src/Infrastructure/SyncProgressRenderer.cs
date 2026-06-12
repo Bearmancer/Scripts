@@ -4,7 +4,7 @@ public sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 {
 	private const int MAX_NAME_LENGTH = 30;
 
-	public IRenderable BuildDisplay() => BuildDisplayFromSnapshot(tracker.GetSnapshot());
+	public IRenderable BuildDisplay() => BuildDisplayFromSnapshot(tracker.Snapshot);
 
 	public static IRenderable BuildDisplayFromSnapshot(SyncProgressSnapshot snapshot)
 	{

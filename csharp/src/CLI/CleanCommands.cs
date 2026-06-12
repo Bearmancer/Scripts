@@ -77,13 +77,11 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 
 		Console.Rule("Clean Purge");
 
-		GoogleSheetsService? sheets = null;
-
 		if (purgeLastFm)
-			PurgeLastFm(ref sheets);
+			PurgeLastFm();
 
 		if (purgeYouTube)
-			PurgeYouTube(ref sheets);
+			PurgeYouTube();
 
 		PurgeCsvExports();
 		PurgeBuildArtifacts();
@@ -97,37 +95,17 @@ public sealed class CleanPurgeCommand : Command<CleanPurgeCommand.Settings>
 		return 0;
 	}
 
-	private static void PurgeLastFm(ref GoogleSheetsService? sheets)
+	private static void PurgeLastFm()
 	{
 		Console.Info("Purging Last.fm...");
-
-		FetchState state = StateManager
-			.LoadStateAsync<FetchState>(StateManager.LastFmSyncFile)
-			.GetAwaiter()
-			.GetResult();
-		if (!IsNullOrEmpty(state.SpreadsheetId))
-		{
-			sheets ??= new GoogleSheetsService();
-			sheets.DeleteSpreadsheet(state.SpreadsheetId);
-		}
 
 		StateManager.DeleteLastFmStates();
 		Console.Success("  State files deleted");
 	}
 
-	private static void PurgeYouTube(ref GoogleSheetsService? sheets)
+	private static void PurgeYouTube()
 	{
 		Console.Info("Purging YouTube...");
-
-		YouTubeFetchState state = StateManager
-			.LoadStateAsync<YouTubeFetchState>(StateManager.YoutubeSyncFile)
-			.GetAwaiter()
-			.GetResult();
-		if (!IsNullOrEmpty(state.SpreadsheetId))
-		{
-			sheets ??= new GoogleSheetsService();
-			sheets.DeleteSpreadsheet(state.SpreadsheetId);
-		}
 
 		StateManager.DeleteAllYouTubeStates();
 		Console.Success("  State files deleted");

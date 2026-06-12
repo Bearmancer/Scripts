@@ -1,5 +1,3 @@
-using Scripts.Data;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Tests.Attributes;
 
@@ -13,8 +11,8 @@ internal sealed class CompiledModelTests : DatabaseTestBase
 	{
 		await using var context = Fixture.GetContext();
 		var model = context.Model;
-		model.Should().NotBeNull();
-		model.GetEntityTypes().Should().HaveCount(10, "all 10 entity configurations must be applied");
+		await Assert.That(model).IsNotNull();
+		await Assert.That(model.GetEntityTypes()).Count().IsEqualTo(10);
 	}
 
 	[Test]
@@ -22,7 +20,6 @@ internal sealed class CompiledModelTests : DatabaseTestBase
 	{
 		await using var context = Fixture.GetContext();
 		var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-		pendingMigrations.Should().BeEmpty("all migrations must be applied during fixture setup");
+		await Assert.That(pendingMigrations).IsEmpty();
 	}
 }
-

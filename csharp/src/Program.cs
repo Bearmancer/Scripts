@@ -1,37 +1,15 @@
-using Scripts.CLI.Clean;
-using Scripts.CLI.Cloud;
-using Scripts.CLI.Music;
-using Scripts.CLI.Read;
-using Scripts.CLI.Sync;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace Scripts;
 
 internal static class Program
 {
 	private static volatile bool Cancelled;
-	private static ServiceProvider? ServiceProvider;
 	public static CancellationTokenSource Cts { get; } = new();
 
-	public static int Main(string[] args)
+	public static async Task Main(string[] args)
 	{
-		Serilog.Log.Logger = Log.BuildAppLogger(filename: "app.jsonl");
-
-		try
-		{
-			Directory.CreateDirectory(Paths.LogDirectory);
-			var testFile = Path.Combine(Paths.LogDirectory, ".write-test");
-			File.WriteAllText(testFile, "");
-			File.Delete(testFile);
-		}
-		catch (Exception ex)
-		{
-			Console.Error.WriteLine(
-				$"Fatal: Cannot write to log directory {Paths.LogDirectory}: {ex.Message}"
-			);
-			return 1;
-		}
-
+		Console.WriteLine("[TRACE] Program.Main entered");
 		try
 		{
 			Console.CancelKeyPress += (_, e) =>
@@ -45,143 +23,69 @@ internal static class Program
 				}
 			};
 
-			ServiceCollection services = new();
-			services.AddTransient<MusicTranslateCommand>();
-			services.AddTransient<CloudUsageCommand>();
-			services.AddTransient<ReadCommand>();
-			ServiceProvider = services.BuildServiceProvider();
-
-			SpectreTypeRegistrar registrar = new(serviceProvider: ServiceProvider);
-			CommandApp app = new(registrar: registrar);
-
-			app.Configure(config =>
+			Console.WriteLine("[TRACE] Calling GoogleAuth.GetCredentialAsync...");
+			var sw = System.Diagnostics.Stopwatch.StartNew();
+			var credential = await GoogleAuth.GetCredentialAsync(Cts.Token);
+			sw.Stop();
+			Console.WriteLine($"[TRACE] GetCredentialAsync returned in {sw.ElapsedMilliseconds}ms");
+			Console.WriteLine($"[TRACE] Credential: UserId={credential.UserId}, Token.IsStale={credential.Token.IsStale}, HasAccessToken={!string.IsNullOrEmpty(credential.Token.AccessToken)}, HasRefreshToken={!string.IsNullOrEmpty(credential.Token.RefreshToken)}");
+			
+			// Verify token works by querying YouTube API
+			Console.WriteLine("[TRACE] Verifying token by querying YouTube API...");
+			try
 			{
-				config.SetApplicationName(name: "tools");
-
-				config.AddBranch(
-					name: "sync",
-					sync =>
-					{
-						sync.SetDescription(description: "Sync data from various services");
-						sync.AddCommand<SyncAllCommand>(name: "all")
-							.WithDescription(description: "Sync YouTube and Last.fm");
-						sync.AddCommand<SyncYouTubeCommand>(name: "yt")
-							.WithDescription(description: "Sync YouTube playlists");
-						sync.AddCommand<SyncLastFmCommand>(name: "lastfm")
-							.WithDescription(description: "Sync Last.fm scrobbles");
-						sync.AddCommand<HistoryCommand>(name: "history")
-							.WithDescription(description: "Show sync history");
-					}
-				);
-
-				config.AddBranch(
-					name: "clean",
-					clean =>
-					{
-						clean.SetDescription(description: "Clean local state");
-						clean
-							.AddCommand<CleanCacheCommand>(name: "cache")
-							.WithDescription(description: "Clean local cache files");
-						clean
-							.AddCommand<CleanResetCommand>(name: "reset")
-							.WithDescription(description: "Reset all state and spreadsheets");
-					}
-				);
-
-				config.AddBranch(
-					name: "music",
-					music =>
-					{
-						music.SetDescription(description: "Music metadata commands");
-						music
-							.AddCommand<MusicSearchCommand>(name: "search")
-							.WithDescription(description: "Search for a music release");
-						music
-							.AddCommand<MusicEnrichCommand>(name: "enrich")
-							.WithDescription(
-								description: "Enrich CSV with missing metadata from MusicBrainz and Discogs"
-							);
-						music
-							.AddCommand<MusicNotesCommand>(name: "notes")
-							.WithDescription(
-								description: "Parse and display Discogs release notes by ID"
-							);
-						music
-							.AddCommand<MusicTranslateCommand>(name: "translate")
-							.WithDescription(
-								description: "Translate non-English titles in a CSV using Azure Translator"
-							);
-						music.AddBranch(
-							name: "lookup",
-							lookup =>
-							{
-								lookup.SetDescription(description: "Lookup a release by ID");
-								lookup
-									.AddCommand<DiscogsLookupCommand>(name: "discogs")
-									.WithDescription(description: "Lookup a Discogs release by ID");
-								lookup
-									.AddCommand<MusicBrainzLookupCommand>(name: "mb")
-									.WithDescription(
-										description: "Lookup a MusicBrainz release by GUID"
-									);
-							}
-						);
-					}
-				);
-
-				config
-					.AddCommand<ReadCommand>(name: "read")
-					.WithDescription(description: "Extract an article from a URL to EPUB");
-
-				config.AddBranch(
-					name: "cloud",
-					cloud =>
-					{
-						cloud.SetDescription(description: "Cloud service management");
-						cloud
-							.AddCommand<CloudUsageCommand>(name: "usage")
-							.WithDescription(
-								description: "Show Azure free tier usage for current billing period"
-							);
-					}
-				);
-			});
-
-			return app.Run(args: args);
+				var ytService = new Google.Apis.YouTube.v3.YouTubeService(new Google.Apis.Services.BaseClientService.Initializer
+				{
+					HttpClientInitializer = credential,
+					ApplicationName = "Scripts"
+				});
+				
+				var channelsRequest = ytService.Channels.List("snippet");
+				channelsRequest.Mine = true;
+				var channelsResponse = await channelsRequest.ExecuteAsync();
+				
+				Console.WriteLine($"[TRACE] YouTube API call SUCCESS");
+				Console.WriteLine($"[TRACE] Channels found: {channelsResponse.Items?.Count ?? 0}");
+				if (channelsResponse.Items?.Count > 0)
+				{
+					Console.WriteLine($"[TRACE] First channel: {channelsResponse.Items[0].Snippet.Title}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"[TRACE] YouTube API call FAILED: {ex.GetType().Name}: {ex.Message}");
+				if (ex.InnerException is { } inner)
+				{
+					Console.Error.WriteLine($"[TRACE] Inner: {inner.GetType().Name}: {inner.Message}");
+				}
+			}
+			Console.WriteLine("YouTube auth complete.");
 		}
-		catch (OperationCanceledException)
+		catch (OperationCanceledException ex)
 		{
+			Console.Error.WriteLine($"[TRACE] OperationCanceledException: {ex.Message}");
 			Console.Error.WriteLine(value: "Fatal: Operation canceled.");
-			return 130;
 		}
-		catch (FileNotFoundException ex)
+		catch (Exception ex) when (ex is FileNotFoundException or UnauthorizedAccessException or InvalidOperationException or IOException or HttpRequestException)
 		{
+			Console.Error.WriteLine($"[TRACE] {ex.GetType().Name}: {ex.Message}");
+			Console.Error.WriteLine($"[TRACE] StackTrace: {ex.StackTrace}");
 			Console.Error.WriteLine($"Fatal: {ex.Message}");
-			return 1;
 		}
-		catch (UnauthorizedAccessException ex)
+		catch (Exception ex)
 		{
-			Console.Error.WriteLine($"Fatal: {ex.Message}");
-			return 1;
-		}
-		catch (InvalidOperationException ex)
-		{
-			Console.Error.WriteLine($"Fatal: {ex.Message}");
-			return 1;
-		}
-		catch (IOException ex)
-		{
-			Console.Error.WriteLine($"Fatal: {ex.Message}");
-			return 1;
-		}
-		catch (HttpRequestException ex)
-		{
-			Console.Error.WriteLine($"Fatal: {ex.Message}");
-			return 1;
+			Console.Error.WriteLine($"[TRACE] UNHANDLED {ex.GetType().FullName}: {ex.Message}");
+			Console.Error.WriteLine($"[TRACE] StackTrace: {ex.StackTrace}");
+			if (ex.InnerException is { } inner)
+			{
+				Console.Error.WriteLine($"[TRACE] InnerException: {inner.GetType().FullName}: {inner.Message}");
+				Console.Error.WriteLine($"[TRACE] InnerStackTrace: {inner.StackTrace}");
+			}
+			throw;
 		}
 		finally
 		{
-			Serilog.Log.CloseAndFlush();
+			Console.WriteLine("[TRACE] Program.Main exiting");
 		}
 	}
 }

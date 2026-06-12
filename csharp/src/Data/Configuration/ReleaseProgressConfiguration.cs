@@ -1,5 +1,5 @@
-using Scripts.Data.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Scripts.Data.Entities;
 
 namespace Scripts.Data.Configuration;
 
@@ -11,11 +11,11 @@ internal sealed class ReleaseProgressConfiguration : IEntityTypeConfiguration<Re
 		b.HasKey(static e => e.Id);
 		b.Property(static e => e.Id).ValueGeneratedOnAdd();
 		b.HasIndex(static e => new
-			{
-				e.ReleaseId,
-				e.DiscNumber,
-				e.TrackNumber,
-			})
+		{
+			e.ReleaseId,
+			e.DiscNumber,
+			e.TrackNumber,
+		})
 			.IsUnique()
 			.HasDatabaseName(name: "idx_release_progress_track");
 		b.HasIndex(static e => e.CreatedAt)

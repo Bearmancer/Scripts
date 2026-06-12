@@ -1,8 +1,6 @@
-using System.Text.Json;
-using Scripts.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Scripts.Data.Entities;
 
 namespace Scripts.Data;
 
@@ -15,10 +13,12 @@ internal sealed class ScriptsDbContext : DbContext
 	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 	{
 		base.OnConfiguring(optionsBuilder);
-		
-		var inMemory = optionsBuilder.Options.Extensions
-			.Any(e => e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true);
-		var noCompiledModel = System.Environment.GetEnvironmentVariable("SCRIPTS_NO_COMPILED_MODEL") is not null;
+
+		var inMemory = optionsBuilder.Options.Extensions.Any(e =>
+			e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true
+		);
+		var noCompiledModel =
+			System.Environment.GetEnvironmentVariable("SCRIPTS_NO_COMPILED_MODEL") is not null;
 		if (inMemory || noCompiledModel)
 			return;
 		try
@@ -34,7 +34,7 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
 	public DbSet<Track> Tracks => Set<Track>();
-	public DbSet<Entities.Scrobble> Scrobbles => Set<Entities.Scrobble>();
+	public DbSet<Scrobble> Scrobbles => Set<Scrobble>();
 	public DbSet<Video> Videos => Set<Video>();
 	public DbSet<Playlist> Playlists => Set<Playlist>();
 	public DbSet<PlaylistVideo> PlaylistVideos => Set<PlaylistVideo>();
@@ -42,10 +42,7 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<Issue> Issues => Set<Issue>();
 	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
 
-	// Legacy / other DbSets
-	public DbSet<Entities.MusicWork> MusicWorks => Set<Entities.MusicWork>();
-	public DbSet<Entities.Movement> Movements => Set<Entities.Movement>();
-	public DbSet<Entities.FailedTask> FailedTasks => Set<Entities.FailedTask>();
+	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
 	public DbSet<ReleaseProgress> ReleaseProgress => Set<ReleaseProgress>();
@@ -55,8 +52,6 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.ArtistConfiguration());
 		mb.ApplyConfiguration(new Configuration.AlbumConfiguration());
 		mb.ApplyConfiguration(new Configuration.TrackConfiguration());
-		mb.ApplyConfiguration(new Configuration.MusicWorkConfiguration());
-		mb.ApplyConfiguration(new Configuration.MovementConfiguration());
 		mb.ApplyConfiguration(new Configuration.ScrobbleConfiguration());
 		mb.ApplyConfiguration(new Configuration.VideoConfiguration());
 		mb.ApplyConfiguration(new Configuration.PlaylistConfiguration());
@@ -69,42 +64,33 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.SourceRecordConfiguration());
 		mb.ApplyConfiguration(new Configuration.ReleaseProgressConfiguration());
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		foreach (var entityType in mb.Model.GetEntityTypes())
-		foreach (var property in entityType.GetProperties())
-		{
-			if (property.ClrType == typeof(string))
+			foreach (var property in entityType.GetProperties())
 			{
-				var comparer = new ValueComparer<string>(
-					(l, r) => string.Equals(l, r, StringComparison.Ordinal),
-					v => v == null ? 0 : StringComparer.Ordinal.GetHashCode(v),
-					v => v);
-				property.SetValueComparer(comparer);
+				if (property.ClrType == typeof(string))
+				{
+					var comparer = new ValueComparer<string>(
+						(l, r) => string.Equals(l, r, StringComparison.Ordinal),
+						v => v == null ? 0 : StringComparer.Ordinal.GetHashCode(v),
+						v => v
+					);
+					property.SetValueComparer(comparer);
+				}
 			}
-		}
 
 		if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
 		{
 			var jsonConverter = new ValueConverter<JsonDocument, string>(
 				v => v.RootElement.ToString(),
-				v => JsonDocument.Parse(v, new JsonDocumentOptions()));
+				v => JsonDocument.Parse(v, new JsonDocumentOptions())
+			);
 
 			foreach (var entityType in mb.Model.GetEntityTypes())
-			foreach (var property in entityType.GetProperties())
-			{
-				if (property.ClrType == typeof(JsonDocument))
-					property.SetValueConverter(jsonConverter);
-			}
+				foreach (var property in entityType.GetProperties())
+				{
+					if (property.ClrType == typeof(JsonDocument))
+						property.SetValueConverter(jsonConverter);
+				}
 		}
 	}
 }

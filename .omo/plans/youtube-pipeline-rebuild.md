@@ -44,6 +44,230 @@ User wants a final comprehensive TDD plan for the current YouTube pipeline, with
 
 ---
 
+## Implementation Architecture (Oracle-Validated)
+
+### Component Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    YouTubePlaylistOrchestrator                   │
+│  (coordinates fetch → cache → detect → translate → ingest)      │
+└────────────────┬────────────────────────────────────────────────┘
+                 │
+    ┌────────────┴────────────┐
+    ▼                         ▼
+┌──────────────┐      ┌──────────────────┐
+│YouTubeService│      │YouTubeChangeDetector│
+│(Google API)  │      │(ETag + count)     │
+└──────┬───────┘      └──────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Phase 1: Fetch to Disk                     │
+│  state/youtube/                                               │
+│  ├── sync.json (YouTubeFetchState — cursor only)             │
+│  ├── manifest.json (playlistId → filename mapping)           │
+│  ├── playlists/{playlistId}.json (raw YouTubeVideoRaw[])     │
+│  └── translations/{playlistId}.json (translation map)        │
+└──────────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    Phase 2: Ingest to PGSQL                   │
+│                                                               │
+│  YouTubeIngestionService                                     │
+│  ├── PlaylistRepository.UpsertAsync()                        │
+│  ├── VideoRepository.UpsertAsync()                           │
+│  └── PlaylistVideoRepository.DeleteByPlaylistIdAsync()       │
+│      PlaylistVideoRepository.BulkInsertAsync()               │
+└──────────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    PostgreSQL (youtube schema)                │
+│  ├── videos (Video entity)                                   │
+│  ├── playlists (Playlist entity)                             │
+│  ├── playlist_videos (PlaylistVideo join table)              │
+│  └── sync_runs (audit trail)                                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow (Step-by-Step)
+
+**Phase 1: Fetch to Disk Buffer**
+
+1. **Change Detection** (optimized path):
+   - `YouTubeService.GetPlaylistSummariesAsync()` → ETag + video count for all playlists
+   - `YouTubeChangeDetector.DetectOptimizedChanges()` → compares against `PlaylistSnapshots`
+   - Returns: new, deleted, modified, renamed playlists
+
+2. **Fetch Video IDs** (for new/modified playlists):
+   - `YouTubeService.GetPlaylistVideoIdsAsync(playlistId)` → paginated playlistItems.list
+   - Stores video IDs in `YouTubePlaylist.VideoIds`
+
+3. **Fetch Video Details** (batched, 50 per call):
+   - `YouTubeService.GetVideoDetailsForIdsAsync(videoIds, onBatch)` → videos.list
+   - Each batch callback saves raw `YouTubeVideoRaw[]` to `state/youtube/playlists/{playlistId}.json`
+   - Updates `YouTubeFetchState.CurrentPlaylistVideosFetched` for resume
+
+4. **Translation** (separate from raw):
+   - `YouTubeTranslationService.TranslateVideosAsync()` → translates non-English videos
+   - Saves to `state/youtube/translations/{playlistId}.json` (separate file)
+   - Raw cache remains untouched
+
+5. **Update Manifest**:
+   - `state/youtube/manifest.json` maps `playlistId → { filename, lastSynced, videoCount }`
+
+**Phase 2: Ingest to PostgreSQL**
+
+6. **Ingest Playlist** (per-playlist transaction):
+   - `PlaylistRepository.UpsertAsync(playlistEntity)` → returns `playlist.Id`
+
+7. **Ingest Videos** (upsert each by VideoId):
+   - `VideoRepository.UpsertAsync(videoEntity)` → returns `video.Id`
+   - Maps `YouTubeVideo.VideoId` → PG `Video.Id`
+
+8. **Update Playlist-Video Relationships**:
+   - `PlaylistVideoRepository.DeleteByPlaylistIdAsync(playlist.Id)` → clear old
+   - `PlaylistVideoRepository.BulkInsertAsync(playlistVideos)` → insert new with positions
+
+9. **Record Sync Run**:
+   - Insert into `youtube.sync_runs`: start_time, end_time, status, counts
+
+### Interface Definitions
+
+**YouTubeService (Real Implementation)**:
+```csharp
+internal class YouTubeService : IDisposable
+{
+    public static Task<YouTubeService> CreateAsync(CancellationToken ct);
+    public Task<List<PlaylistSummary>> GetPlaylistSummariesAsync(CancellationToken ct);
+    public Task<List<string>> GetPlaylistVideoIdsAsync(string playlistId, CancellationToken ct);
+    public Task<List<YouTubeVideo>> GetVideoDetailsForIdsAsync(
+        List<string> videoIds, Func<List<YouTubeVideo>, Task> onBatch, CancellationToken ct);
+    public Task<PlaylistSummary?> GetPlaylistSummaryAsync(string playlistId, CancellationToken ct);
+    public Task<List<PlaylistSummary>> GetPlaylistMetadataAsync(CancellationToken ct);
+}
+```
+
+**YouTubeIngestionService (NEW)**:
+```csharp
+internal sealed class YouTubeIngestionService
+{
+    public YouTubeIngestionService(
+        IDbContextFactory<ScriptsDbContext> contextFactory,
+        ResiliencePipeline resiliencePipeline);
+
+    public Task<(int playlistId, int videoCount)> IngestPlaylistAsync(
+        string playlistId, string playlistTitle, string playlistDescription,
+        string channelName, List<YouTubeVideo> videos, CancellationToken ct);
+
+    public Task RecordSyncRunAsync(
+        DateTimeOffset startTime, string status,
+        int playlistsSynced, int videosSynced,
+        string? errorMessage, CancellationToken ct);
+}
+```
+
+### Ingestion Algorithm
+
+```csharp
+public async Task<(int playlistId, int videoCount)> IngestPlaylistAsync(
+    string playlistId, string title, string description, string channelName,
+    List<YouTubeVideo> videos, CancellationToken ct)
+{
+    // 1. Upsert playlist
+    var playlistEntity = new Playlist
+    {
+        PlaylistId = playlistId,
+        Title = title,
+        TitleLower = title.ToLowerInvariant(),
+        Description = description ?? "",
+        ChannelName = channelName,
+        ChannelNameLower = channelName.ToLowerInvariant()
+    };
+    playlistEntity = await PlaylistRepository.UpsertAsync(playlistEntity, ct);
+    int pgPlaylistId = playlistEntity.Id;
+
+    // 2. Upsert videos, collect PG IDs
+    var videoIdMap = new Dictionary<string, int>();
+    foreach (var video in videos)
+    {
+        var videoEntity = new Video
+        {
+            VideoId = video.VideoId,
+            Url = video.VideoUrl,
+            Title = video.Title,
+            TitleLower = video.Title.ToLowerInvariant(),
+            Description = video.Description,
+            ChannelName = video.ChannelName,
+            ChannelNameLower = video.ChannelName.ToLowerInvariant(),
+            TranslatedTitle = video.TranslatedTitle,
+            TranslatedDescription = video.TranslatedDescription,
+            SyncedAt = DateTimeOffset.UtcNow,
+            Metadata = BuildMetadataJson(video)
+        };
+        videoEntity = await VideoRepository.UpsertAsync(videoEntity, ct);
+        videoIdMap[video.VideoId] = videoEntity.Id;
+    }
+
+    // 3. Delete old playlist-video relationships
+    await PlaylistVideoRepository.DeleteByPlaylistIdAsync(pgPlaylistId, ct);
+
+    // 4. Insert new relationships with positions
+    var playlistVideos = videos.Select((v, i) => new PlaylistVideo
+    {
+        PlaylistId = pgPlaylistId,
+        VideoId = videoIdMap[v.VideoId],
+        Position = i
+    }).ToList();
+    await PlaylistVideoRepository.BulkInsertAsync(playlistVideos, ct);
+
+    return (pgPlaylistId, videos.Count);
+}
+```
+
+### File Structure
+
+**New Files**:
+| File | Purpose |
+|------|---------|
+| `src/Services/Sync/YouTube/YouTubeIngestionService.cs` | Phase 2: disk → PGSQL |
+| `src/Data/Entities/SyncRun.cs` | Audit trail entity |
+| `src/Data/Configuration/SyncRunConfiguration.cs` | EF config for sync_runs |
+| `src/Data/Repositories/SyncRunRepository.cs` | CRUD for sync runs |
+| `src/Models/YouTubeManifest.cs` | Manifest + translation map models |
+
+**Modified Files**:
+| File | Changes |
+|------|---------|
+| `src/Services/Sync/YouTube/YouTubeService.cs` | Real Google API implementation |
+| `src/Orchestrators/YouTubePlaylistOrchestrator.cs` | Wire ingestion, separate translation |
+| `src/Data/State/StateManager.cs` | Add manifest + translation file methods |
+| `src/Models/YouTube.cs` | Add manifest + translation map records |
+| `src/Data/ScriptsDbContext.cs` | Add `DbSet<SyncRun>` |
+
+### Error Handling Strategy
+
+| Stage | Failure Mode | Handling |
+|-------|--------------|----------|
+| YouTube API | Quota exceeded | Log warning, stop sync, resume next cycle |
+| YouTube API | Network timeout | Retry 3x with exponential backoff (ResiliencePipeline) |
+| Disk Write | Corruption | StateManager: backup corrupted + fresh state |
+| PGSQL Write | Connection failure | ResiliencePipeline retries; disk cache preserved |
+| PGSQL Write | Partial write (crash) | Next sync re-ingests from disk (idempotent upsert) |
+| Translation | API failure | Skip translation, sync raw; translate on next sync |
+
+**Key principle**: Disk cache is source of truth. PGSQL is derived. If PGSQL write fails, disk cache survives for retry.
+
+### Watch Outs
+
+1. **YouTube API quota**: Default 10,000 units/day. Batch 50 videos per `videos.list` call.
+2. **Playlist rename**: With manifest, use `playlistId` as key — renames are metadata updates, not file moves.
+3. **Large playlists**: 1000+ videos. Batch inserts in groups of 500 to avoid PGSQL limits.
+
+---
+
 ## Work Objectives
 
 ### Core Objective

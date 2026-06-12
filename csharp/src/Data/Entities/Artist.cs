@@ -1,9 +1,4 @@
-using System.Text.Json;
-
 namespace Scripts.Data.Entities;
-
-
-
 
 public sealed class Artist
 {

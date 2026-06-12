@@ -12,5 +12,5 @@ This setup caused chronic failures because subagents lacked a centralized, immut
 mismatch between `.clinerules` in a project and a skill definition in `.copilot` could trigger infinite retry loops.
 
 Moving the canonical state to Fibery `Skills/Skill`, `Knowledge/Guide`, and `Repos/Issue` entirely eliminates local
-duplication. Agents now dynamically fetch real-time state using MCP queries, ensuring perfect cohesion and dramatically
+duplication. Agents now dynamically fetch real-time state using API queries, ensuring perfect cohesion and dramatically
 reducing the static token payload.

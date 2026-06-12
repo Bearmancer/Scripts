@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -25,17 +23,17 @@ internal sealed class AlbumRepositoryTests : DatabaseTestBase
 		{
 			ArtistId = artist.Id,
 			Title = "Test Album",
-			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
+			ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow),
 		};
 
 		var result = await repository.AddAsync(album);
 
-		result.Should().NotBeNull();
-		result.Title.Should().Be("Test Album");
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result.Title).IsEqualTo("Test Album");
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Albums.CountAsync();
-		count.Should().Be(1);
+		await Assert.That(count).IsEqualTo(1);
 	}
 
 	[RequiresPgConnStr]
@@ -55,9 +53,9 @@ internal sealed class AlbumRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Test Album");
 
-		result.Should().NotBeNull();
-		result!.Title.Should().Be("Test Album");
-		result.ArtistId.Should().Be(artist.Id);
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.Title).IsEqualTo("Test Album");
+		await Assert.That(result.ArtistId).IsEqualTo(artist.Id);
 	}
 
 	[RequiresPgConnStr]
@@ -73,7 +71,7 @@ internal sealed class AlbumRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Nonexistent Album");
 
-		result.Should().BeNull();
+		await Assert.That(result).IsNull();
 	}
 
 	[RequiresPgConnStr]
@@ -98,8 +96,8 @@ internal sealed class AlbumRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist1.Id, "Same Title");
 
-		result.Should().NotBeNull();
-		result!.ArtistId.Should().Be(artist1.Id);
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.ArtistId).IsEqualTo(artist1.Id);
 	}
 
 	[RequiresPgConnStr]
@@ -114,15 +112,20 @@ internal sealed class AlbumRepositoryTests : DatabaseTestBase
 		var repository = new AlbumRepository(factory, pipeline);
 
 		var releaseDate = DateOnly.FromDateTime(DateTime.UtcNow);
-		var album = new Album { ArtistId = artist.Id, Title = "Test Album", ReleaseDate = releaseDate };
+		var album = new Album
+		{
+			ArtistId = artist.Id,
+			Title = "Test Album",
+			ReleaseDate = releaseDate,
+		};
 
 		var result = await repository.AddAsync(album);
 
-		result.ReleaseDate.Should().Be(releaseDate);
+		await Assert.That(result.ReleaseDate).IsEqualTo(releaseDate);
 
 		await using var verifyContext = Fixture.GetContext();
 		var retrieved = await verifyContext.Albums.FirstAsync();
-		retrieved.ReleaseDate.Should().Be(releaseDate);
+		await Assert.That(retrieved.ReleaseDate).IsEqualTo(releaseDate);
 	}
 
 	private static async Task<Artist> SetupArtist(ScriptsDbContext context)

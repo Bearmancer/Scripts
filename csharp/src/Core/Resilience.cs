@@ -2,9 +2,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading.RateLimiting;
-using Polly;
 using Polly.CircuitBreaker;
-using Polly.Retry;
 
 namespace Scripts.Core;
 
@@ -257,33 +255,21 @@ internal static class Resilience
 		CancellationToken ct = default
 	) => ExecuteAsync($"Music.{service}", action: action, ct: ct);
 
-	public static T Execute<T>(
-		string operation,
-		Func<T> action,
-		CancellationToken ct = default
-	) =>
-		ExecuteAsync<T>(
-			operation: operation,
-			action: () => Task.FromResult(result: action()),
-			ct: ct
-		)
+	public static T Execute<T>(string operation, Func<T> action, CancellationToken ct = default) =>
+		ExecuteAsync(operation: operation, action: () => Task.FromResult(result: action()), ct: ct)
 			.GetAwaiter()
 			.GetResult();
 
-	public static void Execute(
-		string operation,
-		Action action,
-		CancellationToken ct = default
-	) =>
-		ExecuteAsync<object>(
-			operation: operation,
-			action: () =>
-			{
-				action();
-				return Task.FromResult<object>(result: null!);
-			},
-			ct: ct
-		)
+	public static void Execute(string operation, Action action, CancellationToken ct = default) =>
+		ExecuteAsync(
+				operation: operation,
+				action: () =>
+				{
+					action();
+					return Task.FromResult<object>(result: null!);
+				},
+				ct: ct
+			)
 			.GetAwaiter()
 			.GetResult();
 }

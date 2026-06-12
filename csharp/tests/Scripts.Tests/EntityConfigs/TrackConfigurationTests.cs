@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -18,8 +16,12 @@ internal sealed class TrackConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Track));
 		var prop = entityType!.FindProperty("DurationSeconds");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("integer");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("integer");
 	}
 
 	[Test]
@@ -32,9 +34,12 @@ internal sealed class TrackConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Track));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i =>
-			i.Properties.Any(p => p.Name == "ArtistId") &&
-			i.Properties.Any(p => p.Name == "Title") &&
-			i.IsUnique);
+		await Assert
+			.That(indexes)
+			.Contains(i =>
+				i.Properties.Any(p => p.Name == "ArtistId")
+				&& i.Properties.Any(p => p.Name == "Title")
+				&& i.IsUnique
+			);
 	}
 }

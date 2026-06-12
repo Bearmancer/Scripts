@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Serilog.Context;
 using Serilog.Core;
 using Serilog.Core.Enrichers;
@@ -17,14 +16,14 @@ internal enum ServiceType
 
 internal static class Log
 {
-	private static readonly FrozenDictionary<ServiceType, ILogger> ServiceLoggers;
+	private static readonly FrozenDictionary<ServiceType, ILogger> ServiceLoggers = InitializeServiceLoggers();
 	private static readonly AsyncLocal<ServiceType?> ActiveServiceLocal = new();
 
-	static Log()
+	private static FrozenDictionary<ServiceType, ILogger> InitializeServiceLoggers()
 	{
 		Directory.CreateDirectory(path: Paths.LogDirectory);
 
-		ServiceLoggers = new Dictionary<ServiceType, ILogger>
+		return new Dictionary<ServiceType, ILogger>
 		{
 			[key: ServiceType.LastFm] = BuildServiceLogger(filename: "lastfm.jsonl"),
 			[key: ServiceType.YouTube] = BuildServiceLogger(filename: "youtube.jsonl"),
@@ -111,13 +110,21 @@ internal static class Log
 		ActiveLogger.Error(messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void Error(Exception ex, string messageTemplate, params object?[] args) =>
-		ActiveLogger.Error(exception: ex.Demystify(), messageTemplate: messageTemplate, propertyValues: args);
+		ActiveLogger.Error(
+			exception: ex.Demystify(),
+			messageTemplate: messageTemplate,
+			propertyValues: args
+		);
 
 	public static void Fatal(string messageTemplate, params object?[] args) =>
 		ActiveLogger.Fatal(messageTemplate: messageTemplate, propertyValues: args);
 
 	public static void Fatal(Exception ex, string messageTemplate, params object?[] args) =>
-		ActiveLogger.Fatal(exception: ex.Demystify(), messageTemplate: messageTemplate, propertyValues: args);
+		ActiveLogger.Fatal(
+			exception: ex.Demystify(),
+			messageTemplate: messageTemplate,
+			propertyValues: args
+		);
 
 	public static void ApiRequest(string api, string method, string url) =>
 		ActiveLogger.Debug(

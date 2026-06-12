@@ -1,6 +1,5 @@
-using Scripts.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Scripts.Data.Entities;
 
 namespace Scripts.Data.Configuration;
 

@@ -1,7 +1,4 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Services.Sync.LastFm;
 using Scripts.Tests.Attributes;
@@ -12,12 +9,12 @@ namespace Scripts.Tests.SyncService;
 internal sealed class SyncServiceTests : DatabaseTestBase
 {
 	[Test]
-	public void LastFmService_Constructor_AcceptsDbContextFactory()
+	public async Task LastFmService_Constructor_AcceptsDbContextFactory()
 	{
 		var factory = Fixture.GetContextFactory();
 
-		var service = new LastFmService("test-api-key", "test-user", factory, null!);
-		service.Should().NotBeNull();
+		var service = new LastFmService("test-api-key", "test-user", null!);
+		await Assert.That(service).IsNotNull();
 	}
 
 	[Test]
@@ -29,12 +26,12 @@ internal sealed class SyncServiceTests : DatabaseTestBase
 		context.Artists.Add(new Artist { Name = artistName });
 		await context.SaveChangesAsync();
 
-		var found = await context.Artists
-			.AsNoTracking()
+		var found = await context
+			.Artists.AsNoTracking()
 			.FirstOrDefaultAsync(a => EF.Functions.ILike(a.Name, artistName.ToUpper()));
 
-		found.Should().NotBeNull();
-		found!.Name.Should().Be(artistName);
+		await Assert.That(found).IsNotNull();
+		await Assert.That(found!.Name).IsEqualTo(artistName);
 	}
 
 	[Test]
@@ -46,11 +43,22 @@ internal sealed class SyncServiceTests : DatabaseTestBase
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
-		var album = new Album { ArtistId = artist.Id, Title = "SyncAlbum", ReleaseDate = new DateOnly(2024, 1, 1) };
+		var album = new Album
+		{
+			ArtistId = artist.Id,
+			Title = "SyncAlbum",
+			ReleaseDate = new DateOnly(2024, 1, 1),
+		};
 		context.Albums.Add(album);
 		await context.SaveChangesAsync();
 
-		var track = new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "SyncTrack", DurationSeconds = 120 };
+		var track = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist.Id,
+			Title = "SyncTrack",
+			DurationSeconds = 120,
+		};
 		context.Tracks.Add(track);
 		await context.SaveChangesAsync();
 
@@ -59,15 +67,15 @@ internal sealed class SyncServiceTests : DatabaseTestBase
 		{
 			TrackId = track.Id,
 			ScrobbledAt = DateTimeOffset.UtcNow,
-			Platform = testPlatform
+			Platform = testPlatform,
 		};
 		context.Scrobbles.Add(scrobble);
 		await context.SaveChangesAsync();
 
-		var deleted = await context.Scrobbles
-			.Where(s => s.Platform == testPlatform)
+		var deleted = await context
+			.Scrobbles.Where(s => s.Platform == testPlatform)
 			.ExecuteDeleteAsync();
 
-		deleted.Should().Be(1);
+		await Assert.That(deleted).IsEqualTo(1);
 	}
 }

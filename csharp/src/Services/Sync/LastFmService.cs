@@ -7,8 +7,8 @@ namespace Scripts.Services.Sync.LastFm;
 internal sealed class LastFmService(
 	string apiKey,
 	string username,
-	IDbContextFactory<ScriptsDbContext> contextFactory,
-	ArtistRepository artistRepository)
+	ArtistRepository artistRepository
+)
 {
 	private const int PerPage = 200;
 
@@ -182,8 +182,8 @@ internal sealed class LastFmService(
 		: state.LastPage > 0 ? state.LastPage + 1
 		: 1;
 
-	internal async Task<Scripts.Data.Entities.Artist?> FindArtistByNameAsync(string name, CancellationToken ct = default)
-	{
-		return await artistRepository.GetByFuzzyNameAsync(name, ct);
-	}
+	internal async Task<Data.Entities.Artist?> FindArtistByNameAsync(
+		string name,
+		CancellationToken ct = default
+	) => await artistRepository.GetByFuzzyNameAsync(name, ct);
 }

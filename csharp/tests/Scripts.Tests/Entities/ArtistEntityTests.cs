@@ -1,63 +1,63 @@
-using TUnit;
-using FluentAssertions;
-using Scripts.Data.Entities;
 using System.Text.Json;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
 
 internal sealed class ArtistEntityTests
 {
 	[Test]
-	public void Artist_HasRequired_Properties()
+	public async Task Artist_HasRequired_Properties()
 	{
 		var props = typeof(Artist).GetProperties().Select(p => p.Name).ToList();
 
-		props.Should().Contain("Id");
-		props.Should().Contain("Name");
-		props.Should().Contain("Metadata");
-		props.Should().Contain("Albums");
-		props.Should().Contain("Tracks");
+		await Assert.That(props).Contains("Id");
+		await Assert.That(props).Contains("Name");
+		await Assert.That(props).Contains("Metadata");
+		await Assert.That(props).Contains("Albums");
+		await Assert.That(props).Contains("Tracks");
 	}
 
 	[Test]
-	public void Artist_Id_IsInt()
+	public async Task Artist_Id_IsInt()
 	{
 		var prop = typeof(Artist).GetProperty("Id");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<int>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(int));
 	}
 
 	[Test]
-	public void Artist_Name_IsString()
+	public async Task Artist_Name_IsString()
 	{
 		var prop = typeof(Artist).GetProperty("Name");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<string>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(string));
 	}
 
 	[Test]
-	public void Artist_Metadata_IsNullableJsonDocument()
+	public async Task Artist_Metadata_IsNullableJsonDocument()
 	{
 		var prop = typeof(Artist).GetProperty("Metadata");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<JsonDocument>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(JsonDocument));
 	}
 
 	[Test]
-	public void Artist_Albums_IsCollection()
+	public async Task Artist_Albums_IsCollection()
 	{
 		var prop = typeof(Artist).GetProperty("Albums");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.IsGenericType.Should().BeTrue();
-		prop.PropertyType.GetGenericTypeDefinition().Should().Be(typeof(ICollection<>));
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType.IsGenericType).IsTrue();
+		await Assert
+			.That(prop.PropertyType.GetGenericTypeDefinition())
+			.IsEqualTo(typeof(ICollection<>));
 	}
 
 	[Test]
-	public void Artist_CanBeInstantiated_WithDefaults()
+	public async Task Artist_CanBeInstantiated_WithDefaults()
 	{
 		var artist = new Artist { Name = "Radiohead" };
-		artist.Name.Should().Be("Radiohead");
-		artist.Metadata.Should().BeNull();
-		artist.Albums.Should().NotBeNull();
+		await Assert.That(artist.Name).IsEqualTo("Radiohead");
+		await Assert.That(artist.Metadata).IsNull();
+		await Assert.That(artist.Albums).IsNotNull();
 	}
 }

@@ -1,9 +1,6 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Tests.Attributes;
-using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.EntityConfigs;
 
@@ -22,18 +19,19 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Test Description",
 			ChannelName = "Test Channel",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		context.Videos.Add(video);
 		await context.SaveChangesAsync();
 
-		var retrieved = await context.Videos.FirstOrDefaultAsync(v => v.Url == "https://example.com/video");
+		var retrieved = await context.Videos.FirstOrDefaultAsync(v =>
+			v.Url == "https://example.com/video"
+		);
 
-		retrieved.Should().NotBeNull();
-		retrieved!.Title.Should().Be("Test Video");
-		retrieved.ChannelName.Should().Be("Test Channel");
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.Title).IsEqualTo("Test Video");
+		await Assert.That(retrieved.ChannelName).IsEqualTo("Test Channel");
 	}
 
 	[Test]
@@ -48,7 +46,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 1",
 			ChannelName = "Channel 1",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		var video2 = new Video
@@ -58,17 +56,14 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 2",
 			ChannelName = "Channel 2",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		context.Videos.Add(video1);
 		await context.SaveChangesAsync();
 
 		context.Videos.Add(video2);
-		var act = async () => await context.SaveChangesAsync();
-
-		await act.Should().ThrowAsync<DbUpdateException>();
-
+		await Assert.That(async () => await context.SaveChangesAsync()).Throws<DbUpdateException>();
 	}
 
 	[Test]
@@ -83,7 +78,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 1",
 			ChannelName = "Channel A",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		var video2 = new Video
@@ -93,19 +88,18 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 2",
 			ChannelName = "Channel B",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		context.Videos.AddRange(video1, video2);
 		await context.SaveChangesAsync();
 
-		var channelAVideos = await context.Videos
-			.Where(v => v.ChannelName == "Channel A")
+		var channelAVideos = await context
+			.Videos.Where(v => v.ChannelName == "Channel A")
 			.ToListAsync();
 
-		channelAVideos.Should().HaveCount(1);
-		channelAVideos[0].Title.Should().Be("Video 1");
-
+		await Assert.That(channelAVideos).Count().IsEqualTo(1);
+		await Assert.That(channelAVideos[0].Title).IsEqualTo("Video 1");
 	}
 
 	[Test]
@@ -123,7 +117,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 1",
 			ChannelName = "Channel A",
 			UploadDate = today,
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		var video2 = new Video
@@ -133,19 +127,16 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Description 2",
 			ChannelName = "Channel B",
 			UploadDate = yesterday,
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		context.Videos.AddRange(video1, video2);
 		await context.SaveChangesAsync();
 
-		var todayVideos = await context.Videos
-			.Where(v => v.UploadDate == today)
-			.ToListAsync();
+		var todayVideos = await context.Videos.Where(v => v.UploadDate == today).ToListAsync();
 
-		todayVideos.Should().HaveCount(1);
-		todayVideos[0].Title.Should().Be("Video 1");
-
+		await Assert.That(todayVideos).Count().IsEqualTo(1);
+		await Assert.That(todayVideos[0].Title).IsEqualTo("Video 1");
 	}
 
 	[Test]
@@ -160,7 +151,7 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 			Description = "Original Description",
 			ChannelName = "Channel",
 			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
-			SyncedAt = DateTimeOffset.UtcNow
+			SyncedAt = DateTimeOffset.UtcNow,
 		};
 
 		context.Videos.Add(video);
@@ -171,11 +162,12 @@ internal class VideoConfigurationAdditionalTests : DatabaseTestBase
 		context.Videos.Update(video);
 		await context.SaveChangesAsync();
 
-		var retrieved = await context.Videos.FirstOrDefaultAsync(v => v.Url == "https://example.com/video");
+		var retrieved = await context.Videos.FirstOrDefaultAsync(v =>
+			v.Url == "https://example.com/video"
+		);
 
-		retrieved.Should().NotBeNull();
-		retrieved!.Title.Should().Be("Updated Title");
-		retrieved.Description.Should().Be("Updated Description");
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.Title).IsEqualTo("Updated Title");
+		await Assert.That(retrieved.Description).IsEqualTo("Updated Description");
 	}
 }

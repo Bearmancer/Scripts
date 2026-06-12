@@ -373,7 +373,7 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 		Console.Info("=== Last.fm ===");
 		var stateFile = Combine(Paths.StateDirectory, StateManager.LastFmSyncFile);
 		var hasState = File.Exists(stateFile);
-		var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{Config.LastFmSpreadsheetId}";
+		var spreadsheetUrl = $"https://docs.google.com/spreadsheets/d/{Secrets.LastFmSpreadsheetId}";
 
 		if (hasState)
 		{
@@ -388,9 +388,6 @@ public sealed class StatusCommand : Command<StatusCommand.Settings>
 		}
 		else
 		{
-			GoogleSheetsService sheets = new();
-			var scrobbleCount = sheets.GetScrobbleCount(Config.LastFmSpreadsheetId);
-			Console.Info("Scrobbles: {0}", scrobbleCount);
 			Console.Info("Cached: No");
 			Console.Link(spreadsheetUrl, "Spreadsheet");
 		}

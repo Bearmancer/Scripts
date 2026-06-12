@@ -456,11 +456,12 @@ public static class Console
 		}
 	}
 
+	public static void Link(Uri url, string text) => throw new NotImplementedException();
+
+	public static void Link(int number, Uri url, int maxLength = 80) => throw new NotImplementedException();
+
 	#endregion
 }
-
-
-
 
 public sealed class FixedWidthDescriptionColumn(int width) : ProgressColumn
 {

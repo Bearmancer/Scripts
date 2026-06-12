@@ -1,7 +1,4 @@
-using System.Text.Json;
 using Scripts.Data.Entities;
-using Scripts.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Scripts.Data.Persistence;
 

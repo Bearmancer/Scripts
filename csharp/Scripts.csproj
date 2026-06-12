@@ -1,14 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<OutputType>Library</OutputType>
+		<OutputType>Exe</OutputType>
 		<PackageId>Scripts</PackageId>
 		<AssemblyName>Scripts</AssemblyName>
 		<PublishSingleFile>true</PublishSingleFile>
 		<SelfContained>false</SelfContained>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 		<EFCompiledModelPath>CompiledModels</EFCompiledModelPath>
+		<NoWarn>$(NoWarn);CA1515</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
+		<Compile Remove="test.cs" />
 		<Compile Remove="tests\**" />
 		<Content Remove="tests\**" />
 		<EmbeddedResource Remove="tests\**" />
@@ -16,8 +18,9 @@
 
 		<Compile Remove="src\Orchestrators\**" />
 		<Compile Remove="src\CLI\**" />
-		<Compile Remove="src\Mcp\**" />
-		<Compile Remove="src\Program.cs" />
+
+		<Compile Remove="src\Classical\**" />
+		<Compile Remove="tests\Scripts.Tests\Classical\**" />
 
 		<PackageReference Include="AngleSharp" Version="*" />
 		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="*" />

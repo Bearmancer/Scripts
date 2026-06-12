@@ -1,6 +1,5 @@
-using Scripts.Data.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Scripts.Data.Repositories;
 
 namespace Scripts.Data;
 

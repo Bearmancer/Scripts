@@ -96,7 +96,7 @@ internal sealed class SyncProgressTracker
 		CurrentPlaylistIndex++;
 	}
 
-	public SyncProgressSnapshot GetSnapshot() =>
+	public SyncProgressSnapshot Snapshot =>
 		new(
 			TotalPlaylists: TotalPlaylists,
 			CompletedPlaylists: CompletedPlaylists,
@@ -118,7 +118,7 @@ internal sealed class SyncProgressRenderer(SyncProgressTracker tracker)
 {
 	private const int MaxNameLength = 30;
 
-	public IRenderable BuildDisplay() => BuildDisplayFromSnapshot(tracker.GetSnapshot());
+	public IRenderable BuildDisplay() => BuildDisplayFromSnapshot(snapshot: tracker.Snapshot);
 
 	public static IRenderable BuildDisplayFromSnapshot(SyncProgressSnapshot snapshot)
 	{

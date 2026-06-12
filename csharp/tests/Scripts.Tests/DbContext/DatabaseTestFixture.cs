@@ -1,13 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Npgsql;
+using Scripts.Data;
 
 namespace Scripts.Tests.DbContext;
-
-
-
-
-
 
 internal sealed class DatabaseTestFixture : IAsyncDisposable
 {
@@ -15,10 +10,12 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 
 	public async Task InitializeAsync()
 	{
-		var baseConnStr = System.Environment.GetEnvironmentVariable("PGCONNSTR")
+		var baseConnStr =
+			System.Environment.GetEnvironmentVariable("PGCONNSTR")
 			?? throw new InvalidOperationException(
-				"PGCONNSTR environment variable is not set. " +
-				"Load .env before running integration tests.");
+				"PGCONNSTR environment variable is not set. "
+					+ "Load .env before running integration tests."
+			);
 
 		var builder = new NpgsqlConnectionStringBuilder(baseConnStr);
 		builder.Database = $"{builder.Database}_{Guid.NewGuid():N}";
@@ -29,10 +26,8 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		await ctx.Database.MigrateAsync();
 	}
 
-	
 	public ScriptsDbContext GetContext() => BuildContext();
 
-	
 	public IDbContextFactory<ScriptsDbContext> GetContextFactory()
 	{
 		if (_connectionString is null)
@@ -42,7 +37,8 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 
 	async ValueTask IAsyncDisposable.DisposeAsync()
 	{
-		if (_connectionString is null) return;
+		if (_connectionString is null)
+			return;
 		await using var ctx = BuildContext();
 		await ctx.Database.EnsureDeletedAsync();
 	}
@@ -50,7 +46,9 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 	private ScriptsDbContext BuildContext()
 	{
 		if (_connectionString is null)
-			throw new InvalidOperationException("Fixture not initialized. Call InitializeAsync first.");
+			throw new InvalidOperationException(
+				"Fixture not initialized. Call InitializeAsync first."
+			);
 
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseNpgsql(_connectionString)
@@ -58,7 +56,8 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		return new ScriptsDbContext(options);
 	}
 
-	private sealed class PostgresContextFactory(string connectionString) : IDbContextFactory<ScriptsDbContext>
+	private sealed class PostgresContextFactory(string connectionString)
+		: IDbContextFactory<ScriptsDbContext>
 	{
 		public ScriptsDbContext CreateDbContext()
 		{
@@ -69,4 +68,3 @@ internal sealed class DatabaseTestFixture : IAsyncDisposable
 		}
 	}
 }
-

@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -20,14 +18,14 @@ internal sealed class DbContextConfigLoadingTests
 
 		var entityTypes = model.GetEntityTypes().Select(e => e.ClrType).ToList();
 
-		entityTypes.Should().Contain(typeof(Artist));
-		entityTypes.Should().Contain(typeof(Album));
-		entityTypes.Should().Contain(typeof(Track));
-		entityTypes.Should().Contain(typeof(Scrobble));
-		entityTypes.Should().Contain(typeof(Video));
-		entityTypes.Should().Contain(typeof(ExecutionLog));
-		entityTypes.Should().Contain(typeof(FailedTask));
-		entityTypes.Should().Contain(typeof(FiberyEntity));
+		await Assert.That(entityTypes).Contains(typeof(Artist));
+		await Assert.That(entityTypes).Contains(typeof(Album));
+		await Assert.That(entityTypes).Contains(typeof(Track));
+		await Assert.That(entityTypes).Contains(typeof(Scrobble));
+		await Assert.That(entityTypes).Contains(typeof(Video));
+		await Assert.That(entityTypes).Contains(typeof(ExecutionLog));
+		await Assert.That(entityTypes).Contains(typeof(FailedTask));
+		await Assert.That(entityTypes).Contains(typeof(FiberyEntity));
 	}
 
 	[Test]
@@ -40,8 +38,8 @@ internal sealed class DbContextConfigLoadingTests
 		await using var context = new ScriptsDbContext(options);
 		var entityType = context.Model.FindEntityType(typeof(Artist));
 
-		entityType.Should().NotBeNull();
-		entityType!.GetTableName().Should().Be("artists");
+		await Assert.That(entityType).IsNotNull();
+		await Assert.That(entityType!.GetTableName()).IsEqualTo("artists");
 	}
 
 	[Test]
@@ -52,11 +50,20 @@ internal sealed class DbContextConfigLoadingTests
 			.Options;
 
 		await using var context = new ScriptsDbContext(options);
-		
-		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
+
+		var entityType = context
+			.Model.GetEntityTypes()
+			.FirstOrDefault(e => e.ClrType == typeof(Scrobble));
 		var scrobbledAt = entityType?.FindProperty("ScrobbledAt");
 
-		scrobbledAt.Should().NotBeNull();
-		scrobbledAt!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("timestamptz");
+		await Assert.That(scrobbledAt).IsNotNull();
+		await Assert
+			.That(
+				scrobbledAt!
+					.GetAnnotations()
+					.FirstOrDefault(a => a.Name == "Relational:ColumnType")
+					?.Value
+			)
+			.IsEqualTo("timestamptz");
 	}
 }

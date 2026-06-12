@@ -12,6 +12,6 @@ internal sealed class SpectreTypeRegistrar(IServiceProvider serviceProvider) : I
 
 	private sealed class SpectreTypeResolver(IServiceProvider serviceProvider) : ITypeResolver
 	{
-		public object? Resolve(Type? type) => serviceProvider.GetService(serviceType: type);
+		public object? Resolve(Type? type) => type is null ? null : serviceProvider.GetService(serviceType: type);
 	}
 }

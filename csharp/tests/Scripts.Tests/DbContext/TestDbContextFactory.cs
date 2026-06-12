@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 
 namespace Scripts.Tests.DbContext;

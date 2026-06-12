@@ -112,7 +112,7 @@ public sealed class SyncProgressTracker
 		CurrentPlaylistIndex++;
 	}
 
-	public SyncProgressSnapshot GetSnapshot() =>
+	public SyncProgressSnapshot Snapshot =>
 		new(
 			TotalPlaylists: TotalPlaylists,
 			CompletedPlaylists: CompletedPlaylists,

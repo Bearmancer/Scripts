@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -15,12 +13,18 @@ internal sealed class ScrobbleConfigurationTests
 			.UseInMemoryDatabase(Guid.NewGuid().ToString())
 			.Options;
 		await using var context = new ScriptsDbContext(options);
-		
-		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
+
+		var entityType = context
+			.Model.GetEntityTypes()
+			.FirstOrDefault(e => e.ClrType == typeof(Scrobble));
 		var prop = entityType?.FindProperty("Platform");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("varchar(50)");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("varchar(50)");
 	}
 
 	[Test]
@@ -30,10 +34,12 @@ internal sealed class ScrobbleConfigurationTests
 			.UseInMemoryDatabase(Guid.NewGuid().ToString())
 			.Options;
 		await using var context = new ScriptsDbContext(options);
-		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
+		var entityType = context
+			.Model.GetEntityTypes()
+			.FirstOrDefault(e => e.ClrType == typeof(Scrobble));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "Platform"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "Platform"));
 	}
 
 	[Test]
@@ -43,12 +49,17 @@ internal sealed class ScrobbleConfigurationTests
 			.UseInMemoryDatabase(Guid.NewGuid().ToString())
 			.Options;
 		await using var context = new ScriptsDbContext(options);
-		var entityType = context.Model.GetEntityTypes().FirstOrDefault(e => e.ClrType == typeof(Scrobble));
+		var entityType = context
+			.Model.GetEntityTypes()
+			.FirstOrDefault(e => e.ClrType == typeof(Scrobble));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i =>
-			i.Properties.Count == 1 &&
-			i.Properties.Any(p => p.Name == "ScrobbledAt") &&
-			!i.IsUnique);
+		await Assert
+			.That(indexes)
+			.Contains(i =>
+				i.Properties.Count == 1
+				&& i.Properties.Any(p => p.Name == "ScrobbledAt")
+				&& !i.IsUnique
+			);
 	}
 }

@@ -37,7 +37,7 @@ internal static class CloudUsageService
 			$"https://management.azure.com/subscriptions/{subscriptionId}"
 			+ $"/providers/Microsoft.CostManagement/query?api-version={ApiVersion}";
 
-		const string requestBody = """
+		const string requestBody = /*lang=json,strict*/ """
 			{
 			  "type": "ActualCost",
 			  "timeframe": "BillingMonthToDate",

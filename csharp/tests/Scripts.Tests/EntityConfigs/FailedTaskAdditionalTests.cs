@@ -1,9 +1,6 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Tests.Attributes;
-using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests.EntityConfigs;
 
@@ -19,17 +16,18 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		{
 			TaskName = "SyncLastFm",
 			ErrorMessage = "Connection timeout",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		context.FailedTasks.Add(task);
 		await context.SaveChangesAsync();
 
-		var retrieved = await context.FailedTasks.FirstOrDefaultAsync(t => t.TaskName == "SyncLastFm");
+		var retrieved = await context.FailedTasks.FirstOrDefaultAsync(t =>
+			t.TaskName == "SyncLastFm"
+		);
 
-		retrieved.Should().NotBeNull();
-		retrieved!.ErrorMessage.Should().Be("Connection timeout");
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.ErrorMessage).IsEqualTo("Connection timeout");
 	}
 
 	[Test]
@@ -41,26 +39,25 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		{
 			TaskName = "SyncLastFm",
 			ErrorMessage = "Error 1",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		var task2 = new FailedTask
 		{
 			TaskName = "SyncYouTube",
 			ErrorMessage = "Error 2",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		context.FailedTasks.AddRange(task1, task2);
 		await context.SaveChangesAsync();
 
-		var lastFmTasks = await context.FailedTasks
-			.Where(t => t.TaskName == "SyncLastFm")
+		var lastFmTasks = await context
+			.FailedTasks.Where(t => t.TaskName == "SyncLastFm")
 			.ToListAsync();
 
-		lastFmTasks.Should().HaveCount(1);
-		lastFmTasks[0].ErrorMessage.Should().Be("Error 1");
-
+		await Assert.That(lastFmTasks).Count().IsEqualTo(1);
+		await Assert.That(lastFmTasks[0].ErrorMessage).IsEqualTo("Error 1");
 	}
 
 	[Test]
@@ -75,26 +72,25 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		{
 			TaskName = "Task1",
 			ErrorMessage = "Error 1",
-			Timestamp = now
+			Timestamp = now,
 		};
 
 		var task2 = new FailedTask
 		{
 			TaskName = "Task2",
 			ErrorMessage = "Error 2",
-			Timestamp = oneHourAgo
+			Timestamp = oneHourAgo,
 		};
 
 		context.FailedTasks.AddRange(task1, task2);
 		await context.SaveChangesAsync();
 
-		var recentTasks = await context.FailedTasks
-			.Where(t => t.Timestamp > oneHourAgo.AddMinutes(1))
+		var recentTasks = await context
+			.FailedTasks.Where(t => t.Timestamp > oneHourAgo.AddMinutes(1))
 			.ToListAsync();
 
-		recentTasks.Should().HaveCount(1);
-		recentTasks[0].TaskName.Should().Be("Task1");
-
+		await Assert.That(recentTasks).Count().IsEqualTo(1);
+		await Assert.That(recentTasks[0].TaskName).IsEqualTo("Task1");
 	}
 
 	[Test]
@@ -106,7 +102,7 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		{
 			TaskName = "SyncLastFm",
 			ErrorMessage = "Original error",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		context.FailedTasks.Add(task);
@@ -116,11 +112,12 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		context.FailedTasks.Update(task);
 		await context.SaveChangesAsync();
 
-		var retrieved = await context.FailedTasks.FirstOrDefaultAsync(t => t.TaskName == "SyncLastFm");
+		var retrieved = await context.FailedTasks.FirstOrDefaultAsync(t =>
+			t.TaskName == "SyncLastFm"
+		);
 
-		retrieved.Should().NotBeNull();
-		retrieved!.ErrorMessage.Should().Be("Updated error");
-
+		await Assert.That(retrieved).IsNotNull();
+		await Assert.That(retrieved!.ErrorMessage).IsEqualTo("Updated error");
 	}
 
 	[Test]
@@ -132,27 +129,24 @@ internal class FailedTaskAdditionalTests : DatabaseTestBase
 		{
 			TaskName = "SyncLastFm",
 			ErrorMessage = "Error 1",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		var task2 = new FailedTask
 		{
 			TaskName = "SyncYouTube",
 			ErrorMessage = "Error 2",
-			Timestamp = DateTimeOffset.UtcNow
+			Timestamp = DateTimeOffset.UtcNow,
 		};
 
 		context.FailedTasks.AddRange(task1, task2);
 		await context.SaveChangesAsync();
 
-		await context.FailedTasks
-			.Where(t => t.TaskName == "SyncLastFm")
-			.ExecuteDeleteAsync();
+		await context.FailedTasks.Where(t => t.TaskName == "SyncLastFm").ExecuteDeleteAsync();
 
 		var remaining = await context.FailedTasks.ToListAsync();
 
-		remaining.Should().HaveCount(1);
-		remaining[0].TaskName.Should().Be("SyncYouTube");
-
+		await Assert.That(remaining).Count().IsEqualTo(1);
+		await Assert.That(remaining[0].TaskName).IsEqualTo("SyncYouTube");
 	}
 }

@@ -399,7 +399,6 @@ INSERT INTO topics (name, slug, category) VALUES
 | Research- Google AI.md | AI Agents |
 | Resolve Prowlarr Clo.md | Docker |
 | Setup SSH OCI (140.2.md | SSH |
-| Setup ssh-mcp.md | SSH |
 | Sonarr- qBittorrent.md | Docker |
 | Tighten Docker port.md | Docker |
 | Ubuntu Host Hardenin.md | OCI |

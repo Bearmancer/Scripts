@@ -1,36 +1,28 @@
-using TUnit;
-using FluentAssertions;
-using System.Text.RegularExpressions;
-
 namespace Scripts.Tests.Environment;
 
 internal sealed class ConnectionStringTests
 {
 	[Test]
-	public void ConnectionString_IsSet_InEnvironment()
+	public async Task ConnectionString_IsSet_InEnvironment()
 	{
 		var connStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
-		connStr.Should().NotBeNullOrWhiteSpace(
-			"because PGCONNSTR must be loaded from .env before running tests");
+		await Assert.That(connStr).IsNotNull().And.IsNotEmpty();
 	}
 
 	[Test]
-	public void ConnectionString_IsValid_PostgresFormat()
+	public async Task ConnectionString_IsValid_PostgresFormat()
 	{
 		var connStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
 
-		connStr.Should().Contain("Host=",
-			"because a valid Npgsql connection string must specify a host");
-		connStr.Should().Contain("Database=",
-			"because a valid Npgsql connection string must specify a database");
-		connStr.Should().Contain("Username=",
-			"because a valid Npgsql connection string must specify a username");
+		await Assert.That(connStr).Contains("Host=");
+		await Assert.That(connStr).Contains("Database=");
+		await Assert.That(connStr).Contains("Username=");
 	}
 
 	[Test]
-	public void ConnectionString_DoesNotContain_Password_InPlainText_InLogs()
+	public async Task ConnectionString_DoesNotContain_Password_InPlainText_InLogs()
 	{
 		var connStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
-		connStr.Should().NotBeNull();
+		await Assert.That(connStr).IsNotNull();
 	}
 }

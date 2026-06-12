@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
@@ -7,40 +5,44 @@ namespace Scripts.Tests.Entities;
 internal sealed class VideoEntityTests
 {
 	[Test]
-	public void Video_HasRequired_Properties()
+	public async Task Video_HasRequired_Properties()
 	{
 		var props = typeof(Video).GetProperties().Select(p => p.Name).ToList();
 
-		props.Should().Contain("Id");
-		props.Should().Contain("Url");
-		props.Should().Contain("Title");
-		props.Should().Contain("Description");
-		props.Should().Contain("ChannelName");
-		props.Should().Contain("UploadDate");
-		props.Should().Contain("SyncedAt");
-		props.Should().Contain("Metadata");
+		await Assert.That(props).Contains("Id");
+		await Assert.That(props).Contains("Url");
+		await Assert.That(props).Contains("Title");
+		await Assert.That(props).Contains("Description");
+		await Assert.That(props).Contains("ChannelName");
+		await Assert.That(props).Contains("UploadDate");
+		await Assert.That(props).Contains("SyncedAt");
+		await Assert.That(props).Contains("Metadata");
 	}
 
 	[Test]
-	public void Video_Url_IsString()
+	public async Task Video_Url_IsString()
 	{
 		var prop = typeof(Video).GetProperty("Url");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<string>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(string));
 	}
 
 	[Test]
-	public void Video_UploadDate_IsDateOnly()
+	public async Task Video_UploadDate_IsDateOnly()
 	{
 		var prop = typeof(Video).GetProperty("UploadDate");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<DateOnly?>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(DateOnly?));
 	}
 
 	[Test]
-	public void Video_CanBeInstantiated_WithDefaults()
+	public async Task Video_CanBeInstantiated_WithDefaults()
 	{
-		var video = new Video { Url = "https://youtube.com/watch?v=dQw4w9WgXcQ", Title = "Never Gonna Give You Up" };
-		video.Description.Should().BeEmpty();
+		var video = new Video
+		{
+			Url = "https://youtube.com/watch?v=dQw4w9WgXcQ",
+			Title = "Never Gonna Give You Up",
+		};
+		await Assert.That(video.Description).IsEmpty();
 	}
 }

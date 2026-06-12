@@ -158,7 +158,7 @@ internal static class Ui
 		var yearDisplay = IsNullOrEmpty(value: year) ? Dim(text: "-") : Cyan(text: year);
 
 		AnsiConsole.MarkupLine(
-			$"    {Colored(color: confColor, $"{confidence, 3}%")} Label: {labelDisplay} │ Cat: {catDisplay} │ Year: {yearDisplay} {Dim($"({source})")}"
+			$"    {Colored(color: confColor, $"{confidence,3}%")} Label: {labelDisplay} │ Cat: {catDisplay} │ Year: {yearDisplay} {Dim($"({source})")}"
 		);
 	}
 

@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -23,18 +21,36 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 
 		var tracks = new[]
 		{
-			new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Track 1", DurationSeconds = 180 },
-			new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Track 2", DurationSeconds = 200 },
-			new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Track 3", DurationSeconds = 220 }
+			new Track
+			{
+				AlbumId = album.Id,
+				ArtistId = artist.Id,
+				Title = "Track 1",
+				DurationSeconds = 180,
+			},
+			new Track
+			{
+				AlbumId = album.Id,
+				ArtistId = artist.Id,
+				Title = "Track 2",
+				DurationSeconds = 200,
+			},
+			new Track
+			{
+				AlbumId = album.Id,
+				ArtistId = artist.Id,
+				Title = "Track 3",
+				DurationSeconds = 220,
+			},
 		};
 
 		var result = await repository.BulkInsertAsync(tracks);
 
-		result.Should().Be(3);
+		await Assert.That(result).IsEqualTo(3);
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Tracks.CountAsync();
-		count.Should().Be(3);
+		await Assert.That(count).IsEqualTo(3);
 	}
 
 	[RequiresPgConnStr]
@@ -47,7 +63,7 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 
 		var result = await repository.BulkInsertAsync(new List<Track>());
 
-		result.Should().Be(0);
+		await Assert.That(result).IsEqualTo(0);
 	}
 
 	[RequiresPgConnStr]
@@ -57,7 +73,13 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 		await using var context = Fixture.GetContext();
 		var (artist, album) = await SetupArtistAndAlbum(context);
 
-		var track = new Track { AlbumId = album.Id, ArtistId = artist.Id, Title = "Test Track", DurationSeconds = 180 };
+		var track = new Track
+		{
+			AlbumId = album.Id,
+			ArtistId = artist.Id,
+			Title = "Test Track",
+			DurationSeconds = 180,
+		};
 		context.Tracks.Add(track);
 		await context.SaveChangesAsync();
 
@@ -67,9 +89,9 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Test Track");
 
-		result.Should().NotBeNull();
-		result!.Title.Should().Be("Test Track");
-		result.DurationSeconds.Should().Be(180);
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.Title).IsEqualTo("Test Track");
+		await Assert.That(result.DurationSeconds).IsEqualTo(180);
 	}
 
 	[RequiresPgConnStr]
@@ -85,7 +107,7 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist.Id, "Nonexistent Track");
 
-		result.Should().BeNull();
+		await Assert.That(result).IsNull();
 	}
 
 	[RequiresPgConnStr]
@@ -103,8 +125,18 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 		context.Albums.AddRange(album1, album2);
 		await context.SaveChangesAsync();
 
-		var track1 = new Track { AlbumId = album1.Id, ArtistId = artist1.Id, Title = "Same Title" };
-		var track2 = new Track { AlbumId = album2.Id, ArtistId = artist2.Id, Title = "Same Title" };
+		var track1 = new Track
+		{
+			AlbumId = album1.Id,
+			ArtistId = artist1.Id,
+			Title = "Same Title",
+		};
+		var track2 = new Track
+		{
+			AlbumId = album2.Id,
+			ArtistId = artist2.Id,
+			Title = "Same Title",
+		};
 		context.Tracks.AddRange(track1, track2);
 		await context.SaveChangesAsync();
 
@@ -114,8 +146,8 @@ internal sealed class TrackRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByArtistAndTitleAsync(artist1.Id, "Same Title");
 
-		result.Should().NotBeNull();
-		result!.ArtistId.Should().Be(artist1.Id);
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.ArtistId).IsEqualTo(artist1.Id);
 	}
 
 	private static async Task<(Artist, Album)> SetupArtistAndAlbum(ScriptsDbContext context)

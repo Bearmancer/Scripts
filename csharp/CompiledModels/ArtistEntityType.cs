@@ -1,7 +1,4 @@
-
-using System;
 using System.Reflection;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -13,76 +10,110 @@ using Scripts.Data.Entities;
 
 namespace MyCompiledModels
 {
-    [EntityFrameworkInternal]
-    public partial class ArtistEntityType
-    {
-        public static RuntimeEntityType Create(RuntimeModel model, RuntimeEntityType baseEntityType = null)
-        {
-            var runtimeEntityType = model.AddEntityType(
-                "Scripts.Data.Entities.Artist",
-                typeof(Artist),
-                baseEntityType,
-                propertyCount: 3,
-                navigationCount: 2,
-                unnamedIndexCount: 1,
-                keyCount: 1);
+	[EntityFrameworkInternal]
+	public static partial class ArtistEntityType
+	{
+		public static RuntimeEntityType Create(
+			RuntimeModel model,
+			RuntimeEntityType baseEntityType = null
+		)
+		{
+			var runtimeEntityType = model.AddEntityType(
+				"Scripts.Data.Entities.Artist",
+				typeof(Artist),
+				baseEntityType,
+				propertyCount: 3,
+				navigationCount: 2,
+				unnamedIndexCount: 1,
+				keyCount: 1
+			);
 
-            var id = runtimeEntityType.AddProperty(
-                "Id",
-                typeof(int),
-                propertyInfo: typeof(Artist).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Artist).GetField("<Id>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                valueGenerated: ValueGenerated.OnAdd,
-                afterSaveBehavior: PropertySaveBehavior.Throw,
-                sentinel: 0);
-            id.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn);
+			var id = runtimeEntityType.AddProperty(
+				"Id",
+				typeof(int),
+				propertyInfo: typeof(Artist).GetProperty(
+					"Id",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Artist).GetField(
+					"<Id>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				valueGenerated: ValueGenerated.OnAdd,
+				afterSaveBehavior: PropertySaveBehavior.Throw,
+				sentinel: 0
+			);
+			id.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.IdentityAlwaysColumn
+			);
 
-            var metadata = runtimeEntityType.AddProperty(
-                "Metadata",
-                typeof(JsonDocument),
-                propertyInfo: typeof(Artist).GetProperty("Metadata", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Artist).GetField("<Metadata>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                nullable: true);
-            metadata.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            metadata.AddAnnotation("Relational:ColumnType", "jsonb");
+			var metadata = runtimeEntityType.AddProperty(
+				"Metadata",
+				typeof(JsonDocument),
+				propertyInfo: typeof(Artist).GetProperty(
+					"Metadata",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Artist).GetField(
+					"<Metadata>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				nullable: true
+			);
+			metadata.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			metadata.AddAnnotation("Relational:ColumnType", "jsonb");
 
-            var name = runtimeEntityType.AddProperty(
-                "Name",
-                typeof(string),
-                propertyInfo: typeof(Artist).GetProperty("Name", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(Artist).GetField("<Name>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
-            name.SetComparer(new ValueComparer<string>(
-                bool (string l, string r) => string.Equals(l, r, StringComparison.Ordinal),
-                int (string v) => (v == null ? 0 : StringComparer.Ordinal.GetHashCode(v)),
-                string (string v) => v));
-            name.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            name.AddAnnotation("Relational:ColumnType", "text");
+			var name = runtimeEntityType.AddProperty(
+				"Name",
+				typeof(string),
+				propertyInfo: typeof(Artist).GetProperty(
+					"Name",
+					BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				),
+				fieldInfo: typeof(Artist).GetField(
+					"<Name>k__BackingField",
+					BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
+				)
+			);
+			name.SetComparer(
+				new ValueComparer<string>(
+					bool (string l, string r) => string.Equals(l, r, StringComparison.Ordinal),
+					int (string v) => (v == null ? 0 : StringComparer.Ordinal.GetHashCode(v)),
+					string (string v) => v
+				)
+			);
+			name.AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.None
+			);
+			name.AddAnnotation("Relational:ColumnType", "text");
 
-            var key = runtimeEntityType.AddKey(
-                new[] { id });
-            runtimeEntityType.SetPrimaryKey(key);
+			var key = runtimeEntityType.AddKey(new[] { id });
+			runtimeEntityType.SetPrimaryKey(key);
 
-            var index = runtimeEntityType.AddIndex(
-                new[] { name },
-                unique: true);
-            index.AddAnnotation("Relational:Filter", "true");
-            index.AddAnnotation("Relational:Name", "idx_artists_name_trgm");
+			var index = runtimeEntityType.AddIndex(new[] { name }, unique: true);
+			index.AddAnnotation("Relational:Filter", "true");
+			index.AddAnnotation("Relational:Name", "idx_artists_name_trgm");
 
-            return runtimeEntityType;
-        }
+			return runtimeEntityType;
+		}
 
-        public static void CreateAnnotations(RuntimeEntityType runtimeEntityType)
-        {
-            runtimeEntityType.AddAnnotation("Relational:FunctionName", null);
-            runtimeEntityType.AddAnnotation("Relational:Schema", "music");
-            runtimeEntityType.AddAnnotation("Relational:SqlQuery", null);
-            runtimeEntityType.AddAnnotation("Relational:TableName", "artists");
-            runtimeEntityType.AddAnnotation("Relational:ViewName", null);
-            runtimeEntityType.AddAnnotation("Relational:ViewSchema", null);
+		public static void CreateAnnotations(RuntimeEntityType runtimeEntityType)
+		{
+			runtimeEntityType.AddAnnotation("Relational:FunctionName", null);
+			runtimeEntityType.AddAnnotation("Relational:Schema", "music");
+			runtimeEntityType.AddAnnotation("Relational:SqlQuery", null);
+			runtimeEntityType.AddAnnotation("Relational:TableName", "artists");
+			runtimeEntityType.AddAnnotation("Relational:ViewName", null);
+			runtimeEntityType.AddAnnotation("Relational:ViewSchema", null);
 
-            Customize(runtimeEntityType);
-        }
+			Customize(runtimeEntityType);
+		}
 
-        static partial void Customize(RuntimeEntityType runtimeEntityType);
-    }
+		static partial void Customize(RuntimeEntityType runtimeEntityType);
+	}
 }

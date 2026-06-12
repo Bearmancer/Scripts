@@ -1,5 +1,4 @@
 using Scripts.Services.Read.Ocr;
-using FluentAssertions;
 
 namespace Scripts.Tests;
 
@@ -9,19 +8,29 @@ internal class OcrTest
 	public async Task TestDocumentIntelligenceAuth()
 	{
 		var provider = AzureDocumentIntelligenceOcrProvider.CreateConfigured();
-		provider.Should().NotBeNull();
+		await Assert.That(provider).IsNotNull();
 
-		byte[] tinyPng = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==");
+		byte[] tinyPng = Convert.FromBase64String(
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=="
+		);
 
 		try
 		{
 			var result = await provider.OcrImageAsync(tinyPng, "image/png");
-			result.Should().NotBeNull();
+			await Assert.That(result).IsNotNull();
 			Console.WriteLine("Authentication and OCR succeeded.");
 		}
-		catch (Azure.RequestFailedException ex) when (ex.Status == 400 && (ex.ErrorCode == "InvalidRequest" || ex.Message.Contains("InvalidContentDimensions")))
+		catch (Azure.RequestFailedException ex)
+			when (ex.Status == 400
+				&& (
+					ex.ErrorCode == "InvalidRequest"
+					|| ex.Message.Contains("InvalidContentDimensions")
+				)
+			)
 		{
-			Console.WriteLine("Authentication succeeded (received expected image dimension validation error from service).");
+			Console.WriteLine(
+				"Authentication succeeded (received expected image dimension validation error from service)."
+			);
 		}
 	}
 }

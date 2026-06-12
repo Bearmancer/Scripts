@@ -1,7 +1,4 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
 using Scripts.Tests.Attributes;
@@ -24,17 +21,17 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 			Title = "Test Video",
 			Description = "Test Description",
 			ChannelName = "Test Channel",
-			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow)
+			UploadDate = DateOnly.FromDateTime(DateTime.UtcNow),
 		};
 
 		var result = await repository.AddAsync(video);
 
-		result.Should().NotBeNull();
-		result.Url.Should().Be(video.Url);
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result.Url).IsEqualTo(video.Url);
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Videos.CountAsync();
-		count.Should().Be(1);
+		await Assert.That(count).IsEqualTo(1);
 	}
 
 	[RequiresPgConnStr]
@@ -47,7 +44,7 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 		{
 			Url = "https://youtube.com/watch?v=test123",
 			Title = "Test Video",
-			ChannelName = "Test Channel"
+			ChannelName = "Test Channel",
 		};
 		context.Videos.Add(video);
 		await context.SaveChangesAsync();
@@ -58,8 +55,8 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByUrlAsync("https://youtube.com/watch?v=test123");
 
-		result.Should().NotBeNull();
-		result!.Title.Should().Be("Test Video");
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.Title).IsEqualTo("Test Video");
 	}
 
 	[RequiresPgConnStr]
@@ -72,7 +69,7 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByUrlAsync("https://youtube.com/watch?v=nonexistent");
 
-		result.Should().BeNull();
+		await Assert.That(result).IsNull();
 	}
 
 	[RequiresPgConnStr]
@@ -83,9 +80,27 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 
 		var now = DateOnly.FromDateTime(DateTime.UtcNow);
 		context.Videos.AddRange(
-			new Video { Url = "url1", Title = "Video 1", ChannelName = "Channel A", UploadDate = now.AddDays(-2) },
-			new Video { Url = "url2", Title = "Video 2", ChannelName = "Channel B", UploadDate = now },
-			new Video { Url = "url3", Title = "Video 3", ChannelName = "Channel A", UploadDate = now.AddDays(-1) }
+			new Video
+			{
+				Url = "url1",
+				Title = "Video 1",
+				ChannelName = "Channel A",
+				UploadDate = now.AddDays(-2),
+			},
+			new Video
+			{
+				Url = "url2",
+				Title = "Video 2",
+				ChannelName = "Channel B",
+				UploadDate = now,
+			},
+			new Video
+			{
+				Url = "url3",
+				Title = "Video 3",
+				ChannelName = "Channel A",
+				UploadDate = now.AddDays(-1),
+			}
 		);
 		await context.SaveChangesAsync();
 
@@ -95,10 +110,10 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByChannelAsync("Channel A");
 
-		result.Should().HaveCount(2);
-		result.Should().AllSatisfy(v => v.ChannelName.Should().Be("Channel A"));
-		result[0].UploadDate.Should().Be(now.AddDays(-1));
-		result[1].UploadDate.Should().Be(now.AddDays(-2));
+		await Assert.That(result).Count().IsEqualTo(2);
+		await Assert.That(result).All(v => v.ChannelName == "Channel A");
+		await Assert.That(result[0].UploadDate).IsEqualTo(now.AddDays(-1));
+		await Assert.That(result[1].UploadDate).IsEqualTo(now.AddDays(-2));
 	}
 
 	[RequiresPgConnStr]
@@ -111,6 +126,6 @@ internal sealed class VideoRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByChannelAsync("Nonexistent Channel");
 
-		result.Should().BeEmpty();
+		await Assert.That(result).IsEmpty();
 	}
 }

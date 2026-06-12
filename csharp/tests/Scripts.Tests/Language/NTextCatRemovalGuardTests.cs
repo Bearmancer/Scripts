@@ -1,7 +1,3 @@
-using System.Text.RegularExpressions;
-using FluentAssertions;
-using TUnit;
-
 namespace Scripts.Tests.Language;
 
 internal sealed class NTextCatRemovalGuardTests
@@ -31,11 +27,7 @@ internal sealed class NTextCatRemovalGuardTests
 			}
 		}
 
-		violations
-			.Should()
-			.BeEmpty(
-				$"because NTextCat has been replaced with Lingua.\nViolations:\n{string.Join("\n", violations)}"
-			);
+		await Assert.That(violations).IsEmpty();
 	}
 
 	[Test]
@@ -51,10 +43,6 @@ internal sealed class NTextCatRemovalGuardTests
 				violations.Add(file);
 		}
 
-		violations
-			.Should()
-			.BeEmpty(
-				"because Lingua embeds language models — no profile file reference should remain"
-			);
+		await Assert.That(violations).IsEmpty();
 	}
 }

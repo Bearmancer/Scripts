@@ -4,7 +4,7 @@ namespace Scripts.Services.Language;
 
 internal static class LanguageIdentifier
 {
-	private static Lazy<Lingua.LanguageDetector?> Detector { get; } =
+	private static Lazy<LanguageDetector?> Detector { get; } =
 		new(() =>
 		{
 			try

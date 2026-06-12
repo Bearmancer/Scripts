@@ -19,6 +19,8 @@ public sealed class AllowedValuesAttribute(params string[] values)
 			? ValidationResult.Success()
 			: ValidationResult.Error($"Invalid value '{value}'. {ErrorMessage}");
 	}
+
+	public string[]? Values { get; }
 }
 
 [AttributeUsage(validOn: AttributeTargets.Property)]

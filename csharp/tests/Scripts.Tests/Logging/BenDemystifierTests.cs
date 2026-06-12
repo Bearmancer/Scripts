@@ -1,20 +1,18 @@
 using System.Diagnostics;
-using FluentAssertions;
-using TUnit;
 
 namespace Scripts.Tests.Logging;
 
 internal sealed class BenDemystifierTests
 {
 	[Test]
-	public void Demystify_Is_Available_As_Extension_Method()
+	public async Task Demystify_Is_Available_As_Extension_Method()
 	{
 		var ex = new InvalidOperationException("test");
 
 		var demystified = ex.Demystify();
 
-		demystified.Should().NotBeNull();
-		demystified.Message.Should().Be("test");
+		await Assert.That(demystified).IsNotNull();
+		await Assert.That(demystified.Message).IsEqualTo("test");
 	}
 
 	[Test]
@@ -29,6 +27,6 @@ internal sealed class BenDemystifierTests
 		);
 		var content = await File.ReadAllTextAsync(logPath);
 
-		content.Should().Contain("exception: ex.Demystify()");
+		await Assert.That(content).Contains("exception: ex.Demystify()");
 	}
 }

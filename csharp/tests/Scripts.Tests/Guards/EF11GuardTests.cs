@@ -1,75 +1,78 @@
 using System.Text.RegularExpressions;
-using FluentAssertions;
 
 namespace Scripts.Tests.Guards;
 
 internal class EF11GuardTests
 {
-	
-	
-	private static readonly string[] SourceDirectories = [ TestPaths.SrcRoot ];
+	private static readonly string[] SourceDirectories = [TestPaths.SrcRoot];
 
 	[Test]
-	public void ShouldNotUseMaxByAsync()
+	public async Task ShouldNotUseMaxByAsync()
 	{
 		var pattern = new Regex(@"\bMaxByAsync\s*\(", RegexOptions.Compiled);
 		var violations = FindViolations(pattern, "MaxByAsync");
 
-		violations.Should().BeEmpty($"Found MaxByAsync usage in:\n{string.Join("\n", violations)}");
+		await Assert.That(violations).IsEmpty();
 	}
 
 	[Test]
-	public void ShouldNotUseMinByAsync()
+	public async Task ShouldNotUseMinByAsync()
 	{
 		var pattern = new Regex(@"\bMinByAsync\s*\(", RegexOptions.Compiled);
 		var violations = FindViolations(pattern, "MinByAsync");
 
-		violations.Should().BeEmpty($"Found MinByAsync usage in:\n{string.Join("\n", violations)}");
+		await Assert.That(violations).IsEmpty();
 	}
 
 	[Test]
-	public void ShouldNotUseJsonPathExists()
+	public async Task ShouldNotUseJsonPathExists()
 	{
 		var pattern = new Regex(@"JsonPathExists\s*\(", RegexOptions.Compiled);
 		var violations = FindViolations(pattern, "JsonPathExists");
 
-		violations.Should().BeEmpty($"Found JsonPathExists usage in:\n{string.Join("\n", violations)}");
+		await Assert.That(violations).IsEmpty();
 	}
 
 	[Test]
-	public void ShouldUseOrderByDescendingForMaxValue()
+	public async Task ShouldUseOrderByDescendingForMaxValue()
 	{
-		var pattern = new Regex(@"OrderByDescending\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync", RegexOptions.Compiled);
+		var pattern = new Regex(
+			@"OrderByDescending\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync",
+			RegexOptions.Compiled
+		);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one OrderByDescending().FirstOrDefaultAsync() pattern");
+		await Assert.That(matches.Count).IsGreaterThanOrEqualTo(0);
 	}
 
 	[Test]
-	public void ShouldUseOrderByForMinValue()
+	public async Task ShouldUseOrderByForMinValue()
 	{
-		var pattern = new Regex(@"OrderBy\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync", RegexOptions.Compiled);
+		var pattern = new Regex(
+			@"OrderBy\s*\(\s*[^)]+\s*\)\s*\.\s*FirstOrDefaultAsync",
+			RegexOptions.Compiled
+		);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one OrderBy().FirstOrDefaultAsync() pattern");
+		await Assert.That(matches.Count).IsGreaterThanOrEqualTo(0);
 	}
 
 	[Test]
-	public void ShouldUseJsonContainsForJsonQueries()
+	public async Task ShouldUseJsonContainsForJsonQueries()
 	{
 		var pattern = new Regex(@"JsonContains\s*\(", RegexOptions.Compiled);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThanOrEqualTo(0, "JsonContains pattern should be available");
+		await Assert.That(matches.Count).IsGreaterThanOrEqualTo(0);
 	}
 
 	[Test]
-	public void ShouldUseExecuteUpdateAsyncForBulkUpdates()
+	public async Task ShouldUseExecuteUpdateAsyncForBulkUpdates()
 	{
 		var pattern = new Regex(@"ExecuteUpdateAsync\s*\(", RegexOptions.Compiled);
 		var matches = FindMatches(pattern);
 
-		matches.Count.Should().BeGreaterThanOrEqualTo(0, "Should have at least one ExecuteUpdateAsync() call");
+		await Assert.That(matches.Count).IsGreaterThanOrEqualTo(0);
 	}
 
 	private static List<string> FindViolations(Regex pattern, string patternName)
@@ -93,7 +96,9 @@ internal class EF11GuardTests
 				if (matches.Count > 0)
 				{
 					var relativePath = Path.GetRelativePath(TestPaths.RepoRoot, file);
-					violations.Add($"{relativePath}: {matches.Count} occurrence(s) of {patternName}");
+					violations.Add(
+						$"{relativePath}: {matches.Count} occurrence(s) of {patternName}"
+					);
 				}
 			}
 		}

@@ -1,9 +1,5 @@
 namespace Scripts.Data.Entities;
 
-
-
-
-
 internal sealed record FiberyEntity
 {
 	public Guid Id { get; set; }

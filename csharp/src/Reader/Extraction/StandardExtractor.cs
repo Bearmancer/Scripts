@@ -82,7 +82,7 @@ internal sealed class StandardExtractor
 
 	private static string? FindBpcExtension()
 	{
-		DirectoryInfo dir = new(path: AppContext.BaseDirectory);
+		DirectoryInfo? dir = new(path: AppContext.BaseDirectory);
 		while (dir is { })
 		{
 			var candidate = Path.Combine(path1: dir.FullName, path2: BpcExtDirName);
@@ -171,7 +171,7 @@ internal sealed class StandardExtractor
 	{
 		Ui.Info(message: "Extracting content with SmartReader...");
 
-		using SmartReader.Reader reader = new(uri: Url.AbsoluteUri, text: htmlContent);
+		using Reader reader = new(uri: Url.AbsoluteUri, text: htmlContent);
 		Article article = await reader.GetArticleAsync();
 
 		WebExtractionQuality quality = WebExtractionQualityAnalyzer.ClassifyArticleQuality(

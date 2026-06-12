@@ -105,7 +105,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 		if (!IsNullOrEmpty(settings.Id))
 			return await PerformLookupAsync(settings, ct: cancellationToken);
 
-		var discogsToken = Config.DiscogsToken;
+		var discogsToken = Secrets.DiscogsToken;
 		var source = settings.Source.ToLowerInvariant();
 
 		var searchMusicBrainz = source is "musicbrainz" or "mb" or "both";
@@ -483,7 +483,7 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 				Console.Error("Invalid Discogs ID (must be number)");
 				return 1;
 			}
-			var discogsToken = Config.DiscogsToken;
+			var discogsToken = Secrets.DiscogsToken;
 			if (IsNullOrEmpty(discogsToken))
 			{
 				Console.CriticalFailure("Discogs", "DISCOGS_USER_TOKEN not set");
@@ -781,7 +781,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 			}
 		);
 
-		var connStr = Environment.GetEnvironmentVariable("PGCONNSTR") 
+		var connStr =
+			Environment.GetEnvironmentVariable("PGCONNSTR")
 			?? throw new InvalidOperationException("PGCONNSTR environment variable is not set.");
 		var progressService = new ReleaseProgressService(new CommandDbContextFactory(connStr));
 
@@ -1007,7 +1008,8 @@ public sealed class MusicSearchCommand : AsyncCommand<MusicSearchCommand.Setting
 
 	#endregion
 
-	private sealed class CommandDbContextFactory(string connectionString) : IDbContextFactory<ScriptsDbContext>
+	private sealed class CommandDbContextFactory(string connectionString)
+		: IDbContextFactory<ScriptsDbContext>
 	{
 		public ScriptsDbContext CreateDbContext()
 		{

@@ -57,7 +57,7 @@ public sealed class MusicFillCommand : AsyncCommand<MusicFillCommand.Settings>
 			return 1;
 		}
 
-		var discogsToken = Config.DiscogsToken;
+		var discogsToken = Secrets.DiscogsToken;
 		if (IsNullOrEmpty(discogsToken))
 			Console.Warning("DISCOGS_USER_TOKEN not set - Discogs fallback disabled");
 

@@ -1,9 +1,6 @@
-using FluentAssertions;
-using TUnit;
-using Scripts.Data;
+using Microsoft.EntityFrameworkCore;
 using Scripts.Data.Entities;
 using Scripts.Tests.Attributes;
-using Microsoft.EntityFrameworkCore;
 
 namespace Scripts.Tests.Guards;
 
@@ -19,7 +16,12 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
-		var album = new Album { ArtistId = artist.Id, Title = "Ef10Album", ReleaseDate = new DateOnly(2024, 1, 1) };
+		var album = new Album
+		{
+			ArtistId = artist.Id,
+			Title = "Ef10Album",
+			ReleaseDate = new DateOnly(2024, 1, 1),
+		};
 		context.Albums.Add(album);
 		await context.SaveChangesAsync();
 
@@ -28,7 +30,7 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 			AlbumId = album.Id,
 			ArtistId = artist.Id,
 			Title = "Ef10Track",
-			DurationSeconds = 180
+			DurationSeconds = 180,
 		};
 		context.Tracks.Add(track);
 		await context.SaveChangesAsync();
@@ -38,23 +40,23 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 		{
 			TrackId = track.Id,
 			ScrobbledAt = now.AddHours(-2),
-			Platform = "lastfm"
+			Platform = "lastfm",
 		};
 		var scrobble2 = new Scrobble
 		{
 			TrackId = track.Id,
 			ScrobbledAt = now,
-			Platform = "lastfm"
+			Platform = "lastfm",
 		};
 		context.Scrobbles.AddRange(scrobble1, scrobble2);
 		await context.SaveChangesAsync();
 
-		var latest = await context.Scrobbles
-			.OrderByDescending(s => s.ScrobbledAt)
+		var latest = await context
+			.Scrobbles.OrderByDescending(s => s.ScrobbledAt)
 			.FirstOrDefaultAsync();
 
-		latest.Should().NotBeNull();
-		latest!.ScrobbledAt.Should().BeCloseTo(now, TimeSpan.FromSeconds(5));
+		await Assert.That(latest).IsNotNull();
+		await Assert.That(latest!.ScrobbledAt).IsEqualTo(now).Within(TimeSpan.FromSeconds(5));
 	}
 
 	[Test]
@@ -66,7 +68,12 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
-		var album = new Album { ArtistId = artist.Id, Title = "Ef10MinAlbum", ReleaseDate = new DateOnly(2024, 1, 1) };
+		var album = new Album
+		{
+			ArtistId = artist.Id,
+			Title = "Ef10MinAlbum",
+			ReleaseDate = new DateOnly(2024, 1, 1),
+		};
 		context.Albums.Add(album);
 		await context.SaveChangesAsync();
 
@@ -75,29 +82,41 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 			AlbumId = album.Id,
 			ArtistId = artist.Id,
 			Title = "Ef10MinTrack",
-			DurationSeconds = 120
+			DurationSeconds = 120,
 		};
 		context.Tracks.Add(track);
 		await context.SaveChangesAsync();
 
 		var now = DateTimeOffset.UtcNow;
-		var scrobbleA = new Scrobble { TrackId = track.Id, ScrobbledAt = now, Platform = "lastfm" };
-		var scrobbleB = new Scrobble { TrackId = track.Id, ScrobbledAt = now.AddHours(-5), Platform = "lastfm" };
+		var scrobbleA = new Scrobble
+		{
+			TrackId = track.Id,
+			ScrobbledAt = now,
+			Platform = "lastfm",
+		};
+		var scrobbleB = new Scrobble
+		{
+			TrackId = track.Id,
+			ScrobbledAt = now.AddHours(-5),
+			Platform = "lastfm",
+		};
 		context.Scrobbles.AddRange(scrobbleA, scrobbleB);
 		await context.SaveChangesAsync();
 
-		var earliest = await context.Scrobbles
-			.Where(s => s.Platform == "lastfm")
+		var earliest = await context
+			.Scrobbles.Where(s => s.Platform == "lastfm")
 			.OrderBy(s => s.ScrobbledAt)
 			.FirstOrDefaultAsync();
 
-		earliest.Should().NotBeNull();
-		earliest!.ScrobbledAt.Should().BeCloseTo(now.AddHours(-5), TimeSpan.FromSeconds(5));
+		await Assert.That(earliest).IsNotNull();
+		await Assert
+			.That(earliest!.ScrobbledAt)
+			.IsEqualTo(now.AddHours(-5))
+			.Within(TimeSpan.FromSeconds(5));
 	}
 
 	[Test]
-	public Task JsonContains_ArtistMetadata_Compiles() =>
-		Task.CompletedTask;
+	public Task JsonContains_ArtistMetadata_Compiles() => Task.CompletedTask;
 
 	[Test]
 	public async Task ExecuteUpdateAsync_SetProperty_IsEf10Compatible()
@@ -108,14 +127,12 @@ internal sealed class Ef10ReplacementPatternTests : DatabaseTestBase
 		context.Artists.Add(artist);
 		await context.SaveChangesAsync();
 
-		await context.Artists
-			.Where(a => a.Name == "BeforeUpdate")
-			.ExecuteUpdateAsync(setters =>
-				setters.SetProperty(a => a.Name, "AfterUpdate"));
+		await context
+			.Artists.Where(a => a.Name == "BeforeUpdate")
+			.ExecuteUpdateAsync(setters => setters.SetProperty(a => a.Name, "AfterUpdate"));
 
-		var updated = await context.Artists
-			.FirstOrDefaultAsync(a => a.Name == "AfterUpdate");
+		var updated = await context.Artists.FirstOrDefaultAsync(a => a.Name == "AfterUpdate");
 
-		updated.Should().NotBeNull();
+		await Assert.That(updated).IsNotNull();
 	}
 }

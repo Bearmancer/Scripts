@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -18,8 +16,12 @@ internal sealed class VideoConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Video));
 		var prop = entityType!.FindProperty("UploadDate");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("date");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("date");
 	}
 
 	[Test]
@@ -32,8 +34,12 @@ internal sealed class VideoConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Video));
 		var prop = entityType!.FindProperty("SyncedAt");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("timestamptz");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("timestamptz");
 	}
 
 	[Test]
@@ -46,6 +52,6 @@ internal sealed class VideoConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Video));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "Title"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "Title"));
 	}
 }

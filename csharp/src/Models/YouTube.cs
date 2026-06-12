@@ -1,6 +1,6 @@
 namespace Scripts.Models;
 
-internal record YouTubeVideoRaw(
+internal sealed record YouTubeVideoRaw(
 	string Title,
 	string Description,
 	TimeSpan Duration,
@@ -19,19 +19,13 @@ internal sealed record YouTubeVideo(
 	string ChannelName,
 	string VideoId,
 	string ChannelId
-) : YouTubeVideoRaw(
-	Title,
-	Description,
-	Duration,
-	ChannelName,
-	VideoId,
-	ChannelId
 )
 {
 	internal string VideoUrl => $"https://www.youtube.com/watch?v={VideoId}";
 	internal string ChannelUrl => $"https://www.youtube.com/channel/{ChannelId}";
 	internal string FormattedDuration => Duration.ToString(format: @"hh\:mm\:ss");
 
+	public string? DetectedLanguage { get; init; }
 	public string? TranslatedTitle { get; init; }
 	public string? TranslatedDescription { get; init; }
 	public DateTimeOffset? TranslatedAt { get; init; }
@@ -58,14 +52,7 @@ internal sealed record YouTubeVideo(
 		};
 
 	public static YouTubeVideo FromRaw(YouTubeVideoRaw raw) =>
-		new(
-			raw.Title,
-			raw.Description,
-			raw.Duration,
-			raw.ChannelName,
-			raw.VideoId,
-			raw.ChannelId
-		)
+		new(raw.Title, raw.Description, raw.Duration, raw.ChannelName, raw.VideoId, raw.ChannelId)
 		{
 			DetectedLanguage = raw.DetectedLanguage,
 		};

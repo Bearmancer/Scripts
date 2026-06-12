@@ -1,7 +1,4 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Scripts.Data;
 using Scripts.Data.Entities;
 using Scripts.Data.Repositories;
 using Scripts.Tests.Attributes;
@@ -22,12 +19,12 @@ internal sealed class ArtistRepositoryTests : DatabaseTestBase
 
 		var result = await repository.AddAsync(artist);
 
-		result.Should().NotBeNull();
-		result.Name.Should().Be("Test Artist");
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result.Name).IsEqualTo("Test Artist");
 
 		await using var verifyContext = Fixture.GetContext();
 		var count = await verifyContext.Artists.CountAsync();
-		count.Should().Be(1);
+		await Assert.That(count).IsEqualTo(1);
 	}
 
 	[RequiresPgConnStr]
@@ -46,8 +43,8 @@ internal sealed class ArtistRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByNameAsync("Test Artist");
 
-		result.Should().NotBeNull();
-		result!.Name.Should().Be("Test Artist");
+		await Assert.That(result).IsNotNull();
+		await Assert.That(result!.Name).IsEqualTo("Test Artist");
 	}
 
 	[RequiresPgConnStr]
@@ -60,7 +57,7 @@ internal sealed class ArtistRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByNameAsync("Nonexistent Artist");
 
-		result.Should().BeNull();
+		await Assert.That(result).IsNull();
 	}
 
 	[RequiresPgConnStr]
@@ -79,7 +76,7 @@ internal sealed class ArtistRepositoryTests : DatabaseTestBase
 
 		var result = await repository.GetByNameAsync("test artist");
 
-		result.Should().BeNull();
+		await Assert.That(result).IsNull();
 	}
 
 	[RequiresPgConnStr]
@@ -94,10 +91,10 @@ internal sealed class ArtistRepositoryTests : DatabaseTestBase
 
 		var result = await repository.AddAsync(artist);
 
-		result.Metadata.Should().BeNull();
+		await Assert.That(result.Metadata).IsNull();
 
 		await using var verifyContext = Fixture.GetContext();
 		var retrieved = await verifyContext.Artists.FirstAsync();
-		retrieved.Metadata.Should().BeNull();
+		await Assert.That(retrieved.Metadata).IsNull();
 	}
 }

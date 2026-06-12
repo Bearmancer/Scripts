@@ -32,7 +32,6 @@ Pay-as-you-go" (via Cloud Billing). The user may be referring to:
 **The Gemini API key is universal** — it works with ANY client that implements the Gemini API protocol:
 
 * Gemini CLI (Antigravity) — Google's own CLI
-* Third-party MCP providers (e.g., @anthropic/mcp-server-gemini)
 * Direct API calls from any application
 * AI coding agents (Cline, Kilo, Copilot) via API key configuration
 

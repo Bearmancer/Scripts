@@ -1,37 +1,35 @@
-using TUnit;
-using FluentAssertions;
-using Scripts.Data.Entities;
 using System.Text.Json;
+using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
 
 internal sealed class ExecutionLogEntityTests
 {
 	[Test]
-	public void ExecutionLog_HasRequired_Properties()
+	public async Task ExecutionLog_HasRequired_Properties()
 	{
 		var props = typeof(ExecutionLog).GetProperties().Select(p => p.Name).ToList();
 
-		props.Should().Contain("Id");
-		props.Should().Contain("Timestamp");
-		props.Should().Contain("SessionId");
-		props.Should().Contain("Payload");
-		props.Should().Contain("ExitCode");
+		await Assert.That(props).Contains("Id");
+		await Assert.That(props).Contains("Timestamp");
+		await Assert.That(props).Contains("SessionId");
+		await Assert.That(props).Contains("Payload");
+		await Assert.That(props).Contains("ExitCode");
 	}
 
 	[Test]
-	public void ExecutionLog_Payload_IsJsonDocument()
+	public async Task ExecutionLog_Payload_IsJsonDocument()
 	{
 		var prop = typeof(ExecutionLog).GetProperty("Payload");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<JsonDocument>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(JsonDocument));
 	}
 
 	[Test]
-	public void ExecutionLog_Timestamp_IsDateTimeOffset()
+	public async Task ExecutionLog_Timestamp_IsDateTimeOffset()
 	{
 		var prop = typeof(ExecutionLog).GetProperty("Timestamp");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<DateTimeOffset>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(DateTimeOffset));
 	}
 }

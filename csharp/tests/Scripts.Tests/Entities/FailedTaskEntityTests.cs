@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Scripts.Data.Entities;
 
 namespace Scripts.Tests.Entities;
@@ -7,29 +5,29 @@ namespace Scripts.Tests.Entities;
 internal sealed class FailedTaskEntityTests
 {
 	[Test]
-	public void FailedTask_HasRequired_Properties()
+	public async Task FailedTask_HasRequired_Properties()
 	{
 		var props = typeof(FailedTask).GetProperties().Select(p => p.Name).ToList();
 
-		props.Should().Contain("Id");
-		props.Should().Contain("TaskName");
-		props.Should().Contain("ErrorMessage");
-		props.Should().Contain("Timestamp");
+		await Assert.That(props).Contains("Id");
+		await Assert.That(props).Contains("TaskName");
+		await Assert.That(props).Contains("ErrorMessage");
+		await Assert.That(props).Contains("Timestamp");
 	}
 
 	[Test]
-	public void FailedTask_Id_IsGuid()
+	public async Task FailedTask_Id_IsGuid()
 	{
 		var prop = typeof(FailedTask).GetProperty("Id");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<Guid>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(Guid));
 	}
 
 	[Test]
-	public void FailedTask_Timestamp_IsDateTimeOffset()
+	public async Task FailedTask_Timestamp_IsDateTimeOffset()
 	{
 		var prop = typeof(FailedTask).GetProperty("Timestamp");
-		prop.Should().NotBeNull();
-		prop!.PropertyType.Should().Be<DateTimeOffset>();
+		await Assert.That(prop).IsNotNull();
+		await Assert.That(prop!.PropertyType).IsEqualTo(typeof(DateTimeOffset));
 	}
 }

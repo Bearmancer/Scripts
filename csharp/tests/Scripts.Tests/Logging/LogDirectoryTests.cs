@@ -1,12 +1,9 @@
-using FluentAssertions;
-using TUnit;
-
 namespace Scripts.Tests.Logging;
 
 internal sealed class LogDirectoryTests
 {
 	[Test]
-	public void LogDirectory_Points_To_UserProfile_Cache_Logs_Scripts()
+	public async Task LogDirectory_Points_To_UserProfile_Cache_Logs_Scripts()
 	{
 		var logDir = Scripts.Core.Paths.LogDirectory;
 
@@ -17,36 +14,36 @@ internal sealed class LogDirectoryTests
 			"scripts"
 		);
 
-		logDir.Should().Be(expectedBase);
+		await Assert.That(logDir).IsEqualTo(expectedBase);
 	}
 
 	[Test]
-	public void LogDirectory_Does_Not_Point_To_ProjectRoot()
+	public async Task LogDirectory_Does_Not_Point_To_ProjectRoot()
 	{
 		var logDir = Scripts.Core.Paths.LogDirectory;
 		var projectRoot = Scripts.Core.Paths.ProjectRoot;
 
-		logDir.Should().NotContain(projectRoot);
+		await Assert.That(logDir).DoesNotContain(projectRoot);
 	}
 
 	[Test]
-	public void LogDirectory_Is_Absolute_Path()
+	public async Task LogDirectory_Is_Absolute_Path()
 	{
 		var logDir = Scripts.Core.Paths.LogDirectory;
 
-		Path.IsPathRooted(logDir).Should().BeTrue();
+		await Assert.That(Path.IsPathRooted(logDir)).IsTrue();
 	}
 
 	[Test]
-	public void LogDirectory_Is_Created_Automatically()
+	public async Task LogDirectory_Is_Created_Automatically()
 	{
 		var logDir = Scripts.Core.Paths.LogDirectory;
 
 		System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(
-			typeof(Scripts.Core.Log).TypeHandle
+			typeof(Core.Log).TypeHandle
 		);
 
-		new DirectoryInfo(logDir).Exists.Should().BeTrue();
+		await Assert.That(new DirectoryInfo(logDir).Exists).IsTrue();
 	}
 
 	[Test]
@@ -61,6 +58,6 @@ internal sealed class LogDirectoryTests
 		);
 		var content = await File.ReadAllTextAsync(logPath);
 
-		content.Should().Contain("Directory.CreateDirectory(path: Paths.LogDirectory)");
+		await Assert.That(content).Contains("Directory.CreateDirectory(path: Paths.LogDirectory)");
 	}
 }

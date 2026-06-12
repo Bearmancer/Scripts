@@ -1,20 +1,10 @@
 using Npgsql;
-using Polly;
 using Polly.CircuitBreaker;
-using Polly.Retry;
 
 namespace Scripts.Data.Repositories;
 
-
-
-
-
 internal static class RepositoryResilienceFactory
 {
-	
-	
-	
-	
 	public static ResiliencePipeline CreateDatabasePipeline()
 	{
 		return new ResiliencePipelineBuilder()
@@ -40,9 +30,6 @@ internal static class RepositoryResilienceFactory
 			.Build();
 	}
 
-	
-	
-	
 	private static bool IsTransientError(NpgsqlException ex)
 	{
 		return ex.SqlState switch

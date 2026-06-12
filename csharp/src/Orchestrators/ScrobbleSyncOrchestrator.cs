@@ -10,7 +10,6 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 	private readonly CancellationToken Ct;
 	private readonly DateTime? ForceFromDate;
 	private readonly LastFmService LastFmService;
-	private readonly WorkService WorkService;
 	private readonly TrackRepository TrackRepository;
 	private readonly ArtistRepository ArtistRepository;
 	private readonly AlbumRepository AlbumRepository;
@@ -21,7 +20,6 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 
 	private ScrobbleSyncOrchestrator(
 		LastFmService lastFmService,
-		WorkService workService,
 		TrackRepository trackRepository,
 		ArtistRepository artistRepository,
 		AlbumRepository albumRepository,
@@ -33,7 +31,6 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 	)
 	{
 		LastFmService = lastFmService;
-		WorkService = workService;
 		TrackRepository = trackRepository;
 		ArtistRepository = artistRepository;
 		AlbumRepository = albumRepository;
@@ -51,7 +48,8 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		CancellationToken ct
 	)
 	{
-		IDbContextFactory<ScriptsDbContext> contextFactory = DbContextRegistration.CreateContextFactory();
+		IDbContextFactory<ScriptsDbContext> contextFactory =
+			DbContextRegistration.CreateContextFactory();
 		ResiliencePipeline pipeline = RepositoryResilienceFactory.CreateDatabasePipeline();
 
 		ArtistRepository artistRepository = new(contextFactory, pipeline);
@@ -59,12 +57,10 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		TrackRepository trackRepository = new(contextFactory, pipeline);
 		ScrobbleRepository scrobbleRepository = new(contextFactory, pipeline);
 		PurgeService purgeService = new(contextFactory);
-		WorkService workService = new(contextFactory);
 
 		LastFmService lastFmService = new(
 			apiKey: Secrets.LastFmApiKey,
 			username: "kanishknishar",
-			contextFactory: contextFactory,
 			artistRepository: artistRepository
 		);
 		FetchState state = await StateManager.LoadStateAsync<FetchState>(
@@ -73,7 +69,6 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 		);
 		return new ScrobbleSyncOrchestrator(
 			lastFmService: lastFmService,
-			workService: workService,
 			trackRepository: trackRepository,
 			artistRepository: artistRepository,
 			albumRepository: albumRepository,
@@ -135,7 +130,12 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 
 		Ui.Info(message: "Purging orphans...");
 		var purgeResult = await PurgeService.PurgeOrphansAsync(Ct);
-		Ui.Ok(message: "Purged {0} tracks, {1} albums, {2} artists.", purgeResult.TracksPurged, purgeResult.AlbumsPurged, purgeResult.ArtistsPurged);
+		Ui.Ok(
+			message: "Purged {0} tracks, {1} albums, {2} artists.",
+			purgeResult.TracksPurged,
+			purgeResult.AlbumsPurged,
+			purgeResult.ArtistsPurged
+		);
 
 		return deleted;
 	}
@@ -253,18 +253,30 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 			var artist = await ArtistRepository.GetByNameAsync(scrobble.ArtistName, Ct);
 			if (artist == null)
 			{
-				artist = await ArtistRepository.AddAsync(new Artist { Name = scrobble.ArtistName }, Ct);
+				artist = await ArtistRepository.AddAsync(
+					new Artist { Name = scrobble.ArtistName },
+					Ct
+				);
 			}
 
-			var album = await AlbumRepository.GetByArtistAndTitleAsync(artist.Id, scrobble.AlbumName, Ct);
+			var album = await AlbumRepository.GetByArtistAndTitleAsync(
+				artist.Id,
+				scrobble.AlbumName,
+				Ct
+			);
 			if (album == null)
 			{
-				album = await AlbumRepository.AddAsync(new Album { ArtistId = artist.Id, Title = scrobble.AlbumName }, Ct);
+				album = await AlbumRepository.AddAsync(
+					new Album { ArtistId = artist.Id, Title = scrobble.AlbumName },
+					Ct
+				);
 			}
 
-			var workId = await WorkService.GetOrCreateWorkAsync(scrobble.TrackName, null, Ct);
-
-			var track = await TrackRepository.GetByArtistAndTitleAsync(artist.Id, scrobble.TrackName, Ct);
+			var track = await TrackRepository.GetByArtistAndTitleAsync(
+				artist.Id,
+				scrobble.TrackName,
+				Ct
+			);
 			int trackId;
 			if (track == null)
 			{
@@ -272,11 +284,14 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 				{
 					ArtistId = artist.Id,
 					AlbumId = album.Id,
-					WorkId = workId,
-					Title = scrobble.TrackName
+					Title = scrobble.TrackName,
 				};
 				await TrackRepository.BulkInsertAsync([newTrack], Ct);
-				track = await TrackRepository.GetByArtistAndTitleAsync(artist.Id, scrobble.TrackName, Ct);
+				track = await TrackRepository.GetByArtistAndTitleAsync(
+					artist.Id,
+					scrobble.TrackName,
+					Ct
+				);
 				trackId = track!.Id;
 			}
 			else
@@ -284,12 +299,14 @@ internal sealed class ScrobbleSyncOrchestrator : IDisposable
 				trackId = track.Id;
 			}
 
-			scrobbleEntities.Add(new Entities.Scrobble
-			{
-				TrackId = trackId,
-				ScrobbledAt = scrobble.PlayedAt ?? DateTimeOffset.UtcNow,
-				Platform = "Last.fm"
-			});
+			scrobbleEntities.Add(
+				new Entities.Scrobble
+				{
+					TrackId = trackId,
+					ScrobbledAt = scrobble.PlayedAt ?? DateTimeOffset.UtcNow,
+					Platform = "Last.fm",
+				}
+			);
 
 			ingestedCount++;
 		}

@@ -1,10 +1,5 @@
 namespace Scripts.Data.Entities;
 
-
-
-
-
-
 public sealed class Scrobble
 {
 	public long Id { get; set; }

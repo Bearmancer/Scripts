@@ -1,17 +1,8 @@
-using Scripts.Data;
-using Scripts.Data.Entities;
-using Microsoft.EntityFrameworkCore;
-
 namespace Scripts.Services.Music;
 
-internal sealed class PurgeService
+internal sealed class PurgeService(IDbContextFactory<ScriptsDbContext> contextFactory)
 {
-	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory;
-
-	public PurgeService(IDbContextFactory<ScriptsDbContext> contextFactory)
-	{
-		_contextFactory = contextFactory;
-	}
+	private readonly IDbContextFactory<ScriptsDbContext> _contextFactory = contextFactory;
 
 	public async Task<PurgeResult> PurgeOrphansAsync(CancellationToken ct = default)
 	{
@@ -25,8 +16,8 @@ internal sealed class PurgeService
 			int artistsPurged = 0;
 
 			// L1: Purge Tracks with no scrobbles
-			var orphanTracks = await db.Tracks
-				.Where(t => !db.Scrobbles.Any(s => s.TrackId == t.Id))
+			var orphanTracks = await db
+				.Tracks.Where(t => !db.Scrobbles.Any(s => s.TrackId == t.Id))
 				.ToListAsync(ct);
 
 			if (orphanTracks.Count > 0)
@@ -37,8 +28,8 @@ internal sealed class PurgeService
 			}
 
 			// L2: Purge Albums with no tracks
-			var orphanAlbums = await db.Albums
-				.Where(a => !db.Tracks.Any(t => t.AlbumId == a.Id))
+			var orphanAlbums = await db
+				.Albums.Where(a => !db.Tracks.Any(t => t.AlbumId == a.Id))
 				.ToListAsync(ct);
 
 			if (orphanAlbums.Count > 0)
@@ -49,8 +40,11 @@ internal sealed class PurgeService
 			}
 
 			// L3: Purge Artists with no albums and no tracks
-			var orphanArtists = await db.Artists
-				.Where(a => !db.Albums.Any(al => al.ArtistId == a.Id) && !db.Tracks.Any(t => t.ArtistId == a.Id))
+			var orphanArtists = await db
+				.Artists.Where(a =>
+					!db.Albums.Any(al => al.ArtistId == a.Id)
+					&& !db.Tracks.Any(t => t.ArtistId == a.Id)
+				)
 				.ToListAsync(ct);
 
 			if (orphanArtists.Count > 0)

@@ -1,10 +1,5 @@
 namespace Scripts.Data.Entities;
 
-
-
-
-
-
 public sealed class FailedTask
 {
 	public Guid Id { get; set; }

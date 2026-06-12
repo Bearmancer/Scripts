@@ -1,29 +1,13 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Scripts.Data;
-using Scripts.Data.Entities;
 using Scripts.Tests.Attributes;
 
 namespace Scripts.Tests.DbContext;
 
-
-
-
-
-
-
-
-
-
-
-
 internal sealed class NullSafeStringComparerTests
 {
 	[Test]
-	public void Model_Builds_For_ReleaseProgress_With_Nullable_Strings()
+	public async Task Model_Builds_For_ReleaseProgress_With_Nullable_Strings()
 	{
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("NullSafeComparer_ModelBuild_" + Guid.NewGuid())
@@ -32,65 +16,57 @@ internal sealed class NullSafeStringComparerTests
 		using var context = new ScriptsDbContext(options);
 		var model = context.Model;
 
-		var rp = model.FindEntityType(typeof(ReleaseProgress));
-		rp.Should().NotBeNull();
+		var rp = model.FindEntityType(typeof(Data.Entities.ReleaseProgress));
+		await Assert.That(rp).IsNotNull();
 	}
 
 	[Test]
-	public void ReleaseProgress_NullableString_Has_NullSafe_ValueComparer()
+	public async Task ReleaseProgress_NullableString_Has_NullSafe_ValueComparer()
 	{
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("NullSafeComparer_HashCheck_" + Guid.NewGuid())
 			.Options;
 
 		using var context = new ScriptsDbContext(options);
-		var property = context.Model
-			.FindEntityType(typeof(ReleaseProgress))!
-			.FindProperty(nameof(ReleaseProgress.Composer))!;
+		var property = context
+			.Model.FindEntityType(typeof(Data.Entities.ReleaseProgress))!
+			.FindProperty(nameof(Scripts.Data.Entities.ReleaseProgress.Composer))!;
 
 		var comparer = property.GetValueComparer();
-		comparer.Should().NotBeNull();
+		await Assert.That(comparer).IsNotNull();
 
-		
-		
 		var hashAction = () => comparer!.GetHashCode((string?)null);
-		hashAction.Should().NotThrow("the comparer hash function must be null-safe");
+		await Assert.That(() => hashAction()).ThrowsNothing();
 	}
 
 	[Test]
-	public void ReleaseProgress_Equality_With_Nulls_Is_Deterministic()
+	public async Task ReleaseProgress_Equality_With_Nulls_Is_Deterministic()
 	{
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("NullSafeComparer_Equality_" + Guid.NewGuid())
 			.Options;
 
 		using var context = new ScriptsDbContext(options);
-		var property = context.Model
-			.FindEntityType(typeof(ReleaseProgress))!
-			.FindProperty(nameof(ReleaseProgress.WorkName))!;
+		var property = context
+			.Model.FindEntityType(typeof(Data.Entities.ReleaseProgress))!
+			.FindProperty(nameof(Scripts.Data.Entities.ReleaseProgress.WorkName))!;
 
 		var comparer = property.GetValueComparer();
-		comparer.Should().NotBeNull();
+		await Assert.That(comparer).IsNotNull();
 
-		
-		comparer!.Equals(null, null).Should().BeTrue();
-		
-		comparer.Equals(null, "x").Should().BeFalse();
-		comparer.Equals("x", null).Should().BeFalse();
-		
-		comparer.Equals("hello", "hello").Should().BeTrue();
-		
-		comparer.Equals("Hello", "hello").Should().BeFalse();
+		await Assert.That(comparer!.Equals(null, null)).IsTrue();
+
+		await Assert.That(comparer.Equals(null, "x")).IsFalse();
+		await Assert.That(comparer.Equals("x", null)).IsFalse();
+
+		await Assert.That(comparer.Equals("hello", "hello")).IsTrue();
+
+		await Assert.That(comparer.Equals("Hello", "hello")).IsFalse();
 	}
 
 	[Test]
-	public void AllStringProperties_Have_NullSafe_Hash_Function()
+	public async Task AllStringProperties_Have_NullSafe_Hash_Function()
 	{
-		
-		
-		
-		
-		
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
 			.UseInMemoryDatabase("NullSafeComparer_AllStrings_" + Guid.NewGuid())
 			.Options;
@@ -104,21 +80,15 @@ internal sealed class NullSafeStringComparerTests
 			.Where(p => p.ClrType == typeof(string))
 			.ToList();
 
-		stringProperties.Should().NotBeEmpty(
-			"ScriptsDbContext should expose at least one string property");
+		await Assert.That(stringProperties).IsNotEmpty();
 
 		foreach (var property in stringProperties)
 		{
 			var comparer = property.GetValueComparer();
-			comparer.Should().NotBeNull(
-				$"string property {property.DeclaringType.ClrType.Name}.{property.Name} must have a value comparer");
+			await Assert.That(comparer).IsNotNull();
 
-			
-			
-			
 			var hashAction = () => comparer!.GetHashCode((string?)null);
-			hashAction.Should().NotThrow(
-				$"comparer for {property.DeclaringType.ClrType.Name}.{property.Name} must hash null safely");
+			await Assert.That(() => hashAction()).ThrowsNothing();
 		}
 	}
 }
@@ -129,21 +99,9 @@ internal sealed class NullSafeComparerCompiledModelTests : DatabaseTestBase
 	[Test]
 	public async Task CompiledModel_Initializes_With_NullSafe_Comparer_Path_Enabled()
 	{
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		await using var context = Fixture.GetContext();
 		var model = context.Model;
-		model.Should().NotBeNull();
-		model.GetEntityTypes().Should().NotBeEmpty();
+		await Assert.That(model).IsNotNull();
+		await Assert.That(model.GetEntityTypes()).IsNotEmpty();
 	}
 }

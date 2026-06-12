@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -18,8 +16,12 @@ internal sealed class AlbumConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Album));
 		var prop = entityType!.FindProperty("ReleaseDate");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("date");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("date");
 	}
 
 	[Test]
@@ -32,6 +34,6 @@ internal sealed class AlbumConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(Album));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "ReleaseDate"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "ReleaseDate"));
 	}
 }

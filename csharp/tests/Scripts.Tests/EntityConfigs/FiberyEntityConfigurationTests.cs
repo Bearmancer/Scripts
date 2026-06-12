@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -17,12 +15,15 @@ internal sealed class FiberyEntityConfigurationTests
 		await using var context = new ScriptsDbContext(options);
 		var entityType = context.Model.FindEntityType(typeof(FiberyEntity));
 
-		entityType.Should().NotBeNull();
+		await Assert.That(entityType).IsNotNull();
 		var indexes = entityType!.GetIndexes().ToList();
-		indexes.Should().Contain(i =>
-			i.Properties.Any(p => p.Name == "FiberyId") &&
-			i.Properties.Any(p => p.Name == "EntityType") &&
-			i.IsUnique);
+		await Assert
+			.That(indexes)
+			.Contains(i =>
+				i.Properties.Any(p => p.Name == "FiberyId")
+				&& i.Properties.Any(p => p.Name == "EntityType")
+				&& i.IsUnique
+			);
 	}
 
 	[Test]
@@ -35,7 +36,9 @@ internal sealed class FiberyEntityConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(FiberyEntity));
 
 		var indexes = entityType!.GetIndexes().ToList();
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "EntityType") && !i.IsUnique);
+		await Assert
+			.That(indexes)
+			.Contains(i => i.Properties.Any(p => p.Name == "EntityType") && !i.IsUnique);
 	}
 
 	[Test]
@@ -48,7 +51,11 @@ internal sealed class FiberyEntityConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(FiberyEntity));
 		var prop = entityType!.FindProperty("FiberyId");
 
-		prop.Should().NotBeNull();
-		prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value.Should().Be("varchar(255)");
+		await Assert.That(prop).IsNotNull();
+		await Assert
+			.That(
+				prop!.GetAnnotations().FirstOrDefault(a => a.Name == "Relational:ColumnType")?.Value
+			)
+			.IsEqualTo("varchar(255)");
 	}
 }

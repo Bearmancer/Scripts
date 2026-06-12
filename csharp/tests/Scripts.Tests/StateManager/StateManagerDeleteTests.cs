@@ -1,28 +1,25 @@
-using TUnit;
-using FluentAssertions;
-
 namespace Scripts.Tests.StateManager;
 
 internal sealed class StateManagerDeleteTests
 {
-    [Test]
-    public void Infrastructure_StateManager_DoesNotExist()
-    {
-        var type = Type.GetType("Scripts.Infrastructure.StateManager, Scripts");
-        type.Should().BeNull(because: "Infrastructure StateManager must be deleted");
-    }
+	[Test]
+	public async Task Infrastructure_StateManager_DoesNotExist()
+	{
+		var type = Type.GetType("Scripts.Infrastructure.StateManager, Scripts");
+		await Assert.That(type).IsNull();
+	}
 
-    [Test]
-    public void CorePersistence_StateManager_FileDoesNotExist()
-    {
-        var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs";
-        System.IO.File.Exists(filePath).Should().BeFalse(because: "Core/Persistence/StateManager.cs must be deleted");
-    }
+	[Test]
+	public async Task CorePersistence_StateManager_FileDoesNotExist()
+	{
+		var filePath = @"C:\Users\Lance\Dev\Scripts\csharp\src\Core\Persistence\StateManager.cs";
+		await Assert.That(System.IO.File.Exists(filePath)).IsFalse();
+	}
 
-    [Test]
-    public void DataState_StateManager_IsSoleVersion()
-    {
-        var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
-        type.Should().NotBeNull(because: "Only Data.State version should remain");
-    }
+	[Test]
+	public async Task DataState_StateManager_IsSoleVersion()
+	{
+		var type = Type.GetType("Scripts.Data.State.StateManager, Scripts");
+		await Assert.That(type).IsNotNull();
+	}
 }

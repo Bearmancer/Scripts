@@ -1,5 +1,3 @@
-using TUnit;
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
 using Scripts.Data.Entities;
@@ -18,7 +16,7 @@ internal sealed class FailedTaskConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(FailedTask));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "TaskName"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "TaskName"));
 	}
 
 	[Test]
@@ -31,6 +29,6 @@ internal sealed class FailedTaskConfigurationTests
 		var entityType = context.Model.FindEntityType(typeof(FailedTask));
 		var indexes = entityType!.GetIndexes().ToList();
 
-		indexes.Should().Contain(i => i.Properties.Any(p => p.Name == "Timestamp"));
+		await Assert.That(indexes).Contains(i => i.Properties.Any(p => p.Name == "Timestamp"));
 	}
 }

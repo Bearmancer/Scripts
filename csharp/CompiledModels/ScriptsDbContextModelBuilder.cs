@@ -1,7 +1,3 @@
-
-using System;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #pragma warning disable 219, 612, 618
@@ -9,45 +5,51 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace MyCompiledModels
 {
-    public partial class ScriptsDbContextModel
-    {
-        private ScriptsDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("440e5332-5f1e-41e3-9a86-a5b2b50b50e4"), entityTypeCount: 10)
-        {
-        }
+	public partial class ScriptsDbContextModel
+	{
+		private ScriptsDbContextModel()
+			: base(
+				skipDetectChanges: false,
+				modelId: new Guid("440e5332-5f1e-41e3-9a86-a5b2b50b50e4"),
+				entityTypeCount: 10
+			)
+		{ }
 
-        partial void Initialize()
-        {
-            var album = AlbumEntityType.Create(this);
-            var artist = ArtistEntityType.Create(this);
-            var executionLog = ExecutionLogEntityType.Create(this);
-            var failedTask = FailedTaskEntityType.Create(this);
-            var fiberyEntity = FiberyEntityEntityType.Create(this);
-            var releaseProgress = ReleaseProgressEntityType.Create(this);
-            var scrobble = ScrobbleEntityType.Create(this);
-            var sourceRecord = SourceRecordEntityType.Create(this);
-            var track = TrackEntityType.Create(this);
-            var video = VideoEntityType.Create(this);
+		partial void Initialize()
+		{
+			var album = AlbumEntityType.Create(this);
+			var artist = ArtistEntityType.Create(this);
+			var executionLog = ExecutionLogEntityType.Create(this);
+			var failedTask = FailedTaskEntityType.Create(this);
+			var fiberyEntity = FiberyEntityEntityType.Create(this);
+			var releaseProgress = ReleaseProgressEntityType.Create(this);
+			var scrobble = ScrobbleEntityType.Create(this);
+			var sourceRecord = SourceRecordEntityType.Create(this);
+			var track = TrackEntityType.Create(this);
+			var video = VideoEntityType.Create(this);
 
-            AlbumEntityType.CreateForeignKey1(album, artist);
-            ScrobbleEntityType.CreateForeignKey1(scrobble, track);
-            TrackEntityType.CreateForeignKey1(track, album);
-            TrackEntityType.CreateForeignKey2(track, artist);
+			AlbumEntityType.CreateForeignKey1(album, artist);
+			ScrobbleEntityType.CreateForeignKey1(scrobble, track);
+			TrackEntityType.CreateForeignKey1(track, album);
+			TrackEntityType.CreateForeignKey2(track, artist);
 
-            AlbumEntityType.CreateAnnotations(album);
-            ArtistEntityType.CreateAnnotations(artist);
-            ExecutionLogEntityType.CreateAnnotations(executionLog);
-            FailedTaskEntityType.CreateAnnotations(failedTask);
-            FiberyEntityEntityType.CreateAnnotations(fiberyEntity);
-            ReleaseProgressEntityType.CreateAnnotations(releaseProgress);
-            ScrobbleEntityType.CreateAnnotations(scrobble);
-            SourceRecordEntityType.CreateAnnotations(sourceRecord);
-            TrackEntityType.CreateAnnotations(track);
-            VideoEntityType.CreateAnnotations(video);
+			AlbumEntityType.CreateAnnotations(album);
+			ArtistEntityType.CreateAnnotations(artist);
+			ExecutionLogEntityType.CreateAnnotations(executionLog);
+			FailedTaskEntityType.CreateAnnotations(failedTask);
+			FiberyEntityEntityType.CreateAnnotations(fiberyEntity);
+			ReleaseProgressEntityType.CreateAnnotations(releaseProgress);
+			ScrobbleEntityType.CreateAnnotations(scrobble);
+			SourceRecordEntityType.CreateAnnotations(sourceRecord);
+			TrackEntityType.CreateAnnotations(track);
+			VideoEntityType.CreateAnnotations(video);
 
-            AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-            AddAnnotation("ProductVersion", "10.0.8");
-            AddAnnotation("Relational:MaxIdentifierLength", 63);
-        }
-    }
+			AddAnnotation(
+				"Npgsql:ValueGenerationStrategy",
+				NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+			);
+			AddAnnotation("ProductVersion", "10.0.8");
+			AddAnnotation("Relational:MaxIdentifierLength", 63);
+		}
+	}
 }
