@@ -85,3 +85,26 @@
 
 ## 4. Open Questions / Unresolved
 - [To be filled from research results]
+
+## 5. Orchestration / Background-Work Strategy
+- The user does not want background work to block the conversation or force repeated manual "continue" prompts.
+- Desired behavior: long-running research or assessment should progress in stages, with the assistant able to provide partial findings, ask the next meaningful decision, and keep moving without creating token bloat.
+- This suggests a staged pipeline: small parallel probes first, then synthesis after the first batch completes, then only launch follow-up work that is truly dependent on earlier results.
+- The strategy should distinguish between background work that is **blocking** (needed for the next decision) and work that is merely **nice-to-have**.
+- We need a control policy for when to wait, when to summarize partial results, and when to ask the user for a decision so work can continue without a manual continue loop.
+
+## 6. Open Questions / Unresolved (Orchestration)
+- What counts as an acceptable partial result checkpoint for the user: a short synthesis, a decision question, or a full interim report?
+- Should background work be grouped into waves with explicit dependencies, or should the assistant opportunistically surface each completed subtask as soon as it lands?
+- How much autonomy should the assistant have to launch follow-up work without asking the user first?
+- What is the preferred stop condition: all work done, all decision points resolved, or only the critical path completed?
+
+## 7. Test / QA Findings
+- Automated tests exist and are mostly TUnit + FluentAssertions.
+- The repo has integration-heavy DB/process/API QA, but no dedicated CI workflow was found in-repo.
+- The QA posture supports agent-run verification, so architectural work can be planned with executable checks instead of human-only validation.
+
+## 8. Confirmed Orchestration Decisions
+- **Checkpoint policy**: Wave-gated completion.
+- **Questioning style**: Maximal questioning for load-bearing architecture decisions.
+- **Working style goal**: Keep background work progressing while this window remains usable for decisions, synthesis, and follow-up questions.

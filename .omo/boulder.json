@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "active_work_id": "youtube-pipeline-rebuild-e6fef9f9",
+  "works": {
+    "youtube-pipeline-rebuild-e6fef9f9": {
+      "work_id": "youtube-pipeline-rebuild-e6fef9f9",
+      "active_plan": "C:\\Users\\Lance\\Dev\\Scripts\\.omo\\plans\\youtube-pipeline-rebuild.md",
+      "plan_name": "youtube-pipeline-rebuild",
+      "status": "active",
+      "started_at": "2026-06-12T07:20:11.266Z",
+      "updated_at": "2026-06-12T07:44:06.331Z",
+      "session_ids": [
+        "opencode:ses_145c6ad3dffeiXbv8Atuhko94J",
+        "opencode:ses_1454b7ffcffeBUt6A4sS3b48zE"
+      ],
+      "session_origins": {
+        "opencode:ses_145c6ad3dffeiXbv8Atuhko94J": "direct",
+        "opencode:ses_1454b7ffcffeBUt6A4sS3b48zE": "direct"
+      },
+      "agent": "atlas",
+      "task_sessions": {
+        "todo:1": {
+          "task_key": "todo:1",
+          "task_label": "1",
+          "task_title": "Purge the current YT cache and configure pgtui",
+          "session_id": "opencode:ses_14547ce42ffeSVua9Jg678b9uJ",
+          "agent": "Sisyphus-Junior",
+          "category": "quick",
+          "updated_at": "2026-06-12T07:26:54.684Z",
+          "started_at": "2026-06-12T07:26:54.684Z",
+          "status": "running"
+        },
+        "todo:2": {
+          "task_key": "todo:2",
+          "task_label": "2",
+          "task_title": "Split raw DTOs from derived DTOs",
+          "session_id": "opencode:ses_1454274e4ffePSnpCnoR07ts9j",
+          "agent": "Sisyphus-Junior",
+          "category": "unspecified-high",
+          "updated_at": "2026-06-12T07:44:06.331Z",
+          "started_at": "2026-06-12T07:44:06.331Z",
+          "status": "running"
+        }
+      }
+    }
+  },
+  "active_plan": "C:\\Users\\Lance\\Dev\\Scripts\\.omo\\plans\\youtube-pipeline-rebuild.md",
+  "started_at": "2026-06-12T07:20:11.266Z",
+  "status": "active",
+  "updated_at": "2026-06-12T07:44:06.331Z",
+  "session_ids": [
+    "opencode:ses_145c6ad3dffeiXbv8Atuhko94J",
+    "opencode:ses_1454b7ffcffeBUt6A4sS3b48zE"
+  ],
+  "session_origins": {
+    "opencode:ses_145c6ad3dffeiXbv8Atuhko94J": "direct",
+    "opencode:ses_1454b7ffcffeBUt6A4sS3b48zE": "direct"
+  },
+  "plan_name": "youtube-pipeline-rebuild",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Purge the current YT cache and configure pgtui",
+      "session_id": "opencode:ses_14547ce42ffeSVua9Jg678b9uJ",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-06-12T07:26:54.684Z",
+      "started_at": "2026-06-12T07:26:54.684Z",
+      "status": "running"
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "Split raw DTOs from derived DTOs",
+      "session_id": "opencode:ses_1454274e4ffePSnpCnoR07ts9j",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-06-12T07:44:06.331Z",
+      "started_at": "2026-06-12T07:44:06.331Z",
+      "status": "running"
+    }
+  },
+  "agent": "atlas"
+}

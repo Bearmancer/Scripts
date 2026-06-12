@@ -182,7 +182,7 @@ internal static class StateManager
 		return fullPath;
 	}
 
-	internal static List<YouTubeVideo> LoadPlaylistCache(string playlistTitle)
+	internal static List<YouTubeVideoRaw> LoadPlaylistCache(string playlistTitle)
 	{
 		Directory.CreateDirectory(path: YouTubePlaylistsDirectory);
 		var path = GetPlaylistPath(playlistTitle: playlistTitle);
@@ -190,11 +190,11 @@ internal static class StateManager
 			return [];
 
 		var json = File.ReadAllText(path: path);
-		return JsonSerializer.Deserialize<List<YouTubeVideo>>(json: json, options: JsonCompact)
+		return JsonSerializer.Deserialize<List<YouTubeVideoRaw>>(json: json, options: JsonCompact)
 			?? [];
 	}
 
-	public static void SavePlaylistCache(string playlistTitle, List<YouTubeVideo> videos)
+	public static void SavePlaylistCache(string playlistTitle, List<YouTubeVideoRaw> videos)
 	{
 		Directory.CreateDirectory(path: YouTubePlaylistsDirectory);
 		File.WriteAllText(

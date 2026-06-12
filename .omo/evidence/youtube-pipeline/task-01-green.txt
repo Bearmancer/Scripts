@@ -1,0 +1,9 @@
+Task 1 — Green state (after purge)
+Date: 2026-06-12
+Command: pwsh -File .\powershell\tests\Assert-YoutubeStateClean.ps1
+Result: PASS (exit code 0)
+Details:
+- All playlist JSON files purged from state/youtube/playlists/
+- All deleted JSON files purged from state/youtube/deleted/
+- sync.json replaced with minimal cursor-only placeholder
+- pgtui config updated: dbs = ["postgresql://lance:lance@localhost:5432/pg_db"]

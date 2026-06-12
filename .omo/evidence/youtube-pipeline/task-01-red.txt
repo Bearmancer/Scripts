@@ -1,0 +1,9 @@
+Task 1 — Red state (before purge)
+Date: 2026-06-12
+Command: pwsh -File .\powershell\tests\Assert-YoutubeStateClean.ps1
+Result: FAIL (exit code 1)
+Details:
+- 140 playlist JSON files found in state/youtube/playlists/
+- 11 deleted JSON files found in state/youtube/deleted/
+- sync.json contained 141 PlaylistSnapshots entries
+- 152 total JSON files under state/youtube/

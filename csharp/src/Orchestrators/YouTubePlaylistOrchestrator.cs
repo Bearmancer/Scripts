@@ -728,15 +728,14 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 		var alreadyFetched = 0;
 		var playlistVideoCount = playlist.VideoIds.Count;
 		List<YouTubeVideo> videos = [];
-		List<YouTubeVideo> existingCache = StateManager.LoadPlaylistCache(
+		List<YouTubeVideoRaw> existingCache = StateManager.LoadPlaylistCache(
 			playlistTitle: playlist.Title
 		);
-		List<YouTubeVideo> previousVideos = [.. existingCache];
 
 		if (State.CurrentPlaylistId == playlist.Id && existingCache.Count > 0)
 		{
 			alreadyFetched = State.CurrentPlaylistVideosFetched;
-			videos = existingCache;
+			videos = [.. existingCache.Select(YouTubeVideo.FromRaw)];
 			onVideoProgress(obj: alreadyFetched);
 			Log.Debug(
 				messageTemplate: "Resuming '{0}': {1}/{2} videos already fetched from cache",
@@ -759,7 +758,10 @@ internal sealed class YouTubePlaylistOrchestrator : IDisposable
 				videos.AddRange(collection: batchVideos);
 				videosFetchedSoFar += batchVideos.Count;
 
-				StateManager.SavePlaylistCache(playlistTitle: playlist.Title, videos: videos);
+				StateManager.SavePlaylistCache(
+					playlistTitle: playlist.Title,
+					videos: [.. videos.Select(static video => video.ToRaw())]
+				);
 
 				State = State with
 				{

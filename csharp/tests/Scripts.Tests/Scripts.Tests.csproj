@@ -12,6 +12,7 @@
 		<PackageReference Include="FluentAssertions" Version="*" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="*" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="*" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
 		<PackageReference Include="TUnit" Version="*" />
 		<PackageReference Include="Testcontainers.PostgreSql" Version="*" />

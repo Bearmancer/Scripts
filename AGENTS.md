@@ -25,7 +25,7 @@ These were decided in earlier sessions. Do not question them again:
 - Google Sheets → PostgreSQL (all data migrates, Sheets is legacy)
 - Fresh install of PostgreSQL (no backward compat)
 - Monolithic program (not library, single csproj, no exclusions)
-- API data goes straight to PGSQL (no JSON buffer)
+- Two-Phase API Sync: Fetch external API data to local JSON disk buffer first, then ingest from disk to PGSQL (Prevents quota exhaustion on DB wipes)
 - Migrating work state stored on Fibery natively onto PGSQL 
 - MCP integration AFTER work PGSQL has finished
 
