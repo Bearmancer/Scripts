@@ -34,14 +34,19 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<Artist> Artists => Set<Artist>();
 	public DbSet<Album> Albums => Set<Album>();
 	public DbSet<Track> Tracks => Set<Track>();
-	public DbSet<MusicWork> MusicWorks => Set<MusicWork>();
-	public DbSet<Movement> Movements => Set<Movement>();
 	public DbSet<Entities.Scrobble> Scrobbles => Set<Entities.Scrobble>();
 	public DbSet<Video> Videos => Set<Video>();
-
+	public DbSet<Playlist> Playlists => Set<Playlist>();
+	public DbSet<PlaylistVideo> PlaylistVideos => Set<PlaylistVideo>();
+	public DbSet<Project> Projects => Set<Project>();
+	public DbSet<Issue> Issues => Set<Issue>();
 	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
+
+	// Legacy / other DbSets
+	public DbSet<Entities.MusicWork> MusicWorks => Set<Entities.MusicWork>();
+	public DbSet<Entities.Movement> Movements => Set<Entities.Movement>();
+	public DbSet<Entities.FailedTask> FailedTasks => Set<Entities.FailedTask>();
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
-	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
 	public DbSet<ReleaseProgress> ReleaseProgress => Set<ReleaseProgress>();
 
@@ -54,6 +59,10 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.MovementConfiguration());
 		mb.ApplyConfiguration(new Configuration.ScrobbleConfiguration());
 		mb.ApplyConfiguration(new Configuration.VideoConfiguration());
+		mb.ApplyConfiguration(new Configuration.PlaylistConfiguration());
+		mb.ApplyConfiguration(new Configuration.PlaylistVideoConfiguration());
+		mb.ApplyConfiguration(new Configuration.ProjectConfiguration());
+		mb.ApplyConfiguration(new Configuration.IssueConfiguration());
 		mb.ApplyConfiguration(new Configuration.ExecutionLogConfiguration());
 		mb.ApplyConfiguration(new Configuration.FiberyEntityConfiguration());
 		mb.ApplyConfiguration(new Configuration.FailedTaskConfiguration());

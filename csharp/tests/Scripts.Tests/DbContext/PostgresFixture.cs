@@ -1,108 +1,72 @@
-using System;
-using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Scripts.Data;
-using Testcontainers.PostgreSql;
+using TUnit.Core.Interfaces;
 
 namespace Scripts.Tests.DbContext;
 
-internal sealed class PostgresFixture : IAsyncDisposable
+internal sealed class PostgresFixture : IAsyncInitializer, IAsyncDisposable
 {
-	private PostgreSqlContainer? _container;
-	private string? _connectionString;
-	private bool _initialized;
-	private bool _disposed;
-	private readonly SemaphoreSlim _initLock = new(1, 1);
-	private readonly ConcurrentBag<string> _createdSchemas = [];
+	private string _connectionString = null!;
+	private readonly List<string> _createdSchemas = new();
 
 	public async Task InitializeAsync()
 	{
-		if (_initialized) return;
-
-		await _initLock.WaitAsync();
-		try
+		var baseConnStr = System.Environment.GetEnvironmentVariable("PGCONNSTR");
+		if (string.IsNullOrEmpty(baseConnStr))
 		{
-			if (_initialized) return;
-
-			var envConn = System.Environment.GetEnvironmentVariable("PGCONNSTR");
-			if (!string.IsNullOrWhiteSpace(envConn))
-			{
-				_connectionString = envConn;
-			}
-			else
-			{
-				_container = new PostgreSqlBuilder("postgres:18").Build();
-				await _container.StartAsync();
-				_connectionString = _container.GetConnectionString();
-			}
-
-			// Create a golden template schema
-			await using var templateCtx = CreateContextWithSchema("template_schema");
-			await templateCtx.Database.MigrateAsync();
-
-			_initialized = true;
+			throw new InvalidOperationException("PGCONNSTR environment variable is not set");
 		}
-		finally
-		{
-			_initLock.Release();
-		}
+
+		_connectionString = baseConnStr;
+		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
+			.UseNpgsql(_connectionString)
+			.Options;
+			
+		await using var ctx = new ScriptsDbContext(options);
+		await ctx.Database.MigrateAsync();
 	}
 
 	public ScriptsDbContext GetContext()
 	{
-		var schemaName = $"test_{Guid.NewGuid():N}";
+		var schemaName = "test_" + Guid.NewGuid().ToString("N");
 		_createdSchemas.Add(schemaName);
 
 		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseNpgsql(_connectionString, npgsqlOptions =>
-			{
-				npgsqlOptions.SearchPath(schemaName);
-			})
+			.UseNpgsql(_connectionString + ";SearchPath=" + schemaName)
 			.Options;
 
 		var ctx = new ScriptsDbContext(options);
-
-		// Create schema and migrate it
-		ctx.Database.ExecuteSqlRaw($"CREATE SCHEMA {schemaName}");
-		ctx.Database.Migrate();
-
+#pragma warning disable EF1002, EF1003
+		ctx.Database.ExecuteSqlRaw("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+#pragma warning restore EF1002, EF1003
+		
 		return ctx;
 	}
 
-	public IDbContextFactory<ScriptsDbContext> GetContextFactory()
-	{
-		return new TestDbContextFactory(this);
-	}
-
-	private ScriptsDbContext CreateContextWithSchema(string schemaName)
-	{
-		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
-			.UseNpgsql(_connectionString, npgsqlOptions =>
-			{
-				npgsqlOptions.SearchPath(schemaName);
-			})
-			.Options;
-
-		var ctx = new ScriptsDbContext(options);
-		ctx.Database.ExecuteSqlRaw($"CREATE SCHEMA IF NOT EXISTS {schemaName}");
-		return ctx;
-	}
+	public IDbContextFactory<ScriptsDbContext> GetContextFactory() => new TestDbContextFactory(this);
 
 	public async ValueTask DisposeAsync()
 	{
-		if (_disposed) return;
-		_disposed = true;
+		if (_createdSchemas.Count == 0) return;
 
-		await using var db = new ScriptsDbContext(new DbContextOptionsBuilder<ScriptsDbContext>().UseNpgsql(_connectionString).Options);
+		var options = new DbContextOptionsBuilder<ScriptsDbContext>()
+			.UseNpgsql(_connectionString)
+			.Options;
+
+		await using var ctx = new ScriptsDbContext(options);
+
 		foreach (var schema in _createdSchemas)
 		{
-			await db.Database.ExecuteSqlRawAsync($"DROP SCHEMA {schema} CASCADE");
+			try
+			{
+#pragma warning disable EF1002, EF1003
+				await ctx.Database.ExecuteSqlRawAsync($"DROP SCHEMA IF EXISTS {schema} CASCADE");
+#pragma warning restore EF1002, EF1003
+			}
+			catch (Npgsql.NpgsqlException)
+			{
+				// Ignore cleanup errors
+			}
 		}
-
-		if (_container is not null)
-			await _container.DisposeAsync();
-		
-		_initLock.Dispose();
-		GC.SuppressFinalize(this);
 	}
 }
