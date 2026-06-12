@@ -17,10 +17,18 @@ internal sealed class IssueConfiguration : IEntityTypeConfiguration<Issue>
         builder.Property(x => x.Title).IsRequired();
         builder.Property(x => x.TitleLower).IsRequired();
         builder.Property(x => x.Status).IsRequired();
+        builder.Property(x => x.Priority).IsRequired();
+        builder.Property(x => x.CreatedAt).HasDefaultValueSql("NOW()");
+        builder.Property(x => x.UpdatedAt).HasDefaultValueSql("NOW()");
         
         builder.HasOne(x => x.Project)
             .WithMany(x => x.Issues)
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Parent)
+            .WithMany(x => x.SubTasks)
+            .HasForeignKey(x => x.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

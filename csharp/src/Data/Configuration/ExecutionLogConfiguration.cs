@@ -11,16 +11,9 @@ internal sealed class ExecutionLogConfiguration : IEntityTypeConfiguration<Execu
         builder.ToTable("execution_logs", "work");
         builder.HasKey(x => x.Id);
         
-        builder.Property(x => x.TaskName).IsRequired();
-        builder.Property(x => x.Status).IsRequired();
-        builder.Property(x => x.Input).HasColumnType("jsonb").IsRequired();
-        builder.Property(x => x.Output).HasColumnType("jsonb");
+        builder.Property(x => x.SessionId).IsRequired();
+        builder.Property(x => x.Payload).HasColumnType("jsonb").IsRequired();
         
         builder.Property(x => x.Timestamp).HasDefaultValueSql("NOW()");
-        
-        builder.HasOne(x => x.Issue)
-            .WithMany(x => x.ExecutionLogs)
-            .HasForeignKey(x => x.IssueId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

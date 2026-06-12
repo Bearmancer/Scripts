@@ -13,5 +13,9 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         
         builder.Property(x => x.Name).IsRequired();
         builder.Property(x => x.NameLower).IsRequired();
+        builder.Property(x => x.Slug).IsRequired();
+        builder.Property(x => x.Status).IsRequired();
+        builder.Property(x => x.CreatedAt).HasDefaultValueSql("NOW()");
+        builder.Property(x => x.UpdatedAt).HasDefaultValueSql("NOW()");
     }
 }
