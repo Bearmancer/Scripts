@@ -38,11 +38,7 @@ internal sealed class ScriptsDbContext : DbContext
 	public DbSet<Video> Videos => Set<Video>();
 	public DbSet<Playlist> Playlists => Set<Playlist>();
 	public DbSet<PlaylistVideo> PlaylistVideos => Set<PlaylistVideo>();
-	public DbSet<Project> Projects => Set<Project>();
-	public DbSet<Issue> Issues => Set<Issue>();
-	public DbSet<ExecutionLog> ExecutionLogs => Set<ExecutionLog>();
 
-	public DbSet<FailedTask> FailedTasks => Set<FailedTask>();
 	public DbSet<FiberyEntity> FiberyEntities => Set<FiberyEntity>();
 	public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
 	public DbSet<ReleaseProgress> ReleaseProgress => Set<ReleaseProgress>();
@@ -56,11 +52,7 @@ internal sealed class ScriptsDbContext : DbContext
 		mb.ApplyConfiguration(new Configuration.VideoConfiguration());
 		mb.ApplyConfiguration(new Configuration.PlaylistConfiguration());
 		mb.ApplyConfiguration(new Configuration.PlaylistVideoConfiguration());
-		mb.ApplyConfiguration(new Configuration.ProjectConfiguration());
-		mb.ApplyConfiguration(new Configuration.IssueConfiguration());
-		mb.ApplyConfiguration(new Configuration.ExecutionLogConfiguration());
 		mb.ApplyConfiguration(new Configuration.FiberyEntityConfiguration());
-		mb.ApplyConfiguration(new Configuration.FailedTaskConfiguration());
 		mb.ApplyConfiguration(new Configuration.SourceRecordConfiguration());
 		mb.ApplyConfiguration(new Configuration.ReleaseProgressConfiguration());
 

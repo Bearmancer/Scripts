@@ -11,7 +11,7 @@ namespace MyCompiledModels
 			: base(
 				skipDetectChanges: false,
 				modelId: new Guid("440e5332-5f1e-41e3-9a86-a5b2b50b50e4"),
-				entityTypeCount: 10
+				entityTypeCount: 8
 			)
 		{ }
 
@@ -19,8 +19,6 @@ namespace MyCompiledModels
 		{
 			var album = AlbumEntityType.Create(this);
 			var artist = ArtistEntityType.Create(this);
-			var executionLog = ExecutionLogEntityType.Create(this);
-			var failedTask = FailedTaskEntityType.Create(this);
 			var fiberyEntity = FiberyEntityEntityType.Create(this);
 			var releaseProgress = ReleaseProgressEntityType.Create(this);
 			var scrobble = ScrobbleEntityType.Create(this);
@@ -35,8 +33,6 @@ namespace MyCompiledModels
 
 			AlbumEntityType.CreateAnnotations(album);
 			ArtistEntityType.CreateAnnotations(artist);
-			ExecutionLogEntityType.CreateAnnotations(executionLog);
-			FailedTaskEntityType.CreateAnnotations(failedTask);
 			FiberyEntityEntityType.CreateAnnotations(fiberyEntity);
 			ReleaseProgressEntityType.CreateAnnotations(releaseProgress);
 			ScrobbleEntityType.CreateAnnotations(scrobble);
