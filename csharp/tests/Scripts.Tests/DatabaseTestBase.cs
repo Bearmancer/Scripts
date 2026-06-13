@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
+using Scripts.Tests.Attributes;
 using Scripts.Tests.DbContext;
 
 namespace Scripts.Tests;
@@ -17,6 +18,7 @@ internal abstract class DatabaseTestBase
 	[Before(Class)]
 	public static async Task SetupFixture(ClassHookContext context)
 	{
+		RequiresPgConnStrAttribute.EnsureSet();
 		ClassLocks.GetOrAdd(context.ClassType, static _ => new SemaphoreSlim(1, 1));
 		var fixture = Fixtures.GetOrAdd(context.ClassType, static _ => new PostgresFixture());
 		await GlobalLock.WaitAsync();

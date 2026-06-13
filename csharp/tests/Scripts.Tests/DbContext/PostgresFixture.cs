@@ -35,6 +35,7 @@ internal sealed class PostgresFixture : IAsyncInitializer, IAsyncDisposable
 		await using var ctx = new ScriptsDbContext(options);
 #pragma warning disable EF1002, EF1003
 		ctx.Database.ExecuteSqlRaw($"CREATE SCHEMA IF NOT EXISTS {template_schema}");
+		ctx.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS pg_trgm");
 #pragma warning restore EF1002, EF1003
 		ctx.Database.Migrate();
 		await ctx.Database.MigrateAsync();

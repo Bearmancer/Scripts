@@ -1,10 +1,17 @@
 namespace Scripts.Tests.Attributes;
 
-internal sealed class RequiresPgConnStrAttribute()
-	: SkipAttribute("PGCONNSTR not set — start Docker, load .env, then re-run")
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+internal sealed class RequiresPgConnStrAttribute : Attribute
 {
-	public override Task<bool> ShouldSkip(TestRegisteredContext context) =>
-		Task.FromResult(
-			string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("PGCONNSTR"))
-		);
+	public static void EnsureSet()
+	{
+		if (string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("PGCONNSTR")))
+		{
+			throw new InvalidOperationException(
+				"PGCONNSTR is not set. Start Postgres (Docker or local) and ensure PGCONNSTR "
+					+ "points to a writable database. Example: "
+					+ "Host=localhost;Database=pg_db;Username=lance;Password=lance"
+			);
+		}
+	}
 }
