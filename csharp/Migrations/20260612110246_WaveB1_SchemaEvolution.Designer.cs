@@ -91,71 +91,6 @@ namespace Scripts.Migrations
                     b.ToTable("artists", "music");
                 });
 
-            modelBuilder.Entity("Scripts.Data.Entities.ExecutionLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ExitCode")
-                        .HasColumnType("integer");
-
-                    b.Property<JsonDocument>("Payload")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("SessionId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("execution_logs", "work");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.FailedTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ErrorMessage")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("ExecutionLogId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TaskName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamptz")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExecutionLogId")
-                        .HasDatabaseName("idx_failed_tasks_execution_log_id");
-
-                    b.HasIndex("TaskName")
-                        .HasDatabaseName("idx_failed_tasks_task_name");
-
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("idx_failed_tasks_timestamp");
-
-                    b.ToTable("failed_tasks", (string)null);
-                });
-
             modelBuilder.Entity("Scripts.Data.Entities.FiberyEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -654,33 +589,6 @@ namespace Scripts.Migrations
                     b.Navigation("Artist");
                 });
 
-            modelBuilder.Entity("Scripts.Data.Entities.FailedTask", b =>
-                {
-                    b.HasOne("Scripts.Data.Entities.ExecutionLog", "ExecutionLog")
-                        .WithMany("FailedTasks")
-                        .HasForeignKey("ExecutionLogId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("ExecutionLog");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
-                {
-                    b.HasOne("Scripts.Data.Entities.Issue", "Parent")
-                        .WithMany("SubTasks")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Scripts.Data.Entities.Project", "Project")
-                        .WithMany("Issues")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Parent");
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
                 {
                     b.HasOne("Scripts.Data.Entities.MusicWork", "MusicWork")
@@ -763,11 +671,6 @@ namespace Scripts.Migrations
                     b.Navigation("Albums");
 
                     b.Navigation("Tracks");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.ExecutionLog", b =>
-                {
-                    b.Navigation("FailedTasks");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>

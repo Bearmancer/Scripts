@@ -36,23 +36,6 @@ namespace Scripts.Migrations
                 name: "idx_videos_url",
                 schema: "youtube",
                 table: "videos");
-
-            migrationBuilder.DropIndex(
-                name: "idx_execution_logs_session_id",
-                table: "execution_logs");
-
-            migrationBuilder.DropIndex(
-                name: "idx_execution_logs_timestamp",
-                table: "execution_logs");
-
-            migrationBuilder.EnsureSchema(
-                name: "work");
-
-            migrationBuilder.RenameTable(
-                name: "execution_logs",
-                newName: "execution_logs",
-                newSchema: "work");
-
             migrationBuilder.AlterColumn<DateTimeOffset>(
                 name: "SyncedAt",
                 schema: "youtube",
@@ -111,18 +94,6 @@ namespace Scripts.Migrations
                 type: "text",
                 nullable: false,
                 defaultValue: "");
-
-            migrationBuilder.AlterColumn<DateTimeOffset>(
-                name: "Timestamp",
-                schema: "work",
-                table: "execution_logs",
-                type: "timestamp with time zone",
-                nullable: false,
-                defaultValueSql: "NOW()",
-                oldClrType: typeof(DateTimeOffset),
-                oldType: "timestamptz",
-                oldDefaultValueSql: "CURRENT_TIMESTAMP");
-
             migrationBuilder.CreateTable(
                 name: "playlists",
                 schema: "youtube",
@@ -141,25 +112,6 @@ namespace Scripts.Migrations
                 {
                     table.PrimaryKey("PK_playlists", x => x.Id);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "projects",
-                schema: "work",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    NameLower = table.Column<string>(type: "text", nullable: false),
-                    Slug = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_projects", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "playlist_videos",
                 schema: "youtube",
@@ -187,71 +139,12 @@ namespace Scripts.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "issues",
-                schema: "work",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Identifier = table.Column<string>(type: "text", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    TitleLower = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Priority = table.Column<string>(type: "text", nullable: false),
-                    PrioritySort = table.Column<int>(type: "integer", nullable: false),
-                    Estimate = table.Column<int>(type: "integer", nullable: true),
-                    ParentId = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()"),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_issues", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_issues_issues_ParentId",
-                        column: x => x.ParentId,
-                        principalSchema: "work",
-                        principalTable: "issues",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_issues_projects_ProjectId",
-                        column: x => x.ProjectId,
-                        principalSchema: "work",
-                        principalTable: "projects",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_videos_VideoId",
                 schema: "youtube",
                 table: "videos",
                 column: "VideoId",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_issues_Identifier",
-                schema: "work",
-                table: "issues",
-                column: "Identifier",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_issues_ParentId",
-                schema: "work",
-                table: "issues",
-                column: "ParentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_issues_ProjectId",
-                schema: "work",
-                table: "issues",
-                column: "ProjectId");
-
             migrationBuilder.CreateIndex(
                 name: "IX_playlist_videos_VideoId",
                 schema: "youtube",
@@ -268,19 +161,9 @@ namespace Scripts.Migrations
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
-                name: "issues",
-                schema: "work");
-
-            migrationBuilder.DropTable(
+        {            migrationBuilder.DropTable(
                 name: "playlist_videos",
                 schema: "youtube");
-
-            migrationBuilder.DropTable(
-                name: "projects",
-                schema: "work");
-
             migrationBuilder.DropTable(
                 name: "playlists",
                 schema: "youtube");
@@ -314,12 +197,6 @@ namespace Scripts.Migrations
                 name: "VideoId",
                 schema: "youtube",
                 table: "videos");
-
-            migrationBuilder.RenameTable(
-                name: "execution_logs",
-                schema: "work",
-                newName: "execution_logs");
-
             migrationBuilder.AlterColumn<DateTimeOffset>(
                 name: "SyncedAt",
                 schema: "youtube",
