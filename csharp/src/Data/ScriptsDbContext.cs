@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Scripts.Data.Entities;
 
@@ -13,6 +14,9 @@ internal sealed class ScriptsDbContext : DbContext
 	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 	{
 		base.OnConfiguring(optionsBuilder);
+
+		optionsBuilder.ConfigureWarnings(w =>
+			w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
 		var inMemory = optionsBuilder.Options.Extensions.Any(e =>
 			e.GetType().FullName?.Contains("InMemoryOptionsExtension") == true

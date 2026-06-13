@@ -13,8 +13,8 @@ using Scripts.Data;
 namespace Scripts.Migrations
 {
     [DbContext(typeof(ScriptsDbContext))]
-    [Migration("20260612110246_WaveB1_SchemaEvolution")]
-    partial class WaveB1_SchemaEvolution
+    [Migration("20260613102910_WaveB1_Regenerated")]
+    partial class WaveB1_Regenerated
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -121,117 +121,6 @@ namespace Scripts.Migrations
                     b.ToTable("fibery_entities", "fibery");
                 });
 
-            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("Estimate")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("PrioritySort")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TitleLower")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Identifier")
-                        .IsUnique();
-
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("issues", "work");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("WorkId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorkId");
-
-                    b.ToTable("movements", "classical");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.MusicWork", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Composer")
-                        .HasColumnType("text");
-
-                    b.Property<JsonDocument>("Metadata")
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("works", "music");
-                });
-
             modelBuilder.Entity("Scripts.Data.Entities.Playlist", b =>
                 {
                     b.Property<int>("Id")
@@ -288,43 +177,6 @@ namespace Scripts.Migrations
                     b.HasIndex("VideoId");
 
                     b.ToTable("playlist_videos", "youtube");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.Project", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("NameLower")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("projects", "work");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.ReleaseProgress", b =>
@@ -487,15 +339,9 @@ namespace Scripts.Migrations
                     b.Property<int?>("DurationSeconds")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("MovementId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("WorkId")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -503,15 +349,11 @@ namespace Scripts.Migrations
 
                     b.HasIndex("ArtistId");
 
-                    b.HasIndex("MovementId");
-
                     b.HasIndex("Title")
                         .HasDatabaseName("idx_tracks_title_trgm");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Title"), "gin");
                     NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Title"), new[] { "gin_trgm_ops" });
-
-                    b.HasIndex("WorkId");
 
                     b.HasIndex("ArtistId", "Title")
                         .IsUnique()
@@ -589,17 +431,6 @@ namespace Scripts.Migrations
                     b.Navigation("Artist");
                 });
 
-            modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
-                {
-                    b.HasOne("Scripts.Data.Entities.MusicWork", "MusicWork")
-                        .WithMany("Movements")
-                        .HasForeignKey("WorkId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MusicWork");
-                });
-
             modelBuilder.Entity("Scripts.Data.Entities.PlaylistVideo", b =>
                 {
                     b.HasOne("Scripts.Data.Entities.Playlist", "Playlist")
@@ -642,23 +473,9 @@ namespace Scripts.Migrations
                         .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Scripts.Data.Entities.Movement", "Movement")
-                        .WithMany("Tracks")
-                        .HasForeignKey("MovementId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Scripts.Data.Entities.MusicWork", "MusicWork")
-                        .WithMany("Tracks")
-                        .HasForeignKey("WorkId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Album");
 
                     b.Navigation("Artist");
-
-                    b.Navigation("Movement");
-
-                    b.Navigation("MusicWork");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.Album", b =>
@@ -673,31 +490,9 @@ namespace Scripts.Migrations
                     b.Navigation("Tracks");
                 });
 
-            modelBuilder.Entity("Scripts.Data.Entities.Issue", b =>
-                {
-                    b.Navigation("SubTasks");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.Movement", b =>
-                {
-                    b.Navigation("Tracks");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.MusicWork", b =>
-                {
-                    b.Navigation("Movements");
-
-                    b.Navigation("Tracks");
-                });
-
             modelBuilder.Entity("Scripts.Data.Entities.Playlist", b =>
                 {
                     b.Navigation("PlaylistVideos");
-                });
-
-            modelBuilder.Entity("Scripts.Data.Entities.Project", b =>
-                {
-                    b.Navigation("Issues");
                 });
 
             modelBuilder.Entity("Scripts.Data.Entities.Track", b =>
