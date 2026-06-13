@@ -23,16 +23,14 @@ internal sealed class ExplicitConfigurationTests
 			.Select(e => e.ClrType)
 			.ToList();
 
-		await Assert.That(entityTypes).Count().IsEqualTo(10);
+		await Assert.That(entityTypes).Count().IsEqualTo(8);
 
 		await Assert.That(entityTypes).Contains(typeof(Artist));
 		await Assert.That(entityTypes).Contains(typeof(Album));
 		await Assert.That(entityTypes).Contains(typeof(Track));
 		await Assert.That(entityTypes).Contains(typeof(Scrobble));
 		await Assert.That(entityTypes).Contains(typeof(Video));
-		await Assert.That(entityTypes).Contains(typeof(ExecutionLog));
 		await Assert.That(entityTypes).Contains(typeof(FiberyEntity));
-		await Assert.That(entityTypes).Contains(typeof(FailedTask));
 		await Assert.That(entityTypes).Contains(typeof(SourceRecord));
 		await Assert.That(entityTypes).Contains(typeof(Data.Entities.ReleaseProgress));
 	}
@@ -74,8 +72,6 @@ internal sealed class ExplicitConfigurationTests
 		{
 			nameof(Album),
 			nameof(Artist),
-			nameof(ExecutionLog),
-			nameof(FailedTask),
 			nameof(FiberyEntity),
 			nameof(Scripts.Data.Entities.ReleaseProgress),
 			nameof(Scrobble),

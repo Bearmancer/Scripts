@@ -48,17 +48,4 @@ internal sealed class DbContextDbSetTests
 		await Assert.That(context.Videos).IsNotNull();
 	}
 
-	[Test]
-	public async Task DbContext_HasExecutionLogs_DbSet()
-	{
-		using var context = CreateContext();
-		await Assert.That(context.ExecutionLogs).IsNotNull();
-	}
-
-	[Test]
-	public async Task DbContext_HasFailedTasks_DbSet()
-	{
-		using var context = CreateContext();
-		await Assert.That(context.FailedTasks).IsNotNull();
-	}
 }

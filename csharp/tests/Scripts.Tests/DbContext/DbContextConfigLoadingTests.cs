@@ -23,8 +23,6 @@ internal sealed class DbContextConfigLoadingTests
 		await Assert.That(entityTypes).Contains(typeof(Track));
 		await Assert.That(entityTypes).Contains(typeof(Scrobble));
 		await Assert.That(entityTypes).Contains(typeof(Video));
-		await Assert.That(entityTypes).Contains(typeof(ExecutionLog));
-		await Assert.That(entityTypes).Contains(typeof(FailedTask));
 		await Assert.That(entityTypes).Contains(typeof(FiberyEntity));
 	}
 
