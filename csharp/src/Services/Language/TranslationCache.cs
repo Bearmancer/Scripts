@@ -40,7 +40,7 @@ internal static class TranslationCache
 		await FileLock.WaitAsync(cancellationToken: ct);
 		try
 		{
-			Dictionary<string, string> cache = await GetCacheAsync(ct: ct);
+			Dictionary<string, string> cache = await GetCacheUnsafeAsync(ct: ct);
 			var key = ComputeKey(text: text, targetLang: targetLang);
 			cache[key: key] = translation;
 			await SaveAsync(cache: cache, ct: ct);
@@ -60,7 +60,7 @@ internal static class TranslationCache
 		await FileLock.WaitAsync(cancellationToken: ct);
 		try
 		{
-			Dictionary<string, string> cache = await GetCacheAsync(ct: ct);
+			Dictionary<string, string> cache = await GetCacheUnsafeAsync(ct: ct);
 			foreach (var (text, lang, translation) in entries)
 			{
 				var key = ComputeKey(text: text, targetLang: lang);
@@ -77,6 +77,27 @@ internal static class TranslationCache
 	}
 
 	private static async Task<Dictionary<string, string>> GetCacheAsync(CancellationToken ct)
+	{
+		if (MemoryCache is { })
+			return MemoryCache;
+
+		await FileLock.WaitAsync(cancellationToken: ct);
+		try
+		{
+			if (MemoryCache is { })
+				return MemoryCache;
+
+			Dictionary<string, string> cache = await LoadAsync(ct: ct);
+			MemoryCache = cache;
+			return cache;
+		}
+		finally
+		{
+			FileLock.Release();
+		}
+	}
+
+	private static async Task<Dictionary<string, string>> GetCacheUnsafeAsync(CancellationToken ct)
 	{
 		if (MemoryCache is { })
 			return MemoryCache;

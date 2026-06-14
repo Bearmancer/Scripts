@@ -1,27 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
-		<GenerateProgramFile>false</GenerateProgramFile>
-		<UseMicrosoftTestingPlatform>true</UseMicrosoftTestingPlatform>
+		<IsTestProject>true</IsTestProject>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>Scripts.Tests</AssemblyName>
+		<RootNamespace>Scripts.Tests</RootNamespace>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<EnableMSTestRunner>true</EnableMSTestRunner>
+		<OutputPath>bin\$(Configuration)\</OutputPath>
+		<Platforms>x64</Platforms>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="Classical\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="*" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="*" />
-		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="*" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
 		<PackageReference Include="TUnit" Version="*" />
-		<PackageReference Include="Testcontainers.PostgreSql" Version="*" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Scripts.csproj" />
 	</ItemGroup>
+
 </Project>

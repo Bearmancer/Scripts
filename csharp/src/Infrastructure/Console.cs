@@ -339,7 +339,7 @@ public static class Console
 		var panel = new Panel(new Markup(markupContent))
 		{
 			Border = BoxBorder.Rounded,
-			Padding = new Spectre.Console.Padding(1, 1, 1, 1),
+			Padding = new Padding(1, 1, 1, 1),
 			Header = new PanelHeader($"[blue]{Markup.Escape(header)}[/]"),
 		};
 		AnsiConsole.Write(panel);

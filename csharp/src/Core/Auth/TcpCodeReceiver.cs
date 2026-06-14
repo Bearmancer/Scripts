@@ -18,24 +18,20 @@ internal sealed class TcpCodeReceiver(string closePageResponse = "<html><body><h
 		AuthorizationCodeRequestUrl url,
 		CancellationToken taskCancellationToken)
 	{
+		using var _ = Log.Track();
 		var authorizationUrl = url.Build().AbsoluteUri;
-		Console.WriteLine($"[TRACE] TcpCodeReceiver: Opening browser to {authorizationUrl}");
 
 		try
 		{
 			var process = Process.Start(new ProcessStartInfo(authorizationUrl) { UseShellExecute = true });
 			if (process == null)
 			{
-				Console.WriteLine($"[TRACE] TcpCodeReceiver: Process.Start returned null - browser may not have launched");
-			}
-			else
-			{
-				Console.WriteLine($"[TRACE] TcpCodeReceiver: Browser process launched, PID={process.Id}");
+				Log.Warning("TcpCodeReceiver: Process.Start returned null - browser may not have launched");
 			}
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"[TRACE] TcpCodeReceiver: Process.Start FAILED: {ex.GetType().Name}: {ex.Message}");
+			Log.Error(ex, "TcpCodeReceiver: Process.Start FAILED");
 			throw;
 		}
 
@@ -44,7 +40,6 @@ internal sealed class TcpCodeReceiver(string closePageResponse = "<html><body><h
 		using (taskCancellationToken.Register(() => listener.Stop()))
 		{
 			listener.Start();
-			Console.WriteLine($"[TRACE] TcpCodeReceiver: Listening on {RedirectUri}");
 
 			using var client = await listener.AcceptTcpClientAsync(taskCancellationToken);
 			using var stream = client.GetStream();
@@ -52,8 +47,6 @@ internal sealed class TcpCodeReceiver(string closePageResponse = "<html><body><h
 			var buffer = new byte[4096];
 			var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), taskCancellationToken);
 			var request = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-			Console.WriteLine($"[TRACE] TcpCodeReceiver: Received request");
 
 			var requestLine = request.Split('\r', '\n')[0];
 			var parts = requestLine.Split(' ');
@@ -69,8 +62,6 @@ internal sealed class TcpCodeReceiver(string closePageResponse = "<html><body><h
 			var responseContent = $"HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {_closePageResponse.Length}\r\nConnection: close\r\n\r\n{_closePageResponse}";
 			var responseBytes = Encoding.UTF8.GetBytes(responseContent);
 			await stream.WriteAsync(responseBytes.AsMemory(0, responseBytes.Length), taskCancellationToken);
-
-			Console.WriteLine($"[TRACE] TcpCodeReceiver: Sent response, parsing query string: {queryString}");
 
 			var parameters = System.Web.HttpUtility.ParseQueryString(queryString);
 			var dict = new Dictionary<string, string>();

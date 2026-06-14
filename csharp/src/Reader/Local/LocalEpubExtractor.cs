@@ -7,7 +7,6 @@ namespace Scripts.Services.Read;
 
 internal sealed partial class LocalEpubExtractor(
 	string filePath,
-	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
 	CancellationToken ct = default
 )
 {
@@ -69,16 +68,15 @@ internal sealed partial class LocalEpubExtractor(
 		string mimeType
 	)
 	{
-		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(options: azureDocumentIntelligence))
+		if (AzureDocumentIntelligenceService.IsConfigured)
 		{
 			try
 			{
 				Ui.Info(
 					$"[{pageNumber}/{totalPages}] Azure Document Intelligence: {name} ({bytes.Length:N0} bytes)..."
 				);
-				return await AzureDocumentIntelligenceOcrProvider
-					.CreateConfigured(options: azureDocumentIntelligence)
-					.OcrImageAsync(imageBytes: bytes, mimeType: mimeType, ct: ct);
+				var result = await AzureDocumentIntelligenceService.OcrImageAsync(bytes, mimeType, ct);
+				if (result is { }) return result;
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using Scripts.Services.Read;
-using Scripts.Services.Read.Ocr;
 using Scripts.Services.Read.Validation;
 
 namespace Scripts.CLI.Read;
@@ -17,39 +16,32 @@ internal sealed class ReadCommand : BaseAsyncCommand<ReadCommand.Settings>
 			service: ServiceType.Read,
 			async () =>
 			{
-				ArticleContent content;
-				AzureDocumentIntelligenceOptions azureDocumentIntelligence = new(
-					Endpoint: settings.AzureDocumentIntelligenceEndpoint,
-					ModelId: settings.AzureDocumentIntelligenceModel
-				);
+			ArticleContent content;
 
-				if (File.Exists(path: settings.Source) && IsPdf(path: settings.Source))
-				{
-					Ui.Info(message: "Local PDF detected — using LocalPdfExtractor.");
-					content = await new LocalPdfExtractor(
-						filePath: settings.Source,
-						azureDocumentIntelligence: azureDocumentIntelligence,
-						ct: cancellationToken
-					).ExtractAsync();
-				}
-				else if (File.Exists(path: settings.Source) && IsEpub(path: settings.Source))
-				{
-					Ui.Info(message: "Local EPUB detected — using LocalEpubExtractor + OCR.");
-					content = await new LocalEpubExtractor(
-						filePath: settings.Source,
-						azureDocumentIntelligence: azureDocumentIntelligence,
-						ct: cancellationToken
-					).ExtractAsync();
-				}
-				else if (File.Exists(path: settings.Source) && IsImage(path: settings.Source))
-				{
-					Ui.Info(message: "Local image detected — using LocalImageExtractor + OCR.");
-					content = await new LocalImageExtractor(
-						filePath: settings.Source,
-						azureDocumentIntelligence: azureDocumentIntelligence,
-						ct: cancellationToken
-					).ExtractAsync();
-				}
+			if (File.Exists(path: settings.Source) && IsPdf(path: settings.Source))
+			{
+				Ui.Info(message: "Local PDF detected — using LocalPdfExtractor.");
+				content = await new LocalPdfExtractor(
+					filePath: settings.Source,
+					ct: cancellationToken
+				).ExtractAsync();
+			}
+			else if (File.Exists(path: settings.Source) && IsEpub(path: settings.Source))
+			{
+				Ui.Info(message: "Local EPUB detected — using LocalEpubExtractor + OCR.");
+				content = await new LocalEpubExtractor(
+					filePath: settings.Source,
+					ct: cancellationToken
+				).ExtractAsync();
+			}
+			else if (File.Exists(path: settings.Source) && IsImage(path: settings.Source))
+			{
+				Ui.Info(message: "Local image detected — using LocalImageExtractor + OCR.");
+				content = await new LocalImageExtractor(
+					filePath: settings.Source,
+					ct: cancellationToken
+				).ExtractAsync();
+			}
 				else if (
 					Uri.TryCreate(
 						uriString: settings.Source,

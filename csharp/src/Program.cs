@@ -29,21 +29,21 @@ internal static class Program
 			sw.Stop();
 			Console.WriteLine($"[TRACE] GetCredentialAsync returned in {sw.ElapsedMilliseconds}ms");
 			Console.WriteLine($"[TRACE] Credential: UserId={credential.UserId}, Token.IsStale={credential.Token.IsStale}, HasAccessToken={!string.IsNullOrEmpty(credential.Token.AccessToken)}, HasRefreshToken={!string.IsNullOrEmpty(credential.Token.RefreshToken)}");
-			
+
 			// Verify token works by querying YouTube API
 			Console.WriteLine("[TRACE] Verifying token by querying YouTube API...");
 			try
 			{
-				var ytService = new Google.Apis.YouTube.v3.YouTubeService(new Google.Apis.Services.BaseClientService.Initializer
+				var ytService = new Google.Apis.YouTube.v3.YouTubeService(new BaseClientService.Initializer
 				{
 					HttpClientInitializer = credential,
 					ApplicationName = "Scripts"
 				});
-				
+
 				var channelsRequest = ytService.Channels.List("snippet");
 				channelsRequest.Mine = true;
 				var channelsResponse = await channelsRequest.ExecuteAsync();
-				
+
 				Console.WriteLine($"[TRACE] YouTube API call SUCCESS");
 				Console.WriteLine($"[TRACE] Channels found: {channelsResponse.Items?.Count ?? 0}");
 				if (channelsResponse.Items?.Count > 0)

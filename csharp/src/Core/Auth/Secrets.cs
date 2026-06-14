@@ -17,9 +17,6 @@ internal static class Secrets
 	public static string GoogleDocumentAiProcessorName =>
 		GetRequired(name: "GOOGLE_DOCUMENTAI_PROCESSOR_NAME");
 
-	public static string? LibreTranslateUrl =>
-		GetEnvironmentVariable("LIBRE_TRANSLATE_URL");
-
 	public static string AzureTranslatorEndpoint =>
 		GetEnvironmentVariable("AZURE_TRANSLATOR_ENDPOINT")
 		?? "https://translator-lance.cognitiveservices.azure.com/";
@@ -31,6 +28,20 @@ internal static class Secrets
 	public static string AzureDocumentIntelligenceModelId =>
 		GetEnvironmentVariable("AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID")
 		?? "prebuilt-layout";
+
+	public static string AzureOpenAIEndpoint =>
+		GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
+		?? "https://openai-lance.openai.azure.com/";
+
+	public static string AzureOpenAIDeploymentName =>
+		GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "gpt-4o-mini";
+
+	public static string AzureOpenAIWhisperDeploymentName =>
+		GetEnvironmentVariable("AZURE_OPENAI_WHISPER_DEPLOYMENT_NAME") ?? "whisper";
+
+	public static string AzureVisionEndpoint =>
+		GetEnvironmentVariable("AZURE_VISION_ENDPOINT")
+		?? "https://vision-lance.cognitiveservices.azure.com/";
 
 	private static string? GetEnvironmentVariable(string name) =>
 		Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.User)

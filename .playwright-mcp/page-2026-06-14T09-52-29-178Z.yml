@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - banner "IBM Cloud" [ref=e2]:
+    - link "IBM Cloud" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: IBM
+      - generic [ref=e5]: Cloud
+    - navigation "IBM Cloud" [ref=e6]:
+      - menubar "IBM Cloud" [ref=e7]:
+        - listitem [ref=e8]:
+          - menuitem "Catalog" [ref=e9] [cursor=pointer]:
+            - generic [ref=e10]: Catalog
+        - listitem [ref=e11]:
+          - menuitem "Cost estimator" [ref=e12] [cursor=pointer]:
+            - generic [ref=e13]: Cost estimator
+        - listitem [ref=e14]:
+          - menuitem "Docs" [ref=e15] [cursor=pointer]:
+            - generic [ref=e16]: Docs
+  - main [ref=e17]:
+    - region "fields-pane" [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: ...
+        - generic [ref=e21]: © Copyright IBM Corp. 2014, 2026. All rights reserved.
+    - region "info-pane" [ref=e22]:
+      - region "signUp" [ref=e24]:
+        - img "error image" [ref=e25]
+        - list [ref=e27]:
+          - listitem [ref=e28]:
+            - paragraph [ref=e29]: Unlock the full IBM Cloud Catalog
+            - paragraph [ref=e30]: Get started with everything you need to take your projects to the next level. Including always-free products like IBM Watson® APIs. They never expire and you can’t be charged for them—ever.
+          - listitem [ref=e31]:
+            - paragraph [ref=e32]: 200 USD Cloud Credit for free
+            - paragraph [ref=e33]: Try any IBM Cloud product with $200 in credit to use over the next 30 days.
+          - generic [ref=e34]:
+            - paragraph [ref=e35]: Get started for free
+            - paragraph [ref=e36]:
+              - text: We ask for your credit card to verify your identity. You will not be charged for any usage within the free tier.
+              - link "Learn more about IBM Cloud free tier (opens in new tab)" [ref=e37] [cursor=pointer]:
+                - /url: https://www.ibm.com/cloud/free
+                - text: Learn more about IBM Cloud free tier
+                - img "(opens in new tab)" [ref=e38]

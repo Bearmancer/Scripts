@@ -14,11 +14,7 @@ internal static class AzureTranslationService
 			new Uri(Secrets.AzureTranslatorEndpoint)
 		);
 
-	internal static bool IsConfigured => !IsNullOrWhiteSpace(Secrets.AzureTranslatorEndpoint);
-
-#if DEBUG
-	internal static Func<string, string?, CancellationToken, Task<TranslationResult?>>? TranslateDelegate;
-#endif
+	internal static bool IsConfigured => !string.IsNullOrWhiteSpace(Secrets.AzureTranslatorEndpoint);
 
 	internal static async Task<TranslationResult?> TranslateAsync(
 		string text,
@@ -26,10 +22,11 @@ internal static class AzureTranslationService
 		CancellationToken ct = default
 	)
 	{
-#if DEBUG
-		if (TranslateDelegate is { } fake)
-			return await fake(text, sourceLanguage, ct);
-#endif
+		_ = text ?? throw new ArgumentNullException(nameof(text));
+		using var track = Log.Track(new { textLength = text.Length, sourceLanguage });
+
+		if (string.IsNullOrWhiteSpace(text))
+			throw new ArgumentException("Text cannot be empty.", nameof(text));
 
 		if (Client is null)
 			return null;
@@ -44,19 +41,19 @@ internal static class AzureTranslationService
 
 		try
 		{
-			Response<IReadOnlyList<TranslatedTextItem>> response = await Client
-				.TranslateAsync(
-					targetLanguage: "en",
-					[text],
-					sourceLanguage: sourceLanguage,
-					cancellationToken: ct
-				)
+			TranslateInputItem input = new(
+				text: text,
+				target: new TranslationTarget(language: "en"),
+				language: sourceLanguage
+			);
+			Response<TranslatedTextItem> response = await Client
+				.TranslateAsync(input: input, cancellationToken: ct)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
-			if (response.Value is not { Count: > 0 } items)
+			if (response.Value is null)
 				return null;
 
-			TranslatedTextItem item = items[0];
+			TranslatedTextItem item = response.Value;
 			var detectedLanguage = item.DetectedLanguage?.Language ?? sourceLanguage ?? "unknown";
 			var translatedText = item.Translations?[0].Text;
 
@@ -88,35 +85,30 @@ internal static class AzureTranslationService
 		CancellationToken ct = default
 	)
 	{
-#if DEBUG
-		if (TranslateDelegate is { } fake)
-		{
-			List<TranslationResult> batchResults = new(capacity: texts.Count);
-			foreach (var t in texts)
-			{
-				var r = await fake(t, sourceLanguage, ct);
-				if (r is { })
-					batchResults.Add(r);
-			}
-			return batchResults;
-		}
-#endif
+		_ = texts ?? throw new ArgumentNullException(nameof(texts));
+		using var track = Log.Track(new { batchSize = texts.Count, sourceLanguage });
+
+		if (texts.Count == 0)
+			throw new ArgumentException("Text batch cannot be empty.", nameof(texts));
 
 		if (Client is null)
 			return [];
 
-		if (texts.Count == 0)
-			return [];
-
 		try
 		{
+			List<TranslateInputItem> inputs = new(capacity: texts.Count);
+			foreach (string t in texts)
+			{
+				inputs.Add(
+					new TranslateInputItem(
+						text: t,
+						target: new TranslationTarget(language: "en"),
+						language: sourceLanguage
+					)
+				);
+			}
 			Response<IReadOnlyList<TranslatedTextItem>> response = await Client
-				.TranslateAsync(
-					targetLanguage: "en",
-					content: texts,
-					sourceLanguage: sourceLanguage,
-					cancellationToken: ct
-				)
+				.TranslateAsync(inputs: inputs, cancellationToken: ct)
 				.ConfigureAwait(continueOnCapturedContext: false);
 
 			List<TranslationResult> results = new(capacity: response.Value.Count);

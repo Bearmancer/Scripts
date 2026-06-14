@@ -6,7 +6,6 @@ namespace Scripts.Services.Read;
 
 internal sealed class LocalImageExtractor(
 	string filePath,
-	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
 	CancellationToken ct = default
 )
 {
@@ -47,7 +46,7 @@ internal sealed class LocalImageExtractor(
 		string mimeType
 	)
 	{
-		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(options: azureDocumentIntelligence))
+		if (AzureDocumentIntelligenceService.IsConfigured)
 		{
 			try
 			{
@@ -56,9 +55,8 @@ internal sealed class LocalImageExtractor(
 					name,
 					bytes.Length
 				);
-				return await AzureDocumentIntelligenceOcrProvider
-					.CreateConfigured(options: azureDocumentIntelligence)
-					.OcrImageAsync(imageBytes: bytes, mimeType: mimeType, ct: ct);
+				var result = await AzureDocumentIntelligenceService.OcrImageAsync(bytes, mimeType, ct);
+				if (result is { }) return result;
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{

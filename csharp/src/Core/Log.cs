@@ -12,6 +12,9 @@ internal enum ServiceType
 	Music,
 	Read,
 	Cloud,
+	OpenAI,
+	Vision,
+	DocumentIntelligence,
 }
 
 internal static class Log
@@ -30,6 +33,9 @@ internal static class Log
 			[key: ServiceType.Music] = BuildServiceLogger(filename: "music.jsonl"),
 			[key: ServiceType.Read] = BuildServiceLogger(filename: "read.jsonl"),
 			[key: ServiceType.Cloud] = BuildServiceLogger(filename: "cloud.jsonl"),
+			[key: ServiceType.OpenAI] = BuildServiceLogger(filename: "openai.jsonl"),
+			[key: ServiceType.Vision] = BuildServiceLogger(filename: "vision.jsonl"),
+			[key: ServiceType.DocumentIntelligence] = BuildServiceLogger(filename: "document-intelligence.jsonl"),
 		}.ToFrozenDictionary();
 	}
 
@@ -96,6 +102,9 @@ internal static class Log
 		Ui.Starting(message: "{0} session started", service);
 		return new SessionScope(service: service, logScope: scope, () => ActiveService = null);
 	}
+
+	public static void Verbose(string messageTemplate, params object?[] args) =>
+		ActiveLogger.Verbose(messageTemplate, args);
 
 	public static void Debug(string messageTemplate, params object?[] args) =>
 		ActiveLogger.Debug(messageTemplate: messageTemplate, propertyValues: args);
@@ -215,6 +224,36 @@ internal static class Log
 		}
 
 		public static Operation Begin(string operationName) => new(operationName: operationName);
+	}
+
+	public static IDisposable Track(
+		object? args = null,
+		[System.Runtime.CompilerServices.CallerMemberName] string methodName = "") => new MethodTracker(methodName, args);
+
+	internal readonly struct MethodTracker : IDisposable
+	{
+		private readonly string _methodName;
+		private readonly long _startTimestamp;
+
+		public MethodTracker(string methodName, object? args)
+		{
+			_methodName = methodName;
+			_startTimestamp = Stopwatch.GetTimestamp();
+			if (args is null)
+			{
+				ActiveLogger.Verbose("-> {MethodName}", methodName);
+			}
+			else
+			{
+				ActiveLogger.Verbose("-> {MethodName} {@Args}", methodName, args);
+			}
+		}
+
+		public void Dispose()
+		{
+			var elapsedMs = Stopwatch.GetElapsedTime(_startTimestamp).TotalMilliseconds;
+			ActiveLogger.Debug("<- {MethodName} [{ElapsedMs:F0}ms]", _methodName, elapsedMs);
+		}
 	}
 }
 

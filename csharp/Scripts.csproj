@@ -18,13 +18,17 @@
 
 		<Compile Remove="src\Orchestrators\**" />
 		<Compile Remove="src\CLI\**" />
+		<Compile Include="src\CLI\BaseAsyncCommand.cs" />
+		<Compile Include="src\CLI\Subtitle\SubtitleCommand.cs" />
 
 		<Compile Remove="src\Classical\**" />
 		<Compile Remove="tests\Scripts.Tests\Classical\**" />
 
 		<PackageReference Include="AngleSharp" Version="*" />
 		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="*" />
+		<PackageReference Include="Azure.AI.OpenAI" Version="*" />
 		<PackageReference Include="Azure.AI.Translation.Text" Version="*" />
+		<PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="*" />
 		<PackageReference Include="Azure.Identity" Version="*" />
 		<PackageReference Include="Ben.Demystifier" Version="*" />
 		<PackageReference Include="CsvHelper" Version="*" />

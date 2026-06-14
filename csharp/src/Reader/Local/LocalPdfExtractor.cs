@@ -8,7 +8,6 @@ namespace Scripts.Services.Read;
 
 internal sealed class LocalPdfExtractor(
 	string filePath,
-	AzureDocumentIntelligenceOptions? azureDocumentIntelligence = null,
 	CancellationToken ct = default
 )
 {
@@ -46,13 +45,12 @@ internal sealed class LocalPdfExtractor(
 
 	private async Task<string> OcrWithFallbackAsync(byte[] pdfBytes)
 	{
-		if (AzureDocumentIntelligenceOcrProvider.IsConfigured(options: azureDocumentIntelligence))
+		if (AzureDocumentIntelligenceService.IsConfigured)
 		{
 			try
 			{
-				return await AzureDocumentIntelligenceOcrProvider
-					.CreateConfigured(options: azureDocumentIntelligence)
-					.OcrPdfAsync(pdfBytes: pdfBytes, ct: ct);
+				var result = await AzureDocumentIntelligenceService.OcrPdfAsync(pdfBytes, ct);
+				if (result is { }) return result;
 			}
 			catch (Exception ex) when (ex is not OperationCanceledException)
 			{

@@ -10,51 +10,45 @@ internal static class YouTubeTranslationService
 		if (!videos.Any(static v => v.NeedsTranslation))
 			return videos;
 
-		return await TranslationService.WithContainerAsync(
-			async token =>
+		List<YouTubeVideo> result = new(capacity: videos.Count);
+
+		foreach (YouTubeVideo video in videos)
+		{
+			if (ct.IsCancellationRequested)
+				return videos;
+
+			if (!video.NeedsTranslation)
 			{
-				List<YouTubeVideo> result = new(capacity: videos.Count);
+				result.Add(item: video);
+				continue;
+			}
 
-				foreach (YouTubeVideo video in videos)
-				{
-					if (token.IsCancellationRequested)
-						return videos;
+			TranslationResult? titleResult = await AzureTranslationService.TranslateAsync(
+				text: video.Title,
+				sourceLanguage: video.DetectedLanguage,
+				ct: ct
+			);
+			TranslationResult? descResult = await AzureTranslationService.TranslateAsync(
+				text: video.Description,
+				sourceLanguage: video.DetectedLanguage,
+				ct: ct
+			);
 
-					if (!video.NeedsTranslation)
-					{
-						result.Add(item: video);
-						continue;
-					}
+			if (titleResult is { })
+			{
+				result.Add(
+					video.WithTranslation(
+						translatedTitle: titleResult.Translation,
+						descResult?.Translation ?? video.Description,
+						detectedLanguage: titleResult.DetectedLanguage
+					)
+				);
+			}
+			else
+				result.Add(item: video);
+		}
 
-					TranslationResult? titleResult = await TranslationService.TranslateAsync(
-						text: video.Title,
-						sourceLanguage: video.DetectedLanguage,
-						ct: token
-					);
-					TranslationResult? descResult = await TranslationService.TranslateAsync(
-						text: video.Description,
-						sourceLanguage: video.DetectedLanguage,
-						ct: token
-					);
-
-					if (titleResult is { })
-					{
-						result.Add(
-							video.WithTranslation(
-								translatedTitle: titleResult.Translation,
-								descResult?.Translation ?? video.Description,
-								detectedLanguage: titleResult.DetectedLanguage
-							)
-						);
-					}
-					else
-						result.Add(item: video);
-				}
-
-				return result;
-			},
-			ct: ct
-		);
+		return result;
 	}
 
 	internal static void ShowTranslationPreview(List<YouTubeVideo> videos)

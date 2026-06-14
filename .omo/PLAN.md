@@ -1,361 +1,57 @@
 # Implementation Plan
 
-## Phase 1: EF Schema Robust Enhancements
+> **Governance**: This is the **only** plan file per AGENTS.md. Done work lives in `changelog.md`. Unfinished work lives here. No other plan files exist.
 
-- [x] Task 1.1: Fix translated properties casing. Update `EF_SCHEMA_AUTHORITY.md` and related drafts/documentation to use EF compliant PascalCase (`TranslatedTitle` and `TranslatedDescription`) instead of `TitleEn` and `DescriptionEn`. Ensure the `videos` schema explicitly reflects this change.
-- [x] Task 1.2: Assess and robustly enhance the `ExternalId` schema for Music. Remove the `source_records` table from the `public` schema. Add `ExternalId` (or specific fields like `MusicBrainzId`, `DiscogsId`) and `SourceSystem` to relevant entities in the `music` schema (e.g., `artists`, `albums`, `tracks`, `release_progress`). This clearly separates MusicBrainz search lookup identities from Last.fm scrobble events. Ensure `EF_SCHEMA_AUTHORITY.md` is fully updated with these entity changes.
-- [x] Task 1.3: Generate a proper comprehensive Mermaid ER Diagram visualizing all 4 updated schemas (`youtube`, `music`, `work`, `public`). Embed the diagram directly into `EF_SCHEMA_AUTHORITY.md` under the "ER Relationship Summary" section. Ensure it reflects the removed `source_records`, updated `ExternalId` columns, and corrected casing.
+## Universal Serilog Tracing Refactor
+- [x] **L1** Add `MethodTracker` struct and `Track` method to `src/Core/Log.cs`
+- [x] **L2** Write TUnit tests for `Log.Track` in `tests/Scripts.Tests/Core/LogTests.cs`
+- [x] **L3** Refactor `src/Services/Language/AzureTranslationService.cs` (Apply 1-liner)
+- [x] **L4** Refactor `src/Services/Language/AzureVisionService.cs` (Apply 1-liner)
+- [x] **L5** Refactor `src/Services/Language/AzureOpenAIService.cs` (Apply 1-liner)
+- [x] **L6** Refactor `src/Services/Language/AzureDocumentIntelligenceService.cs` (Apply 1-liner)
+- [x] **L7** Refactor `src/Core/Auth/AzureAuth.cs` (Apply 1-liner)
+- [x] **L8** Refactor `src/Core/Auth/GoogleAuth.cs` and `TcpCodeReceiver.cs` (Remove `Console.WriteLine`, apply 1-liner)
+- [x] **BUILD** `dotnet build csharp/Scripts.slnx` and run tests
 
+## Phase 0.2: Remaining Azure Services Integration (UNFINISHED)
+- [x] **O2.0** Upgrade `AzureTranslationService.cs` to Translator API version `2026-06-06` *(Note: Verified June 2026 - v3.0 is NOT officially retiring, but the new GA version enables LLM capabilities)* — Done 2026-06-14: switched to `TranslateInputItem(text, TranslationTarget("en"), language)` schema; verified build green
+- [x] **O2.1** `AzureOpenAIService` (Whisper + GPT-4o-mini) — Done 2026-06-14: 131 lines, 2 methods + DEBUG delegate hooks; added `AzureOpenAIWhisperDeploymentName` env var
+- [x] **O2.2** `AzureVisionService` (image OCR + caption + tags) — Done 2026-06-14: 165 lines, 3 methods (ExtractTextAsync, CaptionAsync, TagAsync) + 3 DEBUG delegate hooks
+- [ ] **O2.3a** `AzureDocumentIntelligenceService` (structured extraction)
+- [ ] **O2.3b** DELETE `Reader/Ocr/AzureDocumentIntelligenceOcrProvider.cs`
+- [ ] **O2.3c** REFACTOR 3 Local extractors (`LocalPdfExtractor`, `LocalImageExtractor`, `LocalEpubExtractor`) to call O2.3a
+- [ ] **O2.12** `SubtitleCommand`
+- [x] **O2.8** Tests for `AzureOpenAIServiceTests.cs` — Done 2026-06-14: 237 lines, 15 tests; cannot run due to pre-existing `TestPaths.cs` sentinel issue (see changelog)
+- [x] **O2.9** Tests for `AzureVisionServiceTests.cs` — Done 2026-06-14: 253 lines, 19 tests; same TestPaths issue blocks execution
+- [ ] **O2.10** Tests for `AzureDocumentIntelligenceServiceTests.cs`
+- [ ] **BUILD** `dotnet build csharp/Scripts.slnx` — 0 errors, 0 warnings
+- [ ] **CLEANUP** Flip checkboxes to `[x]`, update `changelog.md`
 
-## Phase 2: Outstanding Team Findings (TDD Gates)
+## Foundry Resource Setup
+- [ ] **O2.X** Add Bicep template at `infra/foundry.bicep` for the single Foundry resource
+- [ ] Update `.env` to set `FOUNDRY_PROJECT_NAME=scripts-prod` (default)
 
-```powershell
-# Step A1.1
-# FAIL CONDITION
-(Test-Path .omo/evidence/A1.1-diagnostic.txt) -eq $false
+## YouTube Pipeline Rebuild (UNFINISHED)
+- [ ] Task 2: Split raw DTOs from derived DTOs
+- [ ] Task 3: Build separate translation files for each playlist
+- [ ] Task 4: Add manifest / index and clean filename scheme
+- [ ] Task 5: Demote `sync.json` to cursor-only and add run history
+- [ ] Task 6: Implement PostgreSQL current tables and history tables
+- [ ] Task 7: Wire rename, delete, and change-detection behavior
+- [ ] Task 8: Add PostgreSQL backup, WAL, and restore workflow
+- [ ] Task 9: Prove offline rebuild from local files with zero YouTube calls
+- [ ] F1: Plan compliance audit
+- [ ] F2: Code quality review
+- [ ] F3: Real end-to-end QA
+- [ ] F4: Scope fidelity and backup integrity
 
-# PASS CONDITION
-(Test-Path .omo/evidence/A1.1-diagnostic.txt) -and ((rg 'ERROR_NOACCESS' .omo/evidence/A1.1-diagnostic.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A1.2
-# FAIL CONDITION
-(Test-Path .omo/evidence/A1.2-cli-check.txt) -eq $false
+## Fibery Expungement (UNFINISHED, deferred per user)
+- [ ] Delete `FiberyEntity.cs`, `FiberyEntityConfiguration.cs`, related compiled models, tests
+- [ ] Purge all migrations and regenerate fresh `InitialCreate` (no fibery)
+- [ ] Extract 18 valuable files from `fibery-archive/` to `AI/references/`
+- [ ] Delete remaining 26 files in `fibery-archive/` + directory
+- [ ] Remove `fibery` schema and `fibery_entities` table from PGSQL
+- [ ] Update `AGENTS.md` (remove line 29)
 
-# PASS CONDITION
-(Test-Path .omo/evidence/A1.2-cli-check.txt) -and ((rg 'upgrade' .omo/evidence/A1.2-cli-check.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A1.3
-# FAIL CONDITION
-(Test-Path .omo/evidence/backups) -eq $false
-
-# PASS CONDITION
-(gci .omo/evidence/backups/ -File | Measure-Object).Count -ge 4
-```
-```powershell
-# Step A1.4
-# FAIL CONDITION
-(Test-Path .omo/evidence/A1.4-smoke-test.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A1.4-smoke-test.txt) -and ((rg '200 OK' .omo/evidence/A1.4-smoke-test.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A1.6
-# FAIL CONDITION
-$task = schtasks /query /tn OpenCode-Serve /xml 2>$null; [string]::IsNullOrEmpty($task)
-
-# PASS CONDITION
-$xml = schtasks /query /tn OpenCode-Serve /xml 2>$null; ($xml -match 'RestartCount') -and ($xml -match 'RestartInterval')
-```
-```powershell
-# Step A2.1
-# FAIL CONDITION
-(Test-Path .omo/evidence/A2.1-tailscale-check.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A2.1-tailscale-check.txt) -and ((rg 'tail2e6179' .omo/evidence/A2.1-tailscale-check.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A2.2
-# FAIL CONDITION
-(Test-Path .omo/evidence/A2.2-ssh-baseline.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A2.2-ssh-baseline.txt) -and ((rg 'Connected|Authenticated' .omo/evidence/A2.2-ssh-baseline.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A2.3
-# FAIL CONDITION
-$config = 'C:\ProgramData\ssh\sshd_config'; (Test-Path $config) -eq $false
-
-# PASS CONDITION
-$config = 'C:\ProgramData\ssh\sshd_config'; (rg 'ListenAddress.*tail2e6179' $config | Measure-Object -Line).Lines -ge 1 -and (rg 'AllowUsers.*100\.64' $config | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step A2.4
-# FAIL CONDITION
-(Test-Path .omo/evidence/A2.4-ssh-verify.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A2.4-ssh-verify.txt) -and ((rg 'tailscale.*success|ipv4.*blocked' .omo/evidence/A2.4-ssh-verify.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A2.5
-# FAIL CONDITION
-(Test-Path .omo/evidence/SSH-ROLLBACK.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/SSH-ROLLBACK.txt) -and ((rg 'rollback|undo|revert' .omo/evidence/SSH-ROLLBACK.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A3.2
-# FAIL CONDITION
-(Test-Path .omo/evidence/A3.2-oci-output.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A3.2-oci-output.txt) -and ((rg 'instance|reboot' .omo/evidence/A3.2-oci-output.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A3.3
-# FAIL CONDITION
-(Test-Path .omo/evidence/task-14-user-summary.md) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/task-14-user-summary.md) -eq $true
-```
-```powershell
-# Step A4.2
-# FAIL CONDITION
-(Test-Path .omo/evidence/A4.2-oci-backup-output.txt) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/A4.2-oci-backup-output.txt) -and ((rg 'backup|volume' .omo/evidence/A4.2-oci-backup-output.txt | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step A4.3
-# FAIL CONDITION
-(Test-Path .omo/evidence/task-17-user-summary-backup.md) -eq $false
-
-# PASS CONDITION
-(Test-Path .omo/evidence/task-17-user-summary-backup.md) -eq $true
-```
-```powershell
-# Step B1.5
-# FAIL CONDITION
-(Test-Path csharp/src/Data/Entities/MusicWork.cs) -eq $false
-
-# PASS CONDITION
-$f = 'csharp/src/Data/Entities/MusicWork.cs'; (Test-Path $f) -and (rg 'public.*Id' $f) -and (rg 'public.*Name' $f) -and (rg 'public.*Composer' $f) -and (rg 'public.*CatalogueNumber' $f) -and (rg 'public.*KeySignature' $f) -and (rg 'public.*ExternalId' $f) -and (rg 'public.*SourceSystem' $f) -and (rg 'public.*Metadata' $f) -and (rg 'public.*CreatedAt' $f) -and (rg 'public.*UpdatedAt' $f)
-```
-```powershell
-# Step B1.6
-# FAIL CONDITION
-(Test-Path csharp/src/Data/Entities/Movement.cs) -eq $false
-
-# PASS CONDITION
-$f = 'csharp/src/Data/Entities/Movement.cs'; (Test-Path $f) -and (rg 'public.*WorkId' $f) -and (rg 'public.*Position' $f) -and (rg 'public.*Name' $f) -and (rg 'public.*CreatedAt' $f) -and (rg 'public.*UpdatedAt' $f)
-```
-```powershell
-# Step B1.7
-# FAIL CONDITION
-(rg 'public int\? WorkId' csharp/src/Data/Entities/Track.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'public int\? WorkId' csharp/src/Data/Entities/Track.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'public int\? MovementId' csharp/src/Data/Entities/Track.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B1.8
-# FAIL CONDITION
-(rg 'WorkId|MovementId' csharp/src/Data/Configuration/TrackConfiguration.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'WorkId' csharp/src/Data/Configuration/TrackConfiguration.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'MovementId' csharp/src/Data/Configuration/TrackConfiguration.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'DeleteBehavior\.Restrict' csharp/src/Data/Configuration/TrackConfiguration.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B1.9
-# FAIL CONDITION
-(rg 'DbSet<MusicWork>' csharp/src/Data/ScriptsDbContext.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'DbSet<MusicWork>' csharp/src/Data/ScriptsDbContext.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'DbSet<Movement>' csharp/src/Data/ScriptsDbContext.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B1.10
-# FAIL CONDITION
-(Test-Path csharp/src/Data/Entities/Recording.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/src/Data/Entities/Recording.cs) -and (Test-Path csharp/src/Data/Entities/Performer.cs) -and (Test-Path csharp/src/Data/Entities/RecordingPerformer.cs) -and (Test-Path csharp/src/Data/Entities/Venue.cs)
-```
-```powershell
-# Step B1.11
-# FAIL CONDITION
-(Test-Path csharp/src/Data/Entities/ScrobbleClassicalMap.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/src/Data/Entities/ScrobbleClassicalMap.cs) -and (Test-Path csharp/src/Data/Configuration/ScrobbleClassicalMapConfiguration.cs)
-```
-```powershell
-# Step B1.13
-# FAIL CONDITION
-Test-Path csharp/src/Data/Entities/Issue.cs
-
-# PASS CONDITION
-(Test-Path csharp/src/Data/Entities/Issue.cs) -eq $false
-```
-```powershell
-# Step B1.15
-# FAIL CONDITION
-(Test-Path csharp/Migrations/*_WaveB1_SchemaEvolution.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/Migrations/*_WaveB1_SchemaEvolution.cs) -and ((dotnet build csharp/Scripts.slnx 2>$null; $LASTEXITCODE) -eq 0)
-```
-```powershell
-# Step B2.1
-# FAIL CONDITION
-(Test-Path csharp/src/Services/Music/WorkService.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/src/Services/Music/WorkService.cs) -and ((rg 'GetOrCreateWorkAsync' csharp/src/Services/Music/WorkService.cs | Measure-Object -Line).Lines -ge 1) -and (Test-Path csharp/tests/Scripts.Tests/Services/Music/WorkServiceTests.cs)
-```
-```powershell
-# Step B2.2
-# FAIL CONDITION
-(rg 'WorkService' csharp/src/Orchestrators/ScrobbleSyncOrchestrator.cs | Measure-Object -Line).Lines -ge 1
-
-# PASS CONDITION
-(rg 'WorkService' csharp/src/Orchestrators/ScrobbleSyncOrchestrator.cs | Measure-Object -Line).Lines -eq 0
-```
-```powershell
-# Step B2.3
-# FAIL CONDITION
-(rg 'DisplayArtist' csharp/src/Data/Entities/Track.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'DisplayArtist.*Artist\?\.Name' csharp/src/Data/Entities/Track.cs | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step B2.4
-# FAIL CONDITION
-(Test-Path csharp/tests/Scripts.Tests/Services/Music/WorkServiceActivationTests.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/tests/Scripts.Tests/Services/Music/WorkServiceActivationTests.cs) -and ((rg '\[Test\]|\[Fact\]' csharp/tests/Scripts.Tests/Services/Music/WorkServiceActivationTests.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B3.1
-# FAIL CONDITION
-(Test-Path csharp/src/Services/Music/PurgeService.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/src/Services/Music/PurgeService.cs) -and ((rg 'PurgeOrphansAsync' csharp/src/Services/Music/PurgeService.cs | Measure-Object -Line).Lines -ge 1) -and (Test-Path csharp/tests/Scripts.Tests/Services/Music/PurgeServiceTests.cs)
-```
-```powershell
-# Step B3.2
-# FAIL CONDITION
-(rg 'BeginTransaction' csharp/src/Services/Music/PurgeService.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'BeginTransaction' csharp/src/Services/Music/PurgeService.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'Tracks' csharp/src/Services/Music/PurgeService.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'Albums' csharp/src/Services/Music/PurgeService.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B3.3
-# FAIL CONDITION
-(rg 'PurgeOrphansAsync' csharp/src/Orchestrators/ScrobbleSyncOrchestrator.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'PurgeOrphansAsync' csharp/src/Orchestrators/ScrobbleSyncOrchestrator.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'ExecuteForceResyncAsync' csharp/src/Orchestrators/ScrobbleSyncOrchestrator.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B3.4
-# FAIL CONDITION
-(Test-Path csharp/tests/Scripts.Tests/Orchestrators/ScrobbleSyncOrchestratorTests.cs) -eq $false
-
-# PASS CONDITION
-(Test-Path csharp/tests/Scripts.Tests/Orchestrators/ScrobbleSyncOrchestratorTests.cs) -and ((rg 'ForceResync|Purge' csharp/tests/Scripts.Tests/Orchestrators/ScrobbleSyncOrchestratorTests.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B4.1
-# FAIL CONDITION
-(rg 'MigrateAsync' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'template_schema' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'MigrateAsync' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B4.2
-# FAIL CONDITION
-(rg 'Guid\.NewGuid' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'test_.*Guid\.NewGuid.*:N' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step B4.3
-# FAIL CONDITION
-(rg 'Database\.Migrate\(\)' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'Database\.Migrate\(\)' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step B4.4
-# FAIL CONDITION
-(rg 'NpgsqlConnectionStringBuilder' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-((rg 'SearchPath' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'NpgsqlConnectionStringBuilder' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1)
-```
-```powershell
-# Step B4.5
-# FAIL CONDITION
-(rg 'DROP SCHEMA' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'DROP SCHEMA.*CASCADE' csharp/tests/Scripts.Tests/DbContext/PostgresFixture.cs | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step B4.6
-# FAIL CONDITION
-$false
-
-# PASS CONDITION
-dotnet test csharp/tests/Scripts.Tests/Scripts.Tests.csproj --parallel 2>$null; $LASTEXITCODE -eq 0
-```
-```powershell
-# Step D3
-# FAIL CONDITION
-dotnet build csharp/Scripts.slnx 2>$null; $LASTEXITCODE -ne 0
-
-# PASS CONDITION
-dotnet build csharp/Scripts.slnx 2>$null; $LASTEXITCODE -eq 0
-```
-```powershell
-# Step D5
-# FAIL CONDITION
-(rg 'public.*Bio|public.*ImageUrl|public.*DateTime.*CreatedAt|public.*DateTime.*UpdatedAt' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -lt 4
-
-# PASS CONDITION
-((rg 'public.*string.*Name' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'public.*Bio' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'public.*ImageUrl' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'public.*DateTime.*CreatedAt' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'public.*DateTime.*UpdatedAt' csharp/src/Data/Entities/Artist.cs | Measure-Object -Line).Lines -ge 1) -and ((rg 'FK_albums_artists_ArtistId' csharp/Migrations/*_WaveB1_SchemaEvolution.cs | Measure-Object -Line).Lines -eq 0)
-```
-```powershell
-# Step E1.1
-# FAIL CONDITION
-(rg 'InterruptResume|ReorderOnly|SaveLoadOrder' csharp/tests/Scripts.Tests/Services/Sync/YouTube/YouTubeServiceTests.cs 2>$null | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'InterruptResume|ReorderOnly|SaveLoadOrder' csharp/tests/Scripts.Tests/Services/Sync/YouTube/YouTubeServiceTests.cs 2>$null | Measure-Object -Line).Lines -ge 3
-```
-```powershell
-# Step E2.1
-# FAIL CONDITION
-(Test-Path csharp/src/Orchestrators/YouTubePlaylistOrchestrator.cs) -eq $true
-
-# PASS CONDITION
-((Test-Path csharp/src/Orchestrators/YouTubePlaylistOrchestrator.cs) -eq $false) -and ((rg 'YouTubePlaylistOrchestrator' csharp/src/ -l 2>$null | Measure-Object).Count -eq 0)
-```
-```powershell
-# Step E2.2
-# FAIL CONDITION
-(rg 'SortPlaylistAsync' csharp/src/Services/Sync/YouTube/YouTubeService.cs 2>$null | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'SortPlaylistAsync' csharp/src/Services/Sync/YouTube/YouTubeService.cs 2>$null | Measure-Object -Line).Lines -ge 1
-```
-```powershell
-# Step E3.1
-# FAIL CONDITION
-(rg 'TextNormalizer\.Normalize' csharp/src/Services/Sync/YouTube/YouTubeService.cs 2>$null | Measure-Object -Line).Lines -eq 0
-
-# PASS CONDITION
-(rg 'TextNormalizer\.Normalize' csharp/src/Services/Sync/YouTube/YouTubeService.cs 2>$null | Measure-Object -Line).Lines -ge 1
-```
-
-
-
-
-
-
+## Phase 2: Outstanding Team Findings (TDD Gates) — UNFINISHED, LOW PRIORITY
+- [ ] A1.1-E3.1 TDD gates for infrastructure, SSH, OCI, EF entities, etc.

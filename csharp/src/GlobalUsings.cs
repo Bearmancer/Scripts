@@ -8,7 +8,6 @@ global using static System.IO.Path;
 global using static System.String;
 global using static System.StringComparison;
 global using System.Text.Json;
-global using System.Text.Json.Serialization;
 global using System.Text.RegularExpressions;
 global using CsvHelper;
 global using CsvHelper.Configuration;

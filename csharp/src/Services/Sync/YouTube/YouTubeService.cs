@@ -310,12 +310,12 @@ internal sealed class YouTubeService : IDisposable
 			ct
 		);
 
-		IList<global::Google.Apis.YouTube.v3.Data.Video>? items = response.Items;
+		IList<Video>? items = response.Items;
 		List<YouTubeVideo> result = [];
 		result.EnsureCapacity(items?.Count ?? 0);
 		if (items is not null)
 		{
-			foreach (global::Google.Apis.YouTube.v3.Data.Video? item in items)
+			foreach (Video? item in items)
 			{
 				result.Add(
 					new YouTubeVideo(
